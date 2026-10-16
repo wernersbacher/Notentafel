@@ -1,7 +1,8 @@
 (function () {
   'use strict';
   var COLS = 8, MAX_ROWS = 8, START_ROWS = 3;
-  var KEY = 'notentafel.v1', SONGS_KEY = 'notentafel.songs.v1', SETTINGS_KEY = 'notentafel.settings.v1';
+  var KEY = 'notentafel.v1', SONGS_KEY = 'notentafel.songs.v1', SETTINGS_KEY = 'notentafel.settings.v1',
+      AUTO_KEY = 'notentafel.autosave.v1';
 
   // f = Frequenz in Hz (C = c', hohe Töne eine Oktave darüber)
   var NOTES = [
@@ -30,6 +31,27 @@
       'D+': ['#f58a1f', '#2a1600'], 'E+': ['#f7d11e', '#2a2300'], 'F+': ['#9bd74a', '#16280a']
     } }
   ];
+  // Mitgelieferte Lieder, immer im Menü ladbar. „-“ ist ein leerer Platz (Pause).
+  // Bruder Jakob und Ode an die Freude stehen in F-Dur, weil der Tonvorrat unter dem C endet.
+  var MELODIES = [
+    { name: 'Alle meine Entchen', notes: 'C D E F G G A A A A G A A A A G F F F F E E D D D D C' },
+    { name: 'Hänschen klein', notes: 'G E E F D D C D E F G G G G E E F D D C E G G C D D D D D E F E E E E E F G G E E F D D C E G G C' },
+    { name: 'Kuckuck, Kuckuck', notes: 'G E G E F E D D D E F D E E F G E G E G E F E D C' },
+    { name: 'Bruder Jakob', notes: 'F G A F F G A F A B C+ - A B C+ - C+ D+ C+ B A F C+ D+ C+ B A F F C F - F C F -' },
+    { name: 'Morgen kommt der Weihnachtsmann', notes: 'C C G G A A G - F F E E D D C - G G F F E E D - G G F F E E D - C C G G A A G - F F E E D D C -' },
+    { name: 'Ode an die Freude', notes: 'A A B C+ C+ B A G F F G A A G G - A A B C+ C+ B A G F F G A G F F - G G A F G A B A F G A B A G F G C A A B C+ C+ B A G F F G A G F F' }
+  ];
+  function melodyRows(m) {
+    var f = m.notes.split(' ').map(function (id) { return id === '-' ? null : { n: id, h: '' }; });
+    var rs = [];
+    for (var i = 0; i < Math.max(START_ROWS * COLS, f.length); i += COLS) {
+      var row = f.slice(i, i + COLS);
+      while (row.length < COLS) row.push(null);
+      rs.push(row);
+    }
+    return rs;
+  }
+
   var THEME_BY = {};
   THEMES.forEach(function (t) { THEME_BY[t.id] = t; });
 
@@ -40,6 +62,7 @@
       btnAddRow = $('btnAddRow'), btnDelRow = $('btnDelRow'), btnMenu = $('btnMenu');
   var drawer = $('drawer'), backdrop = $('backdrop'), btnClose = $('btnClose'), songNameEl = $('songName'),
       btnSave = $('btnSave'), saveHint = $('saveHint'), songsEl = $('songs'), themesEl = $('themes'),
+      autoSec = $('autoSec'), autoEl = $('autosave'), melodiesEl = $('melodies'),
       tempoEl = $('tempo'), tempoOut = $('tempoOut');
 
   /* ---------- Speicher ---------- */
@@ -89,6 +112,17 @@
     };
   }
   function saveSettings() { writeJSON(SETTINGS_KEY, settings); }
+
+  // Ein einziger Autosave-Platz: hält die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
+  function loadAuto() {
+    var a = readJSON(AUTO_KEY);
+    var r = a && cleanRows(a.rows);
+    return r ? { rows: r, name: typeof a.name === 'string' ? a.name : '', savedAt: a.savedAt || 0 } : null;
+  }
+  function stashCurrent() {
+    if (example || flatLast() < 0) return;
+    writeJSON(AUTO_KEY, { rows: rows, name: name, savedAt: Date.now() });
+  }
 
   var saved = load();
   var rows = saved ? saved.rows : exampleRows();
@@ -154,7 +188,7 @@
       dot = '<div class="dot ghost"></div>';
       label = where + ': leer';
     }
-    var hand = (cell && cell.h) ? '<span class="hand on">' + cell.h + '</span>' : '<span class="hand"></span>';
+    var hand = (cell && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
     return '<div class="cell' + (isSel ? ' sel' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot + hand + '</div></div>';
   }
 
@@ -272,6 +306,7 @@
   }
   function clearAll() {
     snap();
+    stashCurrent();
     rows = []; for (var i = 0; i < START_ROWS; i++) rows.push(emptyRow());
     example = false; name = ''; sel = { r: 0, c: 0 };
     commit();
@@ -411,6 +446,20 @@
         '<button type="button" class="btn danger" data-del="' + i + '">Löschen</button></li>';
     }).join('');
   }
+  function renderMelodies() {
+    melodiesEl.innerHTML = MELODIES.map(function (m, i) {
+      return '<li class="song one' + (m.name === name ? ' current' : '') + '"><span class="name">' + esc(m.name) + '</span>' +
+        '<button type="button" class="btn" data-melody="' + i + '">Laden</button></li>';
+    }).join('');
+  }
+  function renderAuto() {
+    var a = loadAuto();
+    autoSec.hidden = !a;
+    if (!a) return;
+    var when = a.savedAt ? new Date(a.savedAt).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    autoEl.innerHTML = '<span class="name">' + esc(a.name || 'Ohne Namen') + '<span class="date">' + when + '</span></span>' +
+      '<button type="button" class="btn" data-auto>Laden</button>';
+  }
   function renderThemes() {
     themesEl.innerHTML = THEMES.map(function (t) {
       var sw = ['C', 'D', 'E', 'F', 'C+', 'D+', 'E+', 'F+'].map(function (id) {
@@ -438,21 +487,25 @@
     if (rest.length < list.length) confirmTap(btnSave, 'Ersetzen?', doSave);
     else doSave();
   }
+  // Die bisherige Tafel wandert in den Autosave-Platz; beim Laden des Autosaves tauschen beide also die Plätze
   function loadSong(s) {
     snap();
+    stashCurrent();
     rows = cleanRows(s.rows);
     name = s.name;
     example = false;
     sel = appendPos();
     closeMenu();
     commit();
-    toast('„' + s.name + '“ geladen. „Rückgängig“ holt die vorherige Tafel zurück.');
+    toast('„' + (s.name || 'Ohne Namen') + '“ geladen. Die vorherige Tafel liegt im Menü unter „Zuletzt ersetzt“.');
   }
   function openMenu() {
     stopPlay();
     songNameEl.value = name;
     hint('');
     renderSongs();
+    renderAuto();
+    renderMelodies();
     renderThemes();
     tempoEl.value = settings.tempo;
     tempoOut.textContent = settings.tempo + ' pro Minute';
@@ -488,6 +541,16 @@
         hint('„' + victim.name + '“ gelöscht.');
       });
     }
+  });
+  melodiesEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-melody]');
+    var m = b && MELODIES[+b.dataset.melody];
+    if (m) loadSong({ name: m.name, rows: melodyRows(m) });
+  });
+  autoEl.addEventListener('click', function (e) {
+    if (!e.target.closest('[data-auto]')) return;
+    var a = loadAuto();
+    if (a) loadSong(a);
   });
   themesEl.addEventListener('click', function (e) {
     var b = e.target.closest('.theme');

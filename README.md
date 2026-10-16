@@ -26,6 +26,8 @@ Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ord
 ### Menü
 
 - **Lied speichern / laden / löschen.** Gleicher Name heißt ersetzen (mit Rückfrage).
+- **Zuletzt ersetzt:** Die aktuelle Tafel wird ohnehin laufend gesichert. Lädt man ein anderes Lied oder tippt „Alles löschen“, wandert die bisherige Tafel in diesen einen Autosave-Platz und lässt sich von dort wieder laden (auch nach dem Schließen). Beim Laden tauschen Tafel und Autosave die Plätze.
+- **Bekannte Lieder:** Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `notentafel.js` in die Liste `MELODIES` ein.
 - **Farben:** Zur Wahl stehen *Original* und *Oktavfarben* (hohe Töne in der Farbe ihres Grundtons).
 - **Tempo** beim Abspielen (50–160 pro Minute).
 
@@ -37,6 +39,7 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 |---|---|
 | `notentafel.v1` | Die aktuelle Tafel |
 | `notentafel.songs.v1` | Gespeicherte Lieder |
+| `notentafel.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz) |
 | `notentafel.settings.v1` | Farbthema und Tempo |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.

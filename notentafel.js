@@ -49,33 +49,37 @@
   // Bruder Jakob und Ode an die Freude stehen in F-Dur, weil der Tonvorrat unter dem C endet.
   // Die punktierte Viertel der Ode gibt es nicht, dort stehen zwei Viertel.
   var MELODIES = [
-    { name: 'Alle meine Entchen', notes: 'C D E F G:2 G:2 | A A A A G:4 | A A A A G:4 | F F F F E:2 E:2 | D D D D C:4' },
-    { name: 'Hänschen klein', notes: 'G E E:2 F D D:2 | C D E F G G G:2 | G E E:2 F D D:2 | C E G G C:4 | D D D D D E F:2 | E E E E E F G:2 | G E E:2 F D D:2 | C E G G C:4' },
-    { name: 'Kuckuck, Kuckuck', notes: 'G:2 E G:2 E F E D C:3 | D D E F:2 D E E F G:2 E | G:2 E G:2 E F E D C:3' },
-    { name: 'Bruder Jakob', notes: 'F G A F F G A F | A B C+:2 A B C+:2 | C+:.5 D+:.5 C+:.5 B:.5 A F C+:.5 D+:.5 C+:.5 B:.5 A F | F C F:2 F C F:2' },
-    { name: 'Morgen kommt der Weihnachtsmann', notes: 'C C G G A A G:2 | F F E E D D C:2 | G G F F E E D:2 | G G F F E E D:2 | C C G G A A G:2 | F F E E D D C:2' },
-    { name: 'Ode an die Freude', notes: 'A A B C+ C+ B A G | F F G A A G G:2 | A A B C+ C+ B A G | F F G A G F F:2 | G G A F G A:.5 B:.5 A F | G A:.5 B:.5 A G F G C:2 | A A B C+ C+ B A G | F F G A G F F:2' }
+    { name: 'Alle meine Entchen', meter: '4/4', notes: 'C D E F G:2 G:2 | A A A A G:4 | A A A A G:4 | F F F F E:2 E:2 | D D D D C:4' },
+    { name: 'Hänschen klein', meter: '4/4', notes: 'G E E:2 F D D:2 | C D E F G G G:2 | G E E:2 F D D:2 | C E G G C:4 | D D D D D E F:2 | E E E E E F G:2 | G E E:2 F D D:2 | C E G G C:4' },
+    { name: 'Kuckuck, Kuckuck', meter: '3/4', notes: 'G:2 E G:2 E F E D C:3 | D D E F:2 D E E F G:2 E | G:2 E G:2 E F E D C:3' },
+    { name: 'Bruder Jakob', meter: '4/4', notes: 'F G A F F G A F | A B C+:2 A B C+:2 | C+:.5 D+:.5 C+:.5 B:.5 A F C+:.5 D+:.5 C+:.5 B:.5 A F | F C F:2 F C F:2' },
+    { name: 'Morgen kommt der Weihnachtsmann', meter: '4/4', notes: 'C C G G A A G:2 | F F E E D D C:2 | G G F F E E D:2 | G G F F E E D:2 | C C G G A A G:2 | F F E E D D C:2' },
+    { name: 'Ode an die Freude', meter: '4/4', notes: 'A A B C+ C+ B A G | F F G A A G G:2 | A A B C+ C+ B A G | F F G A G F F:2 | G G A F G A:.5 B:.5 A F | G A:.5 B:.5 A G F G C:2 | A A B C+ C+ B A G | F F G A G F F:2' }
   ];
   function melodyRows(m) {
     var rs = m.notes.split('|').map(function (line) {
       return line.trim().split(/\s+/).map(function (tok) {
         var p = tok.split(':'), d = p[1] ? +p[1] : 1;
-        if (p[0] === '-') return { d: d };
+        if (p[0] === '-') return { k: 'r', d: d };
         return { n: p[0], h: '', d: d };
       });
     });
     while (rs.length < START_ROWS) rs.push([]);
+    rs[0].meter = m.meter;
     return rs;
   }
+  // Taktarten zur Auswahl; sie stehen vorn in der Zeile
+  var METERS = ['2/2', '2/4', '3/4', '4/4', '6/8'];
 
   var THEME_BY = {};
   THEMES.forEach(function (t) { THEME_BY[t.id] = t; });
 
   var $ = function (id) { return document.getElementById(id); };
-  var grid = $('grid'), toastEl = $('toast'), palette = $('palette'), lensEl = $('lens');
+  var grid = $('grid'), toastEl = $('toast'), palette = $('palette'), valuesEl = $('values'), restsEl = $('rests');
   var board = grid.parentNode;
   var btnR = $('btnR'), btnL = $('btnL'), btnIns = $('btnIns'), btnDel = $('btnDel'), delLabel = $('delLabel'),
-      btnBreak = $('btnBreak'), btnDone = $('btnDone'),
+      btnBreak = $('btnBreak'), btnDone = $('btnDone'), btnBar = $('btnBar'), btnEnd = $('btnEnd'), btnLine = $('btnLine'),
+      btnMeter = $('btnMeter'), meterShow = $('meterShow'), meterPop = $('meterPop'),
       btnPlay = $('btnPlay'), btnUndo = $('btnUndo'), btnClear = $('btnClear'),
       btnAddRow = $('btnAddRow'), btnDelRow = $('btnDelRow'), btnMenu = $('btnMenu');
   var drawer = $('drawer'), backdrop = $('backdrop'), btnClose = $('btnClose'), songNameEl = $('songName'),
@@ -86,27 +90,54 @@
 
   /* ---------- Speicher ---------- */
   function emptyRows() { var rs = []; for (var i = 0; i < START_ROWS; i++) rs.push([]); return rs; }
+  // Ein Platz ist
+  //   null              leer (ein stiller Schlag innerhalb der Zeile)
+  //   { n, h, d? }      bunter Punkt; d nur, wenn ein Notenwert darunter ergänzt wurde (sonst ein Schlag)
+  //   { k: 'b', d }     eigenständiges Notenzeichen ohne Tonhöhe (klingt als Klopfen)
+  //   { k: 'r', d }     Pause
+  // Jeder Platz kann zusätzlich bar tragen: 1 = Taktstrich davor, 2 = Schlussstrich davor; ein leerer Platz damit ist z. B. { bar: 1 }.
+  // Die Notenlinie einer Zeile steht als Eigenschaft line am Zeilen-Array und wird beim Speichern als lines mitgegeben.
+  function cleanCell(c) {
+    if (!c) return null;
+    var o = null;
+    if (c.n != null) {
+      if (BY[c.n]) {
+        o = { n: c.n, h: (c.h === 'r' || c.h === 'l') ? c.h : '' };
+        if (DUR_BY[c.d]) o.d = c.d;
+      }
+    } else if (DUR_BY[c.d]) o = { k: c.k === 'b' ? 'b' : 'r', d: c.d };
+    if (c.bar) { o = o || {}; o.bar = c.bar === 2 ? 2 : 1; }
+    return o;
+  }
+  // Zeilen-Eigenschaften: line (Notenlinie) und meter (Taktart, z. B. '3/4').
+  // Gespeichert als lines: pro Zeile 0, 1 (nur Linie, älteres Format) oder { l, m }.
+  function attachLines(rs, lines) {
+    rs.forEach(function (row, r) {
+      var v = Array.isArray(lines) ? lines[r] : 0;
+      row.line = v === 1 || !!(v && v.l);
+      row.meter = v && METERS.indexOf(v.m) >= 0 ? v.m : '';
+    });
+    return rs;
+  }
   // Prüft gespeicherte Zeilen und liefert eine saubere Kopie (oder null).
   // Ältere Stände hatten immer 8 Plätze pro Zeile; leere Plätze hinter dem letzten Ton fallen weg.
-  function cleanRows(raw) {
+  function cleanRows(raw, lines) {
     if (!Array.isArray(raw) || raw.length < 1 || raw.length > MAX_ROWS) return null;
     for (var i = 0; i < raw.length; i++) if (!Array.isArray(raw[i]) || raw[i].length > MAX_LEN) return null;
-    var rs = raw.map(function (row) {
-      return row.map(function (c) {
-        if (!c) return null;
-        var d = DUR_BY[c.d] ? c.d : 1;
-        if (c.n == null) return DUR_BY[c.d] ? { d: d } : null;
-        if (!BY[c.n]) return null;
-        return { n: c.n, h: (c.h === 'r' || c.h === 'l') ? c.h : '', d: d };
-      });
-    });
+    var rs = raw.map(function (row) { return row.map(cleanCell); });
     var lastRow = -1;
     rs.forEach(function (row, r) { if (row.some(Boolean)) lastRow = r; });
     rs.forEach(function (row, r) {
       if (r > lastRow) row.length = 0;
       else if (r === lastRow) while (!row[row.length - 1]) row.pop();
     });
-    return rs;
+    return attachLines(rs, lines);
+  }
+  function packLines(rs) {
+    return rs.map(function (row) {
+      if (!row.meter) return row.line ? 1 : 0;
+      return { l: row.line ? 1 : 0, m: row.meter };
+    });
   }
   function readJSON(key) {
     try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
@@ -116,10 +147,10 @@
   }
   function load() {
     var d = readJSON(KEY);
-    var r = d && cleanRows(d.rows);
+    var r = d && cleanRows(d.rows, d.lines);
     return r ? { rows: r, name: typeof d.name === 'string' ? d.name : '' } : null;
   }
-  function save() { writeJSON(KEY, { rows: rows, name: name }); }
+  function save() { writeJSON(KEY, { rows: rows, lines: packLines(rows), name: name }); }
 
   function loadSongs() {
     var list = readJSON(SONGS_KEY);
@@ -140,12 +171,12 @@
   // Ein einziger Autosave-Platz: hält die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
   function loadAuto() {
     var a = readJSON(AUTO_KEY);
-    var r = a && cleanRows(a.rows);
-    return r ? { rows: r, name: typeof a.name === 'string' ? a.name : '', savedAt: a.savedAt || 0 } : null;
+    var r = a && cleanRows(a.rows, a.lines);
+    return r ? { rows: r, lines: packLines(r), name: typeof a.name === 'string' ? a.name : '', savedAt: a.savedAt || 0 } : null;
   }
   function stashCurrent() {
     if (!hasNotes()) return;
-    writeJSON(AUTO_KEY, { rows: rows, name: name, savedAt: Date.now() });
+    writeJSON(AUTO_KEY, { rows: rows, lines: packLines(rows), name: name, savedAt: Date.now() });
   }
 
   var saved = load();
@@ -157,13 +188,14 @@
   var hist = [];
   var insertMode = false;
   var clean = false; // „Fertig“: Markierung und leere Plätze ausgeblendet
-  var pen = 1; // Länge für neue Töne und Pausen
 
-  // Ein Platz ist leer (null, ein stiller Schlag), eine Pause ({ d }) oder ein Ton ({ n, h, d })
   function isNote(c) { return !!(c && c.n); }
-  function isRest(c) { return !!(c && !c.n); }
+  function isBeat(c) { return !!(c && c.k === 'b'); }
+  function isRest(c) { return !!(c && c.k === 'r'); }
+  function filled(c) { return isNote(c) || !!(c && c.k); }
+  function sounds(c) { return isNote(c) || isBeat(c); }
   function dur(c) { return (c && c.d) || 1; }
-  function hasNotes() { return rows.some(function (row) { return row.some(isNote); }); }
+  function hasNotes() { return rows.some(function (row) { return row.some(filled); }); }
   // Platz hinter dem letzten Ton der letzten beschriebenen Zeile (Startposition)
   function appendPos() {
     for (var r = rows.length - 1; r >= 0; r--) if (rows[r].some(Boolean)) return { r: r, c: rows[r].length };
@@ -175,7 +207,20 @@
     while (row.length < c) row.push(null);
     row[c] = v;
   }
-  // Leere Plätze am Zeilenende fallen weg
+  // Ersetzt den Inhalt eines Platzes; ein Taktstrich davor bleibt stehen
+  function setCell(r, c, v) {
+    var prev = rows[r][c];
+    if (prev && prev.bar) { v = v || {}; v.bar = prev.bar; }
+    put(r, c, v);
+  }
+  // Inhalt eines Platzes ohne Taktstrich (zum Verschieben)
+  function content(c) {
+    if (!filled(c)) return null;
+    var o = {};
+    for (var k in c) if (k !== 'bar') o[k] = c[k];
+    return o;
+  }
+  // Leere Plätze am Zeilenende fallen weg (ein leerer Platz mit Taktstrich bleibt)
   function trimRow(r) { var row = rows[r]; while (row.length && !row[row.length - 1]) row.pop(); }
   // Ein Platz weiter in derselben Zeile – auch beim Austauschen, damit man mehrere Töne am Stück korrigieren kann.
   // Am Ende einer vollen Zeile bleibt die Markierung stehen.
@@ -185,7 +230,7 @@
     return false;
   }
   function snap() {
-    hist.push(JSON.stringify({ rows: rows, sel: sel, name: name }));
+    hist.push(JSON.stringify({ rows: rows, lines: packLines(rows), sel: sel, name: name }));
     if (hist.length > 60) hist.shift();
   }
 
@@ -208,7 +253,7 @@
   var HEAD = 'cx="9.4" cy="24.6" transform="rotate(-22 9.4 24.6)"';
   function noteSym(d, beam) {
     var s;
-    if (d === 4) s = '<ellipse cx="11" cy="22" rx="6.4" ry="4.3" fill="none" stroke-width="2.6"/>';
+    if (d === 4) s = '<ellipse cx="11" cy="24.6" rx="6.4" ry="4.3" fill="none" stroke-width="2.6"/>';
     else {
       s = '<path d="M14 24V2.5" stroke-width="2.4"/>' + (d >= 2
         ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="2.4"/>'
@@ -229,34 +274,56 @@
     return '<svg class="sym" viewBox="0 0 22 30" stroke="currentColor" stroke-linecap="round" aria-hidden="true">' + s + '</svg>';
   }
 
-  // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens
-  function cellHTML(cell, r, c, beyond, beam) {
+  // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens.
+  // line: Lage auf der Notenlinie der Zeile ('first', 'mid', 'last' oder leer)
+  // Taktart als zwei Zahlen übereinander
+  function meterHTML(m) {
+    var p = m.split('/');
+    return '<span class="mtr"><span>' + p[0] + '</span><span>' + p[1] + '</span></span>';
+  }
+  function cellHTML(cell, r, c, beyond, beam, line, meter) {
     var isSel = sel.r === r && sel.c === c;
     var where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
-    var dot, label, len = '';
+    var dot, label, len = '', stackCls = '';
     if (isNote(cell)) {
-      var n = BY[cell.n], d = dur(cell);
+      var n = BY[cell.n];
       dot = '<div class="dot' + (n.up ? ' up' : '') + '" style="' + colorStyle(n) + '">' + inner(n) + '</div>';
-      label = where + ': ' + n.n + ', ' + DUR_BY[d].n + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
-      len = noteSym(d, beam);
-    } else if (cell) {
-      dot = '<div class="dot rest">' + restSym(dur(cell)) + '</div>';
-      label = where + ': ' + DUR_BY[dur(cell)].p;
+      label = where + ': ' + n.n + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
+      if (cell.d) len = noteSym(cell.d, beam);
+    } else if (isBeat(cell)) {
+      dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
+      label = where + ': ' + DUR_BY[cell.d].n;
+      if (beam === 1) stackCls = ' bbeam';
+    } else if (isRest(cell)) {
+      dot = '<div class="dot rest">' + restSym(cell.d) + '</div>';
+      label = where + ': ' + DUR_BY[cell.d].p;
     } else {
       dot = '<div class="dot ghost"></div>';
       label = where + ': leer';
     }
-    var hand = (cell && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
-    return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot +
-      '<span class="len' + (beam === 1 ? ' beam' : '') + '">' + len + '</span>' + hand + '</div></div>';
+    if (cell && cell.bar) label += cell.bar === 2 ? ', Schlussstrich davor' : ', Taktstrich davor';
+    var hand = (isNote(cell) && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
+    return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') +
+      (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
+      '<div class="stack' + stackCls + '">' + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
+      (cell && cell.bar ? '<span class="barline' + (cell.bar === 2 ? ' final' : '') + '"></span>' : '') + dot +
+      '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + hand + '</div></div>';
   }
-  // Zwei Achtel hintereinander bekommen einen gemeinsamen Balken
+  // Zwei Achtel hintereinander bekommen einen gemeinsamen Balken – bunte Punkte untereinander, eigenständige Notenzeichen untereinander
   function beams(row) {
     var b = [];
+    function eighth(x) { return x && x.d === 0.5 && (isNote(x) || isBeat(x)); }
     for (var c = 0; c + 1 < row.length; c++) {
-      if (isNote(row[c]) && dur(row[c]) === 0.5 && isNote(row[c + 1]) && dur(row[c + 1]) === 0.5) { b[c] = 1; b[c + 1] = 2; c++; }
+      var a = row[c], z = row[c + 1];
+      if (eighth(a) && eighth(z) && isNote(a) === isNote(z)) { b[c] = 1; b[c + 1] = 2; c++; }
     }
     return b;
+  }
+  // Die Notenlinie läuft vom ersten bis zum letzten Zeichen der Zeile
+  function lineSpan(row) {
+    var last = -1;
+    row.forEach(function (x, c) { if (filled(x)) last = c; });
+    return last;
   }
 
   // Alle Zeilen haben so viele Plätze wie die längste Zeile plus einen freien Platz.
@@ -273,12 +340,17 @@
     var cols = colCount();
     grid.style.setProperty('--rows', rows.length);
     grid.style.setProperty('--cols', cols);
+    // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
+    grid.classList.toggle('meters', rows.some(function (row) { return row.meter; }));
     grid.classList.toggle('inserting', insertMode);
     grid.classList.toggle('clean', clean);
     grid.classList.toggle('nolen', !settings.lens);
     grid.innerHTML = rows.map(function (row, r) {
-      var cells = '', b = beams(row);
-      for (var c = 0; c < cols; c++) cells += cellHTML(row[c] || null, r, c, c >= row.length, b[c]);
+      var cells = '', b = beams(row), last = row.line ? lineSpan(row) : -1;
+      for (var c = 0; c < cols; c++) {
+        var line = c > last ? '' : last === 0 ? 'one' : c === 0 ? 'first' : c === last ? 'last' : 'mid';
+        cells += cellHTML(row[c] || null, r, c, c >= row.length, b[c], line, c === 0 ? row.meter : '');
+      }
       return '<div class="row"><span class="rownum">' + (r + 1) + '</span>' + cells + '</div>';
     }).join('');
     updateWide();
@@ -288,11 +360,21 @@
     btnR.classList.toggle('on', isNote(cur) && cur.h === 'r');
     btnL.classList.toggle('on', isNote(cur) && cur.h === 'l');
     btnR.disabled = btnL.disabled = !isNote(cur);
-    renderLens(cur);
+    renderValues(cur);
+    var hasBar = !!(cur && cur.bar === 1), hasEnd = !!(cur && cur.bar === 2), hasLine = !!rows[sel.r].line;
+    btnBar.classList.toggle('on', hasBar);
+    btnBar.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
+    btnEnd.classList.toggle('on', hasEnd);
+    btnEnd.setAttribute('aria-pressed', hasEnd ? 'true' : 'false');
+    btnLine.classList.toggle('on', hasLine);
+    btnLine.setAttribute('aria-pressed', hasLine ? 'true' : 'false');
+    var meter = rows[sel.r].meter;
+    meterShow.innerHTML = meter ? meterHTML(meter) : '<span class="mtr off"><span>?</span><span>?</span></span>';
+    btnMeter.classList.toggle('on', !!meter);
     btnIns.classList.toggle('on', insertMode);
     btnIns.setAttribute('aria-pressed', insertMode ? 'true' : 'false');
     delLabel.textContent = insertMode ? 'Lücke zu' : 'entfernen';
-    btnDel.disabled = insertMode ? sel.c >= rows[sel.r].length : !cur;
+    btnDel.disabled = insertMode ? sel.c >= rows[sel.r].length : !filled(cur);
     btnBreak.disabled = rows.length >= MAX_ROWS && !canStepDown();
     btnDone.classList.toggle('on', clean);
     btnDone.setAttribute('aria-pressed', clean ? 'true' : 'false');
@@ -314,41 +396,71 @@
   }
 
   /* ---------- Aktionen ---------- */
-  // id null setzt eine Pause. Beim Austauschen bleibt die Länge des alten Platzes, damit der Rhythmus stimmt;
-  // auf einem leeren Platz gilt die gewählte Länge.
+  // Bunter Punkt. Beim Austauschen bleiben r/l und ein Notenwert erhalten, damit der Rhythmus stimmt
+  // (auch wenn vorher ein eigenständiges Notenzeichen dort stand).
   function placeNote(id) {
-    if (insertMode) { insertNote(id); return; }
+    if (insertMode) { insertCell({ n: id, h: '' }); return; }
     snap();
-    var prev = rows[sel.r][sel.c];
-    var d = prev ? dur(prev) : pen;
-    put(sel.r, sel.c, id ? { n: id, h: isNote(prev) ? prev.h : '', d: d } : { d: d });
+    var prev = rows[sel.r][sel.c], v = { n: id, h: isNote(prev) ? prev.h : '' };
+    if (isNote(prev) || isBeat(prev)) { if (prev.d) v.d = prev.d; }
+    setCell(sel.r, sel.c, v);
     advance();
     commit();
   }
-  // Fügt den Ton an der Markierung ein; der Rest der Zeile rückt einen Platz weiter
-  function insertNote(id) {
+  // Notenwert: Auf einem bunten Punkt kommt er darunter, sonst wird das Notenzeichen eigenständig eingesetzt
+  function placeValue(d) {
+    var prev = rows[sel.r][sel.c];
+    if (insertMode) { insertCell({ k: 'b', d: d }); return; }
+    snap();
+    if (isNote(prev)) prev.d = d;
+    else setCell(sel.r, sel.c, { k: 'b', d: d });
+    advance();
+    commit();
+  }
+  function placeRest(d) {
+    if (insertMode) { insertCell({ k: 'r', d: d }); return; }
+    snap();
+    setCell(sel.r, sel.c, { k: 'r', d: d });
+    advance();
+    commit();
+  }
+  // Fügt an der Markierung ein; der Rest der Zeile rückt einen Platz weiter
+  function insertCell(v) {
     var row = rows[sel.r];
     if (row.length >= MAX_LEN) {
       toast('Die Zeile ist voll (' + MAX_LEN + ' Plätze). Entferne zuerst einen Ton oder mach einen Umbruch.', true);
       return;
     }
     snap();
-    var v = id ? { n: id, h: '', d: pen } : { d: pen };
     if (sel.c >= row.length) put(sel.r, sel.c, v);
     else row.splice(sel.c, 0, v);
     advance();
     commit();
   }
-  // Ändert die Länge des markierten Tons bzw. der Pause und merkt sie sich für die nächsten neuen Töne.
-  // Auf einem leeren Platz innerhalb der Zeile entsteht dabei eine Pause.
-  function setLen(d) {
-    pen = d;
-    var row = rows[sel.r], cell = row[sel.c];
-    if (cell ? dur(cell) !== d : sel.c < row.length) {
-      snap();
-      if (cell) cell.d = d; else row[sel.c] = { d: d };
-      commit();
-    } else render();
+  // Taktstrich (kind 1) oder Schlussstrich (kind 2) vor dem markierten Platz setzen, umstellen oder entfernen
+  function toggleBar(kind) {
+    snap();
+    var cell = rows[sel.r][sel.c];
+    if (cell && cell.bar === kind) {
+      delete cell.bar;
+      if (!filled(cell)) rows[sel.r][sel.c] = null;
+      trimRow(sel.r);
+    } else if (cell) cell.bar = kind;
+    else put(sel.r, sel.c, { bar: kind });
+    commit();
+  }
+  function toggleLine() {
+    snap();
+    rows[sel.r].line = !rows[sel.r].line;
+    commit();
+  }
+  // Taktart der markierten Zeile ('' = ohne)
+  function setMeter(m) {
+    closeMeterPop();
+    if (rows[sel.r].meter === m) return;
+    snap();
+    rows[sel.r].meter = m;
+    commit();
   }
   // Umbruch: Die Markierung und alles dahinter rutscht in eine neue Zeile darunter.
   // Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
@@ -360,13 +472,14 @@
     if (rows.length >= MAX_ROWS) return;
     snap();
     var rest = rows[sel.r].splice(sel.c);
+    rest.line = rows[sel.r].line;
     rows.splice(sel.r + 1, 0, rest);
     sel = { r: sel.r + 1, c: 0 };
     commit();
   }
   function setHand(h) {
     var cell = rows[sel.r][sel.c];
-    if (!cell) return;
+    if (!isNote(cell)) return;
     snap();
     cell.h = cell.h === h ? '' : h;
     commit();
@@ -374,9 +487,9 @@
   function deleteCell() {
     if (insertMode) { closeGap(); return; }
     var row = rows[sel.r];
-    if (!row[sel.c]) return;
+    if (!filled(row[sel.c])) return;
     snap();
-    row[sel.c] = null;
+    setCell(sel.r, sel.c, null);
     // Ein entfernter Ton am Zeilenende hinterlässt keine Pause
     if (sel.c === row.length - 1) trimRow(sel.r);
     commit();
@@ -393,7 +506,7 @@
     var s = hist.pop();
     if (!s) return;
     var d = JSON.parse(s);
-    rows = d.rows; sel = d.sel; name = d.name || '';
+    rows = attachLines(d.rows, d.lines); sel = d.sel; name = d.name || '';
     commit();
   }
   function addRow() {
@@ -446,6 +559,19 @@
     if (audio.state === 'suspended') audio.resume();
     return audio;
   }
+  // Kurzes Klopfen für eigenständige Notenzeichen (wie ein Holzblock)
+  function knock(out, t0) {
+    var o = audio.createOscillator(), g = audio.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(1100, t0);
+    o.frequency.exponentialRampToValueAtTime(550, t0 + 0.06);
+    g.gain.setValueAtTime(0.9, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
+    o.connect(g);
+    g.connect(out);
+    o.start(t0);
+    o.stop(t0 + 0.12);
+  }
   function tone(out, freq, t0, dur) {
     var o = audio.createOscillator(), g = audio.createGain();
     o.type = 'triangle';
@@ -474,7 +600,7 @@
       row.forEach(function (cell, c) {
         seq.push({ cell: cell, r: r, c: c, t: t });
         t += dur(cell);
-        if (isNote(cell)) { last = seq.length - 1; end = t; }
+        if (sounds(cell)) { last = seq.length - 1; end = t; }
       });
     });
     if (last < 0) { toast('Noch keine Töne auf der Tafel.', true); return; }
@@ -487,6 +613,7 @@
     play = { out: out, timers: [], cur: null };
     seq.slice(0, last + 1).forEach(function (s) {
       if (isNote(s.cell)) tone(out, BY[s.cell.n].f, t0 + s.t * step, dur(s.cell) * step * 0.9);
+      else if (isBeat(s.cell)) knock(out, t0 + s.t * step);
       var pos = { r: s.r, c: s.c };
       play.timers.push(setTimeout(function () {
         play.cur = pos;
@@ -513,28 +640,59 @@
       '" style="' + colorStyle(n) + '" aria-label="' + n.n + '">' + inner(n) + '</button>';
   }
   function renderPalette() {
-    // Der Pause-Knopf sitzt in der letzten Gruppe hinter Fis und B
-    palette.innerHTML = GROUPS.map(function (g, i) {
-      return '<div class="pal">' + g.map(function (id) { return noteBtn(BY[id]); }).join('') +
-        (i === GROUPS.length - 1 ? '<button type="button" class="note pause" data-id="" aria-label="Pause">' + restSym(1) + '</button>' : '') + '</div>';
+    palette.innerHTML = GROUPS.map(function (g) {
+      return '<div class="pal">' + g.map(function (id) { return noteBtn(BY[id]); }).join('') + '</div>';
     }).join('');
   }
   palette.addEventListener('click', function (e) {
     var b = e.target.closest('.note');
-    if (b) placeNote(b.dataset.id || null);
+    if (b) placeNote(b.dataset.id);
   });
-  // Die Knöpfe zeigen Pausenzeichen, solange die Markierung auf einer Pause oder einem leeren Platz in der Zeile steht
-  function renderLens(cur) {
-    var asRest = !isNote(cur) && sel.c < rows[sel.r].length;
-    var on = cur ? dur(cur) : pen;
-    lensEl.innerHTML = DURS.map(function (x) {
-      return '<button type="button" class="btn' + (x.d === on ? ' on' : '') + '" data-d="' + x.d + '" aria-pressed="' + (x.d === on) +
-        '" title="' + (asRest ? x.p : x.n) + '">' + (asRest ? restSym(x.d) : noteSym(x.d)) + '<span class="small">' + x.l + '</span></button>';
+  // Notenwerte und Pausenwerte; hervorgehoben ist der Wert des markierten Platzes
+  function valueBtns(on, sym, names) {
+    return DURS.map(function (x) {
+      return '<button type="button" class="btn' + (x.d === on ? ' on' : '') + '" data-d="' + x.d + '" title="' + x[names] +
+        '" aria-label="' + x[names] + '">' + sym(x.d) + '<span class="small">' + x.l + '</span></button>';
     }).join('');
   }
-  lensEl.addEventListener('click', function (e) {
+  function renderValues(cur) {
+    valuesEl.innerHTML = valueBtns((isNote(cur) || isBeat(cur)) && cur.d, noteSym, 'n');
+    restsEl.innerHTML = valueBtns(isRest(cur) && cur.d, restSym, 'p');
+  }
+  valuesEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-d]');
-    if (b) setLen(+b.dataset.d);
+    if (b) placeValue(+b.dataset.d);
+  });
+  restsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-d]');
+    if (b) placeRest(+b.dataset.d);
+  });
+  btnBar.addEventListener('click', function () { toggleBar(1); });
+  btnEnd.addEventListener('click', function () { toggleBar(2); });
+  btnLine.addEventListener('click', toggleLine);
+
+  // Auswahl der Taktart: kleines Feld unter den Werkzeugen
+  function openMeterPop() {
+    var cur = rows[sel.r].meter;
+    meterPop.innerHTML = [''].concat(METERS).map(function (m) {
+      return '<button type="button" class="btn' + (m === cur ? ' on' : '') + '" data-m="' + m + '" aria-label="' + (m ? 'Taktart ' + m : 'ohne Taktart') + '">' +
+        (m ? meterHTML(m) : '<span class="small">ohne</span>') + '</button>';
+    }).join('');
+    meterPop.hidden = false;
+    btnMeter.setAttribute('aria-expanded', 'true');
+  }
+  function closeMeterPop() {
+    meterPop.hidden = true;
+    btnMeter.setAttribute('aria-expanded', 'false');
+  }
+  btnMeter.addEventListener('click', function () { if (meterPop.hidden) openMeterPop(); else closeMeterPop(); });
+  meterPop.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-m]');
+    if (b) setMeter(b.dataset.m);
+  });
+  // Ein Tipp irgendwo anders schließt die Auswahl
+  document.addEventListener('pointerdown', function (e) {
+    if (!meterPop.hidden && !meterPop.contains(e.target) && !btnMeter.contains(e.target)) closeMeterPop();
   });
 
   btnR.addEventListener('click', function () { setHand('r'); });
@@ -603,7 +761,7 @@
     var list = loadSongs();
     var rest = list.filter(function (s) { return s.name.toLowerCase() !== n.toLowerCase(); });
     var doSave = function () {
-      rest.unshift({ name: n, rows: rows, savedAt: Date.now() });
+      rest.unshift({ name: n, rows: rows, lines: packLines(rows), savedAt: Date.now() });
       if (!writeJSON(SONGS_KEY, rest)) { hint('Speichern hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
       name = n;
       save();
@@ -617,7 +775,7 @@
   function loadSong(s) {
     snap();
     stashCurrent();
-    rows = cleanRows(s.rows);
+    rows = cleanRows(s.rows, s.lines);
     name = s.name;
     sel = appendPos();
     closeMenu();
@@ -671,7 +829,7 @@
   melodiesEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-melody]');
     var m = b && MELODIES[+b.dataset.melody];
-    if (m) loadSong({ name: m.name, rows: melodyRows(m) });
+    if (m) { var rs = melodyRows(m); loadSong({ name: m.name, rows: rs, lines: packLines(rs) }); }
   });
   autoEl.addEventListener('click', function (e) {
     if (!e.target.closest('[data-auto]')) return;
@@ -733,7 +891,7 @@
   grid.addEventListener('pointermove', function (e) {
     if (!drag || e.pointerId !== drag.id) return;
     if (!drag.active) {
-      if (!rows[drag.r][drag.c]) return;
+      if (!filled(rows[drag.r][drag.c])) return;
       if (clean) { clean = false; render(); }
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 12) return;
       beginDrag();
@@ -753,9 +911,9 @@
       var t = cancel ? null : cellAt(e.clientX, e.clientY);
       if (t && (t.r !== d.r || t.c !== d.c)) {
         snap();
-        var a = rows[d.r][d.c], b = rows[t.r][t.c] || null;
-        rows[d.r][d.c] = b;
-        put(t.r, t.c, a);
+        var a = content(rows[d.r][d.c]), b = content(rows[t.r][t.c]);
+        setCell(d.r, d.c, b);
+        setCell(t.r, t.c, a);
         // Wird der letzte Ton einer Zeile weggezogen, wird die Zeile kürzer statt eine Pause zu behalten
         if (!b && d.c === rows[d.r].length - 1) trimRow(d.r);
         sel = { r: t.r, c: t.c };

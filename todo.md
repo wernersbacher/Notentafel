@@ -7,10 +7,10 @@ todo
 
 - zählzeit, bei 4/4 takt
 
-- 2/8 nacheinander mit balken (wie in echt)
-- noten darstellung tooglen
-- sowieso mehr abstand zwischen zeilen
-- pausenzeichen einführen
+- [x] 2/8 nacheinander mit balken (wie in echt)
+- [x] noten darstellung tooglen
+- [x] sowieso mehr abstand zwischen zeilen
+- [x] pausenzeichen einführen
 
 - glockenspiel oben
 

@@ -136,6 +136,59 @@ body {
 .grid.nolen .stack { --d: max(24px, min(84cqw, calc(100cqh - 2.6rem))); }
 .grid.nolen .len { display: none; }
 .sym { display: block; height: 100%; width: auto; overflow: visible; }
+/* Notenlinie: läuft auf Höhe der Kreismitte vom ersten bis zum letzten Zeichen, hinter den Kreisen */
+.cell { position: relative; }
+.stack { position: relative; z-index: 0; }
+.cell[class*="line-"] .stack::before {
+  content: ""; position: absolute; z-index: -1;
+  top: calc(var(--d) / 2 - 1.5px); height: 3px; left: -3px; right: -3px;
+  background: var(--fg);
+}
+.cell.line-first .stack::before { left: 50%; }
+.cell.line-last .stack::before { right: 50%; }
+.cell.line-one .stack::before { left: 10%; right: 10%; }
+/* Taktart: zwei Zahlen übereinander vor dem ersten Platz, die Notenlinie läuft zwischen ihnen hindurch.
+   Steht irgendwo eine Taktart, wird die Spalte vor den Plätzen in allen Zeilen breiter, damit sie untereinander bleiben. */
+.grid.meters { min-width: calc(4.2rem + var(--cols, 1) * 46px); }
+.grid.meters .row { grid-template-columns: 4.2rem repeat(var(--cols, 1), minmax(0, 7rem)); }
+.grid.meters .rownum { justify-self: start; width: 1.5rem; }
+.mtr {
+  display: inline-flex; flex-direction: column; align-items: center;
+  font-family: var(--font-display); font-weight: 700; line-height: .9;
+}
+.meter {
+  position: absolute; right: calc(100% + 6px + .35rem); top: calc(var(--d) / 2);
+  transform: translateY(-50%); color: var(--fg);
+}
+.meter .mtr { font-size: calc(var(--d) * .42); gap: calc(var(--d) * .08); }
+.cell.has-meter.line-first .stack::before,
+.cell.has-meter.line-one .stack::before { left: calc(-6px - 2.6rem); }
+/* Taktstrich in der Lücke vor dem Platz, so hoch wie Kreis und Notenzeichen */
+.barline {
+  position: absolute; left: -4.5px; top: calc(var(--d) * -.2);
+  height: calc(var(--d) * 1.6); width: 3px; border-radius: 2px; background: var(--fg);
+}
+.grid.nolen .barline { height: calc(var(--d) * 1.4); }
+/* Schlussstrich: dünner und dicker Strich, der dicke direkt vor dem Platz */
+.barline.final {
+  left: -9px; width: 9px; border-radius: 0; background: none;
+  border-left: 2px solid var(--fg); border-right: 5px solid var(--fg);
+}
+/* Eigenständiges Notenzeichen statt Punkt: Notenkopf sitzt auf der Kreismitte (also auf der Notenlinie) */
+.dot.beat { position: relative; background: none; box-shadow: none; color: var(--fg); }
+.dot.beat .sym {
+  position: absolute; left: 50%; top: calc(var(--d) * -.156);
+  height: calc(var(--d) * .8); transform: translateX(-50%);
+}
+.cell.sel .dot.beat { box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
+.grid.clean .cell.sel .dot.beat { box-shadow: none; }
+/* Balken zweier eigenständiger Achtel: Hals .08 × Kreis rechts der Mitte, .064 breit, Oberkante .089 über dem Kreis */
+.stack.bbeam::after {
+  content: ""; position: absolute;
+  left: calc(50% + var(--d) * .048); top: calc(var(--d) * -.089);
+  width: calc(100% + 6px + var(--d) * .064); height: calc(var(--d) * .12);
+  background: var(--fg);
+}
 /* Balken von Hals zu Hals zweier Achtel: Hals liegt .05 × Kreis rechts der Mitte und ist .04 × Kreis breit, Platzabstand 6px */
 .len.beam::after {
   content: ""; position: absolute;
@@ -199,7 +252,7 @@ body {
   background: var(--panel);
   border-radius: 18px;
   padding: 16px;
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 10px;
   overflow-y: auto; min-height: 0; min-width: 0;
 }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -223,30 +276,45 @@ body {
 .ico { width: 1.25rem; height: 1.25rem; flex: none; }
 .btn .big .ico { width: 1.5rem; height: 1.5rem; display: block; }
 
-.tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tools { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .tools .btn { flex-direction: column; gap: .15rem; min-height: 58px; padding: .3rem .15rem; }
 .tools .btn .small { font-size: .72rem; }
+.tools { position: relative; }
+#meterShow .mtr { font-size: .85rem; }
+#meterShow .mtr.off { opacity: .45; }
+/* Auswahl der Taktart, schwebt unter den Werkzeugen */
+.meterpop {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
+  padding: 8px; background: var(--panel);
+  border: 2px solid var(--btn-line); border-radius: 14px;
+  box-shadow: 0 10px 24px var(--shadow);
+}
+.meterpop .btn { min-height: 54px; padding: 0; }
+.meterpop .mtr { font-size: 1.05rem; }
 
-.palette { display: flex; flex-direction: column; gap: 16px; }
-.pal { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.palette { display: flex; flex-direction: column; gap: 10px; }
+.pal { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .note {
   aspect-ratio: 1; border: 0; border-radius: 50%;
   background: var(--c); color: #000;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font: 700 1.9rem/1 var(--font-display);
+  font: 700 1.7rem/1 var(--font-display);
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16);
   cursor: pointer; touch-action: manipulation; padding: 0;
 }
 .note:active { transform: scale(.93); }
-.note.pause { background: var(--btn); color: var(--fg); border: 3px solid var(--line); box-shadow: none; }
-.note.pause .sym { height: 1.15em; }
-.lens { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
-.lens .btn { flex-direction: column; gap: .1rem; min-height: 56px; padding: .3rem .1rem; }
-.lens .sym { height: 1.6rem; }
-.lens .btn .small { font-size: .8rem; }
+/* Gruppen der Leiste: Notennamen, Notenwerte, Pausenwerte */
+.group { display: flex; flex-direction: column; gap: 6px; }
+.glabel { margin: 0; font: 800 .75rem var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.glabel span { text-transform: none; letter-spacing: 0; font-weight: 700; }
+.values { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.values .btn { flex-direction: column; gap: .1rem; min-height: 50px; padding: .3rem .1rem; }
+.values .sym { height: 1.6rem; }
+.values .btn .small { font-size: .8rem; }
 .note.up .ltr { font-size: .9em; }
-.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
-.actions .play { grid-column: 1 / -1; }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
+.actions .play { grid-column: span 2; }
 
 /* ---------- Menü (Slide-in) ---------- */
 .backdrop {
@@ -329,8 +397,14 @@ body {
     <div class="tools">
       <button type="button" class="btn" id="btnR" title="Rechte Hand"><span class="big">r</span><span class="small">rechts</span></button>
       <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
-      <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
+      <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
+      </button>
+      <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Takt</span>
+      </button>
+      <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
       </button>
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
@@ -338,14 +412,30 @@ body {
       <button type="button" class="btn" id="btnDel" title="Ton entfernen">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></span><span class="small" id="delLabel">entfernen</span>
       </button>
+      <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
+      </button>
       <button type="button" class="btn" id="btnDone" aria-pressed="false" title="Markierung und leere Plätze ausblenden">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">fertig</span>
       </button>
+      <button type="button" class="btn" id="btnMeter" aria-haspopup="true" aria-expanded="false" aria-controls="meterPop" title="Taktart der markierten Zeile">
+        <span id="meterShow"></span><span class="small">Taktart</span>
+      </button>
+      <div class="meterpop" id="meterPop" role="group" aria-label="Taktart wählen" hidden></div>
     </div>
 
-    <div class="lens" id="lens" role="group" aria-label="Tonlänge in Schlägen"></div>
-
-    <div class="palette" id="palette"></div>
+    <section class="group">
+      <h2 class="glabel">Notennamen</h2>
+      <div class="palette" id="palette"></div>
+    </section>
+    <section class="group">
+      <h2 class="glabel">Notenwerte <span>unter einen Punkt oder allein</span></h2>
+      <div class="values" id="values"></div>
+    </section>
+    <section class="group">
+      <h2 class="glabel">Pausenwerte</h2>
+      <div class="values" id="rests"></div>
+    </section>
 
     <div class="actions">
       <button type="button" class="btn play" id="btnPlay"></button>

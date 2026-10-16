@@ -17,8 +17,13 @@ Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ord
 - **Zeilen:** Eine Zeile wird so lang, wie man schreibt (bis 32 Plätze). Werden die Zeilen länger, schrumpfen alle Kreise gleichmäßig. Wenn sie zu klein würden, lässt sich die Tafel seitlich wischen. Blasse Plätze liegen hinter dem Zeilenende.
 - **Umbruch:** Die Markierung und alles dahinter rutschen in eine neue Zeile darunter. Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
 - **Fertig:** Blendet die Markierung und die leeren Plätze aus, damit eine saubere Ansicht für die Klasse bleibt. Ein Tipp auf die Tafel oder ein neuer Ton holt alles zurück.
-- **Tonlänge:** Die Knöpfe **½ · 1 · 2 · 3 · 4** (Schläge: Achtel, Viertel, Halbe, punktierte Halbe, Ganze) ändern die Länge des markierten Tons. Steht die Markierung auf einem leeren Platz, gilt die Länge für die nächsten neuen Töne. Unter dem Kreis steht das Notenzeichen, zwei Achtel hintereinander werden mit einem Balken verbunden. Beim Austauschen eines Tons bleibt seine Länge erhalten.
-- **Pause:** Der Knopf mit dem Pausenzeichen (neben Fis und B) setzt eine sichtbare Pause mit der gewählten Länge. Die Länge einer Pause ändert man wie bei Tönen über die Längenknöpfe, die dann Pausenzeichen zeigen. Ein leerer Platz in der Zeile bleibt ein stiller Schlag ohne Zeichen.
+- **Die Leiste** ist gegliedert in Werkzeuge, **Notennamen** (die bunten Punkte), **Notenwerte** und **Pausenwerte**. Die Zahlen unter den Werten sind Schläge (½ Achtel, 1 Viertel, 2 Halbe, 3 punktierte Halbe, 4 Ganze).
+- **Notenwerte:** Steht die Markierung auf einem bunten Punkt, kommt das Notenzeichen darunter. Auf einem leeren Platz wird es eigenständig eingesetzt, anstelle eines Punkts, und klingt beim Abspielen als Klopfen. In beiden Fällen springt die Markierung weiter. So kann man erst die Töne schreiben und dann von vorn den Rhythmus darunter tippen. Bunte Punkte ohne Notenwert zählen einen Schlag. Wird ein Punkt ausgetauscht, behält er seinen Notenwert. Zwei Achtel hintereinander bekommen einen Balken.
+- **Pausenwerte** setzen eine Pause mit Pausenzeichen. Ein leerer Platz in der Zeile bleibt ein stiller Schlag ohne Zeichen.
+- **Takt:** Setzt oder entfernt einen Taktstrich vor dem markierten Platz. Er belegt keinen eigenen Platz und bleibt stehen, wenn der Ton dahinter ersetzt, verschoben oder entfernt wird.
+- **Taktart:** Öffnet eine Auswahl (ohne, 2/2, 2/4, 3/4, 4/4, 6/8) für die markierte Zeile. Die Taktart steht als zwei Zahlen übereinander ganz vorn in der Zeile, eine eingeschaltete Notenlinie läuft zwischen ihnen hindurch. Die bekannten Lieder bringen ihre Taktart in der ersten Zeile mit.
+- **Schluss:** Wie „Takt“, setzt aber einen Schlussstrich (dünner und dicker Strich). Auf einem Platz mit Taktstrich wird daraus ein Schlussstrich und umgekehrt.
+- **Linie:** Schaltet für die markierte Zeile eine Notenlinie ein oder aus. Sie läuft durch die Kreismitte vom ersten bis zum letzten Zeichen und wächst mit. Die Köpfe eigenständiger Notenzeichen sitzen auf der Linie.
 - **Platz wählen:** Auf der Tafel einen Platz antippen.
 - **Verschieben/Tauschen:** Einen Ton auf der Tafel ziehen und auf einem anderen Platz loslassen.
 - **r / l:** Markiert den Ton für die rechte oder linke Hand.
@@ -33,9 +38,9 @@ Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ord
 
 - **Lied speichern / laden / löschen.** Gleicher Name heißt ersetzen (mit Rückfrage).
 - **Zuletzt ersetzt:** Die aktuelle Tafel wird ohnehin laufend gesichert. Lädt man ein anderes Lied oder tippt „Alles löschen“, wandert die bisherige Tafel in diesen einen Autosave-Platz und lässt sich von dort wieder laden (auch nach dem Schließen). Beim Laden tauschen Tafel und Autosave die Plätze.
-- **Bekannte Lieder:** Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `notentafel.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`). Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
+- **Bekannte Lieder:** Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `notentafel.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
 - **Farben:** Zur Wahl stehen *Original* und *Oktavfarben* (hohe Töne in der Farbe ihres Grundtons).
-- **Notenzeichen** unter den Tönen ein- und ausschalten. Ausgeschaltet werden die Kreise größer. Die Längen gelten beim Abspielen trotzdem, und Pausenzeichen bleiben sichtbar.
+- **Notenzeichen** unter den bunten Punkten ein- und ausschalten. Ausgeschaltet werden die Kreise größer. Die Werte gelten beim Abspielen trotzdem, eigenständige Notenzeichen und Pausen bleiben sichtbar.
 - **Tempo** beim Abspielen (50–160 pro Minute).
 
 ## Speicherung

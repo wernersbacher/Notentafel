@@ -1,0 +1,47 @@
+/* ---------- Menü (Slide-in) ---------- */
+.backdrop {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(0, 0, 0, .35);
+}
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 90;
+  width: min(380px, 100vw);
+  background: var(--panel); color: var(--fg);
+  box-shadow: -10px 0 30px var(--shadow);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) 16px;
+  display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto; overscroll-behavior: contain;
+  transform: translateX(105%); visibility: hidden;
+  transition: transform .22s ease, visibility 0s linear .22s;
+}
+.drawer.open { transform: none; visibility: visible; transition: transform .22s ease; }
+.drawer h2 { font: 700 1.3rem var(--font-display); margin: 0; }
+.drawer h3 { font: 800 .8rem var(--font-ui); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.drawer .hint { margin: 6px 0 0; font-size: .85rem; color: var(--muted); min-height: 1.2em; }
+.drawer .hint.warn { color: var(--danger); }
+.songs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.song {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center;
+  background: var(--btn); border: 2px solid var(--btn-line); border-radius: 12px; padding: 6px 6px 6px 12px;
+}
+.song.current { border-color: var(--fg); }
+.song.one { grid-template-columns: minmax(0, 1fr) auto; }
+.song .name { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.song .date { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); }
+.song .btn { min-height: 44px; font-size: .85rem; }
+.empty { margin: 0; font-size: .88rem; color: var(--muted); }
+.themes { display: flex; flex-direction: column; gap: 8px; }
+.theme {
+  text-align: left; flex-direction: column; align-items: stretch; gap: 6px;
+  padding: 10px 12px; font-weight: 700;
+}
+.theme .desc { font-size: .78rem; font-weight: 700; opacity: .8; }
+.swatches { display: flex; gap: 5px; }
+.swatches span { width: 22px; height: 22px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--board); }
+.temporow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.temporow input { width: 100%; min-height: 44px; accent-color: var(--fg); }
+.temporow output { font-weight: 800; min-width: 6.5em; text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer, .drawer.open { transition: none; }
+}

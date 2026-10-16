@@ -4,12 +4,36 @@ Eine digitale Notentafel für den Musikunterricht. Gebaut fürs **Tablet mit Tou
 
 ## Dateien
 
+Reines HTML, CSS und JavaScript ohne Build-Schritt und ohne Abhängigkeiten. Das Skript besteht aus ES-Modulen (`<script type="module">`).
+
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Aufbau und Gestaltung (HTML + CSS) |
-| `notentafel.js` | Die gesamte Logik |
+| `index.html` | Aufbau der Seite |
+| `css/base.css` | Farben, Schriften, Grundlayout, Knöpfe |
+| `css/board.css` | Die Tafel |
+| `css/side.css` | Die Leiste |
+| `css/menu.css` | Das Menü |
+| `js/main.js` | Einstieg: verdrahtet alles und zeichnet die Tafel |
+| `js/config.js` | Töne (`NOTES`, `GROUPS`), Farbthemen, Notenwerte, Taktarten |
+| `js/melodies.js` | Die bekannten Lieder (`MELODIES`) |
+| `js/model.js` | Datenmodell der Tafel (reine Funktionen) und Prüfung gespeicherter Stände |
+| `js/theory.js` | Taktarten, Zählzeiten, automatische Taktstriche |
+| `js/storage.js` | Lesen und Schreiben im `localStorage` |
+| `js/state.js` | Laufender Zustand (Tafel, Markierung, Rückgängig, Einstellungen) |
+| `js/actions.js` | Alles, was die Tafel verändert |
+| `js/render.js` | Neu zeichnen (`render`) und Änderung abschließen (`commit`) |
+| `js/board.js` | Darstellung der Tafel |
+| `js/sidebar.js` | Darstellung der Leiste |
+| `js/symbols.js` | SVG-Zeichen für Noten, Pausen, Taktarten |
+| `js/controls.js` | Bedienung der Leiste |
+| `js/input.js` | Antippen und Ziehen auf der Tafel |
+| `js/menu.js` | Das Menü |
+| `js/player.js`, `js/audio.js` | Abspielen und Klangerzeugung |
+| `js/ui.js`, `js/dom.js` | Einblendung, Nochmal-tippen-Bestätigung, Popups, Element-Verweise |
 
-Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ordner liegen. Ein Server ist nicht nötig, und die App funktioniert auch offline. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
+**Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository. Pushen reicht, es gibt nichts zu bauen.
+
+**Lokal starten:** Module laden nicht über `file://`, darum braucht man einen kleinen lokalen Server im Projektordner, z. B. `npx serve` oder `python -m http.server`, und öffnet dann die angezeigte Adresse. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
 
 ## Bedienung
 
@@ -47,7 +71,7 @@ Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ord
 - Das Menü gehört immer zum offenen Bereich (Titel „Menü · Melodie“ bzw. „Menü · Rhythmus“). Melodien und Rhythmen werden in **getrennten Listen** gespeichert und in die Tafel des offenen Bereichs geladen.
 - **Lied speichern / laden / löschen.** Gleicher Name heißt ersetzen (mit Rückfrage).
 - **Zuletzt ersetzt:** Die aktuelle Tafel wird ohnehin laufend gesichert. Lädt man ein anderes Lied oder tippt „Alles löschen“, wandert die bisherige Tafel in den Autosave-Platz ihres Bereichs (einer pro Bereich) und lässt sich von dort wieder laden (auch nach dem Schließen). Beim Laden tauschen Tafel und Autosave die Plätze.
-- **Bekannte Lieder** (nur im Bereich Melodie): Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `notentafel.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
+- **Bekannte Lieder** (nur im Bereich Melodie): Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `js/melodies.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
 - **Farben:** Zur Wahl stehen *Original* und *Oktavfarben* (hohe Töne in der Farbe ihres Grundtons).
 - **Notenzeichen** unter den bunten Punkten ein- und ausschalten. Ausgeschaltet werden die Kreise größer. Die Werte gelten beim Abspielen trotzdem, eigenständige Notenzeichen und Pausen bleiben sichtbar.
 - **Breite nach Notenlänge:** Jedes Zeichen bekommt so viel Platz, wie es dauert. Ein Schlag ist einen Kreis breit, also eine Viertel (und ein bunter Punkt ohne Notenwert) so breit wie sonst ein Platz, eine Halbe doppelt, eine Ganze viermal. Steht auf einem Schlag eine Achtel, wird dieser Schlag in dieser Zeile zwei Kreise breit, damit die Achtel genauso groß bleiben wie alle anderen Zeichen. Jede Zeile wird für sich eingeteilt, die Taktstriche stehen also nicht unbedingt untereinander. Alle Kreise sind in allen Zeilen gleich groß; erst wenn die längste Zeile nicht mehr passt, schrumpft alles. Das Zeichen steht vorn in seinem Platz, gehaltene Zählzeiten stehen darunter an ihrer Stelle.
@@ -68,7 +92,7 @@ Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet,
 
 ## Bewusste Entscheidungen
 
-- **Halbtöne:** Absichtlich gibt es nur **Fis** und **B**, weil das für das verwendete Liedgut reicht. Weitere (Cis, Es, Gis …) lassen sich in `notentafel.js` über die Liste `NOTES` und die Gruppen in `GROUPS` ergänzen.
+- **Halbtöne:** Absichtlich gibt es nur **Fis** und **B**, weil das für das verwendete Liedgut reicht. Weitere (Cis, Es, Gis …) lassen sich in `js/config.js` über die Liste `NOTES` und die Gruppen in `GROUPS` ergänzen.
 - **Schrift auf den Tönen immer schwarz:** Darum muss jede Tonfarbe hell genug sein (Kontrast ≥ 4,5). Das A ist deshalb ein helleres Lila. Neue Farben in `NOTES` bitte auch daraufhin prüfen.
 - **Hohe Töne im Original-Thema alle rot:** Das ist gewollt. Wer die Oktave farblich zuordnen will, nimmt das Thema *Oktavfarben*.
 - **Keine Tastaturbedienung als Hauptweg:** Die App ist für Touch gedacht.

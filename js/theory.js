@@ -1,0 +1,57 @@
+// Taktarten, Zählzeiten und automatische Taktstriche
+import { filled, dur, lineSpan } from './model.js';
+
+// Taktart als Zahlen: n Zählzeiten im Takt, jede unit Schläge lang (Schlag = Viertel)
+export function meterInfo(m) {
+  const [n, base] = m.split('/'), unit = 4 / +base;
+  return { n: +n, unit, len: +n * unit };
+}
+// Taktart, die für eine Zeile gilt: die eigene oder die zuletzt darüber gesetzte
+export function meterOf(rows, r) {
+  for (; r >= 0; r--) if (rows[r].meter) return rows[r].meter;
+  return '';
+}
+// Wie viele Zählzeiten man unter ein Zeichen tippt (z. B. zwei für eine Halbe im 4/4-Takt)
+export function countSlots(rows, r, cell) {
+  const m = meterOf(rows, r), unit = m ? meterInfo(m).unit : 1;
+  return Math.max(1, Math.round(dur(cell) / unit));
+}
+// Zählzeiten eines Zeichens, das an Stelle p im Takt beginnt und d Schläge dauert.
+// Auf der Zählzeit steht die Zahl, genau dazwischen „+“; gehaltene Zählzeiten folgen blasser.
+function countsAt(p, d, mi) {
+  const out = [], q = p / mi.unit, k = Math.floor(q);
+  if (q === k) out.push({ t: String(k + 1) });
+  else if (q - k === 0.5) out.push({ t: '+' });
+  // o: Abstand zum Anfang des Zeichens in Achteln (für „Breite nach Notenlänge“)
+  for (let x = k + 1; x < mi.n && x * mi.unit < p + d; x++) out.push({ t: String(x + 1), held: true, o: (x * mi.unit - p) * 2 });
+  return out;
+}
+// Automatische Taktstriche und Zählzeiten. Gezählt wird ab der ersten Zeile mit Taktart über die Zeilen hinweg;
+// eine neue Taktart beginnt wieder bei 1. Pro Zeile: b[c] = Taktstrich vor Platz c, z[c] = Zählzeiten.
+// Geht ein Takt genau am Zeilenende auf, steht der Taktstrich hinter dem letzten Zeichen.
+export function autoMarks(rows, on) {
+  const res = { rows: [], any: false };
+  if (!on) return res;
+  let mi = null, pos = 0;
+  rows.forEach((row, r) => {
+    const a = res.rows[r] = { b: {}, z: [] };
+    if (row.meter) { mi = meterInfo(row.meter); pos = 0; }
+    if (!mi) return;
+    const last = lineSpan(row);
+    for (let c = 0; c <= last; c++) {
+      const p = pos % mi.len;
+      if (c > 0 && pos > 0 && p === 0) a.b[c] = 1;
+      if (filled(row[c])) { a.z[c] = countsAt(p, dur(row[c]), mi); res.any = true; }
+      pos += dur(row[c]);
+    }
+    if (last >= 0 && pos % mi.len === 0) a.b[last + 1] = 1;
+  });
+  return res;
+}
+// Strich vor Platz c: 0 keiner, 1 Taktstrich, 2 Schlussstrich. a sind die automatischen Marken der Zeile.
+// Der Schlussstrich bleibt immer stehen; von Hand gesetzte Taktstriche weichen den automatischen.
+export function barAt(cell, c, a, autoBar) {
+  if (cell && cell.bar === 2) return 2;
+  if (autoBar) return a && a.b[c] ? 1 : 0;
+  return cell && cell.bar ? 1 : 0;
+}

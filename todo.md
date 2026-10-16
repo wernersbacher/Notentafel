@@ -5,7 +5,7 @@ todo
 - oktavfarben als standard
 - kleines l fixen
 
-- zählzeit, bei 4/4 takt
+- [x] zählzeit, bei 4/4 takt
 
 - [x] 2/8 nacheinander mit balken (wie in echt)
 - [x] noten darstellung tooglen

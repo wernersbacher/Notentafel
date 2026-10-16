@@ -2,8 +2,14 @@
   'use strict';
   // Zeilen sind beliebig lang (bis MAX_LEN)
   var MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
-  var KEY = 'notentafel.v1', SONGS_KEY = 'notentafel.songs.v1', SETTINGS_KEY = 'notentafel.settings.v1',
-      AUTO_KEY = 'notentafel.autosave.v1';
+  var SETTINGS_KEY = 'notentafel.settings.v1';
+  // Melodie und Rhythmus haben je eine eigene Tafel, eigene gespeicherte Lieder und einen eigenen Autosave-Platz.
+  // Die Melodie behält die alten Schlüssel, damit bisherige Stände dort weiterleben.
+  var KEYS = {
+    mel: { board: 'notentafel.v1', songs: 'notentafel.songs.v1', auto: 'notentafel.autosave.v1' },
+    rhy: { board: 'notentafel.rhy.v1', songs: 'notentafel.rhy.songs.v1', auto: 'notentafel.rhy.autosave.v1' }
+  };
+  function K() { return KEYS[settings.mode]; }
 
   // f = Frequenz in Hz (C = c', hohe Töne eine Oktave darüber).
   // Die Schrift ist auf allen Tönen schwarz; jede Farbe muss dafür hell genug sein (Kontrast ≥ 4,5).
@@ -75,27 +81,35 @@
   THEMES.forEach(function (t) { THEME_BY[t.id] = t; });
 
   var $ = function (id) { return document.getElementById(id); };
-  var grid = $('grid'), toastEl = $('toast'), palette = $('palette'), valuesEl = $('values'), restsEl = $('rests');
+  var grid = $('grid'), toastEl = $('toast'), palette = $('palette'), valuesEl = $('values'), restsEl = $('rests'),
+      valuesMelEl = $('valuesMel'), countsEl = $('counts');
   var board = grid.parentNode;
   var btnR = $('btnR'), btnL = $('btnL'), btnIns = $('btnIns'), btnDel = $('btnDel'), delLabel = $('delLabel'),
       btnBreak = $('btnBreak'), btnDone = $('btnDone'), btnBar = $('btnBar'), btnEnd = $('btnEnd'), btnLine = $('btnLine'),
       btnMeter = $('btnMeter'), meterShow = $('meterShow'), meterPop = $('meterPop'),
       btnPlay = $('btnPlay'), btnUndo = $('btnUndo'), btnClear = $('btnClear'),
-      btnAddRow = $('btnAddRow'), btnDelRow = $('btnDelRow'), btnMenu = $('btnMenu');
+      btnAddRow = $('btnAddRow'), btnDelRow = $('btnDelRow'), btnMenu = $('btnMenu'),
+      tabMel = $('tabMel'), tabRhy = $('tabRhy'), panelMel = $('panelMel'), panelRhy = $('panelRhy'),
+      btnAutoBar = $('btnAutoBar'), btnAutoZ = $('btnAutoZ');
   var drawer = $('drawer'), backdrop = $('backdrop'), btnClose = $('btnClose'), songNameEl = $('songName'),
       btnSave = $('btnSave'), saveHint = $('saveHint'), songsEl = $('songs'), themesEl = $('themes'),
       autoSec = $('autoSec'), autoEl = $('autosave'), melodiesEl = $('melodies'),
       tempoEl = $('tempo'), tempoOut = $('tempoOut'),
-      btnLensToggle = $('btnLensToggle'), lensToggleState = $('lensToggleState');
+      btnLensToggle = $('btnLensToggle'), lensToggleState = $('lensToggleState'),
+      btnPropToggle = $('btnPropToggle'), propToggleState = $('propToggleState'),
+      drawerTitle = $('drawerTitle'), saveTitle = $('saveTitle'), songsTitle = $('songsTitle'), melodiesSec = $('melodiesSec'),
+      btnSaveSide = $('btnSaveSide'), savePop = $('savePop'), saveNameEl = $('saveName'), btnSaveOk = $('btnSaveOk'),
+      saveHintSide = $('saveHintSide');
 
   /* ---------- Speicher ---------- */
   function emptyRows() { var rs = []; for (var i = 0; i < START_ROWS; i++) rs.push([]); return rs; }
   // Ein Platz ist
   //   null              leer (ein stiller Schlag innerhalb der Zeile)
   //   { n, h, d? }      bunter Punkt; d nur, wenn ein Notenwert darunter ergänzt wurde (sonst ein Schlag)
-  //   { k: 'b', d }     eigenständiges Notenzeichen ohne Tonhöhe (klingt als Klopfen)
+  //   { k: 'b', d }     eigenständiges Notenzeichen ohne Tonhöhe (klingt wie Klanghölzer)
   //   { k: 'r', d }     Pause
   // Jeder Platz kann zusätzlich bar tragen: 1 = Taktstrich davor, 2 = Schlussstrich davor; ein leerer Platz damit ist z. B. { bar: 1 }.
+  // Noten und Pausen können z tragen: von Hand getippte Zählzeiten, mit Leerzeichen getrennt (z. B. '1 2' oder '+').
   // Die Notenlinie einer Zeile steht als Eigenschaft line am Zeilen-Array und wird beim Speichern als lines mitgegeben.
   function cleanCell(c) {
     if (!c) return null;
@@ -106,6 +120,7 @@
         if (DUR_BY[c.d]) o.d = c.d;
       }
     } else if (DUR_BY[c.d]) o = { k: c.k === 'b' ? 'b' : 'r', d: c.d };
+    if (o && typeof c.z === 'string' && /^[1-6+]( [1-6+]){0,5}$/.test(c.z)) o.z = c.z;
     if (c.bar) { o = o || {}; o.bar = c.bar === 2 ? 2 : 1; }
     return o;
   }
@@ -146,14 +161,14 @@
     try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
   }
   function load() {
-    var d = readJSON(KEY);
+    var d = readJSON(K().board);
     var r = d && cleanRows(d.rows, d.lines);
     return r ? { rows: r, name: typeof d.name === 'string' ? d.name : '' } : null;
   }
-  function save() { writeJSON(KEY, { rows: rows, lines: packLines(rows), name: name }); }
+  function save() { writeJSON(K().board, { rows: rows, lines: packLines(rows), name: name }); }
 
   function loadSongs() {
-    var list = readJSON(SONGS_KEY);
+    var list = readJSON(K().songs);
     if (!Array.isArray(list)) return [];
     return list.filter(function (s) { return s && typeof s.name === 'string' && cleanRows(s.rows); })
       .sort(function (a, b) { return (b.savedAt || 0) - (a.savedAt || 0); });
@@ -163,31 +178,38 @@
     return {
       theme: THEME_BY[s.theme] ? s.theme : 'original',
       tempo: (s.tempo >= 50 && s.tempo <= 160) ? s.tempo : 90,
-      lens: s.lens !== false // Notenzeichen unter den Tönen anzeigen
+      lens: s.lens !== false, // Notenzeichen unter den Tönen anzeigen
+      mode: s.mode === 'rhy' ? 'rhy' : 'mel', // Bereich der Leiste: Melodie oder Rhythmus
+      autoBar: !!s.autoBar, // Taktstriche nach der Taktart
+      autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
+      prop: !!s.prop // Breite nach Notenlänge
     };
   }
   function saveSettings() { writeJSON(SETTINGS_KEY, settings); }
 
-  // Ein einziger Autosave-Platz: hält die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
+  // Ein Autosave-Platz pro Bereich: hält die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
   function loadAuto() {
-    var a = readJSON(AUTO_KEY);
+    var a = readJSON(K().auto);
     var r = a && cleanRows(a.rows, a.lines);
     return r ? { rows: r, lines: packLines(r), name: typeof a.name === 'string' ? a.name : '', savedAt: a.savedAt || 0 } : null;
   }
   function stashCurrent() {
     if (!hasNotes()) return;
-    writeJSON(AUTO_KEY, { rows: rows, lines: packLines(rows), name: name, savedAt: Date.now() });
+    writeJSON(K().auto, { rows: rows, lines: packLines(rows), name: name, savedAt: Date.now() });
   }
 
+  var settings = loadSettings();
   var saved = load();
   // Ohne gespeicherten Stand startet die Tafel leer
   var rows = saved ? saved.rows : emptyRows();
   var name = saved ? saved.name : '';
-  var settings = loadSettings();
   var sel = { r: 0, c: 0 };
   var hist = [];
+  // Markierung und Rückgängig-Verlauf der gerade nicht sichtbaren Tafel (nur bis zum Schließen der App)
+  var parked = {};
   var insertMode = false;
   var clean = false; // „Fertig“: Markierung und leere Plätze ausgeblendet
+  var countAt = null; // Platz, unter dem gerade mehrere Zählzeiten getippt werden
 
   function isNote(c) { return !!(c && c.n); }
   function isBeat(c) { return !!(c && c.k === 'b'); }
@@ -281,7 +303,66 @@
     var p = m.split('/');
     return '<span class="mtr"><span>' + p[0] + '</span><span>' + p[1] + '</span></span>';
   }
-  function cellHTML(cell, r, c, beyond, beam, line, meter) {
+  // Taktart als Zahlen: n Zählzeiten im Takt, jede unit Schläge lang (Schlag = Viertel)
+  function meterInfo(m) {
+    var p = m.split('/'), unit = 4 / +p[1];
+    return { n: +p[0], unit: unit, len: +p[0] * unit };
+  }
+  // Taktart, die für eine Zeile gilt: die eigene oder die zuletzt darüber gesetzte
+  function meterOf(r) {
+    for (; r >= 0; r--) if (rows[r].meter) return rows[r].meter;
+    return '';
+  }
+  // Zählzeiten eines Zeichens, das an Stelle p im Takt beginnt und d Schläge dauert.
+  // Auf der Zählzeit steht die Zahl, genau dazwischen „+“; gehaltene Zählzeiten folgen blasser.
+  function countsAt(p, d, mi) {
+    var out = [], q = p / mi.unit, k = Math.floor(q);
+    if (q === k) out.push({ t: String(k + 1) });
+    else if (q - k === 0.5) out.push({ t: '+' });
+    // o: Abstand zum Anfang des Zeichens in Achteln (für „Breite nach Notenlänge“)
+    for (var x = k + 1; x < mi.n && x * mi.unit < p + d; x++) out.push({ t: String(x + 1), held: true, o: (x * mi.unit - p) * 2 });
+    return out;
+  }
+  // Automatische Taktstriche und Zählzeiten. Gezählt wird ab der ersten Zeile mit Taktart über die Zeilen hinweg;
+  // eine neue Taktart beginnt wieder bei 1. Pro Zeile: b[c] = Taktstrich vor Platz c, z[c] = Zählzeiten.
+  // Geht ein Takt genau am Zeilenende auf, steht der Taktstrich hinter dem letzten Zeichen.
+  function autoMarks() {
+    var res = { rows: [], any: false }, mi = null, pos = 0;
+    if (!settings.autoBar && !settings.autoZ) return res;
+    rows.forEach(function (row, r) {
+      var a = res.rows[r] = { b: {}, z: [] };
+      if (row.meter) { mi = meterInfo(row.meter); pos = 0; }
+      if (!mi) return;
+      var last = lineSpan(row);
+      for (var c = 0; c <= last; c++) {
+        var p = pos % mi.len;
+        if (c > 0 && pos > 0 && p === 0) a.b[c] = 1;
+        if (filled(row[c])) { a.z[c] = countsAt(p, dur(row[c]), mi); res.any = true; }
+        pos += dur(row[c]);
+      }
+      if (last >= 0 && pos % mi.len === 0) a.b[last + 1] = 1;
+    });
+    return res;
+  }
+  // Strich vor Platz c: 0 keiner, 1 Taktstrich, 2 Schlussstrich.
+  // Der Schlussstrich bleibt immer stehen; von Hand gesetzte Taktstriche weichen den automatischen.
+  function barAt(cell, c, a) {
+    if (cell && cell.bar === 2) return 2;
+    if (settings.autoBar) return a && a.b[c] ? 1 : 0;
+    return cell && cell.bar ? 1 : 0;
+  }
+  // geo (nur bei Breite nach Notenlänge): u0 = erste Achtel-Spalte des Platzes, k = Anzahl Spalten,
+  // P = aufsummierte Spaltenbreiten in fr (P[u] = Breite aller Spalten vor u)
+  function geoFrac(geo, o) { return (geo.P[geo.u0 + o] - geo.P[geo.u0]) / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]); }
+  function countsHTML(zz, geo) {
+    if (!zz || !zz.length) return '<span class="zz"></span>';
+    // Mit Breite nach Notenlänge stehen gehaltene Zählzeiten an ihrer Stelle, sonst alle zusammen unter dem Zeichen
+    return '<span class="zz' + (!geo && zz.length > 4 ? ' many' : '') + '">' + zz.map(function (x) {
+      if (geo && x.o) return '<span class="held at" style="--t:' + geoFrac(geo, x.o).toFixed(4) + '">' + x.t + '</span>';
+      return '<span' + (x.held ? ' class="held"' : '') + '>' + x.t + '</span>';
+    }).join('') + '</span>';
+  }
+  function cellHTML(cell, r, c, beyond, beam, line, meter, auto, geo) {
     var isSel = sel.r === r && sel.c === c;
     var where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
     var dot, label, len = '', stackCls = '';
@@ -301,13 +382,19 @@
       dot = '<div class="dot ghost"></div>';
       label = where + ': leer';
     }
-    if (cell && cell.bar) label += cell.bar === 2 ? ', Schlussstrich davor' : ', Taktstrich davor';
+    var a = auto || { b: {}, z: [] };
+    var bar = barAt(cell, c, a);
+    var zz = settings.autoZ ? a.z[c] : (cell && cell.z ? cell.z.split(' ').map(function (t) { return { t: t }; }) : null);
+    if (bar) label += bar === 2 ? ', Schlussstrich davor' : ', Taktstrich davor';
+    if (zz && zz.length) label += ', gezählt ' + zz.map(function (x) { return x.t === '+' ? 'und' : x.t; }).join(' ');
     var hand = (isNote(cell) && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
+    // Der Kreis vorn ist immer 2fr breit; --f ist sein Anteil am ganzen Platz
+    var span = geo ? ' style="grid-column:span ' + geo.k + ';--f:' + (2 / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0])).toFixed(4) + '"' : '';
     return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') +
-      (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
+      (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
       '<div class="stack' + stackCls + '">' + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
-      (cell && cell.bar ? '<span class="barline' + (cell.bar === 2 ? ' final' : '') + '"></span>' : '') + dot +
-      '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + hand + '</div></div>';
+      (bar ? '<span class="barline' + (bar === 2 ? ' final' : '') + '"></span>' : '') + dot +
+      '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand + '</div></div>';
   }
   // Zwei Achtel hintereinander bekommen einen gemeinsamen Balken – bunte Punkte untereinander, eigenständige Notenzeichen untereinander
   function beams(row) {
@@ -333,11 +420,39 @@
     rows.forEach(function (row) { n = Math.max(n, row.length + 1); });
     return Math.min(n, MAX_LEN);
   }
+  // Breite nach Notenlänge: Ein Platz belegt so viele Achtel-Spalten, wie er dauert (leer = ein Schlag).
+  // Gezählt wird in Spalten: die längste Zeile plus ein freier Schlag, mindestens bis zur Markierung,
+  // aufgerundet auf ganze Schläge.
+  function spanOf(x) { return Math.round(dur(x) * 2); }
+  function rowUnits(row) { return row.reduce(function (u, x) { return u + spanOf(x); }, 0); }
+  function unitCount() {
+    var n = 0;
+    rows.forEach(function (row, r) {
+      var extra = r === sel.r && sel.c >= row.length ? (sel.c - row.length + 1) * 2 : 2;
+      n = Math.max(n, rowUnits(row) + extra);
+    });
+    return n + n % 2;
+  }
+  // Breite der Spalten einer Zeile in --L, aufsummiert. Ein Schlag ist einen Kreis breit (2 × 1). Beginnt in der Zeile
+  // auf diesem Schlag eine Achtel oder ein Zeichen zwischen den Schlägen, wird er zwei Kreise breit (2 × 2).
+  function colFrs(cols, row) {
+    var wide = [], P = [0], u = 0;
+    row.forEach(function (x) {
+      var k = spanOf(x);
+      if (k === 1 || u % 2) wide[u >> 1] = true;
+      u += k;
+    });
+    for (u = 0; u < cols; u++) P.push(P[u] + (wide[u >> 1] ? 2 : 1));
+    return P;
+  }
   // Passt die Tafel nicht mehr in die Breite, darf man sie seitlich wischen
   function updateWide() { grid.classList.toggle('wide', board.scrollWidth > board.clientWidth + 1); }
 
   function render() {
-    var cols = colCount();
+    var prop = settings.prop, cols = prop ? unitCount() : colCount();
+    grid.classList.toggle('prop', prop);
+    var Ps = prop ? rows.map(function (row) { return colFrs(cols, row); }) : null;
+    if (prop) grid.style.setProperty('--fr', Math.max.apply(null, Ps.map(function (P) { return P[cols]; })));
     grid.style.setProperty('--rows', rows.length);
     grid.style.setProperty('--cols', cols);
     // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
@@ -345,13 +460,28 @@
     grid.classList.toggle('inserting', insertMode);
     grid.classList.toggle('clean', clean);
     grid.classList.toggle('nolen', !settings.lens);
+    var auto = autoMarks();
+    // Platz für Zählzeiten nur, wenn welche zu sehen sind
+    grid.classList.toggle('counts', settings.autoZ ? auto.any : rows.some(function (row) {
+      return row.some(function (x) { return x && x.z; });
+    }));
     grid.innerHTML = rows.map(function (row, r) {
       var cells = '', b = beams(row), last = row.line ? lineSpan(row) : -1;
-      for (var c = 0; c < cols; c++) {
-        var line = c > last ? '' : last === 0 ? 'one' : c === 0 ? 'first' : c === last ? 'last' : 'mid';
-        cells += cellHTML(row[c] || null, r, c, c >= row.length, b[c], line, c === 0 ? row.meter : '');
+      // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
+      var toBar = last >= 0 && barAt(row[last + 1], last + 1, auto.rows[r]) > 0;
+      // u: belegte Achtel-Spalten (nur bei Breite nach Notenlänge); leere Plätze hinter dem Zeilenende sind
+      // einen Schlag breit, nach einer einzelnen Achtel erst eine halbe, damit sie wieder auf den Schlägen stehen
+      for (var c = 0, u = 0; prop ? u < cols && c < MAX_LEN : c < cols; c++) {
+        var beyond = c >= row.length, geo = null;
+        if (prop) {
+          geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P: Ps[r] };
+          u += geo.k;
+        }
+        var line = c > last ? '' : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
+        cells += cellHTML(row[c] || null, r, c, beyond, b[c], line, c === 0 ? row.meter : '', auto.rows[r], geo);
       }
-      return '<div class="row"><span class="rownum">' + (r + 1) + '</span>' + cells + '</div>';
+      var tpl = prop ? ' style="--tpl:' + Ps[r].slice(1).map(function (x, u) { return 'calc(var(--L) * ' + (x - Ps[r][u]) + ')'; }).join(' ') + '"' : '';
+      return '<div class="row"' + tpl + '><span class="rownum">' + (r + 1) + '</span>' + cells + '</div>';
     }).join('');
     updateWide();
     if (play && play.cur) markPlaying(play.cur.r, play.cur.c);
@@ -362,7 +492,8 @@
     btnR.disabled = btnL.disabled = !isNote(cur);
     renderValues(cur);
     var hasBar = !!(cur && cur.bar === 1), hasEnd = !!(cur && cur.bar === 2), hasLine = !!rows[sel.r].line;
-    btnBar.classList.toggle('on', hasBar);
+    btnBar.classList.toggle('on', hasBar && !settings.autoBar);
+    btnBar.disabled = settings.autoBar;
     btnBar.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
     btnEnd.classList.toggle('on', hasEnd);
     btnEnd.setAttribute('aria-pressed', hasEnd ? 'true' : 'false');
@@ -371,6 +502,16 @@
     var meter = rows[sel.r].meter;
     meterShow.innerHTML = meter ? meterHTML(meter) : '<span class="mtr off"><span>?</span><span>?</span></span>';
     btnMeter.classList.toggle('on', !!meter);
+    var mel = settings.mode === 'mel';
+    tabMel.setAttribute('aria-selected', mel ? 'true' : 'false');
+    tabRhy.setAttribute('aria-selected', mel ? 'false' : 'true');
+    panelMel.hidden = !mel;
+    panelRhy.hidden = mel;
+    [[btnAutoBar, settings.autoBar], [btnAutoZ, settings.autoZ]].forEach(function (x) {
+      x[0].classList.toggle('on', x[1]);
+      x[0].setAttribute('aria-pressed', x[1] ? 'true' : 'false');
+    });
+    renderCounts(cur);
     btnIns.classList.toggle('on', insertMode);
     btnIns.setAttribute('aria-pressed', insertMode ? 'true' : 'false');
     delLabel.textContent = insertMode ? 'Lücke zu' : 'entfernen';
@@ -403,24 +544,32 @@
     snap();
     var prev = rows[sel.r][sel.c], v = { n: id, h: isNote(prev) ? prev.h : '' };
     if (isNote(prev) || isBeat(prev)) { if (prev.d) v.d = prev.d; }
-    setCell(sel.r, sel.c, v);
+    setCell(sel.r, sel.c, keepCount(prev, v));
     advance();
     commit();
   }
-  // Notenwert: Auf einem bunten Punkt kommt er darunter, sonst wird das Notenzeichen eigenständig eingesetzt
+  // Von Hand getippte Zählzeiten bleiben stehen, wenn ein Zeichen durch ein anderes ersetzt wird
+  function keepCount(prev, v) {
+    if (filled(prev) && prev.z) v.z = prev.z;
+    return v;
+  }
+  // Notenwert: Auf einem bunten Punkt kommt er darunter, sonst wird das Notenzeichen eigenständig eingesetzt.
+  // Im Bereich Melodie gibt es nur Notenwerte unter bunten Punkten.
   function placeValue(d) {
     var prev = rows[sel.r][sel.c];
-    if (insertMode) { insertCell({ k: 'b', d: d }); return; }
+    if (settings.mode === 'mel') {
+      if (!isNote(prev)) { toast('Hier kommt der Notenwert unter einen bunten Punkt. Notenzeichen ohne Punkt gibt es unter „Rhythmus“.', true); return; }
+    } else if (insertMode) { insertCell({ k: 'b', d: d }); return; }
     snap();
     if (isNote(prev)) prev.d = d;
-    else setCell(sel.r, sel.c, { k: 'b', d: d });
+    else setCell(sel.r, sel.c, keepCount(prev, { k: 'b', d: d }));
     advance();
     commit();
   }
   function placeRest(d) {
     if (insertMode) { insertCell({ k: 'r', d: d }); return; }
     snap();
-    setCell(sel.r, sel.c, { k: 'r', d: d });
+    setCell(sel.r, sel.c, keepCount(rows[sel.r][sel.c], { k: 'r', d: d }));
     advance();
     commit();
   }
@@ -447,6 +596,32 @@
       trimRow(sel.r);
     } else if (cell) cell.bar = kind;
     else put(sel.r, sel.c, { bar: kind });
+    commit();
+  }
+  // Zählzeit von Hand. Dauert das Zeichen mehrere Zählzeiten (z. B. eine Halbe im 4/4-Takt),
+  // bleibt die Markierung stehen, bis alle getippt sind; ein neuer Anfang ersetzt die alten Zählzeiten.
+  function countSlots(cell, r) {
+    var m = meterOf(r), unit = m ? meterInfo(m).unit : 1;
+    return Math.max(1, Math.round(dur(cell) / unit));
+  }
+  function placeCount(t) {
+    var cell = rows[sel.r][sel.c];
+    if (!filled(cell)) return;
+    snap();
+    var more = countAt && countAt.r === sel.r && countAt.c === sel.c && cell.z;
+    var z = more ? cell.z.split(' ') : [];
+    z.push(t);
+    cell.z = z.join(' ');
+    if (z.length >= countSlots(cell, sel.r)) { countAt = null; advance(); }
+    else countAt = { r: sel.r, c: sel.c };
+    commit();
+  }
+  function clearCount() {
+    var cell = rows[sel.r][sel.c];
+    if (!cell || !cell.z) return;
+    snap();
+    delete cell.z;
+    countAt = null;
     commit();
   }
   function toggleLine() {
@@ -506,7 +681,7 @@
     var s = hist.pop();
     if (!s) return;
     var d = JSON.parse(s);
-    rows = attachLines(d.rows, d.lines); sel = d.sel; name = d.name || '';
+    rows = attachLines(d.rows, d.lines); sel = d.sel; name = d.name || ''; countAt = null;
     commit();
   }
   function addRow() {
@@ -559,31 +734,57 @@
     if (audio.state === 'suspended') audio.resume();
     return audio;
   }
-  // Kurzes Klopfen für eigenständige Notenzeichen (wie ein Holzblock)
-  function knock(out, t0) {
+  // Ein Sinuston mit Anschlag: steigt in att Sekunden auf amp und klingt mit der Zeitkonstante tau aus.
+  // damp (optional): ab dieser Zeit schnell abdämpfen. stop: wann der Oszillator endet.
+  function partial(out, freq, t0, amp, att, tau, damp, stop) {
     var o = audio.createOscillator(), g = audio.createGain();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(1100, t0);
-    o.frequency.exponentialRampToValueAtTime(550, t0 + 0.06);
-    g.gain.setValueAtTime(0.9, t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
-    o.connect(g);
-    g.connect(out);
-    o.start(t0);
-    o.stop(t0 + 0.12);
-  }
-  function tone(out, freq, t0, dur) {
-    var o = audio.createOscillator(), g = audio.createGain();
-    o.type = 'triangle';
+    o.type = 'sine';
     o.frequency.value = freq;
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.5, t0 + 0.02);
-    g.gain.setValueAtTime(0.5, t0 + dur * 0.55);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    g.gain.linearRampToValueAtTime(amp, t0 + att);
+    g.gain.setTargetAtTime(0.0001, t0 + att, tau);
+    if (damp) g.gain.setTargetAtTime(0.0001, damp, 0.04);
     o.connect(g);
     g.connect(out);
     o.start(t0);
-    o.stop(t0 + dur + 0.05);
+    o.stop(stop);
+  }
+  // Rauschen für den Anschlag der Klanghölzer, einmal erzeugt
+  var noiseBuf = null;
+  function noise() {
+    if (!noiseBuf) {
+      var n = Math.round(audio.sampleRate * 0.03);
+      noiseBuf = audio.createBuffer(1, n, audio.sampleRate);
+      var data = noiseBuf.getChannelData(0);
+      for (var i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuf;
+  }
+  // Klanghölzer für eigenständige Notenzeichen: kurzer, heller, trockener Ton mit hölzernem Anschlag
+  function clave(out, t0) {
+    partial(out, 2400, t0, 0.9, 0.001, 0.018, 0, t0 + 0.12);
+    partial(out, 4150, t0, 0.12, 0.001, 0.008, 0, t0 + 0.06);
+    var src = audio.createBufferSource(), bp = audio.createBiquadFilter(), g = audio.createGain();
+    src.buffer = noise();
+    bp.type = 'bandpass';
+    bp.frequency.value = 2400;
+    bp.Q.value = 2;
+    g.gain.setValueAtTime(0.5, t0);
+    g.gain.setTargetAtTime(0.0001, t0, 0.004);
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(out);
+    src.start(t0);
+    src.stop(t0 + 0.03);
+  }
+  // Glockenspiel für die bunten Punkte: eine Oktave über dem notierten Ton wie beim echten Instrument,
+  // mit den unharmonischen Teiltönen eines Metallstabs. Klingt natürlich aus und wird am Ende der Notenlänge
+  // abgedämpft, damit man lange und kurze Töne unterscheidet.
+  function bell(out, freq, t0, dur) {
+    var f = freq * 2, damp = t0 + dur, stop = damp + 0.3;
+    partial(out, f, t0, 0.45, 0.003, 0.7, damp, stop);
+    partial(out, f * 2.76, t0, 0.1, 0.002, 0.18, damp, stop);
+    partial(out, f * 5.4, t0, 0.04, 0.001, 0.06, damp, stop);
   }
   function markPlaying(r, c) {
     var old = grid.querySelector('.cell.playing');
@@ -612,8 +813,8 @@
     var step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08;
     play = { out: out, timers: [], cur: null };
     seq.slice(0, last + 1).forEach(function (s) {
-      if (isNote(s.cell)) tone(out, BY[s.cell.n].f, t0 + s.t * step, dur(s.cell) * step * 0.9);
-      else if (isBeat(s.cell)) knock(out, t0 + s.t * step);
+      if (isNote(s.cell)) bell(out, BY[s.cell.n].f, t0 + s.t * step, dur(s.cell) * step * 0.95);
+      else if (isBeat(s.cell)) clave(out, t0 + s.t * step);
       var pos = { r: s.r, c: s.c };
       play.timers.push(setTimeout(function () {
         play.cur = pos;
@@ -656,13 +857,62 @@
     }).join('');
   }
   function renderValues(cur) {
+    valuesMelEl.innerHTML = valueBtns(isNote(cur) && cur.d, noteSym, 'n');
     valuesEl.innerHTML = valueBtns((isNote(cur) || isBeat(cur)) && cur.d, noteSym, 'n');
     restsEl.innerHTML = valueBtns(isRest(cur) && cur.d, restSym, 'p');
   }
-  valuesEl.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-d]');
-    if (b) placeValue(+b.dataset.d);
+  [valuesEl, valuesMelEl].forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-d]');
+      if (b) placeValue(+b.dataset.d);
+    });
   });
+  // Zählzeiten-Knöpfe: 1–6, „+“ (und) und Löschen; aus, solange die Zählzeiten automatisch kommen
+  var COUNTS = ['1', '2', '3', '4', '5', '6', '+'];
+  countsEl.innerHTML = COUNTS.map(function (t) {
+    return '<button type="button" class="btn" data-z="' + t + '" aria-label="Zählzeit ' + (t === '+' ? 'und' : t) + '">' + t + '</button>';
+  }).join('') + '<button type="button" class="btn" data-zclear aria-label="Zählzeiten entfernen" title="Zählzeiten entfernen">' +
+    '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h11v14H9l-6-7z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>' +
+    '<path d="M12 9.5l5 5M17 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>';
+  function renderCounts(cur) {
+    countsEl.querySelectorAll('[data-z]').forEach(function (b) { b.disabled = settings.autoZ || !filled(cur); });
+    countsEl.querySelector('[data-zclear]').disabled = settings.autoZ || !(cur && cur.z);
+  }
+  countsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.z) placeCount(b.dataset.z);
+    else clearCount();
+  });
+  // Wechselt zwischen der Melodie- und der Rhythmus-Tafel. Die aktuelle Tafel ist schon gespeichert;
+  // Markierung und Rückgängig-Verlauf werden geparkt, die andere Tafel kommt aus dem Speicher.
+  function setMode(m) {
+    closeMeterPop();
+    closeSavePop();
+    if (m === settings.mode) return;
+    stopPlay();
+    disarm();
+    parked[settings.mode] = { sel: sel, hist: hist };
+    settings.mode = m;
+    saveSettings();
+    var d = load(), p = parked[m];
+    rows = d ? d.rows : emptyRows();
+    name = d ? d.name : '';
+    hist = p ? p.hist : [];
+    sel = p && p.sel.r < rows.length ? p.sel : appendPos();
+    insertMode = false; clean = false; countAt = null;
+    render();
+  }
+  tabMel.addEventListener('click', function () { setMode('mel'); });
+  tabRhy.addEventListener('click', function () { setMode('rhy'); });
+  function toggleAuto(key) {
+    settings[key] = !settings[key];
+    saveSettings();
+    if (settings[key] && !rows.some(function (row) { return row.meter; })) toast('Wähle zuerst eine Taktart. Ab dieser Zeile wird dann automatisch gezählt.');
+    render();
+  }
+  btnAutoBar.addEventListener('click', function () { toggleAuto('autoBar'); });
+  btnAutoZ.addEventListener('click', function () { toggleAuto('autoZ'); });
   restsEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-d]');
     if (b) placeRest(+b.dataset.d);
@@ -755,22 +1005,58 @@
         '<span class="desc">' + t.desc + '</span><span class="swatches">' + sw + '</span></button>';
     }).join('');
   }
-  function saveSong() {
-    var n = songNameEl.value.trim();
-    if (!n) { hint('Bitte zuerst einen Namen eingeben.', true); songNameEl.focus(); return; }
+  // Speichert die Tafel unter dem Namen aus input (im Menü oder in der Leiste). Gleicher Name heißt ersetzen,
+  // dafür muss btn ein zweites Mal getippt werden. report(text, warn) meldet das Ergebnis.
+  function saveAs(input, btn, report) {
+    var n = input.value.trim();
+    if (!n) { report('Bitte zuerst einen Namen eingeben.', true); input.focus(); return; }
     var list = loadSongs();
     var rest = list.filter(function (s) { return s.name.toLowerCase() !== n.toLowerCase(); });
     var doSave = function () {
       rest.unshift({ name: n, rows: rows, lines: packLines(rows), savedAt: Date.now() });
-      if (!writeJSON(SONGS_KEY, rest)) { hint('Speichern hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
+      if (!writeJSON(K().songs, rest)) { report('Speichern hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
       name = n;
       save();
-      renderSongs();
-      hint('Gespeichert: „' + n + '“');
+      report('Gespeichert: „' + n + '“');
     };
-    if (rest.length < list.length) confirmTap(btnSave, 'Ersetzen?', doSave);
+    if (rest.length < list.length) confirmTap(btn, 'Ersetzen?', doSave);
     else doSave();
   }
+  function saveSong() {
+    saveAs(songNameEl, btnSave, function (text, warn) { if (!warn) renderSongs(); hint(text, warn); });
+  }
+  // Speichern direkt aus der Leiste: kleines Feld über den Knöpfen
+  function openSavePop() {
+    stopPlay();
+    closeMeterPop();
+    saveNameEl.value = name;
+    saveHintSide.textContent = '';
+    saveHintSide.classList.remove('warn');
+    savePop.hidden = false;
+    btnSaveSide.setAttribute('aria-expanded', 'true');
+    saveNameEl.focus();
+  }
+  function closeSavePop() {
+    if (savePop.hidden) return;
+    if (armed && armed.btn === btnSaveOk) disarm();
+    saveNameEl.blur();
+    savePop.hidden = true;
+    btnSaveSide.setAttribute('aria-expanded', 'false');
+  }
+  function saveFromSide() {
+    saveAs(saveNameEl, btnSaveOk, function (text, warn) {
+      if (warn) { saveHintSide.textContent = text; saveHintSide.classList.add('warn'); return; }
+      closeSavePop();
+      toast(text);
+    });
+  }
+  btnSaveSide.addEventListener('click', function () { if (savePop.hidden) openSavePop(); else closeSavePop(); });
+  btnSaveOk.addEventListener('click', saveFromSide);
+  saveNameEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveFromSide(); } });
+  saveNameEl.addEventListener('input', function () { if (armed && armed.btn === btnSaveOk) disarm(); });
+  document.addEventListener('pointerdown', function (e) {
+    if (!savePop.hidden && !savePop.contains(e.target) && !btnSaveSide.contains(e.target)) closeSavePop();
+  });
   // Die bisherige Tafel wandert in den Autosave-Platz; beim Laden des Autosaves tauschen beide also die Plätze
   function loadSong(s) {
     snap();
@@ -784,13 +1070,21 @@
   }
   function openMenu() {
     stopPlay();
+    closeSavePop();
     songNameEl.value = name;
     hint('');
+    // Das Menü zeigt die Lieder des offenen Bereichs; die bekannten Lieder sind Melodien
+    var mel = settings.mode === 'mel';
+    drawerTitle.textContent = 'Menü · ' + (mel ? 'Melodie' : 'Rhythmus');
+    saveTitle.textContent = mel ? 'Melodie speichern' : 'Rhythmus speichern';
+    songsTitle.textContent = mel ? 'Gespeicherte Melodien' : 'Gespeicherte Rhythmen';
+    melodiesSec.hidden = !mel;
     renderSongs();
     renderAuto();
     renderMelodies();
     renderThemes();
     renderLensToggle();
+    renderPropToggle();
     tempoEl.value = settings.tempo;
     tempoOut.textContent = settings.tempo + ' pro Minute';
     backdrop.hidden = false;
@@ -820,7 +1114,7 @@
       var victim = list[+b.dataset.del];
       if (!victim) return;
       confirmTap(b, 'Sicher?', function () {
-        writeJSON(SONGS_KEY, list.filter(function (s) { return s !== victim; }));
+        writeJSON(K().songs, list.filter(function (s) { return s !== victim; }));
         renderSongs();
         hint('„' + victim.name + '“ gelöscht.');
       });
@@ -854,6 +1148,17 @@
     settings.lens = !settings.lens;
     saveSettings();
     renderLensToggle();
+    render();
+  });
+  function renderPropToggle() {
+    btnPropToggle.classList.toggle('on', settings.prop);
+    btnPropToggle.setAttribute('aria-pressed', settings.prop ? 'true' : 'false');
+    propToggleState.textContent = settings.prop ? 'an' : 'aus';
+  }
+  btnPropToggle.addEventListener('click', function () {
+    settings.prop = !settings.prop;
+    saveSettings();
+    renderPropToggle();
     render();
   });
   tempoEl.addEventListener('input', function () {
@@ -921,6 +1226,7 @@
       } else { render(); }
     } else if (!cancel) {
       sel = { r: d.r, c: d.c };
+      countAt = null;
       clean = false;
       render();
     }

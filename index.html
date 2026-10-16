@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+DE+Grund:wght@100..400&family=Nunito:wght@600;700;800&display=swap">
 <style>
 /* Layout: links die Tafel (Zeilen beliebig lang, Kreise schrumpfen mit der längsten Zeile), rechts die Leiste mit allen Tönen */
 :root {
@@ -20,8 +20,8 @@
   --ring: #18211d;
   --danger: #b3261e;
   --shadow: rgba(24, 33, 29, .18);
-  /* Andika ist für Leseanfänger gemacht: B, D, l usw. sind klar unterscheidbar */
-  --font-display: "Andika", "Trebuchet MS", system-ui, sans-serif;
+  /* Playwrite DE Grund ist die Deutschland-Grundschrift für die Grundschule; die Schrift hat nur Stärken bis 400, fett wird vom Browser verstärkt */
+  --font-display: "Playwrite DE Grund", "Andika", "Trebuchet MS", system-ui, sans-serif;
   --font-ui: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -92,6 +92,7 @@ body {
 }
 /* Unter etwa 46px pro Platz wird nicht weiter geschrumpft, dann lässt sich die Tafel seitlich wischen */
 .grid {
+  --g: 6px; /* Abstand zwischen zwei Plätzen */
   flex: 1; min-height: 0;
   min-width: calc(1.5rem + var(--cols, 1) * 46px);
   padding: 14px 12px;
@@ -108,7 +109,7 @@ body {
   grid-template-columns: 1.5rem repeat(var(--cols, 1), minmax(0, 7rem));
   justify-content: start;
   grid-template-rows: minmax(0, 1fr);
-  gap: 6px;
+  gap: var(--g);
   min-height: 0;
 }
 .rownum {
@@ -121,27 +122,60 @@ body {
   min-width: 0; min-height: 0;
   cursor: pointer; border-radius: 14px;
 }
-/* Unter dem Kreis: Längenzeichen (Höhe .5 × Kreis), darunter r/l */
+/* Unter dem Kreis: Längenzeichen (Höhe .5 × Kreis), darunter r/l.
+   --f ist der Anteil des Platzes, den der Kreis vorn bekommt (normal 1, also der ganze Platz),
+   --sw diese Breite; --dq ist der Kreis, --d der Kreis dieses Platzes. */
 .stack {
-  --d: max(24px, min(84cqw, calc((100cqh - 2.8rem) / 1.5)));
-  width: 100%;
+  --sw: calc(100cqw * var(--f, 1));
+  --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 1.5)));
+  --d: var(--dq);
+  width: var(--sw);
   display: flex; flex-direction: column; align-items: center; gap: .25rem;
 }
+/* Breite nach Notenlänge: Jede Spalte ist eine Achtel. Ein Schlag ist einen Kreis breit (zwei Spalten zu 1 --L);
+   steht in der Zeile auf diesem Schlag eine Achtel, ist er zwei Kreise breit (zwei Spalten zu 2 --L).
+   Jede Zeile bekommt ihre Spalten als --tpl aus dem Skript; --fr ist die Breite der längsten Zeile in --L.
+   --L ist für alle Zeilen gleich, damit alle Kreise gleich groß sind: höchstens 3.5rem + 3px (ein Kreis also so breit
+   wie sonst ein Platz mit Abstand), weniger, wenn die längste Zeile sonst nicht passt. Das Zeichen steht vorn in seinem Platz. */
+.grid.prop { --g: 0px; min-width: calc(1.5rem + var(--fr, 2) * 26px); }
+.grid.prop .row { --L: min(3.5rem + 3px, (100% - 1.5rem) / var(--fr, 2)); grid-template-columns: 1.5rem var(--tpl); }
+.grid.prop.meters { min-width: calc(4.2rem + var(--fr, 2) * 26px); }
+.grid.prop.meters .row { --L: min(3.5rem + 3px, (100% - 4.2rem) / var(--fr, 2)); grid-template-columns: 4.2rem var(--tpl); }
+.grid.prop .cell { justify-items: start; }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);
 }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */
 .grid.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem)); }
-.grid.nolen .stack { --d: max(24px, min(84cqw, calc(100cqh - 2.6rem))); }
+.grid.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc(100cqh - 2.6rem))); }
 .grid.nolen .len { display: none; }
+/* Zählzeiten unter dem Notenzeichen; gehaltene Zählzeiten blasser. Nur wenn es welche gibt, bekommt die Zeile Platz dafür. */
+.zz {
+  position: relative; width: 100%;
+  display: none; justify-content: center; align-items: center; gap: .45em;
+  height: calc(var(--d) * .36); white-space: nowrap;
+  font: 700 calc(var(--d) * .3)/1 var(--font-display); color: var(--fg);
+}
+.zz.many { font-size: calc(var(--d) * .22); }
+.zz .held { color: var(--muted); }
+/* Breite nach Notenlänge: gehaltene Zählzeiten stehen an ihrer Stelle, --t ist der Abstand als Anteil des Platzes */
+.zz .at { position: absolute; left: calc(50% + 100cqw * var(--t)); transform: translateX(-50%); }
+.grid.counts .zz { display: flex; }
+.grid.counts { grid-template-rows: repeat(var(--rows, 3), minmax(0, 13.5rem)); }
+.grid.counts .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 3.05rem) / 1.86))); }
+.grid.counts.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 10rem)); }
+.grid.counts.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 1.36))); }
 .sym { display: block; height: 100%; width: auto; overflow: visible; }
 /* Notenlinie: läuft auf Höhe der Kreismitte vom ersten bis zum letzten Zeichen, hinter den Kreisen */
 .cell { position: relative; }
 .stack { position: relative; z-index: 0; }
 .cell[class*="line-"] .stack::before {
   content: ""; position: absolute; z-index: -1;
-  top: calc(var(--d) / 2 - 1.5px); height: 3px; left: -3px; right: -3px;
+  /* je 1px mehr als die halbe Lücke, damit sich die Stücke überlappen und beim Runden keine Haarlinie bleibt */
+  /* dünn, damit das Loch halber und ganzer Noten frei bleibt */
+  top: calc(var(--d) / 2 - .75px); height: 1.5px; left: calc(var(--g) / -2 - 1px);
+  right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw))); /* bis zum Ende des Platzes, auch hinter dem Kreis */
   background: var(--fg);
 }
 .cell.line-first .stack::before { left: 50%; }
@@ -157,21 +191,21 @@ body {
   font-family: var(--font-display); font-weight: 700; line-height: .9;
 }
 .meter {
-  position: absolute; right: calc(100% + 6px + .35rem); top: calc(var(--d) / 2);
+  position: absolute; right: calc(100% + var(--g) + .35rem); top: calc(var(--d) / 2);
   transform: translateY(-50%); color: var(--fg);
 }
 .meter .mtr { font-size: calc(var(--d) * .42); gap: calc(var(--d) * .08); }
 .cell.has-meter.line-first .stack::before,
-.cell.has-meter.line-one .stack::before { left: calc(-6px - 2.6rem); }
+.cell.has-meter.line-one .stack::before { left: calc(0px - var(--g) - 2.6rem); }
 /* Taktstrich in der Lücke vor dem Platz, so hoch wie Kreis und Notenzeichen */
 .barline {
-  position: absolute; left: -4.5px; top: calc(var(--d) * -.2);
+  position: absolute; left: calc(var(--g) / -2 - 1.5px); top: calc(var(--d) * -.2);
   height: calc(var(--d) * 1.6); width: 3px; border-radius: 2px; background: var(--fg);
 }
 .grid.nolen .barline { height: calc(var(--d) * 1.4); }
 /* Schlussstrich: dünner und dicker Strich, der dicke direkt vor dem Platz */
 .barline.final {
-  left: -9px; width: 9px; border-radius: 0; background: none;
+  left: calc(var(--g) / -2 - 6px); width: 9px; border-radius: 0; background: none;
   border-left: 2px solid var(--fg); border-right: 5px solid var(--fg);
 }
 /* Eigenständiges Notenzeichen statt Punkt: Notenkopf sitzt auf der Kreismitte (also auf der Notenlinie) */
@@ -182,18 +216,18 @@ body {
 }
 .cell.sel .dot.beat { box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
 .grid.clean .cell.sel .dot.beat { box-shadow: none; }
-/* Balken zweier eigenständiger Achtel: Hals .08 × Kreis rechts der Mitte, .064 breit, Oberkante .089 über dem Kreis */
+/* Balken zweier eigenständiger Achtel: Hals .08 × Kreis rechts der Mitte, .064 breit, Halsspitze (mit runder Kappe) .1213 über dem Kreis */
 .stack.bbeam::after {
   content: ""; position: absolute;
-  left: calc(50% + var(--d) * .048); top: calc(var(--d) * -.089);
-  width: calc(100% + 6px + var(--d) * .064); height: calc(var(--d) * .12);
+  left: calc(50% + var(--d) * .048); top: calc(var(--d) * -.1213);
+  width: calc(100% + var(--g) + var(--d) * .064); height: calc(var(--d) * .12);
   background: var(--fg);
 }
-/* Balken von Hals zu Hals zweier Achtel: Hals liegt .05 × Kreis rechts der Mitte und ist .04 × Kreis breit, Platzabstand 6px */
+/* Balken von Hals zu Hals zweier Achtel: Hals liegt .05 × Kreis rechts der Mitte, ist .04 × Kreis breit und endet (mit runder Kappe) .0217 × Kreis unter der Oberkante; Platzabstand 6px */
 .len.beam::after {
   content: ""; position: absolute;
-  left: calc(50% + var(--d) * .03); top: calc(var(--d) * .04);
-  width: calc(100% + 6px + var(--d) * .04); height: calc(var(--d) * .075);
+  left: calc(50% + var(--d) * .03); top: calc(var(--d) * .0217);
+  width: calc(100% + var(--g) + var(--d) * .04); height: calc(var(--d) * .075);
   background: currentColor;
 }
 .dot {
@@ -276,7 +310,25 @@ body {
 .ico { width: 1.25rem; height: 1.25rem; flex: none; }
 .btn .big .ico { width: 1.5rem; height: 1.5rem; display: block; }
 
-.tools { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+/* Umschalter Melodie / Rhythmus */
+.tabs {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
+  padding: 4px; background: var(--bg); border-radius: 14px;
+}
+.tab {
+  font: 800 1rem var(--font-ui); color: var(--muted); background: none;
+  border: 0; border-radius: 10px; min-height: 48px;
+  cursor: pointer; touch-action: manipulation;
+}
+.tab[aria-selected="true"] { background: var(--btn); color: var(--fg); box-shadow: 0 1px 4px var(--shadow); }
+.panel { display: flex; flex-direction: column; gap: 10px; }
+.tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.tools.t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tools.t2 .btn { flex-direction: row; gap: .5rem; min-height: 48px; }
+/* Zählzeiten von Hand: 1–6, + und Löschen */
+.zbtns { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.zbtns .btn { padding: 0; font: 700 1.35rem/1 var(--font-display); }
+.autos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .tools .btn { flex-direction: column; gap: .15rem; min-height: 58px; padding: .3rem .15rem; }
 .tools .btn .small { font-size: .72rem; }
 .tools { position: relative; }
@@ -313,8 +365,18 @@ body {
 .values .sym { height: 1.6rem; }
 .values .btn .small { font-size: .8rem; }
 .note.up .ltr { font-size: .9em; }
-.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
-.actions .play { grid-column: span 2; }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: auto; position: relative; }
+.actions > .btn { padding: 0 .3rem; gap: .3rem; font-size: .88rem; line-height: 1.1; text-align: center; }
+/* Namensfeld zum Speichern, schwebt über den Knöpfen */
+.savepop {
+  position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 30;
+  padding: 10px; background: var(--panel);
+  border: 2px solid var(--btn-line); border-radius: 14px;
+  box-shadow: 0 10px 24px var(--shadow);
+}
+.savepop .hint { margin: 6px 0 0; font-size: .85rem; font-weight: 700; color: var(--muted); }
+.savepop .hint:empty { display: none; }
+.savepop .hint.warn { color: var(--danger); }
 
 /* ---------- Menü (Slide-in) ---------- */
 .backdrop {
@@ -394,18 +456,12 @@ body {
       </button>
     </div>
 
+    <div class="tabs" role="tablist" aria-label="Bereich">
+      <button type="button" class="tab" role="tab" id="tabMel" aria-controls="panelMel">Melodie</button>
+      <button type="button" class="tab" role="tab" id="tabRhy" aria-controls="panelRhy">Rhythmus</button>
+    </div>
+
     <div class="tools">
-      <button type="button" class="btn" id="btnR" title="Rechte Hand"><span class="big">r</span><span class="small">rechts</span></button>
-      <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
-      <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
-      </button>
-      <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Takt</span>
-      </button>
-      <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
-      </button>
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
       </button>
@@ -418,31 +474,82 @@ body {
       <button type="button" class="btn" id="btnDone" aria-pressed="false" title="Markierung und leere Plätze ausblenden">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">fertig</span>
       </button>
-      <button type="button" class="btn" id="btnMeter" aria-haspopup="true" aria-expanded="false" aria-controls="meterPop" title="Taktart der markierten Zeile">
-        <span id="meterShow"></span><span class="small">Taktart</span>
-      </button>
-      <div class="meterpop" id="meterPop" role="group" aria-label="Taktart wählen" hidden></div>
     </div>
 
-    <section class="group">
-      <h2 class="glabel">Notennamen</h2>
-      <div class="palette" id="palette"></div>
-    </section>
-    <section class="group">
-      <h2 class="glabel">Notenwerte <span>unter einen Punkt oder allein</span></h2>
-      <div class="values" id="values"></div>
-    </section>
-    <section class="group">
-      <h2 class="glabel">Pausenwerte</h2>
-      <div class="values" id="rests"></div>
-    </section>
+    <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tabMel">
+      <section class="group">
+        <h2 class="glabel">Notennamen</h2>
+        <div class="palette" id="palette"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Notenwerte <span>unter den bunten Punkt</span></h2>
+        <div class="values" id="valuesMel"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Hand</h2>
+        <div class="tools t2">
+          <button type="button" class="btn" id="btnR" title="Rechte Hand"><span class="big">r</span><span class="small">rechts</span></button>
+          <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
+        </div>
+      </section>
+    </div>
+
+    <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tabRhy" hidden>
+      <section class="group">
+        <h2 class="glabel">Takt</h2>
+        <div class="tools">
+          <button type="button" class="btn" id="btnMeter" aria-haspopup="true" aria-expanded="false" aria-controls="meterPop" title="Taktart der markierten Zeile">
+            <span id="meterShow"></span><span class="small">Taktart</span>
+          </button>
+          <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
+          </button>
+          <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Takt</span>
+          </button>
+          <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+          </button>
+          <div class="meterpop" id="meterPop" role="group" aria-label="Taktart wählen" hidden></div>
+        </div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Notenwerte <span>unter einen Punkt oder allein</span></h2>
+        <div class="values" id="values"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Pausenwerte</h2>
+        <div class="values" id="rests"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Zählzeiten <span>unter Noten und Pausen</span></h2>
+        <div class="zbtns" id="counts"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Automatisch <span>nach der Taktart</span></h2>
+        <div class="autos">
+          <button type="button" class="btn" id="btnAutoBar" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Taktstriche</button>
+          <button type="button" class="btn" id="btnAutoZ" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zählzeiten</button>
+        </div>
+      </section>
+    </div>
 
     <div class="actions">
-      <button type="button" class="btn play" id="btnPlay"></button>
+      <div class="savepop" id="savePop" role="group" aria-label="Tafel speichern" hidden>
+        <div class="saverow">
+          <input id="saveName" type="text" maxlength="40" placeholder="Name" autocomplete="off" enterkeyhint="done" aria-label="Name zum Speichern">
+          <button type="button" class="btn" id="btnSaveOk">Speichern</button>
+        </div>
+        <p class="hint" id="saveHintSide" aria-live="polite"></p>
+      </div>
+      <button type="button" class="btn" id="btnPlay"></button>
       <button type="button" class="btn" id="btnUndo">Rückgängig</button>
-      <button type="button" class="btn danger" id="btnClear">Alles löschen</button>
+      <button type="button" class="btn" id="btnSaveSide" aria-haspopup="true" aria-expanded="false" aria-controls="savePop">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Speichern
+      </button>
       <button type="button" class="btn" id="btnAddRow">+ Zeile</button>
       <button type="button" class="btn" id="btnDelRow">− Zeile</button>
+      <button type="button" class="btn danger" id="btnClear">Alles löschen</button>
     </div>
   </aside>
 </div>
@@ -457,7 +564,7 @@ body {
   </div>
 
   <section>
-    <h3>Lied speichern</h3>
+    <h3 id="saveTitle">Lied speichern</h3>
     <div class="saverow">
       <input id="songName" type="text" maxlength="40" placeholder="Name des Lieds" autocomplete="off" enterkeyhint="done">
       <button type="button" class="btn" id="btnSave">Speichern</button>
@@ -472,11 +579,11 @@ body {
   </section>
 
   <section>
-    <h3>Gespeicherte Lieder</h3>
+    <h3 id="songsTitle">Gespeicherte Lieder</h3>
     <ul class="songs" id="songs"></ul>
   </section>
 
-  <section>
+  <section id="melodiesSec">
     <h3>Bekannte Lieder</h3>
     <ul class="songs" id="melodies"></ul>
   </section>
@@ -491,6 +598,14 @@ body {
     <button type="button" class="btn theme" id="btnLensToggle" aria-pressed="true">
       <span>Unter den Tönen: <span id="lensToggleState">an</span></span>
       <span class="desc">Zeigt die Tonlänge als Note unter jedem Kreis. Ausgeschaltet werden die Kreise größer.</span>
+    </button>
+  </section>
+
+  <section>
+    <h3>Breite nach Notenlänge</h3>
+    <button type="button" class="btn theme" id="btnPropToggle" aria-pressed="false">
+      <span>Platz nach Schlägen: <span id="propToggleState">aus</span></span>
+      <span class="desc">Eine Halbe bekommt so viel Platz wie zwei Viertel oder vier Achtel. Achtel werden halb so groß, jeder Takt ist gleich breit.</span>
     </button>
   </section>
 

@@ -65,7 +65,16 @@ body {
 }
 
 /* ---------- Tafel ---------- */
-.boardwrap { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.boardwrap { display: flex; flex-direction: column; min-height: 0; min-width: 0; position: relative; }
+.toast {
+  position: absolute; left: 50%; bottom: 36px; z-index: 20;
+  transform: translateX(-50%); width: max-content; max-width: calc(100% - 48px);
+  background: var(--fg); color: var(--board);
+  padding: 10px 16px; border-radius: 12px;
+  font-weight: 800; font-size: .95rem; line-height: 1.3; text-align: center;
+  box-shadow: 0 8px 20px var(--shadow); pointer-events: none;
+}
+.toast.warn { background: var(--danger); }
 .board {
   flex: 1; min-height: 0; display: flex;
   background: var(--board);
@@ -159,8 +168,6 @@ body {
 }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .title { font: 700 1.4rem var(--font-display); margin: 0; }
-.status { margin: 0; font-size: .88rem; line-height: 1.3; color: var(--muted); min-height: 2.6em; }
-.status.warn { color: var(--danger); }
 .example { margin: 0; font-size: .82rem; line-height: 1.3; color: var(--muted); border-left: 3px solid var(--line); padding-left: .6rem; }
 
 .btn {
@@ -268,6 +275,7 @@ body {
   <div class="boardwrap">
     <div class="board"><div class="grid" id="grid" aria-label="Notentafel"></div></div>
     <div class="tray" aria-hidden="true"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </div>
 
   <aside class="side" aria-label="Werkzeuge">
@@ -277,7 +285,6 @@ body {
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Menü
       </button>
     </div>
-    <p class="status" id="status" aria-live="polite"></p>
     <p class="example" id="example">Beispielmelodie „Hänschen klein“. Mit „Alles löschen“ beginnst du neu.</p>
 
     <div class="tools">

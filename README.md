@@ -6,10 +6,10 @@ Eine digitale Notentafel für den Musikunterricht. Gebaut fürs **Tablet mit Tou
 
 | Datei | Inhalt |
 |---|---|
-| `Notentafel.html` | Aufbau und Gestaltung (HTML + CSS) |
+| `index.html` | Aufbau und Gestaltung (HTML + CSS) |
 | `notentafel.js` | Die gesamte Logik |
 
-Zum Starten `Notentafel.html` im Browser öffnen. Beide Dateien müssen im selben Ordner liegen. Ein Server ist nicht nötig, und die App funktioniert auch offline. Die Schriften kommen von Google Fonts; ohne Internet springen Systemschriften ein.
+Zum Starten `index.html` im Browser öffnen. Beide Dateien müssen im selben Ordner liegen. Ein Server ist nicht nötig, und die App funktioniert auch offline. Die Schriften kommen von Google Fonts; ohne Internet springen Systemschriften ein.
 
 ## Bedienung
 

@@ -34,7 +34,7 @@
   THEMES.forEach(function (t) { THEME_BY[t.id] = t; });
 
   var $ = function (id) { return document.getElementById(id); };
-  var grid = $('grid'), statusEl = $('status'), exampleEl = $('example'), palette = $('palette');
+  var grid = $('grid'), toastEl = $('toast'), exampleEl = $('example'), palette = $('palette');
   var btnR = $('btnR'), btnL = $('btnL'), btnIns = $('btnIns'), btnDel = $('btnDel'), delLabel = $('delLabel'),
       btnPlay = $('btnPlay'), btnUndo = $('btnUndo'), btnClear = $('btnClear'),
       btnAddRow = $('btnAddRow'), btnDelRow = $('btnDelRow'), btnMenu = $('btnMenu');
@@ -98,7 +98,6 @@
   var sel = { r: 0, c: 0 };
   var hist = [];
   var insertMode = false;
-  var notice = '';  // einmaliger Hinweis in der Statuszeile (z. B. „Tafel voll“)
 
   function flatLast() {
     var last = -1;
@@ -159,16 +158,6 @@
     return '<div class="cell' + (isSel ? ' sel' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot + hand + '</div></div>';
   }
 
-  function statusText(cur) {
-    var where = 'Zeile ' + (sel.r + 1) + ', Platz ' + (sel.c + 1);
-    if (insertMode) {
-      return 'Einfügen: Der nächste Ton kommt in ' + where + ', alles danach rückt einen Platz weiter. „Lücke zu“ schiebt die Töne zurück.';
-    }
-    return cur
-      ? BY[cur.n].n + ' ist markiert (' + where + '). Tippe einen Ton rechts, um ihn zu tauschen.'
-      : 'Der nächste Ton landet in ' + where + '.';
-  }
-
   function render() {
     grid.style.setProperty('--rows', rows.length);
     grid.classList.toggle('inserting', insertMode);
@@ -179,9 +168,6 @@
     if (play && play.cur) markPlaying(play.cur.r, play.cur.c);
 
     var cur = rows[sel.r] && rows[sel.r][sel.c];
-    statusEl.textContent = notice || statusText(cur);
-    statusEl.classList.toggle('warn', !!notice);
-    notice = '';
     exampleEl.hidden = !example;
     btnR.classList.toggle('on', !!cur && cur.h === 'r');
     btnL.classList.toggle('on', !!cur && cur.h === 'l');
@@ -196,6 +182,16 @@
   }
   function commit() { stopPlay(); save(); render(); }
 
+  // Kurze Einblendung unten auf der Tafel – verschiebt nichts im Layout
+  var toastTimer = null;
+  function toast(text, warn) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = text;
+    toastEl.classList.toggle('warn', !!warn);
+    toastEl.hidden = false;
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 3500);
+  }
+
   /* ---------- Aktionen ---------- */
   var FULL_MSG = 'Ende der Tafel erreicht (' + MAX_ROWS + ' Zeilen). Ein weiterer Ton ersetzt den letzten.';
 
@@ -207,16 +203,15 @@
     rows[sel.r][sel.c] = { n: id, h: prev ? prev.h : '' };
     example = false;
     sel = nextPos();
-    if (selIndex() === at) notice = FULL_MSG;
     commit();
+    if (selIndex() === at) toast(FULL_MSG, true);
   }
   // Fügt den Ton an der Markierung ein und schiebt alle folgenden Töne einen Platz weiter
   function insertNote(id) {
     var f = flatten();
     var lastTaken = !!f[f.length - 1];
     if (lastTaken && rows.length >= MAX_ROWS) {
-      notice = 'Kein Platz zum Einfügen – die Tafel ist voll. Entferne zuerst einen Ton.';
-      render();
+      toast('Kein Platz zum Einfügen – die Tafel ist voll. Entferne zuerst einen Ton.', true);
       return;
     }
     snap();
@@ -227,8 +222,8 @@
     unflatten(f);
     example = false;
     sel = nextPos();
-    if (selIndex() === at) notice = FULL_MSG;
     commit();
+    if (selIndex() === at) toast(FULL_MSG, true);
   }
   function setHand(h) {
     var cell = rows[sel.r][sel.c];
@@ -337,9 +332,9 @@
   // Spielt die Tafel von vorne bis zur letzten Note; leere Plätze dazwischen sind Pausen
   function startPlay() {
     var last = flatLast();
-    if (last < 0) { notice = 'Noch keine Töne auf der Tafel.'; render(); return; }
+    if (last < 0) { toast('Noch keine Töne auf der Tafel.', true); return; }
     var ctx = audioCtx();
-    if (!ctx) { notice = 'Abspielen wird von diesem Browser nicht unterstützt.'; render(); return; }
+    if (!ctx) { toast('Abspielen wird von diesem Browser nicht unterstützt.', true); return; }
     var out = ctx.createGain();
     out.gain.value = 0.6;
     out.connect(ctx.destination);
@@ -450,9 +445,8 @@
     example = false;
     sel = appendPos();
     closeMenu();
-    notice = '„' + s.name + '“ geladen. „Rückgängig“ holt die vorherige Tafel zurück.';
     commit();
-    statusEl.classList.remove('warn');
+    toast('„' + s.name + '“ geladen. „Rückgängig“ holt die vorherige Tafel zurück.');
   }
   function openMenu() {
     stopPlay();

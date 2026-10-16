@@ -97,7 +97,8 @@ body {
   padding: 14px 12px;
   display: grid;
   gap: 6px;
-  grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem));
+  /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter */
+  grid-template-rows: repeat(var(--rows, 3), minmax(0, 12rem));
   align-content: start;
   touch-action: none;
 }
@@ -120,9 +121,27 @@ body {
   min-width: 0; min-height: 0;
   cursor: pointer; border-radius: 14px;
 }
+/* Unter dem Kreis: Längenzeichen (Höhe .5 × Kreis), darunter r/l */
 .stack {
-  --d: max(24px, min(84cqw, calc(100cqh - 2.6rem)));
+  --d: max(24px, min(84cqw, calc((100cqh - 2.8rem) / 1.5)));
+  width: 100%;
   display: flex; flex-direction: column; align-items: center; gap: .25rem;
+}
+.len {
+  position: relative; width: 100%; height: calc(var(--d) * .5);
+  display: flex; justify-content: center; color: var(--fg);
+}
+/* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */
+.grid.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem)); }
+.grid.nolen .stack { --d: max(24px, min(84cqw, calc(100cqh - 2.6rem))); }
+.grid.nolen .len { display: none; }
+.sym { display: block; height: 100%; width: auto; overflow: visible; }
+/* Balken von Hals zu Hals zweier Achtel: Hals liegt .05 × Kreis rechts der Mitte und ist .04 × Kreis breit, Platzabstand 6px */
+.len.beam::after {
+  content: ""; position: absolute;
+  left: calc(50% + var(--d) * .03); top: calc(var(--d) * .04);
+  width: calc(100% + 6px + var(--d) * .04); height: calc(var(--d) * .075);
+  background: currentColor;
 }
 .dot {
   width: var(--d); aspect-ratio: 1; border-radius: 50%;
@@ -136,6 +155,11 @@ body {
 .dot.ghost {
   background: transparent; border: 3px dashed var(--line); box-shadow: none;
 }
+.dot.rest {
+  background: var(--btn); color: var(--fg);
+  border: 3px solid var(--line); box-shadow: none;
+}
+.dot.rest .sym { height: calc(var(--d) * .62); }
 /* Plätze hinter dem Zeilenende nur blass, damit man sieht, wo die Zeile aufhört */
 .cell.beyond:not(.sel) .dot.ghost { opacity: .4; }
 .sharp { font-size: .6em; vertical-align: .55em; margin-left: .03em; }
@@ -214,6 +238,12 @@ body {
   cursor: pointer; touch-action: manipulation; padding: 0;
 }
 .note:active { transform: scale(.93); }
+.note.pause { background: var(--btn); color: var(--fg); border: 3px solid var(--line); box-shadow: none; }
+.note.pause .sym { height: 1.15em; }
+.lens { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.lens .btn { flex-direction: column; gap: .1rem; min-height: 56px; padding: .3rem .1rem; }
+.lens .sym { height: 1.6rem; }
+.lens .btn .small { font-size: .8rem; }
 .note.up .ltr { font-size: .9em; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
 .actions .play { grid-column: 1 / -1; }
@@ -313,6 +343,8 @@ body {
       </button>
     </div>
 
+    <div class="lens" id="lens" role="group" aria-label="Tonlänge in Schlägen"></div>
+
     <div class="palette" id="palette"></div>
 
     <div class="actions">
@@ -362,6 +394,14 @@ body {
   <section>
     <h3>Farben</h3>
     <div class="themes" id="themes"></div>
+  </section>
+
+  <section>
+    <h3>Notenzeichen</h3>
+    <button type="button" class="btn theme" id="btnLensToggle" aria-pressed="true">
+      <span>Unter den Tönen: <span id="lensToggleState">an</span></span>
+      <span class="desc">Zeigt die Tonlänge als Note unter jedem Kreis. Ausgeschaltet werden die Kreise größer.</span>
+    </button>
   </section>
 
   <section>

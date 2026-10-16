@@ -1,7 +1,7 @@
 (function () {
   'use strict';
-  // Zeilen sind beliebig lang (bis MAX_LEN); MELODY_COLS ist nur die Zeilenlänge der mitgelieferten Lieder
-  var MELODY_COLS = 8, MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
+  // Zeilen sind beliebig lang (bis MAX_LEN)
+  var MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
   var KEY = 'notentafel.v1', SONGS_KEY = 'notentafel.songs.v1', SETTINGS_KEY = 'notentafel.settings.v1',
       AUTO_KEY = 'notentafel.autosave.v1';
 
@@ -33,20 +33,37 @@
       'D+': '#f58a1f', 'E+': '#f7d11e', 'F+': '#9bd74a'
     } }
   ];
-  // Mitgelieferte Lieder, immer im Menü ladbar. „-“ ist ein leerer Platz (Pause).
+  // Tonlängen in Schlägen; Viertel (1) ist der Normalfall
+  var DURS = [
+    { d: 0.5, l: '½', n: 'Achtel', p: 'Achtelpause' },
+    { d: 1,   l: '1', n: 'Viertel', p: 'Viertelpause' },
+    { d: 2,   l: '2', n: 'Halbe', p: 'Halbe Pause' },
+    { d: 3,   l: '3', n: 'Punktierte Halbe', p: 'Punktierte halbe Pause' },
+    { d: 4,   l: '4', n: 'Ganze', p: 'Ganze Pause' }
+  ];
+  var DUR_BY = {};
+  DURS.forEach(function (x) { DUR_BY[x.d] = x; });
+
+  // Mitgelieferte Lieder, immer im Menü ladbar. „|“ trennt Zeilen, „-“ ist eine Pause,
+  // „:2“ hängt die Länge in Schlägen an (ohne Angabe ein Schlag), z. B. „G:2“ oder „-:2“.
   // Bruder Jakob und Ode an die Freude stehen in F-Dur, weil der Tonvorrat unter dem C endet.
+  // Die punktierte Viertel der Ode gibt es nicht, dort stehen zwei Viertel.
   var MELODIES = [
-    { name: 'Alle meine Entchen', notes: 'C D E F G G A A A A G A A A A G F F F F E E D D D D C' },
-    { name: 'Hänschen klein', notes: 'G E E F D D C D E F G G G G E E F D D C E G G C D D D D D E F E E E E E F G G E E F D D C E G G C' },
-    { name: 'Kuckuck, Kuckuck', notes: 'G E G E F E D D D E F D E E F G E G E G E F E D C' },
-    { name: 'Bruder Jakob', notes: 'F G A F F G A F A B C+ - A B C+ - C+ D+ C+ B A F C+ D+ C+ B A F F C F - F C F -' },
-    { name: 'Morgen kommt der Weihnachtsmann', notes: 'C C G G A A G - F F E E D D C - G G F F E E D - G G F F E E D - C C G G A A G - F F E E D D C -' },
-    { name: 'Ode an die Freude', notes: 'A A B C+ C+ B A G F F G A A G G - A A B C+ C+ B A G F F G A G F F - G G A F G A B A F G A B A G F G C A A B C+ C+ B A G F F G A G F F' }
+    { name: 'Alle meine Entchen', notes: 'C D E F G:2 G:2 | A A A A G:4 | A A A A G:4 | F F F F E:2 E:2 | D D D D C:4' },
+    { name: 'Hänschen klein', notes: 'G E E:2 F D D:2 | C D E F G G G:2 | G E E:2 F D D:2 | C E G G C:4 | D D D D D E F:2 | E E E E E F G:2 | G E E:2 F D D:2 | C E G G C:4' },
+    { name: 'Kuckuck, Kuckuck', notes: 'G:2 E G:2 E F E D C:3 | D D E F:2 D E E F G:2 E | G:2 E G:2 E F E D C:3' },
+    { name: 'Bruder Jakob', notes: 'F G A F F G A F | A B C+:2 A B C+:2 | C+:.5 D+:.5 C+:.5 B:.5 A F C+:.5 D+:.5 C+:.5 B:.5 A F | F C F:2 F C F:2' },
+    { name: 'Morgen kommt der Weihnachtsmann', notes: 'C C G G A A G:2 | F F E E D D C:2 | G G F F E E D:2 | G G F F E E D:2 | C C G G A A G:2 | F F E E D D C:2' },
+    { name: 'Ode an die Freude', notes: 'A A B C+ C+ B A G | F F G A A G G:2 | A A B C+ C+ B A G | F F G A G F F:2 | G G A F G A:.5 B:.5 A F | G A:.5 B:.5 A G F G C:2 | A A B C+ C+ B A G | F F G A G F F:2' }
   ];
   function melodyRows(m) {
-    var f = m.notes.split(' ').map(function (id) { return id === '-' ? null : { n: id, h: '' }; });
-    var rs = [];
-    for (var i = 0; i < f.length; i += MELODY_COLS) rs.push(f.slice(i, i + MELODY_COLS));
+    var rs = m.notes.split('|').map(function (line) {
+      return line.trim().split(/\s+/).map(function (tok) {
+        var p = tok.split(':'), d = p[1] ? +p[1] : 1;
+        if (p[0] === '-') return { d: d };
+        return { n: p[0], h: '', d: d };
+      });
+    });
     while (rs.length < START_ROWS) rs.push([]);
     return rs;
   }
@@ -55,7 +72,7 @@
   THEMES.forEach(function (t) { THEME_BY[t.id] = t; });
 
   var $ = function (id) { return document.getElementById(id); };
-  var grid = $('grid'), toastEl = $('toast'), palette = $('palette');
+  var grid = $('grid'), toastEl = $('toast'), palette = $('palette'), lensEl = $('lens');
   var board = grid.parentNode;
   var btnR = $('btnR'), btnL = $('btnL'), btnIns = $('btnIns'), btnDel = $('btnDel'), delLabel = $('delLabel'),
       btnBreak = $('btnBreak'), btnDone = $('btnDone'),
@@ -64,7 +81,8 @@
   var drawer = $('drawer'), backdrop = $('backdrop'), btnClose = $('btnClose'), songNameEl = $('songName'),
       btnSave = $('btnSave'), saveHint = $('saveHint'), songsEl = $('songs'), themesEl = $('themes'),
       autoSec = $('autoSec'), autoEl = $('autosave'), melodiesEl = $('melodies'),
-      tempoEl = $('tempo'), tempoOut = $('tempoOut');
+      tempoEl = $('tempo'), tempoOut = $('tempoOut'),
+      btnLensToggle = $('btnLensToggle'), lensToggleState = $('lensToggleState');
 
   /* ---------- Speicher ---------- */
   function emptyRows() { var rs = []; for (var i = 0; i < START_ROWS; i++) rs.push([]); return rs; }
@@ -75,8 +93,11 @@
     for (var i = 0; i < raw.length; i++) if (!Array.isArray(raw[i]) || raw[i].length > MAX_LEN) return null;
     var rs = raw.map(function (row) {
       return row.map(function (c) {
-        if (!c || !BY[c.n]) return null;
-        return { n: c.n, h: (c.h === 'r' || c.h === 'l') ? c.h : '' };
+        if (!c) return null;
+        var d = DUR_BY[c.d] ? c.d : 1;
+        if (c.n == null) return DUR_BY[c.d] ? { d: d } : null;
+        if (!BY[c.n]) return null;
+        return { n: c.n, h: (c.h === 'r' || c.h === 'l') ? c.h : '', d: d };
       });
     });
     var lastRow = -1;
@@ -110,7 +131,8 @@
     var s = readJSON(SETTINGS_KEY) || {};
     return {
       theme: THEME_BY[s.theme] ? s.theme : 'original',
-      tempo: (s.tempo >= 50 && s.tempo <= 160) ? s.tempo : 90
+      tempo: (s.tempo >= 50 && s.tempo <= 160) ? s.tempo : 90,
+      lens: s.lens !== false // Notenzeichen unter den Tönen anzeigen
     };
   }
   function saveSettings() { writeJSON(SETTINGS_KEY, settings); }
@@ -135,8 +157,13 @@
   var hist = [];
   var insertMode = false;
   var clean = false; // „Fertig“: Markierung und leere Plätze ausgeblendet
+  var pen = 1; // Länge für neue Töne und Pausen
 
-  function hasNotes() { return rows.some(function (row) { return row.some(Boolean); }); }
+  // Ein Platz ist leer (null, ein stiller Schlag), eine Pause ({ d }) oder ein Ton ({ n, h, d })
+  function isNote(c) { return !!(c && c.n); }
+  function isRest(c) { return !!(c && !c.n); }
+  function dur(c) { return (c && c.d) || 1; }
+  function hasNotes() { return rows.some(function (row) { return row.some(isNote); }); }
   // Platz hinter dem letzten Ton der letzten beschriebenen Zeile (Startposition)
   function appendPos() {
     for (var r = rows.length - 1; r >= 0; r--) if (rows[r].some(Boolean)) return { r: r, c: rows[r].length };
@@ -176,20 +203,60 @@
       : '';
     return arrow + '<span class="ltr">' + n.l + (n.sharp ? '<span class="sharp">♯</span>' : '') + '</span>';
   }
-  function cellHTML(cell, r, c, beyond) {
+  // Noten- und Pausenzeichen, alle im selben Rahmen (22 × 30), damit Hals und Balken sauber anschließen.
+  // beam: Achtel ohne Fähnchen, der Balken zur nächsten Achtel kommt aus dem CSS.
+  var HEAD = 'cx="9.4" cy="24.6" transform="rotate(-22 9.4 24.6)"';
+  function noteSym(d, beam) {
+    var s;
+    if (d === 4) s = '<ellipse cx="11" cy="22" rx="6.4" ry="4.3" fill="none" stroke-width="2.6"/>';
+    else {
+      s = '<path d="M14 24V2.5" stroke-width="2.4"/>' + (d >= 2
+        ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="2.4"/>'
+        : '<ellipse ' + HEAD + ' rx="5.3" ry="3.8" fill="currentColor" stroke="none"/>');
+      if (d === 0.5 && !beam) s += '<path d="M14 2.5c.5 5 7 6.5 5.2 14" fill="none" stroke-width="2.2"/>';
+      if (d === 3) s += '<circle cx="19.8" cy="25" r="1.9" fill="currentColor" stroke="none"/>';
+    }
+    return '<svg class="sym" viewBox="0 0 22 30" stroke="currentColor" stroke-linecap="round" aria-hidden="true">' + s + '</svg>';
+  }
+  function restSym(d) {
+    var s = {
+      0.5: '<circle cx="8.5" cy="11" r="2.6" fill="currentColor" stroke="none"/><path d="M8 13.2c3 .8 5.5-.3 7.5-3L10 25" fill="none" stroke-width="2"/>',
+      1: '<path d="M8.5 3.5l5.5 6.5-4.5 5 5.5 6c-3.5-1.5-7-.3-4.5 4" fill="none" stroke-width="2.4" stroke-linejoin="round"/>',
+      2: '<path d="M3 18.5h16" stroke-width="1.8"/><rect x="6" y="13" width="10" height="5.5" fill="currentColor" stroke="none"/>',
+      3: '<path d="M2 18.5h14" stroke-width="1.8"/><rect x="4.5" y="13" width="9" height="5.5" fill="currentColor" stroke="none"/><circle cx="19" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
+      4: '<path d="M3 11.5h16" stroke-width="1.8"/><rect x="6" y="11.5" width="10" height="5.5" fill="currentColor" stroke="none"/>'
+    }[d];
+    return '<svg class="sym" viewBox="0 0 22 30" stroke="currentColor" stroke-linecap="round" aria-hidden="true">' + s + '</svg>';
+  }
+
+  // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens
+  function cellHTML(cell, r, c, beyond, beam) {
     var isSel = sel.r === r && sel.c === c;
     var where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
-    var dot, label;
-    if (cell) {
-      var n = BY[cell.n];
+    var dot, label, len = '';
+    if (isNote(cell)) {
+      var n = BY[cell.n], d = dur(cell);
       dot = '<div class="dot' + (n.up ? ' up' : '') + '" style="' + colorStyle(n) + '">' + inner(n) + '</div>';
-      label = where + ': ' + n.n + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
+      label = where + ': ' + n.n + ', ' + DUR_BY[d].n + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
+      len = noteSym(d, beam);
+    } else if (cell) {
+      dot = '<div class="dot rest">' + restSym(dur(cell)) + '</div>';
+      label = where + ': ' + DUR_BY[dur(cell)].p;
     } else {
       dot = '<div class="dot ghost"></div>';
       label = where + ': leer';
     }
     var hand = (cell && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
-    return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot + hand + '</div></div>';
+    return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot +
+      '<span class="len' + (beam === 1 ? ' beam' : '') + '">' + len + '</span>' + hand + '</div></div>';
+  }
+  // Zwei Achtel hintereinander bekommen einen gemeinsamen Balken
+  function beams(row) {
+    var b = [];
+    for (var c = 0; c + 1 < row.length; c++) {
+      if (isNote(row[c]) && dur(row[c]) === 0.5 && isNote(row[c + 1]) && dur(row[c + 1]) === 0.5) { b[c] = 1; b[c + 1] = 2; c++; }
+    }
+    return b;
   }
 
   // Alle Zeilen haben so viele Plätze wie die längste Zeile plus einen freien Platz.
@@ -208,18 +275,20 @@
     grid.style.setProperty('--cols', cols);
     grid.classList.toggle('inserting', insertMode);
     grid.classList.toggle('clean', clean);
+    grid.classList.toggle('nolen', !settings.lens);
     grid.innerHTML = rows.map(function (row, r) {
-      var cells = '';
-      for (var c = 0; c < cols; c++) cells += cellHTML(row[c] || null, r, c, c >= row.length);
+      var cells = '', b = beams(row);
+      for (var c = 0; c < cols; c++) cells += cellHTML(row[c] || null, r, c, c >= row.length, b[c]);
       return '<div class="row"><span class="rownum">' + (r + 1) + '</span>' + cells + '</div>';
     }).join('');
     updateWide();
     if (play && play.cur) markPlaying(play.cur.r, play.cur.c);
 
     var cur = rows[sel.r] && rows[sel.r][sel.c];
-    btnR.classList.toggle('on', !!cur && cur.h === 'r');
-    btnL.classList.toggle('on', !!cur && cur.h === 'l');
-    btnR.disabled = btnL.disabled = !cur;
+    btnR.classList.toggle('on', isNote(cur) && cur.h === 'r');
+    btnL.classList.toggle('on', isNote(cur) && cur.h === 'l');
+    btnR.disabled = btnL.disabled = !isNote(cur);
+    renderLens(cur);
     btnIns.classList.toggle('on', insertMode);
     btnIns.setAttribute('aria-pressed', insertMode ? 'true' : 'false');
     delLabel.textContent = insertMode ? 'Lücke zu' : 'entfernen';
@@ -245,11 +314,14 @@
   }
 
   /* ---------- Aktionen ---------- */
+  // id null setzt eine Pause. Beim Austauschen bleibt die Länge des alten Platzes, damit der Rhythmus stimmt;
+  // auf einem leeren Platz gilt die gewählte Länge.
   function placeNote(id) {
     if (insertMode) { insertNote(id); return; }
     snap();
     var prev = rows[sel.r][sel.c];
-    put(sel.r, sel.c, { n: id, h: prev ? prev.h : '' });
+    var d = prev ? dur(prev) : pen;
+    put(sel.r, sel.c, id ? { n: id, h: isNote(prev) ? prev.h : '', d: d } : { d: d });
     advance();
     commit();
   }
@@ -261,10 +333,22 @@
       return;
     }
     snap();
-    if (sel.c >= row.length) put(sel.r, sel.c, { n: id, h: '' });
-    else row.splice(sel.c, 0, { n: id, h: '' });
+    var v = id ? { n: id, h: '', d: pen } : { d: pen };
+    if (sel.c >= row.length) put(sel.r, sel.c, v);
+    else row.splice(sel.c, 0, v);
     advance();
     commit();
+  }
+  // Ändert die Länge des markierten Tons bzw. der Pause und merkt sie sich für die nächsten neuen Töne.
+  // Auf einem leeren Platz innerhalb der Zeile entsteht dabei eine Pause.
+  function setLen(d) {
+    pen = d;
+    var row = rows[sel.r], cell = row[sel.c];
+    if (cell ? dur(cell) !== d : sel.c < row.length) {
+      snap();
+      if (cell) cell.d = d; else row[sel.c] = { d: d };
+      commit();
+    } else render();
   }
   // Umbruch: Die Markierung und alles dahinter rutscht in eine neue Zeile darunter.
   // Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
@@ -384,9 +468,14 @@
   }
   // Spielt die Tafel Zeile für Zeile bis zur letzten Note; leere Plätze innerhalb einer Zeile sind Pausen
   function startPlay() {
-    var seq = [], last = -1;
+    // t = Startzeit in Schlägen; leere Plätze zählen einen Schlag
+    var seq = [], last = -1, t = 0, end = 0;
     rows.forEach(function (row, r) {
-      row.forEach(function (cell, c) { if (cell) last = seq.length; seq.push({ cell: cell, r: r, c: c }); });
+      row.forEach(function (cell, c) {
+        seq.push({ cell: cell, r: r, c: c, t: t });
+        t += dur(cell);
+        if (isNote(cell)) { last = seq.length - 1; end = t; }
+      });
     });
     if (last < 0) { toast('Noch keine Töne auf der Tafel.', true); return; }
     var ctx = audioCtx();
@@ -396,15 +485,15 @@
     out.connect(ctx.destination);
     var step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08;
     play = { out: out, timers: [], cur: null };
-    seq.slice(0, last + 1).forEach(function (s, i) {
-      if (s.cell) tone(out, BY[s.cell.n].f, t0 + i * step, step * 0.9);
+    seq.slice(0, last + 1).forEach(function (s) {
+      if (isNote(s.cell)) tone(out, BY[s.cell.n].f, t0 + s.t * step, dur(s.cell) * step * 0.9);
       var pos = { r: s.r, c: s.c };
       play.timers.push(setTimeout(function () {
         play.cur = pos;
         markPlaying(pos.r, pos.c);
-      }, (t0 - ctx.currentTime + i * step) * 1000));
+      }, (t0 - ctx.currentTime + s.t * step) * 1000));
     });
-    play.timers.push(setTimeout(stopPlay, (t0 - ctx.currentTime + (last + 1) * step) * 1000));
+    play.timers.push(setTimeout(stopPlay, (t0 - ctx.currentTime + end * step) * 1000));
     btnPlay.innerHTML = STOP_HTML;
     btnPlay.classList.add('on');
   }
@@ -424,13 +513,28 @@
       '" style="' + colorStyle(n) + '" aria-label="' + n.n + '">' + inner(n) + '</button>';
   }
   function renderPalette() {
-    palette.innerHTML = GROUPS.map(function (g) {
-      return '<div class="pal">' + g.map(function (id) { return noteBtn(BY[id]); }).join('') + '</div>';
+    // Der Pause-Knopf sitzt in der letzten Gruppe hinter Fis und B
+    palette.innerHTML = GROUPS.map(function (g, i) {
+      return '<div class="pal">' + g.map(function (id) { return noteBtn(BY[id]); }).join('') +
+        (i === GROUPS.length - 1 ? '<button type="button" class="note pause" data-id="" aria-label="Pause">' + restSym(1) + '</button>' : '') + '</div>';
     }).join('');
   }
   palette.addEventListener('click', function (e) {
     var b = e.target.closest('.note');
-    if (b) placeNote(b.dataset.id);
+    if (b) placeNote(b.dataset.id || null);
+  });
+  // Die Knöpfe zeigen Pausenzeichen, solange die Markierung auf einer Pause oder einem leeren Platz in der Zeile steht
+  function renderLens(cur) {
+    var asRest = !isNote(cur) && sel.c < rows[sel.r].length;
+    var on = cur ? dur(cur) : pen;
+    lensEl.innerHTML = DURS.map(function (x) {
+      return '<button type="button" class="btn' + (x.d === on ? ' on' : '') + '" data-d="' + x.d + '" aria-pressed="' + (x.d === on) +
+        '" title="' + (asRest ? x.p : x.n) + '">' + (asRest ? restSym(x.d) : noteSym(x.d)) + '<span class="small">' + x.l + '</span></button>';
+    }).join('');
+  }
+  lensEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-d]');
+    if (b) setLen(+b.dataset.d);
   });
 
   btnR.addEventListener('click', function () { setHand('r'); });
@@ -528,6 +632,7 @@
     renderAuto();
     renderMelodies();
     renderThemes();
+    renderLensToggle();
     tempoEl.value = settings.tempo;
     tempoOut.textContent = settings.tempo + ' pro Minute';
     backdrop.hidden = false;
@@ -580,6 +685,17 @@
     saveSettings();
     renderThemes();
     renderPalette();
+    render();
+  });
+  function renderLensToggle() {
+    btnLensToggle.classList.toggle('on', settings.lens);
+    btnLensToggle.setAttribute('aria-pressed', settings.lens ? 'true' : 'false');
+    lensToggleState.textContent = settings.lens ? 'an' : 'aus';
+  }
+  btnLensToggle.addEventListener('click', function () {
+    settings.lens = !settings.lens;
+    saveSettings();
+    renderLensToggle();
     render();
   });
   tempoEl.addEventListener('input', function () {

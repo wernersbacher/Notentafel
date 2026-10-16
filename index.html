@@ -3,9 +3,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Nunito:wght@600;700;800&display=swap">
 <style>
-/* Layout: links die Tafel (8 Plätze pro Zeile, Zeilen füllen die Höhe), rechts die Leiste mit allen Tönen */
+/* Layout: links die Tafel (Zeilen beliebig lang, Kreise schrumpfen mit der längsten Zeile), rechts die Leiste mit allen Tönen */
 :root {
   --bg: #dfe5e1;
   --board: #fbfcfa;
@@ -20,7 +20,8 @@
   --ring: #18211d;
   --danger: #b3261e;
   --shadow: rgba(24, 33, 29, .18);
-  --font-display: "Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  /* Andika ist für Leseanfänger gemacht: B, D, l usw. sind klar unterscheidbar */
+  --font-display: "Andika", "Trebuchet MS", system-ui, sans-serif;
   --font-ui: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -81,7 +82,7 @@ body {
   border: 10px solid var(--frame);
   border-radius: 18px 18px 6px 6px;
   box-shadow: 0 2px 0 var(--frame-edge), inset 0 2px 10px var(--shadow);
-  overflow: hidden;
+  overflow-x: auto; overflow-y: hidden;
 }
 .tray {
   height: 12px; margin-inline: 10%;
@@ -89,8 +90,10 @@ body {
   border-radius: 0 0 8px 8px;
   box-shadow: 0 2px 0 var(--frame-edge);
 }
+/* Unter etwa 46px pro Platz wird nicht weiter geschrumpft, dann lässt sich die Tafel seitlich wischen */
 .grid {
-  flex: 1; min-width: 0; min-height: 0;
+  flex: 1; min-height: 0;
+  min-width: calc(1.5rem + var(--cols, 8) * 46px);
   padding: 14px 12px;
   display: grid;
   gap: 6px;
@@ -98,9 +101,10 @@ body {
   align-content: start;
   touch-action: none;
 }
+.grid.wide { touch-action: pan-x; }
 .row {
   display: grid;
-  grid-template-columns: 1.5rem repeat(8, minmax(0, 1fr));
+  grid-template-columns: 1.5rem repeat(var(--cols, 8), minmax(0, 1fr));
   grid-template-rows: minmax(0, 1fr);
   gap: 6px;
   min-height: 0;
@@ -121,9 +125,9 @@ body {
 }
 .dot {
   width: var(--d); aspect-ratio: 1; border-radius: 50%;
-  background: var(--c); color: var(--ink);
+  background: var(--c); color: #000;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 600;
+  font-family: var(--font-display); font-weight: 700;
   font-size: calc(var(--d) * .5); line-height: 1;
   box-shadow: inset 0 calc(var(--d) * -.05) 0 rgba(0, 0, 0, .16);
   transition: transform .12s ease;
@@ -131,6 +135,8 @@ body {
 .dot.ghost {
   background: transparent; border: 3px dashed var(--line); box-shadow: none;
 }
+/* Plätze hinter dem Zeilenende nur blass, damit man sieht, wo die Zeile aufhört */
+.cell.beyond:not(.sel) .dot.ghost { opacity: .4; }
 .ltr.long { font-size: .62em; }
 .up .ltr { font-size: .9em; }
 .arr { width: .46em; height: .46em; margin-bottom: -.02em; }
@@ -148,10 +154,13 @@ body {
 .cell.sel .dot.ghost { border-color: var(--ring); border-style: solid; box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
 /* Im Einfügen-Modus zeigt ein Balken links an, dass der Ton vor diesem Platz landet */
 .grid.inserting .cell.sel { position: relative; }
-.grid.inserting .cell.sel::before {
+.grid.inserting:not(.clean) .cell.sel::before {
   content: ""; position: absolute; left: -5px; top: 10%; bottom: 10%;
   width: 4px; border-radius: 2px; background: var(--ring);
 }
+/* „Fertig“: Markierung und leere Plätze ausblenden, nur die Töne bleiben */
+.grid.clean .dot.ghost { visibility: hidden; }
+.grid.clean .cell.sel .dot { box-shadow: inset 0 calc(var(--d) * -.05) 0 rgba(0, 0, 0, .16); }
 .cell.playing .dot:not(.ghost) { transform: scale(1.14); }
 .cell.lifting { opacity: .3; }
 .cell.drop .dot { transform: scale(1.08); }
@@ -170,7 +179,6 @@ body {
 }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .title { font: 700 1.4rem var(--font-display); margin: 0; }
-.example { margin: 0; font-size: .82rem; line-height: 1.3; color: var(--muted); border-left: 3px solid var(--line); padding-left: .6rem; }
 
 .btn {
   font: 800 .95rem var(--font-ui);
@@ -190,7 +198,7 @@ body {
 .ico { width: 1.25rem; height: 1.25rem; flex: none; }
 .btn .big .ico { width: 1.5rem; height: 1.5rem; display: block; }
 
-.tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .tools .btn { flex-direction: column; gap: .15rem; min-height: 58px; padding: .3rem .15rem; }
 .tools .btn .small { font-size: .72rem; }
 
@@ -198,9 +206,9 @@ body {
 .pal { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .note {
   aspect-ratio: 1; border: 0; border-radius: 50%;
-  background: var(--c); color: var(--ink);
+  background: var(--c); color: #000;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font: 600 1.9rem/1 var(--font-display);
+  font: 700 1.9rem/1 var(--font-display);
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16);
   cursor: pointer; touch-action: manipulation; padding: 0;
 }
@@ -288,16 +296,21 @@ body {
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Menü
       </button>
     </div>
-    <p class="example" id="example">Beispielmelodie „Hänschen klein“. Mit „Alles löschen“ beginnst du neu.</p>
 
     <div class="tools">
       <button type="button" class="btn" id="btnR" title="Rechte Hand"><span class="big">r</span><span class="small">rechts</span></button>
       <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
+      <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
+      </button>
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
       </button>
       <button type="button" class="btn" id="btnDel" title="Ton entfernen">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></span><span class="small" id="delLabel">entfernen</span>
+      </button>
+      <button type="button" class="btn" id="btnDone" aria-pressed="false" title="Markierung und leere Plätze ausblenden">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">fertig</span>
       </button>
     </div>
 

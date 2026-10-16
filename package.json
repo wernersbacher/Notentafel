@@ -1,0 +1,8 @@
+{
+  "name": "notentafel",
+  "private": true,
+  "description": "Digitale Notentafel für den Musikunterricht",
+  "scripts": {
+    "start": "node tools/serve.js"
+  }
+}

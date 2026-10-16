@@ -30,10 +30,11 @@ Reines HTML, CSS und JavaScript ohne Build-Schritt und ohne Abhängigkeiten. Das
 | `js/menu.js` | Das Menü |
 | `js/player.js`, `js/audio.js` | Abspielen und Klangerzeugung |
 | `js/ui.js`, `js/dom.js` | Einblendung, Nochmal-tippen-Bestätigung, Popups, Element-Verweise |
+| `package.json`, `tools/serve.js` | Nur für `npm start`: kleiner lokaler Server |
 
 **Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository. Pushen reicht, es gibt nichts zu bauen.
 
-**Lokal starten:** Module laden nicht über `file://`, darum braucht man einen kleinen lokalen Server im Projektordner, z. B. `npx serve` oder `python -m http.server`, und öffnet dann die angezeigte Adresse. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
+**Lokal starten:** `npm start` und dann http://localhost:8000/ öffnen (anderer Port: `PORT=8080 npm start`). Der Server in `tools/serve.js` braucht nur Node, keine Pakete. Direkt über `file://` geht es nicht, weil Browser dort keine Module laden. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
 
 ## Bedienung
 

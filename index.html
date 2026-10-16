@@ -93,7 +93,7 @@ body {
 /* Unter etwa 46px pro Platz wird nicht weiter geschrumpft, dann lässt sich die Tafel seitlich wischen */
 .grid {
   flex: 1; min-height: 0;
-  min-width: calc(1.5rem + var(--cols, 8) * 46px);
+  min-width: calc(1.5rem + var(--cols, 1) * 46px);
   padding: 14px 12px;
   display: grid;
   gap: 6px;
@@ -104,7 +104,8 @@ body {
 .grid.wide { touch-action: pan-x; }
 .row {
   display: grid;
-  grid-template-columns: 1.5rem repeat(var(--cols, 8), minmax(0, 1fr));
+  grid-template-columns: 1.5rem repeat(var(--cols, 1), minmax(0, 7rem));
+  justify-content: start;
   grid-template-rows: minmax(0, 1fr);
   gap: 6px;
   min-height: 0;

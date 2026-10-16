@@ -1,7 +1,7 @@
 (function () {
   'use strict';
-  // Zeilen sind beliebig lang (bis MAX_LEN); COLS ist nur die Mindestbreite der Tafel und die Zeilenlänge der Lieder
-  var COLS = 8, MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
+  // Zeilen sind beliebig lang (bis MAX_LEN); MELODY_COLS ist nur die Zeilenlänge der mitgelieferten Lieder
+  var MELODY_COLS = 8, MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
   var KEY = 'notentafel.v1', SONGS_KEY = 'notentafel.songs.v1', SETTINGS_KEY = 'notentafel.settings.v1',
       AUTO_KEY = 'notentafel.autosave.v1';
 
@@ -46,7 +46,7 @@
   function melodyRows(m) {
     var f = m.notes.split(' ').map(function (id) { return id === '-' ? null : { n: id, h: '' }; });
     var rs = [];
-    for (var i = 0; i < f.length; i += COLS) rs.push(f.slice(i, i + COLS));
+    for (var i = 0; i < f.length; i += MELODY_COLS) rs.push(f.slice(i, i + MELODY_COLS));
     while (rs.length < START_ROWS) rs.push([]);
     return rs;
   }
@@ -192,9 +192,10 @@
     return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + '" data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '"><div class="stack">' + dot + hand + '</div></div>';
   }
 
-  // Alle Zeilen sind gleich breit: die längste Zeile plus ein freier Platz, mindestens COLS
+  // Alle Zeilen haben so viele Plätze wie die längste Zeile plus einen freien Platz.
+  // Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
   function colCount() {
-    var n = Math.max(COLS, sel.c + 1);
+    var n = sel.c + 1;
     rows.forEach(function (row) { n = Math.max(n, row.length + 1); });
     return Math.min(n, MAX_LEN);
   }

@@ -19,7 +19,7 @@
     { id: 'D+',  l: 'D',   up: 1, bg: '#e5383b', n: 'hohes D', f: 587.33 },
     { id: 'E+',  l: 'E',   up: 1, bg: '#e5383b', n: 'hohes E', f: 659.25 },
     { id: 'F+',  l: 'F',   up: 1, bg: '#e5383b', n: 'hohes F', f: 698.46 },
-    { id: 'Fis', l: 'Fis', long: 1, bg: '#9bd74a', n: 'Fis', f: 369.99 },
+    { id: 'Fis', l: 'F', sharp: 1, bg: '#9bd74a', n: 'Fis', f: 369.99 },
     { id: 'B',   l: 'B',   bg: '#ec4899', n: 'B',  f: 466.16 }
   ];
   var BY = {};
@@ -174,7 +174,7 @@
     var arrow = n.up
       ? '<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
       : '';
-    return arrow + '<span class="ltr' + (n.long ? ' long' : '') + '">' + n.l + '</span>';
+    return arrow + '<span class="ltr">' + n.l + (n.sharp ? '<span class="sharp">♯</span>' : '') + '</span>';
   }
   function cellHTML(cell, r, c, beyond) {
     var isSel = sel.r === r && sel.c === c;

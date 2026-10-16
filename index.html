@@ -138,7 +138,7 @@ body {
 }
 /* Plätze hinter dem Zeilenende nur blass, damit man sieht, wo die Zeile aufhört */
 .cell.beyond:not(.sel) .dot.ghost { opacity: .4; }
-.ltr.long { font-size: .62em; }
+.sharp { font-size: .6em; vertical-align: .55em; margin-left: .03em; }
 .up .ltr { font-size: .9em; }
 .arr { width: .46em; height: .46em; margin-bottom: -.02em; }
 .hand {
@@ -215,8 +215,6 @@ body {
 }
 .note:active { transform: scale(.93); }
 .note.up .ltr { font-size: .9em; }
-.note .ltr.long { font-size: .66em; }
-
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
 .actions .play { grid-column: 1 / -1; }
 

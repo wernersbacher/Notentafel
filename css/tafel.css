@@ -72,14 +72,17 @@
 }
 /* Rhythmussprache unter eigenständigen Notenzeichen (ta, ti-ti, taja …) */
 .len .syl { align-self: center; white-space: nowrap; font: 700 calc(var(--d) * .3)/1 var(--font-display); color: var(--fg); }
-/* Farbfeld hinter Silben, die zusammen gesprochen werden: von der Mitte des Zeichens bis --w Platzbreiten weiter,
-   benachbarte Gruppen abwechselnd gelb und blau (durchscheinend, damit es auf heller und dunkler Tafel passt) */
+/* Farbfeld hinter einer Silbengruppe: von der Mitte des Zeichens bis --w Platzbreiten weiter. Die Farbe zeigt den
+   Notenwert (durchscheinend, damit es auf heller und dunkler Tafel passt). */
 .len .sgrp {
   position: absolute; z-index: -1; top: calc(50% - var(--d) * .21); left: calc(50% - var(--d) * .3);
   width: calc(100cqw * var(--w) + var(--d) * .6); height: calc(var(--d) * .42);
-  border-radius: calc(var(--d) * .21); background: rgba(247, 209, 30, .38);
+  border-radius: calc(var(--d) * .21); background: rgba(247, 209, 30, .4);
 }
-.len .sgrp.alt { background: rgba(90, 160, 240, .3); }
+.len .sgrp.d05 { background: rgba(90, 160, 240, .32); } /* Achtel: blau */
+.len .sgrp.d2 { background: rgba(120, 200, 80, .36); }  /* Halbe: grün */
+.len .sgrp.d3 { background: rgba(160, 110, 220, .3); }  /* punktierte Halbe: lila */
+.len .sgrp.d4 { background: rgba(245, 138, 31, .34); }  /* Ganze: orange */
 /* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
 .len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */

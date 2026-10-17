@@ -82,7 +82,7 @@ function countsHTML(zz, geo) {
 // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens.
 // line: Lage auf der Notenlinie der Zeile ('first', 'mid', 'last', 'one' oder leer). meter: Taktart vor dem Platz.
 // marks: automatische Taktstriche und Zählzeiten der Zeile. Der erste Platz trägt die Zeilennummer (auf Höhe des Kreises).
-function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, alt }) {
+function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   const isSel = S.sel.r === r && S.sel.c === c;
   const where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
   let dot, label, len = '', stackCls = '';
@@ -97,14 +97,14 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, alt }) {
     if (beam === 1) stackCls = ' bbeam';
     // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);
     // mit Breite nach Notenlänge auf die Schläge verteilt (Halbe: ta unter Schlag 1, ja unter Schlag 2)
-    // Was zusammen gesprochen wird, liegt auf einem gemeinsamen Farbfeld: ta ja (ja …) einer langen Note und ti ti zweier
-    // Achtel mit Balken (das Feld der ersten reicht bis zur Mitte der zweiten, eine halbe Feldbreite weiter).
-    // Benachbarte Gruppen wechseln die Farbe (alt 0 / 1).
+    // Jede Silbengruppe liegt auf einem Farbfeld: ta, ti, ta ja (ja …) einer langen Note und ti ti zweier Achtel mit Balken
+    // (das Feld der ersten reicht bis zur Mitte der zweiten, eine halbe Feldbreite weiter; die zweite hat keins).
+    // Die Farbe zeigt den Notenwert (Klasse d1, d05, d2, d3, d4).
     if (settings.syl && S.variant === 'rhy') {
       const parts = geo ? syllableParts(cell, beam) : [[syllable(cell, beam), 0]];
       len = parts.map(([t, o]) => o ? '<span class="syl at" style="--t:' + geoFrac(geo, o).toFixed(4) + '">' + t + '</span>' : '<span class="syl">' + t + '</span>').join('');
       const reach = parts.length > 1 ? geoFrac(geo, parts[parts.length - 1][1]) : geo && beam === 1 ? 1 : 0;
-      if (reach) len += '<span class="sgrp' + (alt ? ' alt' : '') + '" style="--w:' + reach.toFixed(4) + '"></span>';
+      if (parts.length && beam !== 2) len += '<span class="sgrp d' + String(cell.d).replace('.', '') + '" style="--w:' + reach.toFixed(4) + '"></span>';
     }
   } else if (isRest(cell)) {
     // Halbe (auch punktiert) liegen auf der Linie, die Ganze hängt darunter
@@ -137,10 +137,6 @@ function rowHTML(row, r, cols, P, marks) {
   // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
   const full = row.line && S.variant === 'rhy';
   const prop = !!P, b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
-  // Gruppen der Rhythmussprache (lange Note oder zwei Achtel mit Balken) abwechselnd einfärben
-  const alt = [];
-  let grp = 0;
-  row.forEach((x, c) => { if (b[c] === 1 || syllableParts(x, b[c]).length > 1) alt[c] = grp++ % 2; });
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
   let cells = '';
@@ -155,7 +151,7 @@ function rowHTML(row, r, cols, P, marks) {
     }
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
     const line = c > last ? '' : full ? (c === 0 && row.meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
-    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? row.meter : '', marks, geo, alt: alt[c] });
+    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? row.meter : '', marks, geo });
   }
   const tpl = prop ? ' style="--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"' : '';
   return '<div class="row"' + tpl + '><span class="rownum"></span>' + cells + '</div>';

@@ -7,6 +7,7 @@ import { playPlan } from './model.js';
 import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
+import { printHTML } from './print.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
 import { buildPanel, fillTaktPop } from './sidebar.js';
@@ -75,6 +76,14 @@ function exportMusicXML() {
   toast('Als MusicXML gespeichert.');
 }
 
+// Druckansicht füllen und den Druckdialog öffnen (dort „Als PDF speichern“)
+function printSheet() {
+  if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
+  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, counts: opts.autoZ, wrap: opts.wrap, size: opts.size });
+  closeMenu();
+  window.print();
+}
+
 export function registerLied() {
   buildPanel();
   initControls();
@@ -88,6 +97,7 @@ export function registerLied() {
     act.loadSong(songOf(s));
   });
   el.btnLiedExport.addEventListener('click', exportMusicXML);
+  el.btnLiedPrint.addEventListener('click', printSheet);
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,

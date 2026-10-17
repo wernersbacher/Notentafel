@@ -50,3 +50,16 @@
 
 /* ---------- Menü: Notengröße ---------- */
 .sizes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+/* ---------- Druckansicht (Als PDF speichern) ---------- */
+/* Nur beim Drucken sichtbar; dann ist alles andere ausgeblendet. Immer schwarz auf weiß, auch im dunklen Modus. */
+.printout { display: none; }
+@media print {
+  @page { size: A4; margin: 15mm; }
+  body > :not(.printout) { display: none !important; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  body { padding: 0 !important; }
+  .printout { display: block; color: #000; --muted: #555; }
+  .printout h1 { margin: 0 0 6mm; font: 700 20pt var(--font-display); text-align: center; }
+  .printout .score { max-width: 100%; height: auto; margin: 0 auto 3mm; break-inside: avoid; page-break-inside: avoid; }
+}

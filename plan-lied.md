@@ -232,7 +232,7 @@ Damit das Notenblatt nicht mehr seitlich gewischt werden muss. Mit dem Schalter 
 - Tonart-Vorzeichen am Zeilenanfang (z. B. F-Dur mit einem ♭)
 - Triolen, Bassschlüssel, mehrere Stimmen
 - Automatisches Teilen einer Note am Taktstrich mit Haltebogen
-- Import von Liedern (MusicXML), Export als PDF über eine Druckansicht
+- Import von Liedern (MusicXML)
 
 ---
 
@@ -241,6 +241,12 @@ Damit das Notenblatt nicht mehr seitlich gewischt werden muss. Mit dem Schalter 
 Im Menü *Exportieren → Als MusicXML speichern*. `lied/musicxml.js` macht aus dem Lied MusicXML 4.0 (partwise, `divisions` = 8 Ticks pro Viertel, also `duration` = `ticks()`). Takte entstehen an den gezeichneten Strichen (`barsAfter` mit der Einstellung *Taktstriche automatisch*), der Auftakt ist Takt 0 (`implicit`). Ein Umbruch wird zu `<print new-system>`; steht er mitten im Takt, endet dort ein Takt mit unsichtbarem Strich, weil MusicXML nur zwischen Takten umbricht. `alter` ist das klingende Vorzeichen, `accidental` das gezeichnete (`shownAccidentals`). Haltebögen nur bei gleicher Tonhöhe (`tiedFrom`), Balken aus `beamGroups`. Alle bekannten Lieder sind gegen das offizielle Schema geprüft.
 
 Fehlt für vollen Support (kommt mit den Funktionen selbst): Tonart, Liedtext, Wiederholungen, Taktwechsel, Triolen.
+
+## Nachtrag: Druckansicht (PDF) – erledigt
+
+Im Menü *Exportieren → Als PDF drucken*. `lied/print.js` setzt das Lied für A4 (Satzbreite 180 mm, Linienabstand 1,8 / 2,4 / 3,2 mm je nach Notengröße) und füllt `#printOut`, dann `window.print()`. Im Druck ist nur `.printout` sichtbar (`@media print` in `lied.css`). Gedruckt wird wie eingestellt (Notennamen, Zählzeiten, Taktstriche, Umbruch). Dafür hat `layout` zwei Optionen bekommen: `justify` (Blocksatz für alle Zeilen außer der letzten) und `ghost: false` (kein leerer Platz am Ende), und `sheetSVG` die Option `fit` (Notenlinien enden am letzten Strich) und liefert die Systeme auch einzeln (`parts`), damit der Browser zwischen ihnen umbrechen kann. Geprüft mit Chrome headless (`Page.printToPDF`), auch im dunklen Modus.
+
+Später mit Backend: MuseScore auf dem Server (`mscore -o lied.pdf lied.musicxml`) für Notensatz in Verlagsqualität.
 
 ---
 

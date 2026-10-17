@@ -28,11 +28,14 @@ function itemSVG(it, e) {
   return s;
 }
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, counts, target, playing }.
-// Liefert { svg, height } – height in sp, damit der Aufrufer die Größe setzen kann.
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, counts, target, playing, fit }.
+// fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
+// Liefert { svg, height, parts } – height in sp, damit der Aufrufer die Größe setzen kann; parts sind die Systeme
+// einzeln ({ svg, height }, jedes ab seiner Oberkante), z. B. für den Druck.
 export function sheetSVG(song, lay, o) {
   const ev = song.ev, W = o.width;
   let y = 0, out = '';
+  const parts = [];
   lay.systems.forEach((s) => {
     const zz = o.counts ? COUNTS_H : 0, top = y + s.top, bottom = s.bottom + zz + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
     let g = '';
@@ -48,7 +51,9 @@ export function sheetSVG(song, lay, o) {
     }
     // Takte, die nicht aufgehen, sanft hinter den Noten
     s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
-    g += staffLines(0, W) + clef(s.clefX, yOf(2));
+    const last = s.bars[s.bars.length - 1];
+    const end = !o.fit ? W : last && last.x > s.width - 2.5 ? last.x + (last.k === 2 ? 0.03 : 0) : s.width - 0.6;
+    g += staffLines(0, end) + clef(s.clefX, yOf(2));
     if (s.meterX != null) g += meter(s.meterX, song.meter);
     s.items.forEach((it) => {
       const e = ev[it.i];
@@ -70,14 +75,15 @@ export function sheetSVG(song, lay, o) {
     if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
     s.ties.forEach((t) => {
       const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);
-      g += tie(t.x1, t.x2 == null ? W - 0.6 : t.x2, y, t.down);
+      g += tie(t.x1, t.x2 == null ? end - 0.6 : t.x2, y, t.down);
     });
     // Tippflächen über den Zeichen: jede Spalte reicht über die ganze Höhe des Systems
     // Die markierte Spalte lässt sich ziehen (grab), alle anderen scrollen wie gewohnt
     s.items.forEach((it) => { g += rect(it.i === o.sel && !o.clean ? 'hit grab' : 'hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
     if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');
     out += '<g transform="translate(0 ' + f(top) + ')">' + g + '</g>';
+    parts.push({ svg: '<g transform="translate(0 ' + f(s.top) + ')">' + g + '</g>', height: h });
     y += h + GAP;
   });
-  return { svg: out, height: y };
+  return { svg: out, height: y, parts };
 }

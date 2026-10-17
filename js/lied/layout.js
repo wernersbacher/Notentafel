@@ -139,8 +139,10 @@ function noteShape(it, e) {
 //   bad             { x1, x2 } Takte, die nicht aufgehen (nur mit check); über einen Umbruch pro System ein Stück
 //   width, top, bottom   Breite und Platz über bzw. unter dem System in sp
 // counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }]); check: Takte prüfen;
-// width: verfügbare Breite in sp – dann wird zusätzlich automatisch umgebrochen (siehe wrap), sonst nur von Hand
-export function layout(song, { autoBar = false, counts = false, check = false, width = 0 } = {}) {
+// width: verfügbare Breite in sp – dann wird zusätzlich automatisch umgebrochen (siehe wrap), sonst nur von Hand.
+// Für den Druck: justify (Breite in sp) streckt alle Zeilen außer der letzten auf diese Breite; ghost: false lässt den
+// leeren Platz am Ende weg.
+export function layout(song, { autoBar = false, counts = false, check = false, width = 0, justify = 0, ghost = true } = {}) {
   const ev = song.ev, at = [], barX = [];
   const { bars, shown, advance, wOf, lead } = measurer(song, autoBar);
   const { brk, full } = width ? wrap(ev, bars, wOf, lead, width) : { brk: ev.map((e) => !!e.brk), full: [] };
@@ -151,12 +153,15 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
     if (brk[i]) systems.push({ first: i + 1, end: i + 1 });
   });
   // Automatisch umbrochene Zeilen werden auf die ganze Breite gestreckt, gleichmäßig verteilt auf ihre Zeichen
+  // (höchstens 3 sp mehr pro Zeichen); mit justify alle außer der letzten, ohne Grenze
   systems.forEach((s, si) => {
     s.stretch = 0;
-    if (s.end === s.first || !full[s.end - 1]) return;
+    const fill = justify ? si < systems.length - 1 : full[s.end - 1];
+    if (s.end === s.first || !fill) return;
     let w = lead(si === 0);
     for (let i = s.first; i < s.end; i++) w += wOf(i);
-    s.stretch = Math.max(0, Math.min(3, (width - 0.6 - w) / (s.end - s.first)));
+    const extra = ((justify || width) - 0.6 - w) / (s.end - s.first);
+    s.stretch = Math.max(0, justify ? extra : Math.min(3, extra));
   });
 
   systems.forEach((s, si) => {
@@ -178,7 +183,7 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
       if (bars[i]) { barX[i] = x - 0.5; s.bars.push({ x: barX[i], k: bars[i] }); x += G.bar; }
     }
     s.items.forEach((it, j) => { it.r = j + 1 < s.items.length ? s.items[j + 1].l : x - 0.5; });
-    if (si === systems.length - 1) {
+    if (ghost && si === systems.length - 1) {
       s.ghost = { l: x - 0.5, x: x + 0.3 + G.head / 2, r: x + G.ghost };
       x += G.ghost;
     }

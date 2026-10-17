@@ -32,6 +32,7 @@
   "./js/lied/layout.js": "./js/lied/layout.js?v=1.0.0",
   "./js/lied/model.js": "./js/lied/model.js?v=1.0.0",
   "./js/lied/musicxml.js": "./js/lied/musicxml.js?v=1.0.0",
+  "./js/lied/print.js": "./js/lied/print.js?v=1.0.0",
   "./js/lied/render.js": "./js/lied/render.js?v=1.0.0",
   "./js/lied/sheet.js": "./js/lied/sheet.js?v=1.0.0",
   "./js/lied/sidebar.js": "./js/lied/sidebar.js?v=1.0.0",
@@ -302,6 +303,10 @@
 
   <section data-area="lied">
     <h3>Exportieren</h3>
+    <button type="button" class="btn theme" id="btnLiedPrint">
+      <span>Als PDF drucken</span>
+      <span class="desc">Öffnet den Druckdialog, dort „Als PDF speichern“ wählen. Gedruckt wird das Notenblatt so, wie es eingestellt ist (mit Notennamen und Zählzeiten, falls an), auf A4.</span>
+    </button>
     <button type="button" class="btn theme" id="btnLiedExport">
       <span>Als MusicXML speichern</span>
       <span class="desc">Lädt das Lied als Datei herunter. MusicXML können alle Notenprogramme öffnen, z. B. MuseScore. Dort lässt es sich weiter bearbeiten und als PDF drucken.</span>
@@ -326,6 +331,8 @@
 
   <p class="version">Version 1.0.0</p>
 </aside>
+
+<div class="printout" id="printOut"></div>
 
 </body>
 </html>

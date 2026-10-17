@@ -171,9 +171,12 @@
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
       </section>
-      <div class="tools t2">
+      <div class="tools t3">
         <button type="button" class="btn" id="liedRest" title="Pause mit dem gewählten Notenwert"><span class="small">Pause</span></button>
-        <button type="button" class="btn" id="liedTakt" aria-haspopup="true" aria-expanded="false" aria-controls="liedTaktPop" title="Taktart, Taktstriche">
+        <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
+          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10c4 6 14 6 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span class="small">Bogen</span>
+        </button>
+        <button type="button" class="btn" id="liedTakt" aria-haspopup="true" aria-expanded="false" aria-controls="liedTaktPop" title="Taktart, Auftakt, Taktstriche, Zählzeiten">
           <span id="liedMeterShow"></span><span class="small">Takt …</span>
         </button>
         <div class="meterpop taktpop" id="liedTaktPop" role="group" aria-label="Takt" hidden></div>

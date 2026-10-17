@@ -1,9 +1,11 @@
 // Zeichnet das berechnete Notenblatt (layout.js) als ein SVG. Maße in Linienabständen (sp); sp ist die Größe in Pixeln.
 import { isNote, noteName } from './model.js';
 import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, staffLines } from './glyphs.js';
+import { tie } from './glyphs.js';
 
 const f = (n) => +n.toFixed(3);
 const NAMES_H = 1.8; // Platz für die Notennamen unter dem System
+const COUNTS_H = 1.9; // Platz für die Zählzeiten unter dem System
 const GAP = 0.6;     // Abstand zwischen zwei Systemen
 
 const rect = (cls, x1, y1, x2, y2, attrs = '') =>
@@ -26,13 +28,13 @@ function itemSVG(it, e) {
   return s;
 }
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, target, playing }.
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, counts, target, playing }.
 // Liefert { svg, height } – height in sp, damit der Aufrufer die Größe setzen kann.
 export function sheetSVG(song, lay, o) {
   const ev = song.ev, W = o.width;
   let y = 0, out = '';
   lay.systems.forEach((s) => {
-    const top = y + s.top, bottom = s.bottom + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
+    const zz = o.counts ? COUNTS_H : 0, top = y + s.top, bottom = s.bottom + zz + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
     let g = '';
     // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
     g += rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
@@ -50,6 +52,8 @@ export function sheetSVG(song, lay, o) {
       const e = ev[it.i];
       const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
       g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e);
+      // Zählzeiten direkt unter dem System, darunter die Notennamen
+      if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
       if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.55) + '">' + noteName(e) + '</text>';
       g += '</g>';
     });
@@ -60,6 +64,10 @@ export function sheetSVG(song, lay, o) {
     });
     s.bars.forEach((b) => { g += barline(b.x, b.k); });
     if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
+    s.ties.forEach((t) => {
+      const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);
+      g += tie(t.x1, t.x2 == null ? W - 0.6 : t.x2, y, t.down);
+    });
     // Tippflächen über den Zeichen: jede Spalte reicht über die ganze Höhe des Systems
     s.items.forEach((it) => { g += rect('hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
     if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');

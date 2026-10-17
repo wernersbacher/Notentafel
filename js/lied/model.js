@@ -101,6 +101,25 @@ export function barsAfter(song, auto) {
   });
 }
 
+// Zählzeiten wie in der Tafel, nach dem Auftakt gezählt: pro Ereignis [{ t, held, o }]. Auf der Zählzeit steht die Zahl,
+// genau dazwischen „+“; Zählzeiten, die das Zeichen hält, folgen blasser (held) mit ihrem Abstand o in Ticks.
+// Gezählt wird in der Einheit der Taktart (6/8 in Achteln, 2/2 in Halben). Eine Note hinter einem Haltebogen
+// wird nicht neu angeschlagen, ihre erste Zählzeit ist deshalb auch blass. Ohne Taktart: keine Zählzeiten.
+export function countsOf(song) {
+  if (!song.meter) return song.ev.map(() => []);
+  const [n, base] = song.meter.split('/'), unit = 32 / +base, len = measureTicks(song.meter), starts = gridStarts(song);
+  return song.ev.map((e, i) => {
+    const p = starts[i] % len, d = ticks(e), q = p / unit, k = Math.floor(q), out = [];
+    const tied = isNote(e) && tiedFrom(song.ev[i - 1], e);
+    if (q === k) out.push({ t: String(k + 1), held: tied });
+    else if (q - k === 0.5) out.push({ t: '+', held: tied });
+    for (let x = k + 1; x < +n && x * unit < p + d; x++) out.push({ t: String(x + 1), held: true, o: x * unit - p });
+    return out;
+  });
+}
+// Hängt Note e mit einem Haltebogen an prev (gleiche Tonhöhe samt Vorzeichen)? Nur dann klingt sie nicht neu.
+export const tiedFrom = (prev, e) => !!(prev && prev.tie && isNote(e) && prev.p === e.p && (prev.acc ?? null) === (e.acc ?? null));
+
 /* ---------- Gespeicherte Stände prüfen ---------- */
 function cleanEvent(e) {
   if (!e || typeof e !== 'object' || !VALUES.includes(e.v)) return null;
@@ -126,4 +145,26 @@ export function cleanSong(raw) {
     pickup: pickupsFor(meter).includes(raw.pickup) ? raw.pickup : 0,
     ev: raw.ev.map(cleanEvent).filter(Boolean)
   };
+}
+
+/* ---------- Abspielen ---------- */
+// Ablaufplan für den Player: alle Zeichen nacheinander bis zum letzten Ton, Zeiten in Vierteln.
+// Eine Note hinter einem Haltebogen klingt nicht neu, sondern verlängert die vorige.
+export function playPlan(song) {
+  const items = [];
+  let t = 0, end = 0, last = -1, held = null;
+  song.ev.forEach((e, i) => {
+    const len = ticks(e) / QUARTER;
+    if (held && tiedFrom(song.ev[i - 1], e)) {
+      held.len += len;
+      items.push({ t, len, sound: '', f: 0, pos: i });
+    } else {
+      const it = { t, len, sound: isNote(e) ? 'piano' : '', f: isNote(e) ? freq(e) : 0, pos: i };
+      items.push(it);
+      held = isNote(e) ? it : null;
+    }
+    t += len;
+    if (isNote(e)) { last = i; end = t; }
+  });
+  return { items: items.slice(0, last + 1), end };
 }

@@ -1,6 +1,7 @@
 // Notensatz: berechnet aus dem Lied die Lage aller Zeichen, ohne DOM. Gezeichnet wird in sheet.js.
 // Waagerecht zählt alles in Linienabständen (sp), senkrecht in Plätzen (pos, halbe Linienabstände, unterste Linie = 0).
 import { isNote, ticks, staffPos, measureTicks, barsAfter } from './model.js';
+import { countsOf } from './model.js';
 
 export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
@@ -61,8 +62,10 @@ function noteShape(it, e) {
 //   bars            { x, k } Takt- (1) und Schlussstriche (2)
 //   beams           { up, end, x1, x2, sub: [[x1, x2]] } Balken; sub sind die zweiten Balken der Sechzehntel
 //   ghost           der leere Platz am Ende (nur in der letzten Zeile)
+//   ties            Haltebögen { x1, x2, pos, down }; über einen Umbruch hinweg in zwei Stücken
 //   width, top, bottom   Breite und Platz über bzw. unter dem System in sp
-export function layout(song, { autoBar = false } = {}) {
+// counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }])
+export function layout(song, { autoBar = false, counts = false } = {}) {
   const ev = song.ev, bars = barsAfter(song, autoBar), at = [];
   // Zeilen: hinter einem Ereignis mit brk beginnt eine neue (auch, wenn danach noch nichts steht)
   const systems = [{ first: 0, end: 0 }];
@@ -130,5 +133,36 @@ export function layout(song, { autoBar = false } = {}) {
     s.top = Math.max(2.5, (hi - 8) / 2 + 1.5);
     s.bottom = Math.max(2.5, -lo / 2 + 1.5);
   });
+  addTies(ev, systems, at);
+  if (counts) addCounts(song, systems);
   return { systems, at };
+}
+
+// Haltebögen: von einer Note mit tie zur nächsten. Sie liegen gegenüber dem Hals (bei Hälsen nach oben unter den Köpfen).
+// Steht die nächste Note in der nächsten Zeile, läuft der Bogen bis zum Zeilenende und beginnt dort neu vor der Note;
+// ohne nächste Note ist er ein kurzer Ansatz.
+function addTies(ev, systems, at) {
+  const sysOf = (i) => systems.find((s) => i < s.end);
+  systems.forEach((s) => { s.ties = []; });
+  ev.forEach((e, i) => {
+    if (!e.tie) return;
+    const a = at[i], b = at[i + 1], s = sysOf(i);
+    const down = a.stem ? a.stem.up : a.pos < 4;
+    if (!b) { s.ties.push({ x1: a.x + 0.5, x2: a.x + 2.2, pos: a.pos, down }); return; }
+    const t = sysOf(i + 1), pos = b.rest ? a.pos : b.pos;
+    if (t === s) { s.ties.push({ x1: a.x + 0.5, x2: b.x - 0.5, pos: a.pos, down }); return; }
+    s.ties.push({ x1: a.x + 0.5, x2: null, pos: a.pos, down }); // x2 null: bis zum Zeilenende
+    t.ties.push({ x1: Math.max(b.x - 2.6, G.left + G.clef), x2: b.x - 0.5, pos, down });
+  });
+}
+
+// Zählzeiten unter dem System: die erste unter dem Kopf, gehaltene an ihrer Stelle zwischen diesem und dem nächsten Zeichen
+function addCounts(song, systems) {
+  const zz = countsOf(song);
+  systems.forEach((s) => {
+    s.items.forEach((it, j) => {
+      const next = j + 1 < s.items.length ? s.items[j + 1].x : it.r + 0.5, d = ticks(song.ev[it.i]);
+      it.counts = zz[it.i].map((c) => ({ t: c.t, held: !!c.held, x: c.o ? it.x + (next - it.x) * c.o / d : it.x }));
+    });
+  });
 }

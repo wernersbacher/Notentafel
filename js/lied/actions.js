@@ -1,6 +1,6 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
-import { MAX_EV, isNote, canDot, nearestPitch, shiftOct } from './model.js';
+import { MAX_EV, isNote, canDot, nearestPitch, shiftOct, pickupsFor } from './model.js';
 import { L, opts, persistOpts, snap, restore, stashSong } from './state.js';
 import { render, commit } from './render.js';
 
@@ -61,11 +61,14 @@ function place(o, keepValue) {
   commit();
 }
 // Stammton step (0 = c … 6 = h) in der Oktave, die dem vorigen Ton am nächsten liegt.
-// Beim Ersetzen bleibt der Wert des Zeichens, damit der Rhythmus stimmt.
+// Beim Ersetzen bleibt der Wert des Zeichens, damit der Rhythmus stimmt. Hängt der Ton an einem Haltebogen
+// und ist es derselbe, übernimmt er das Vorzeichen (sonst wäre es kein Haltebogen mehr).
 export function placePitch(step) {
   let prev = null;
   for (let i = L.sel - 1; i >= 0 && !prev; i--) if (isNote(ev()[i])) prev = ev()[i].p;
-  place({ p: nearestPitch(step, prev) }, true);
+  const o = { p: nearestPitch(step, prev) }, before = ev()[L.sel - 1];
+  if (isNote(before) && before.tie && before.p === o.p && before.acc != null) o.acc = before.acc;
+  place(o, true);
 }
 // Pause mit dem vorgewählten Wert
 export const placeRest = () => place({}, false);
@@ -101,6 +104,15 @@ export function setAcc(a) {
   if (e.acc === a) delete e.acc; else e.acc = a;
   commit();
 }
+// Haltebogen von der Note zur nächsten an- oder abschalten (zwei gleiche Töne werden ein langer)
+export function toggleTie() {
+  const t = target();
+  if (t == null) return;
+  snap();
+  const e = ev()[t];
+  if (e.tie) delete e.tie; else e.tie = 1;
+  commit();
+}
 // Eine Oktave höher (1) oder tiefer (−1)
 export function shift(by) {
   const t = target();
@@ -121,16 +133,31 @@ export function toggleBar(kind) {
   if (e.bar === kind) delete e.bar; else e.bar = kind;
   commit();
 }
+// Taktart des Lieds; ein Auftakt, der in der neuen Taktart nicht passt, fällt weg
 export function setMeter(m) {
   if (L.song.meter === m) return;
   snap();
   L.song.meter = m;
+  if (!pickupsFor(m).includes(L.song.pickup)) L.song.pickup = 0;
+  commit();
+}
+// Auftakt in Ticks (0 = keiner)
+export function setPickup(t) {
+  if (L.song.pickup === t) return;
+  snap();
+  L.song.pickup = t;
   commit();
 }
 export function toggleAutoBar() {
   opts.autoBar = !opts.autoBar;
   persistOpts();
   if (opts.autoBar && !L.song.meter) toast('Wähle zuerst eine Taktart, dann kommen die Taktstriche von selbst.');
+  render();
+}
+export function toggleAutoZ() {
+  opts.autoZ = !opts.autoZ;
+  persistOpts();
+  if (opts.autoZ && !L.song.meter) toast('Wähle zuerst eine Taktart, dann stehen die Zählzeiten unter den Noten.');
   render();
 }
 

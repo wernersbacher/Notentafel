@@ -19,6 +19,8 @@
 /* Taktart: zwei Ziffern übereinander, jede so hoch wie zwei Linienabstände */
 .score .mt { font: 700 2.75px Georgia, "Times New Roman", serif; text-anchor: middle; dominant-baseline: central; }
 .score .nm { font: 800 1.25px var(--font-ui); text-anchor: middle; fill: var(--muted); }
+.score .cnt { font: 700 1.35px var(--font-display); text-anchor: middle; }
+.score .cnt.held { opacity: .4; }
 
 /* ---------- Leiste des Lieds ---------- */
 .steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
@@ -30,5 +32,10 @@
 #liedRest .sym { height: 1.6rem; }
 #liedMeterShow .mtr { font-size: .85rem; }
 #liedMeterShow .mtr.off { opacity: .45; }
-/* Feld „Takt …“: Taktarten in einer Reihe, darunter Strich, Schlussstrich und Automatik */
-.taktpop .btn.wide { grid-column: span 2; min-height: 48px; padding: 0 .3rem; font-size: .82rem; line-height: 1.1; }
+.tools.t3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tools.t3 .btn { flex-direction: row; gap: .4rem; min-height: 48px; }
+.tools.t3 .big .ico { width: 1.3rem; height: 1.3rem; }
+/* Feld „Takt …“: Taktarten, Auftakte, darunter Striche und Automatik, jeweils mit Überschrift */
+.taktpop .poplabel { grid-column: 1 / -1; margin: 2px 2px -2px; font: 800 .7rem var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.taktpop .sym { height: 1.7rem; }
+.taktpop .btn.wide { grid-column: span 3; min-height: 48px; padding: 0 .3rem; font-size: .82rem; line-height: 1.1; }

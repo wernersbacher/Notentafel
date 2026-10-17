@@ -21,7 +21,8 @@ export function cleanLiedSettings(s) {
   s = s || {};
   return {
     autoBar: s.autoBar !== false, // Taktstriche nach der Taktart (Standard: an)
-    names: !!s.names // Notennamen unter den Noten
+    names: !!s.names, // Notennamen unter den Noten
+    autoZ: !!s.autoZ // Zählzeiten nach der Taktart
   };
 }
 export const loadLiedSettings = () => cleanLiedSettings(readJSON(SETTINGS_KEY));

@@ -12,13 +12,14 @@ import { el } from './dom.js';
 const SP = { min: 8, max: 20 };
 
 export function renderSheet() {
-  const lay = layout(L.song, { autoBar: opts.autoBar });
+  const lay = layout(L.song, { autoBar: opts.autoBar, counts: opts.autoZ });
   const avail = el.sheet.clientWidth || 600, U = Math.max(...lay.systems.map((s) => s.width));
   const sp = Math.max(SP.min, Math.min(SP.max, avail / U)), W = Math.max(U, avail / sp - 0.1);
   const last = !L.clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
-    width: W, sel: L.sel, clean: L.clean, insert: L.insertMode, names: opts.names, target: last, playing: pos == null ? -1 : pos
+    width: W, sel: L.sel, clean: L.clean, insert: L.insertMode, names: opts.names, counts: opts.autoZ,
+    target: last, playing: pos == null ? -1 : pos
   });
   el.sheet.innerHTML = '<svg class="score' + (L.clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';

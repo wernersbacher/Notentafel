@@ -2,7 +2,7 @@
 import { register } from '../core/shell.js';
 import { renderToggle, toggleSetting } from '../core/menu.js';
 import { confirmTap, popover, delegate } from '../core/ui.js';
-import { isNote, ticks, freq, QUARTER } from './model.js';
+import { playPlan } from './model.js';
 import { store } from './storage.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
@@ -12,24 +12,12 @@ import { el } from './dom.js';
 
 let taktPop;
 
-// Ablaufplan fürs Abspielen: alle Zeichen nacheinander bis zum letzten Ton, Zeiten in Vierteln
-function plan() {
-  const items = [];
-  let t = 0, end = 0, last = -1;
-  L.song.ev.forEach((e, i) => {
-    const len = ticks(e) / QUARTER;
-    items.push({ t, len, sound: isNote(e) ? 'piano' : '', f: isNote(e) ? freq(e) : 0, pos: i });
-    t += len;
-    if (isNote(e)) { last = i; end = t; }
-  });
-  return { items: items.slice(0, last + 1), end };
-}
-
 function initControls() {
   delegate(el.liedSteps, '[data-step]', (b) => act.placePitch(+b.dataset.step));
   delegate(el.liedValues, '[data-v]', (b) => act.setValue(+b.dataset.v));
   delegate(el.liedValues, '[data-dot]', act.toggleDot);
   el.liedRest.addEventListener('click', act.placeRest);
+  el.liedTie.addEventListener('click', act.toggleTie);
   el.liedSharp.addEventListener('click', () => act.setAcc(1));
   el.liedFlat.addEventListener('click', () => act.setAcc(-1));
   el.liedNat.addEventListener('click', () => act.setAcc(0));
@@ -37,9 +25,11 @@ function initControls() {
   el.liedDown.addEventListener('click', () => act.shift(-1));
 
   taktPop = popover(el.liedTaktPop, el.liedTakt, { onOpen: fillTaktPop });
-  delegate(el.liedTaktPop, '[data-m]', (b) => { taktPop.close(); act.setMeter(b.dataset.m); });
+  delegate(el.liedTaktPop, '[data-m]', (b) => act.setMeter(b.dataset.m));
   delegate(el.liedTaktPop, '[data-bar]', (b) => act.toggleBar(+b.dataset.bar));
+  delegate(el.liedTaktPop, '[data-pk]', (b) => act.setPickup(+b.dataset.pk));
   delegate(el.liedTaktPop, '[data-auto]', act.toggleAutoBar);
+  delegate(el.liedTaktPop, '[data-autoz]', act.toggleAutoZ);
 
   // Antippen auf dem Notenblatt markiert den Platz darunter
   el.sheet.addEventListener('click', (e) => {
@@ -73,7 +63,7 @@ export function registerLied() {
       undo: act.undo,
       clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
     },
-    plan,
+    plan: () => playPlan(L.song),
     mark: markPlaying,
     songs: {
       store,

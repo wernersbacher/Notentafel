@@ -97,15 +97,22 @@ export function barline(x, k) {
   return line(x, 0, x, 4, 0.14);
 }
 export const staffLines = (x1, x2) => [0, 1, 2, 3, 4].map((y) => line(x1, y, x2, y, 0.11)).join('');
+// Haltebogen von x1 nach x2 auf Höhe y, nach unten (down) oder oben gewölbt: eine schmale Sichel
+export function tie(x1, x2, y, down) {
+  const s = down ? 1 : -1, w = x2 - x1, h = Math.min(1.1, 0.35 + w * 0.12), a = x1 + w * 0.25, b = x2 - w * 0.25;
+  return '<path d="M' + f(x1) + ' ' + f(y) + 'C' + f(a) + ' ' + f(y + s * h) + ' ' + f(b) + ' ' + f(y + s * h) + ' ' + f(x2) + ' ' + f(y) +
+    'C' + f(b) + ' ' + f(y + s * (h - 0.22)) + ' ' + f(a) + ' ' + f(y + s * (h - 0.22)) + ' ' + f(x1) + ' ' + f(y) + 'Z"/>';
+}
 
 /* ---------- Kleine Zeichen für die Knöpfe der Leiste ---------- */
 const icon = (vb, s) => '<svg class="sym" viewBox="' + vb + '" fill="currentColor" aria-hidden="true">' + s + '</svg>';
-// Notenwert v
-export function noteIcon(v) {
+// Notenwert v, mit Punkt, wenn withDot
+export function noteIcon(v, withDot) {
   // Die Ganze hat keinen Hals und steht deshalb in der Mitte
   if (v === 1) return icon('-0.3 -4 3.4 4.8', head(1, -1.6, 1));
   let s = head(1, 0, v) + stem(1.6, -0.1, -3.5);
   if (v >= 8) s += flags(1.6, -3.5, v === 8 ? 1 : 2, true);
+  if (withDot) s += dot(2.45, -0.3);
   return icon('-0.3 -4 3.4 4.8', s);
 }
 export const dotIcon = () => icon('-1.7 -1.7 3.4 3.4', dot(0, 0).replace('r="0.2"', 'r="0.4"'));

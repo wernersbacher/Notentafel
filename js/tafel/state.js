@@ -27,8 +27,7 @@ export const S = {
   countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
   cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };
-// Zeilen werden automatisch umbrochen, wenn sie voll sind (höchstens MAX_PER_ROW Plätze; bei Rhythmus so viele, wie bei
-// fester Größe in die Breite passen)
+// Zeilen werden automatisch umbrochen, wenn sie voll sind (Melodie: MAX_PER_ROW Plätze, Rhythmus: RHY_PER_ROW Schläge)
 export const wraps = () => S.cap > 0;
 // Breite nach Notenlänge: bei Rhythmus immer (ein Feld pro Schlag), bei Melodie nach der Einstellung
 export const propOn = () => settings.prop || S.variant === 'rhy';

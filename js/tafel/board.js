@@ -1,5 +1,5 @@
 // Darstellung der Tafel
-import { MAX_LEN, MAX_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
+import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
 import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt } from './theory.js';
 import { S, settings, wraps, propOn } from './state.js';
@@ -8,15 +8,6 @@ import { el } from './dom.js';
 
 const NO_MARKS = { b: {}, z: [] };
 
-// Rhythmus: feste Breite eines Platzes in Pixeln (samt Abstand); so viele Plätze passen in eine Zeile
-const CELL_W = 96, CELL_GAP = 6;
-function measureCap() {
-  const w = el.board.clientWidth;
-  if (!w) return;
-  // 24px Rand links und rechts, davor die Zeilennummer (mit Taktart breiter)
-  const free = w - 24 - (hasMeter(S.rows) ? 67 : 24);
-  S.cap = Math.max(4, Math.min(MAX_PER_ROW, Math.floor(free / (CELL_W + CELL_GAP))));
-}
 
 // Alle Zeilen haben so viele Plätze wie die längste Zeile plus einen freien Platz.
 // Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
@@ -158,8 +149,7 @@ function rowHTML(row, r, cols, P, marks) {
 }
 
 export function renderBoard() {
-  if (S.variant === 'rhy') measureCap();
-  else S.cap = MAX_PER_ROW;
+  S.cap = S.variant === 'rhy' ? RHY_PER_ROW : MAX_PER_ROW;
   const grid = el.grid, prop = propOn(), cols = prop ? unitCount() : colCount();
   grid.classList.toggle('prop', prop);
   grid.classList.toggle('rhy', S.variant === 'rhy');

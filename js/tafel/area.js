@@ -87,13 +87,6 @@ export function registerTafel() {
   initControls();
   initBoardInput();
   initTafelMenu();
-  // Ändert sich die Breite (z. B. beim Drehen des Tablets), passen bei Rhythmus mehr oder weniger Plätze in eine Zeile
-  let width = 0;
-  new ResizeObserver(() => {
-    if (S.variant !== 'rhy' || el.grid.hidden || el.board.clientWidth === width) return;
-    width = el.board.clientWidth;
-    render();
-  }).observe(el.board);
   register(area('mel', 'Melodie', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
   register(area('rhy', 'Rhythmus', el.panelRhy, { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
 }

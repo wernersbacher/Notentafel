@@ -6,6 +6,8 @@ export const MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
 // Höchstens so viele Plätze stehen in einer Zeile; dann geht es automatisch in der nächsten weiter.
 // (Ältere Stände mit längeren Zeilen, bis MAX_LEN, bleiben, wie sie sind.)
 export const MAX_PER_ROW = 10;
+// Rhythmus: so viele Felder (Schläge) hat jede Zeile; die Felder werden so breit, dass sie die Zeile füllen
+export const RHY_PER_ROW = 12;
 
 // f = Frequenz in Hz (C = c', hohe Töne eine Oktave darüber).
 // Farben aus core/colors.js (dort auch die Regel für den Kontrast).

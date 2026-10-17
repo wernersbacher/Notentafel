@@ -107,20 +107,20 @@ Ein Lied ist **eine durchgehende Folge von Ereignissen**, keine Zeilen mit Plät
 
 ```js
 song = {
-  name: 'Alle meine Entchen',
-  meter: '4/4',          // Taktart am Anfang
+  meter: '4/4',          // Taktart des ganzen Lieds ('' = ohne); Taktwechsel mitten im Lied gibt es (noch) nicht
   pickup: 0,             // Auftakt in Ticks (0 = keiner), Phase 2
   ev: [                  // Ereignisse
     { p: 'c1', v: 4 },               // Note c', Viertel
-    { p: 'fis1', v: 8, dot: 1 },     // fis', punktierte Achtel
-    { p: null, v: 2 },               // Halbe Pause
+    { p: 'f1', acc: 1, v: 8, dot: 1 },  // fis', punktierte Achtel
+    { v: 2 },                        // Halbe Pause (ohne p)
     { p: 'g1', v: 4, tie: 1 },       // Haltebogen zur nächsten Note (Phase 2)
-    { p: 'g1', v: 4, bar: 2 },       // bar: Takt- (1) oder Schlussstrich (2) davor, wie in der Tafel
-    { p: 'a1', v: 4, brk: 1 },       // Zeilenumbruch davor (von Hand)
-    { p: 'h1', v: 4, meter: '3/4' }  // Taktwechsel ab hier
+    { p: 'g1', v: 4, bar: 2 },       // bar: Takt- (1) oder Schlussstrich (2) dahinter
+    { p: 'a1', v: 4, brk: 1 }        // Zeilenumbruch dahinter (von Hand)
   ]
 }
 ```
+
+Takt-, Schlussstrich und Umbruch stehen **hinter** einem Ereignis (anders als in der Tafel, wo sie davor stehen). So kann man sie auch am Ende setzen, wo noch kein Ereignis ist. Die Knöpfe wirken trotzdem „vor der Markierung“, also auf das Ereignis davor. Der Name steht nicht im Lied, sondern daneben wie in der Tafel.
 
 - **`v`** ist der Grundwert als Bruch der Ganzen: 1, 2, 4, 8, 16. Dazu kommt **`dot`**.
 - **Dauer in Ticks** (ganze Zahlen, keine Kommazahlen): Viertel = 8 Ticks, also Ganze 32, Halbe 16, Achtel 4, Sechzehntel 2. Mit Punkt mal 1,5: punktierte Halbe 24, punktierte Viertel 12, punktierte Achtel 6. Die punktierte Sechzehntel lassen wir weg.
@@ -135,7 +135,7 @@ song = {
 - **Punkt antippen:** schaltet den Punkt am Stift (und an der markierten Note) um.
 - **Tonname antippen:** am Ende eine neue Note mit dem Stift-Wert. Auf einer vorhandenen Note wird nur die Tonhöhe getauscht, der Wert bleibt (wie in der Tafel). Danach geht die Markierung einen weiter.
 - **Pause antippen:** wie ein Tonname, setzt aber eine Pause mit dem Stift-Wert. Dafür reicht **ein Knopf** statt fünf Pausenwerten.
-- **einfügen / entfernen / Lücke zu / Umbruch / fertig / Rückgängig** wie in der Tafel. „Entfernen“ macht aus einer Note eine Pause gleicher Länge, damit die Takte stimmen bleiben. „Lücke zu“ nimmt das Ereignis ganz heraus. „Umbruch“ setzt `brk` vor der Markierung.
+- **einfügen / entfernen / Lücke zu / Umbruch / fertig / Rückgängig** wie in der Tafel. „Entfernen“ macht aus einer Note eine Pause gleicher Länge, damit die Takte stimmen bleiben. „Lücke zu“ nimmt das Ereignis ganz heraus. „Umbruch“ setzt `brk` hinter das Zeichen vor der Markierung (nochmal tippen nimmt ihn weg).
 - **Antippen auf dem Notenblatt** markiert. Jede Note bekommt eine unsichtbare Tippfläche über die ganze Höhe des Systems, damit man auch mit dem Finger sicher trifft.
 
 ### Leiste im Bereich Lied
@@ -178,18 +178,19 @@ Markierung: farbig hinterlegte Spalte. Hinter der letzten Note steht eine blasse
 
 ---
 
-## Phase 1: Notenblatt und Eingabe (Kern)
+## Phase 1: Notenblatt und Eingabe (Kern) – erledigt
 
-- [ ] `lied/model.js`: Ereignisse, Ticks, Tonhöhen (Frequenz, Linienplatz), Prüfen/Packen + Tests
-- [ ] alle Notenwerte im Modell: Ganze, Halbe, Viertel, Achtel, Sechzehntel, punktiert Ganze/Halbe/Viertel/Achtel, Pausen dazu
-- [ ] `lied/layout.js`: Takte (Taktstriche von Hand oder automatisch 1:1 wie in der Tafel), Zeilen, Abstände, Halsrichtung, Hilfslinien + Tests
-- [ ] `lied/glyphs.js`: Violinschlüssel, Köpfe (voll/hohl/Ganze), Fähnchen (Achtel, Sechzehntel), alle Pausen, Punkt, ♯ ♭ ♮, Taktart, Takt- und Schlussstrich
-- [ ] `lied/sheet.js`: SVG zeichnen, Markierung, Platzhalter am Ende, Tippflächen
-- [ ] Balken zunächst einfach: gleiche Werte innerhalb eines Schlags, waagerecht
-- [ ] Leiste: Tonnamen, Vorzeichen, 5 Werte + Punkt, Pause, Aufklappfeld „Takt …“
-- [ ] Stift-Logik, einfügen/entfernen/Lücke zu/Umbruch/fertig, Rückgängig
-- [ ] Speichern, Laden, Zuletzt ersetzt, Menü
-- [ ] Abspielen mit Mitlauf-Markierung
+- [x] `lied/model.js`: Ereignisse, Ticks, Tonhöhen (Frequenz, Linienplatz), Prüfen/Packen + Tests
+- [x] alle Notenwerte im Modell: Ganze, Halbe, Viertel, Achtel, Sechzehntel, punktiert Ganze/Halbe/Viertel/Achtel, Pausen dazu
+- [x] `lied/layout.js`: Takte (Taktstriche von Hand oder automatisch 1:1 wie in der Tafel), Zeilen, Abstände, Halsrichtung, Hilfslinien + Tests
+- [x] `lied/glyphs.js`: Violinschlüssel, Köpfe (voll/hohl/Ganze), Fähnchen (Achtel, Sechzehntel), alle Pausen, Punkt, ♯ ♭ ♮, Taktart, Takt- und Schlussstrich
+- [x] `lied/sheet.js`: SVG zeichnen, Markierung, Platzhalter am Ende, Tippflächen
+- [x] Balken zunächst einfach: gleiche Werte innerhalb eines Schlags, waagerecht
+- [x] Leiste: Tonnamen, Vorzeichen, 5 Werte + Punkt, Pause, Aufklappfeld „Takt …“
+- [x] Stift-Logik, einfügen/entfernen/Lücke zu/Umbruch/fertig, Rückgängig
+- [x] Speichern, Laden, Zuletzt ersetzt, Menü
+- [x] Abspielen mit Mitlauf-Markierung, Klavierklang
+- [x] Notennamen unter den Noten (Schalter im Menü)
 
 **Fertig, wenn:** man „Alle meine Entchen“ und „Hänschen klein“ in wenigen Minuten nur per Tippen als Noten aufschreiben, abspielen und speichern kann und das Bild als Notenblatt erkennbar ist.
 

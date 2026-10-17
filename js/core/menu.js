@@ -42,9 +42,10 @@ function renderAuto() {
 }
 
 /* ---------- Einstellungen ---------- */
-// An/Aus-Schalter im Menü; renderToggle und toggleSetting nutzen auch die Bereiche für ihre eigenen Schalter
+// An/Aus-Schalter im Menü; renderToggle und toggleSetting nutzen auch die Bereiche für ihre eigenen Schalter.
+// t = { key, btn, state }; liegt die Einstellung nicht in den gemeinsamen, kommen obj und save (zum Speichern) dazu.
 export function renderToggle(t) {
-  const on = settings[t.key];
+  const on = (t.obj || settings)[t.key];
   t.btn.classList.toggle('on', on);
   t.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   t.state.textContent = on ? 'an' : 'aus';
@@ -52,8 +53,9 @@ export function renderToggle(t) {
 // apply setzt die Einstellung um, nachdem sie umgeschaltet und gespeichert wurde
 export function toggleSetting(t, apply) {
   t.btn.addEventListener('click', () => {
-    settings[t.key] = !settings[t.key];
-    persistSettings();
+    const obj = t.obj || settings;
+    obj[t.key] = !obj[t.key];
+    (t.save || persistSettings)();
     renderToggle(t);
     apply();
   });

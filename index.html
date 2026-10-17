@@ -24,7 +24,17 @@
   "./js/core/store.js": "./js/core/store.js?v=1.0.0",
   "./js/core/ui.js": "./js/core/ui.js?v=1.0.0",
   "./js/core/wake.js": "./js/core/wake.js?v=1.0.0",
+  "./js/lied/actions.js": "./js/lied/actions.js?v=1.0.0",
   "./js/lied/area.js": "./js/lied/area.js?v=1.0.0",
+  "./js/lied/dom.js": "./js/lied/dom.js?v=1.0.0",
+  "./js/lied/glyphs.js": "./js/lied/glyphs.js?v=1.0.0",
+  "./js/lied/layout.js": "./js/lied/layout.js?v=1.0.0",
+  "./js/lied/model.js": "./js/lied/model.js?v=1.0.0",
+  "./js/lied/render.js": "./js/lied/render.js?v=1.0.0",
+  "./js/lied/sheet.js": "./js/lied/sheet.js?v=1.0.0",
+  "./js/lied/sidebar.js": "./js/lied/sidebar.js?v=1.0.0",
+  "./js/lied/state.js": "./js/lied/state.js?v=1.0.0",
+  "./js/lied/storage.js": "./js/lied/storage.js?v=1.0.0",
   "./js/main.js": "./js/main.js?v=1.0.0",
   "./js/tafel/actions.js": "./js/tafel/actions.js?v=1.0.0",
   "./js/tafel/area.js": "./js/tafel/area.js?v=1.0.0",
@@ -142,7 +152,32 @@
     </div>
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
-      <p class="soon">Hier entsteht das Notenblatt: Töne und Notenwerte zusammen, auf fünf Notenlinien.</p>
+      <section class="group">
+        <h2 class="glabel">Töne <span>in der Oktave nah am vorigen Ton</span></h2>
+        <div class="steps" id="liedSteps"></div>
+        <div class="tools t5">
+          <button type="button" class="btn" id="liedDown" title="Eine Oktave tiefer">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">tiefer</span>
+          </button>
+          <button type="button" class="btn" id="liedSharp" aria-pressed="false" title="Kreuz: einen Halbton höher"><span class="big acc">♯</span><span class="small">Kreuz</span></button>
+          <button type="button" class="btn" id="liedFlat" aria-pressed="false" title="Be: einen Halbton tiefer"><span class="big acc">♭</span><span class="small">Be</span></button>
+          <button type="button" class="btn" id="liedNat" aria-pressed="false" title="Auflösungszeichen"><span class="big acc">♮</span><span class="small">Auflöser</span></button>
+          <button type="button" class="btn" id="liedUp" title="Eine Oktave höher">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">höher</span>
+          </button>
+        </div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
+        <div class="values v6" id="liedValues"></div>
+      </section>
+      <div class="tools t2">
+        <button type="button" class="btn" id="liedRest" title="Pause mit dem gewählten Notenwert"><span class="small">Pause</span></button>
+        <button type="button" class="btn" id="liedTakt" aria-haspopup="true" aria-expanded="false" aria-controls="liedTaktPop" title="Taktart, Taktstriche">
+          <span id="liedMeterShow"></span><span class="small">Takt …</span>
+        </button>
+        <div class="meterpop taktpop" id="liedTaktPop" role="group" aria-label="Takt" hidden></div>
+      </div>
     </div>
 
     <div class="actions">
@@ -217,6 +252,14 @@
     <button type="button" class="btn theme" id="btnPropToggle" aria-pressed="false">
       <span>Platz nach Schlägen: <span id="propToggleState">aus</span></span>
       <span class="desc">Eine Halbe bekommt so viel Platz wie zwei Viertel oder vier Achtel. Achtel werden halb so groß, jeder Takt ist gleich breit.</span>
+    </button>
+  </section>
+
+  <section data-area="lied">
+    <h3>Notennamen</h3>
+    <button type="button" class="btn theme" id="btnNamesToggle" aria-pressed="false">
+      <span>Unter den Noten: <span id="namesToggleState">aus</span></span>
+      <span class="desc">Zeigt unter jeder Note ihren Namen, z. B. C, Fis oder B.</span>
     </button>
   </section>
 

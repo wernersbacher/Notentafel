@@ -1,7 +1,7 @@
 // Abspielen. Der Bereich liefert einen fertigen Ablaufplan, der Player kennt weder Zeilen noch Takte.
-// Plan: { items: [{ t, len, sound, f, pos }], end } – Zeiten in Schlägen; sound ist 'bell', 'clave' oder leer (still).
+// Plan: { items: [{ t, len, sound, f, pos }], end } – Zeiten in Schlägen; sound ist 'bell', 'piano', 'clave' oder leer (still).
 // pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die Stelle hervorheben kann.
-import { audioCtx, bell, clave } from './audio.js';
+import { audioCtx, bell, clave, piano } from './audio.js';
 import { settings } from './settings.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
@@ -34,6 +34,7 @@ function startPlay(plan, mark) {
   play = { out, timers: [], cur: null, mark };
   plan.items.forEach((s) => {
     if (s.sound === 'bell') bell(out, s.f, t0 + s.t * step, s.len * step * 0.95);
+    else if (s.sound === 'piano') piano(out, s.f, t0 + s.t * step, s.len * step * 0.95);
     else if (s.sound === 'clave') clave(out, t0 + s.t * step);
     play.timers.push(setTimeout(() => { play.cur = s.pos; mark(s.pos); }, delay(s.t)));
   });

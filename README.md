@@ -41,11 +41,18 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 | `js/tafel/input.js` | Antippen und Ziehen auf der Tafel |
 | `js/tafel/menu.js` | Abschnitte der Tafel im Menü (Bekannte Lieder, Farben, Notenzeichen, Breite) |
 | `js/tafel/dom.js` | Element-Verweise der Tafel |
-| `js/lied/area.js` | Der Bereich Lied (bisher nur leere Notenlinien) |
+| `js/lied/area.js` | Meldet den Bereich Lied an, verdrahtet Leiste und Notenblatt, Ablaufplan fürs Abspielen |
+| `js/lied/model.js` | Datenmodell des Lieds (reine Funktionen): Tonhöhen, Notenwerte in Ticks, Taktstriche, Prüfung gespeicherter Stände |
+| `js/lied/layout.js` | Notensatz ohne DOM: Zeilen, Abstände, Hälse, Balken, Hilfslinien |
+| `js/lied/glyphs.js` | Die Zeichen der Notenschrift als SVG (Violinschlüssel, Köpfe, Pausen, Vorzeichen …) |
+| `js/lied/sheet.js` | Zeichnet das Notenblatt als SVG |
+| `js/lied/state.js`, `js/lied/storage.js` | Laufender Zustand, Speicherschlüssel und Einstellungen des Lieds |
+| `js/lied/actions.js` | Alles, was das Lied verändert |
+| `js/lied/render.js`, `js/lied/sidebar.js`, `js/lied/dom.js` | Neu zeichnen, Leiste, Element-Verweise |
 | `package.json` | Die Versionsnummer (`version`) und die npm-Befehle |
 | `tools/serve.js` | Für `npm start`: kleiner lokaler Server |
 | `tools/version.js` | Für `npm run version:set`: Version setzen und in `index.html` eintragen |
-| `test/` | Tests für Datenmodell, Zählzeiten, Speicher, Einstellungen, bekannte Lieder und die Abhängigkeiten zwischen den Teilen (`npm test`) |
+| `test/` | Tests für Datenmodell, Zählzeiten, Speicher, Einstellungen, bekannte Lieder, Datenmodell und Notensatz des Lieds und die Abhängigkeiten zwischen den Teilen (`npm test`) |
 
 **Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository, es gibt nichts zu bauen. Vor dem Push die Version hochsetzen: `npm run version:set 1.0.1` (ohne Nummer wird nur `index.html` auf den Stand von `package.json` gebracht, z. B. nach einem neuen Modul). Das Skript schreibt die Nummer in `package.json`, hängt in `index.html` `?v=1.0.1` an Stylesheets und Einstiegs-Script und erneuert die Import Map, die jedes Modul unter `js/` (auch in Unterordnern) auf `js/…?v=1.0.1` umleitet; auch neue Module kommen so automatisch dazu. Damit lädt der Browser nach einem Update alle Dateien neu, statt alte und neue Module zu mischen. Die Version steht ganz unten im Menü.
 
@@ -59,7 +66,7 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 - **Zeilen:** Eine Zeile wird so lang, wie man schreibt (bis 32 Plätze). Werden die Zeilen länger, schrumpfen alle Kreise gleichmäßig. Wenn sie zu klein würden, lässt sich die Tafel seitlich wischen. Blasse Plätze liegen hinter dem Zeilenende.
 - **Umbruch:** Die Markierung und alles dahinter rutschen in eine neue Zeile darunter. Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
 - **Fertig:** Blendet die Markierung und die leeren Plätze aus, damit eine saubere Ansicht für die Klasse bleibt. Ein Tipp auf die Tafel oder ein neuer Ton holt alles zurück.
-- **Die Leiste** hat oben einen Umschalter zwischen den Bereichen *Melodie*, *Rhythmus* und *Lied* (die App merkt sich, welcher zuletzt offen war). **Jeder Bereich hat seine eigene Tafel** mit eigenem Speicherstand, eigener Markierung und eigenem Rückgängig. Man kann hin und her wechseln, ohne etwas zu verlieren; die Tafeln bleiben immer gespeichert, Markierung und Rückgängig-Verlauf der anderen Tafel bis zum Schließen der App. Gemeinsam sind die Werkzeuge *einfügen, entfernen, Umbruch, fertig* und unten *Abspielen, Rückgängig, Speichern, + Zeile, − Zeile, Alles löschen*. Der Bereich *Lied* (echtes Notenblatt) ist noch im Aufbau und zeigt bisher nur leere Notenlinien.
+- **Die Leiste** hat oben einen Umschalter zwischen den Bereichen *Melodie*, *Rhythmus* und *Lied* (die App merkt sich, welcher zuletzt offen war). **Jeder Bereich hat seine eigene Tafel** mit eigenem Speicherstand, eigener Markierung und eigenem Rückgängig. Man kann hin und her wechseln, ohne etwas zu verlieren; die Tafeln bleiben immer gespeichert, Markierung und Rückgängig-Verlauf der anderen Tafel bis zum Schließen der App. Gemeinsam sind die Werkzeuge *einfügen, entfernen, Umbruch, fertig* und unten *Abspielen, Rückgängig, Speichern, + Zeile, − Zeile, Alles löschen*. Melodie und Rhythmus nutzen die Tafel mit bunten Punkten, *Lied* ein echtes Notenblatt (siehe unten). *+ Zeile* und *− Zeile* gibt es nur auf der Tafel.
 - **Speichern** (unten in der Leiste) öffnet ein Feld für den Namen, vorbelegt mit dem Namen der Tafel. Gespeichert wird in die Liste des offenen Bereichs. Gleicher Name heißt ersetzen, dafür den Knopf ein zweites Mal tippen.
   - **Melodie:** **Notennamen** (die bunten Punkte), **Notenwerte** (nur unter einen bunten Punkt) und **r/l**.
   - **Rhythmus:** **Takt** (Taktart, Linie, Taktstrich, Schlussstrich), **Notenwerte**, **Pausenwerte**, **Zählzeiten** und die Schalter **Automatisch: Taktstriche / Zählzeiten**.
@@ -84,6 +91,23 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 - **Alles löschen** und **− Zeile** (wenn in der Zeile Noten stehen) muss man zur Sicherheit zweimal antippen.
 - Die Tafel hat höchstens 8 Zeilen.
 
+### Lied (echtes Notenblatt)
+
+Fünf Notenlinien mit Violinschlüssel, ohne Farben. Bisher gibt es nur Töne, Pausen und Takte; Haltebögen, Auftakt und automatische Zählzeiten kommen noch (siehe `plan-lied.md`).
+
+- **Notenwert vorwählen:** Unter *Notenwert* einen Wert antippen (Ganze, Halbe, Viertel, Achtel, Sechzehntel), danach bekommen alle folgenden Töne und Pausen diesen Wert. Der Punkt (anderthalbmal so lang) wird nach dem Wert dazugetippt und gilt ebenfalls weiter; ein neuer Wert ist wieder ohne Punkt. Eine punktierte Sechzehntel gibt es nicht.
+- **Töne:** *C D E F G A H* setzen einen Ton. Er kommt in die Oktave, die dem vorigen Ton am nächsten liegt (der erste in c'–h'). Mit *höher* / *tiefer* verschiebt man ihn um eine Oktave (von c bis h'''). *Kreuz*, *Be* und *Auflöser* schalten das Vorzeichen um, nochmal tippen nimmt es weg. Oktave und Vorzeichen wirken auf den zuletzt gesetzten Ton (blau), bis man woanders hin tippt; dann auf den markierten.
+- **Pause:** setzt eine Pause mit dem vorgewählten Wert.
+- **Markieren:** Eine Note antippen. Der Stift übernimmt ihren Wert. Ein Tonname tauscht dann nur die Tonhöhe (der Wert bleibt), ein Notenwert oder Punkt ändert den Wert der markierten Note. Tippt man neben die Noten, kommt die Markierung ans Zeilenende.
+- **einfügen:** Töne und Pausen kommen an der Markierung dazu, statt zu ersetzen; Notenwerte ändern dann nur den Stift.
+- **entfernen:** Eine Note wird zur Pause gleicher Länge, damit die Takte stimmen. Eine Pause oder das letzte Zeichen verschwinden ganz. Im Einfügen-Modus (*Lücke zu*) verschwindet das Zeichen immer.
+- **Umbruch:** Ab der Markierung geht es in einer neuen Zeile weiter; nochmal tippen holt die Zeile wieder hoch. Zeilen bricht man (erst einmal) nur von Hand um.
+- **Takt …** öffnet ein Feld mit der Taktart des Lieds (ohne, 2/2, 2/4, 3/4, 4/4, 6/8), *Taktstrich* und *Schlussstrich* vor der Markierung und *Taktstriche automatisch* (Standard: an; wie auf der Tafel, von Hand gesetzte Taktstriche sind dann ausgeblendet, der Schlussstrich bleibt).
+- **Balken:** Achtel und Sechzehntel innerhalb eines Schlags bekommen von selbst einen Balken (im 6/8-Takt drei Achtel). Pausen, Taktstriche und Umbrüche unterbrechen ihn.
+- **Abspielen** klingt wie ein Klavier.
+- Das Notenblatt wird so groß, dass die längste Zeile die Breite füllt; ist sie zu lang, lässt es sich seitlich wischen.
+- Im Menü lassen sich die **Notennamen** unter den Noten einblenden (C, Fis, B, Es …).
+
 ### Menü
 
 - Das Menü gehört immer zum offenen Bereich (Titel „Menü · Melodie“, „Menü · Rhythmus“ usw.). Melodien und Rhythmen werden in **getrennten Listen** gespeichert und in die Tafel des offenen Bereichs geladen.
@@ -106,6 +130,8 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 | `notentafel.songs.v1` / `notentafel.rhy.songs.v1` | Gespeicherte Melodien / Rhythmen |
 | `notentafel.autosave.v1` / `notentafel.rhy.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz pro Bereich) |
 | `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich, die Automatik-Schalter, Breite nach Notenlänge und Bildschirm anlassen |
+| `notentafel.lied.v1`, `notentafel.lied.songs.v1`, `notentafel.lied.autosave.v1` | Das aktuelle Lied, gespeicherte Lieder und das zuletzt ersetzte Lied |
+| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche automatisch, Notennamen |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.
 

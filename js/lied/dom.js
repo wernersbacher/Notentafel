@@ -1,0 +1,9 @@
+// Elemente des Lieds nach ihrer id, zusammen mit den gemeinsamen aus dem Kern
+import { el as core } from '../core/dom.js';
+
+const ids = [
+  'sheet', 'panelLied', 'liedSteps', 'liedDown', 'liedUp', 'liedSharp', 'liedFlat', 'liedNat',
+  'liedValues', 'liedRest', 'liedTakt', 'liedMeterShow', 'liedTaktPop',
+  'btnNamesToggle', 'namesToggleState'
+];
+export const el = Object.assign(Object.create(core), Object.fromEntries(ids.map((id) => [id, document.getElementById(id)])));

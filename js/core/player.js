@@ -4,7 +4,7 @@
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
 import { audioCtx, bell, clave, piano, tick } from './audio.js';
-import { settings } from './settings.js';
+import { settings, persistSettings } from './settings.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
 
@@ -71,7 +71,25 @@ export function togglePlay(getPlan, mark) {
   if (play) stopPlay();
   else startPlay(getPlan(), mark);
 }
-export const initPlayer = () => showButton(false);
+// Einzählen und Metronom: Knöpfe mit data-play in den Leisten aller Bereiche schalten dieselbe Einstellung um
+function renderPlayOpts() {
+  document.querySelectorAll('[data-play]').forEach((b) => {
+    const on = !!settings[b.dataset.play];
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+export function initPlayer() {
+  showButton(false);
+  renderPlayOpts();
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-play]');
+    if (!b) return;
+    settings[b.dataset.play] = !settings[b.dataset.play];
+    persistSettings();
+    renderPlayOpts();
+  });
+}
 
 // Ein einzelner kurzer Ton zum Vorhören (z. B. beim Ziehen einer Note), unabhängig vom Abspielen
 let preview = null;

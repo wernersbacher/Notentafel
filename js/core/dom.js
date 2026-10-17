@@ -6,7 +6,7 @@ const ids = [
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs',
-  'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'btnCountInToggle', 'countInToggleState', 'btnMetroToggle', 'metroToggleState', 'tempo', 'tempoOut'
+  'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut'
 ];
 export const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 // Der Rahmen um die Tafel, in dem jeder Bereich seine eigene Fläche hat

@@ -123,6 +123,13 @@
           <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
         </div>
       </section>
+      <section class="group">
+        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
+        <div class="autos">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+        </div>
+      </section>
     </div>
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
@@ -165,6 +172,13 @@
       <section class="group">
         <h2 class="glabel">Zählzeiten <span>unter Noten und Pausen</span></h2>
         <div class="zbtns" id="counts"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
+        <div class="autos">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+        </div>
       </section>
     </div>
 
@@ -234,6 +248,16 @@
           <span class="big volta">1.|2.</span><span class="small">Klammer</span>
         </button>
       </div>
+      <section class="group">
+        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
+        <div class="autos">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+        </div>
+      </section>
+      <button type="button" class="btn wide tomel" id="btnToMelody" title="Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach im Menü unter „Zuletzt ersetzt“.">
+        <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Als Melodie übernehmen
+      </button>
     </div>
 
     <div class="actions">
@@ -297,16 +321,6 @@
     <section data-area="lied">
       <h3>Bekannte Lieder</h3>
       <ul class="songs" id="liedSongs"></ul>
-    </section>
-
-    <section data-area="lied">
-      <h3>Als Melodie übernehmen</h3>
-      <div class="themes">
-        <button type="button" class="btn theme" id="btnToMelody">
-          <span>Als bunte Punkte in die Melodie</span>
-          <span class="desc">Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers): jede Note ein Punkt mit Notenwert. Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach unter „Zuletzt ersetzt“.</span>
-        </button>
-      </div>
     </section>
 
     <section data-area="lied">
@@ -402,17 +416,6 @@
         <input type="range" id="tempo" min="50" max="160" step="5" aria-label="Tempo">
         <output id="tempoOut" for="tempo"></output>
       </div>
-    </section>
-
-    <section class="switches">
-      <button type="button" class="btn switch" id="btnCountInToggle" aria-pressed="false">
-        <span class="sname">Einzählen</span><span class="state" id="countInToggleState">aus</span>
-        <span class="desc">Vor dem Abspielen klickt ein Takt vorweg (nach der Taktart), damit alle gemeinsam einsetzen können.</span>
-      </button>
-      <button type="button" class="btn switch" id="btnMetroToggle" aria-pressed="false">
-        <span class="sname">Metronom</span><span class="state" id="metroToggleState">aus</span>
-        <span class="desc">Beim Abspielen klickt jeder Schlag leise mit, der erste im Takt etwas heller.</span>
-      </button>
     </section>
 
     <section id="wakeSec" class="switches">

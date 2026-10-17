@@ -44,7 +44,7 @@ function initControls() {
   el.liedKeyUp.addEventListener('click', () => act.stepKey(1));
   el.btnTransDown.addEventListener('click', () => act.transposeSong(-1));
   el.btnTransUp.addEventListener('click', () => act.transposeSong(1));
-  el.btnToMelody.addEventListener('click', () => { closeMenu(); act.sendToMelody(); });
+  el.btnToMelody.addEventListener('click', act.sendToMelody);
   // Töne der kleinen und dreigestrichenen Oktave ein- und ausklappen
   el.liedMore.addEventListener('click', () => { opts.allTones = !opts.allTones; persistOpts(); buildSteps(); });
   el.liedBar.addEventListener('click', () => act.toggleBar(1));

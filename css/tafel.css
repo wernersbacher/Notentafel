@@ -63,6 +63,12 @@
 /* ein leerer halber Platz (nach einer einzelnen Achtel) bekommt einen kleineren Kreis, damit er den nächsten nicht überdeckt */
 .grid.prop .cell.half .dot.ghost { transform: scale(.5); }
 .grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .02); }
+/* Rhythmus: Notenzeichen größer (Rahmen 1,2 × Kreis statt .8; der Kopf bei 24.6/30 bleibt auf der Linie), Pausen
+   ebenso; die Balken entsprechend: Halsmitte .12 rechts, Hals .03 breit, Halsende .382 über dem Kreis, Balken .126 dick */
+.grid.rhy .dot.beat .sym { height: calc(var(--d) * 1.2); top: calc(var(--d) * -.484); }
+.grid.rhy .dot.rest { --rh: calc(var(--d) * 1.05); }
+.grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .105); top: calc(var(--d) * -.382); width: calc(100% + var(--g) + var(--d) * .03); height: calc(var(--d) * .126); }
+.grid.rhy.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .03); }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);

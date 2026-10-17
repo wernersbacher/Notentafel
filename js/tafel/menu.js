@@ -39,6 +39,8 @@ export function openTafelMenu() {
   renderMelodies();
   renderThemes();
   TOGGLES.forEach(renderToggle);
+  // Rhythmus hat immer ein Feld pro Schlag
+  el.btnPropToggle.hidden = S.variant === 'rhy';
 }
 
 export function initTafelMenu() {

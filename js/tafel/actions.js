@@ -2,17 +2,31 @@
 import { MAX_LEN, MAX_ROWS } from './config.js';
 import { isNote, isBeat, filled, dur, canCloseGap, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
 import { countSlots } from './theory.js';
-import { S, settings, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
+import { S, propOn, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
 import { toast } from '../core/ui.js';
 
 // Rhythmus: Ist die Zeile mit dem Platz c voll? Mit Breite nach Notenlänge zählen Schläge (ein Platz je Schlag).
 function fullAt(row, c) {
   if (!wraps()) return false;
-  if (!settings.prop) return c + 1 >= S.cap;
+  if (!propOn()) return c + 1 >= S.cap;
   let u = 0;
   for (let k = 0; k <= c; k++) u += Math.round(dur(row[k]) * 2);
   return u >= 2 * S.cap;
+}
+// Mit Breite nach Notenlänge: Passt ein neues Zeichen am Ende der Zeile nicht mehr hinein (z. B. eine Ganze nach drei
+// Schlägen in einer Zeile mit vier Feldern), kommt es gleich an den Anfang der nächsten Zeile
+function makeRoom(v) {
+  const row = curRow();
+  if (!wraps() || !propOn() || S.sel.c < row.length || !row.some(Boolean)) return;
+  let u = 0;
+  row.forEach((x) => { u += Math.round(dur(x) * 2); });
+  if (u + Math.round(dur(v) * 2) <= 2 * S.cap) return;
+  if (S.sel.r + 1 >= S.rows.length) {
+    if (S.rows.length >= MAX_ROWS) return;
+    S.rows.push(newRow(row.line));
+  }
+  S.sel = { r: S.sel.r + 1, c: 0 };
 }
 // Ein Platz weiter in derselben Zeile – auch beim Austauschen, damit man mehrere Töne am Stück korrigieren kann.
 // Bei Rhythmus geht es am Ende einer vollen Zeile in der nächsten weiter (die angelegt wird, wenn es keine gibt);
@@ -36,6 +50,7 @@ function keepCount(prev, v) {
 }
 // Ersetzt den markierten Platz und springt weiter
 function replaceCur(v) {
+  makeRoom(v);
   setCell(curRow(), S.sel.c, keepCount(curCell(), v));
   advance();
   commit();

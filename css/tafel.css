@@ -57,12 +57,18 @@
 .grid.prop.meters { min-width: calc(4.2rem + var(--fr, 2) * 26px); }
 .grid.prop.meters .row { --L: min(3.5rem + 3px, (100% - 4.2rem) / var(--fr, 2)); grid-template-columns: 4.2rem var(--tpl); }
 .grid.prop .cell { justify-items: start; }
+/* Achtel im geteilten Feld (Rhythmus): das Zeichen ist so groß wie sonst und steht mittig über seiner halben Spalte;
+   der Balken reicht nur bis zur nächsten Achtel (eine halbe Stapelbreite) */
+.grid.prop .cell.half { justify-items: center; }
+.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .064); }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);
 }
 /* Rhythmussprache unter eigenständigen Notenzeichen (ta, ti-ti, taja …) */
 .len .syl { align-self: center; white-space: nowrap; font: 700 calc(var(--d) * .3)/1 var(--font-display); color: var(--fg); }
+/* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
+.len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */
 .grid.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem)); }
 .grid.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc(100cqh - 2.6rem))); }

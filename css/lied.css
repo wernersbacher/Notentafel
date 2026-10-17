@@ -29,10 +29,10 @@
 /* ---------- Leiste des Lieds ---------- */
 .steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
 .steps .btn { padding: 0; min-height: 40px; font: 700 1.2rem/1 var(--font-display); }
-.meters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
-.meters .btn { min-height: 48px; padding: 0; }
-.meters .mtr { font-size: 1.05rem; }
-.meters .sym { height: 1.7rem; }
+.meterrow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.meterrow .btn { min-height: 48px; padding: 0; }
+.meterrow .mtr { font-size: 1.05rem; }
+.meterrow .sym { height: 1.7rem; }
 .glabel.sub { margin-top: 6px; }
 .lyrow { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
 .lyrow input { min-width: 0; min-height: 42px; padding: 0 .6rem; border: 2px solid var(--line); border-radius: 10px; font: 600 1.05rem var(--font-ui); color: var(--fg); background: var(--btn); }

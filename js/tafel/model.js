@@ -102,6 +102,13 @@ export function beams(row) {
 // Rhythmussprache unter einem Notenzeichen: Viertel ta, Halbe taja, punktierte Halbe tajaja, Ganze tajajaja;
 // zwei Achtel mit Balken ti-ti (beam 1: erste, 2: zweite), eine einzelne Achtel ti. Pausen und leere Plätze: nichts.
 const SYL = { 1: 'ta', 2: 'taja', 3: 'tajaja', 4: 'tajajaja' };
+// Verteilt auf die Schläge (bei Breite nach Notenlänge): [Silbe, Abstand in Achteln] – Halbe ta (Schlag 1) ja (Schlag 2),
+// punktierte Halbe ta ja ja, Ganze ta ja ja ja; alles andere eine Silbe am Anfang
+export function syllableParts(c, beam) {
+  const n = isBeat(c) || (isNote(c) && c.d) ? Math.round(c.d) : 0;
+  if (n < 2) { const s = syllable(c, beam); return s ? [[s, 0]] : []; }
+  return Array.from({ length: n }, (_, k) => [k ? 'ja' : 'ta', k * 2]);
+}
 export function syllable(c, beam) {
   if (!(isBeat(c) || (isNote(c) && c.d))) return '';
   if (c.d === 0.5) return beam === 1 ? 'ti-' : 'ti';

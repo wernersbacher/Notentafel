@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, rowsToSong } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -173,4 +173,14 @@ test('rowsToSong: Melodie und Rhythmus als Lied', () => {
     ev: [{ p: 'c1', v: 4 }, { p: 'f1', v: 2, acc: 1 }, { v: 4, brk: 1 }, { p: 'h1', v: 8 }, { v: 4 }, { p: 'c2', v: 2, dot: 1, bar: 2 }]
   });
   assert.deepEqual(rowsToSong(emptyRows()).ev, []);
+});
+
+test('syllableParts: Silben auf die Schläge verteilt', () => {
+  const b = (d) => ({ k: 'b', d });
+  assert.deepEqual(syllableParts(b(1)), [['ta', 0]]);
+  assert.deepEqual(syllableParts(b(2)), [['ta', 0], ['ja', 2]]);
+  assert.deepEqual(syllableParts(b(3)), [['ta', 0], ['ja', 2], ['ja', 4]]);
+  assert.deepEqual(syllableParts(b(4)), [['ta', 0], ['ja', 2], ['ja', 4], ['ja', 6]]);
+  assert.deepEqual(syllableParts(b(0.5), 1), [['ti-', 0]]);
+  assert.deepEqual(syllableParts({ k: 'r', d: 2 }), []);
 });

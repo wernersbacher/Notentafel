@@ -1,8 +1,8 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable } from './model.js';
+import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt } from './theory.js';
-import { S, settings, wraps } from './state.js';
+import { S, settings, wraps, propOn } from './state.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
@@ -53,13 +53,14 @@ function unitCount() {
   return n + n % 2;
 }
 // Breite der Spalten einer Zeile in --L, aufsummiert (P[u] = Breite aller Spalten vor u). Ein Schlag ist einen Kreis breit (2 × 1).
-// Beginnt in der Zeile auf diesem Schlag eine Achtel oder ein Zeichen zwischen den Schlägen, wird er zwei Kreise breit (2 × 2).
+// Melodie: Beginnt in der Zeile auf diesem Schlag eine Achtel oder ein Zeichen zwischen den Schlägen, wird er zwei Kreise
+// breit (2 × 2), damit die bunten Kreise nebeneinander passen. Rhythmus: Ein Schlag bleibt ein Feld, zwei Achtel teilen es sich.
 function colFrs(cols, row) {
-  const wide = [], P = [0];
+  const wide = [], P = [0], share = S.variant === 'rhy';
   let u = 0;
   row.forEach((x) => {
     const k = spanOf(x);
-    if (k === 1 || u % 2) wide[u >> 1] = true;
+    if (!share && (k === 1 || u % 2)) wide[u >> 1] = true;
     u += k;
   });
   for (u = 0; u < cols; u++) P.push(P[u] + (wide[u >> 1] ? 2 : 1));
@@ -94,8 +95,12 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
     dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
     if (beam === 1) stackCls = ' bbeam';
-    // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist)
-    if (settings.syl && S.variant === 'rhy') len = '<span class="syl">' + syllable(cell, beam) + '</span>';
+    // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);
+    // mit Breite nach Notenlänge auf die Schläge verteilt (Halbe: ta unter Schlag 1, ja unter Schlag 2)
+    if (settings.syl && S.variant === 'rhy') {
+      len = geo ? syllableParts(cell, beam).map(([t, o]) => o ? '<span class="syl at" style="--t:' + geoFrac(geo, o).toFixed(4) + '">' + t + '</span>' : '<span class="syl">' + t + '</span>').join('')
+        : '<span class="syl">' + syllable(cell, beam) + '</span>';
+    }
   } else if (isRest(cell)) {
     // Halbe (auch punktiert) liegen auf der Linie, die Ganze hängt darunter
     dot = '<div class="dot rest' + (cell.d === 4 ? ' hang' : cell.d >= 2 ? ' sit' : '') + '">' + restSym(cell.d, !!line) + '</div>';
@@ -111,8 +116,10 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   if (zz && zz.length) label += ', gezählt ' + zz.map((x) => x.t === '+' ? 'und' : x.t).join(' ');
   const hand = (isNote(cell) && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
   // Der Kreis vorn ist immer 2fr breit; --f ist sein Anteil am ganzen Platz
-  const span = geo ? ' style="grid-column:span ' + geo.k + ';--f:' + (2 / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0])).toFixed(4) + '"' : '';
-  return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') +
+  // Eine Achtel im geteilten Feld (Rhythmus) ist schmaler als ihr Zeichen: --f > 1, das Zeichen steht mittig über ihr
+  const fr = geo ? 2 / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]) : 1;
+  const span = geo ? ' style="grid-column:span ' + geo.k + ';--f:' + fr.toFixed(4) + '"' : '';
+  return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (bar === 2 ? ' final' : '') + '"></span>' : '') + dot +
@@ -148,7 +155,7 @@ function rowHTML(row, r, cols, P, marks) {
 export function renderBoard() {
   if (S.variant === 'rhy') measureCap();
   else S.cap = MAX_PER_ROW;
-  const grid = el.grid, prop = settings.prop, cols = prop ? unitCount() : colCount();
+  const grid = el.grid, prop = propOn(), cols = prop ? unitCount() : colCount();
   grid.classList.toggle('prop', prop);
   const Ps = prop ? S.rows.map((row) => colFrs(cols, row)) : null;
   if (prop) grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));

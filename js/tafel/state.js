@@ -30,6 +30,8 @@ export const S = {
 // Zeilen werden automatisch umbrochen, wenn sie voll sind (höchstens MAX_PER_ROW Plätze; bei Rhythmus so viele, wie bei
 // fester Größe in die Breite passen)
 export const wraps = () => S.cap > 0;
+// Breite nach Notenlänge: bei Rhythmus immer (ein Feld pro Schlag), bei Melodie nach der Einstellung
+export const propOn = () => settings.prop || S.variant === 'rhy';
 
 // Schaltet auf die Tafel v um: Zustand und Einstellungen (geladen wird in area.js)
 export function useVariant(v) {

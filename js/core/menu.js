@@ -1,4 +1,4 @@
-// Menü (Slide-in) in zwei Gruppen: oben der offene Bereich (Lieder speichern und laden, seine eigenen Abschnitte und
+// Seitenleiste (Slide-in) für Liedersammlung und Einstellungen; früher ein gemeinsames Menü, jetzt zwei Knöpfe. Gruppen: oben der offene Bereich (Lieder speichern und laden, seine eigenen Abschnitte und
 // darunter seine Einstellungen), unten die Einstellungen für alle Bereiche (Tempo, Bildschirm anlassen).
 // Eigene Abschnitte eines Bereichs tragen im HTML data-area und werden von ihm selbst eingeblendet.
 import { settings, persistSettings } from './settings.js';
@@ -65,8 +65,12 @@ const WAKE = { key: 'wake', btn: el.btnWakeToggle, state: el.wakeToggleState };
 function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
 
 /* ---------- Öffnen und schließen ---------- */
-function openMenu() {
+// mode 'songs' (Liedersammlung) oder 'settings' (Einstellungen): beide nutzen dieselbe Seitenleiste, jeder zeigt nur
+// seine Abschnitte (data-part im HTML)
+function openMenu(mode) {
   const a = current(), s = a.songs;
+  el.drawer.dataset.mode = mode;
+  el.drawerTitle.textContent = mode === 'songs' ? 'Liedersammlung' : 'Einstellungen';
   stopPlay();
   closeSavePop();
   hint('');
@@ -108,7 +112,8 @@ function saveSong() {
 }
 
 export function initMenu() {
-  el.btnMenu.addEventListener('click', openMenu);
+  el.btnSongs.addEventListener('click', () => openMenu('songs'));
+  el.btnSettings.addEventListener('click', () => openMenu('settings'));
   el.btnClose.addEventListener('click', closeMenu);
   el.backdrop.addEventListener('click', closeMenu);
 

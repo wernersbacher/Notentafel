@@ -75,9 +75,14 @@
   <aside class="side" aria-label="Werkzeuge">
     <div class="head">
       <h1 class="title">Musiktafel</h1>
-      <button type="button" class="btn" id="btnMenu" aria-haspopup="dialog" aria-controls="drawer">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Menü
-      </button>
+      <div class="headbtns">
+        <button type="button" class="btn" id="btnSongs" aria-haspopup="dialog" aria-controls="drawer" title="Liedersammlung: speichern, laden, bekannte Lieder, exportieren">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>Lieder</span>
+        </button>
+        <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Einstellungen</span>
+        </button>
+      </div>
     </div>
 
     <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
@@ -209,11 +214,16 @@
         <div class="meterrow" id="liedMeters"></div>
         <h2 class="glabel">Auftakt</h2>
         <div class="meterrow" id="liedPickups"></div>
-        <h2 class="glabel">Tonart</h2>
+        <h2 class="glabel">Tonart <span>nur die Vorzeichen</span></h2>
         <div class="keyrow">
           <button type="button" class="btn" id="liedKeyDown" title="Ein ♭ mehr bzw. ein ♯ weniger"><span class="acc">♭</span> ◀</button>
           <span class="keyname" id="liedKeyName" aria-live="polite"></span>
           <button type="button" class="btn" id="liedKeyUp" title="Ein ♯ mehr bzw. ein ♭ weniger">▶ <span class="acc">♯</span></button>
+        </div>
+        <h2 class="glabel">Transponieren <span>das ganze Lied mit seiner Tonart</span></h2>
+        <div class="transrow">
+          <button type="button" class="btn" id="btnTransDown" title="Das ganze Lied einen Halbton tiefer (zweimal: ein ganzer Ton)">▼ ½ Ton tiefer</button>
+          <button type="button" class="btn" id="btnTransUp" title="Das ganze Lied einen Halbton höher (zweimal: ein ganzer Ton)">▲ ½ Ton höher</button>
         </div>
       </section>
 
@@ -271,7 +281,7 @@
         </div>
       </section>
 
-      <button type="button" class="btn wide tomel" id="btnToMelody" title="Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach im Menü unter „Zuletzt ersetzt“.">
+      <button type="button" class="btn wide tomel" id="btnToMelody" title="Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.">
         <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Als Melodie übernehmen
       </button>
     </div>
@@ -299,17 +309,17 @@
 <div class="backdrop" id="backdrop" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" inert>
   <div class="head">
-    <h2 id="drawerTitle">Menü</h2>
-    <button type="button" class="btn" id="btnClose" aria-label="Menü schließen">
+    <h2 id="drawerTitle">Liedersammlung</h2>
+    <button type="button" class="btn" id="btnClose" aria-label="Schließen">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
     </button>
   </div>
 
   <!-- Alles, was nur für den offenen Modus gilt: oben Speichern, Laden und Exportieren, darunter seine Einstellungen -->
   <div class="mgroup" aria-labelledby="menuAreaTitle" role="group">
-    <h2 class="mtitle"><span class="kicker">Modus</span> <span id="menuAreaTitle"></span></h2>
+    <h2 class="mtitle" data-part="songs"><span class="kicker">Modus</span> <span id="menuAreaTitle"></span></h2>
 
-    <section id="saveSec">
+    <section id="saveSec" data-part="songs">
       <h3 id="saveTitle">Lied speichern</h3>
       <div class="saverow">
         <input id="songName" type="text" maxlength="40" placeholder="Name des Lieds" autocomplete="off" enterkeyhint="done">
@@ -318,37 +328,39 @@
       <p class="hint" id="saveHint" aria-live="polite"></p>
     </section>
 
-    <section id="songsSec">
+    <section id="songsSec" data-part="songs">
       <h3 id="songsTitle">Gespeicherte Lieder</h3>
       <ul class="songs" id="songs"></ul>
     </section>
 
-    <section id="autoSec" hidden>
+    <section id="autoSec" data-part="songs" hidden>
       <h3>Zuletzt ersetzt</h3>
       <div class="song one" id="autosave"></div>
       <p class="hint">Die Tafel vor dem letzten Laden oder „Alles löschen“.</p>
     </section>
 
-    <section id="melodiesSec" data-area="tafel">
+    <section id="melodiesSec" data-area="tafel" data-part="songs">
       <h3>Bekannte Lieder</h3>
       <ul class="songs" id="melodies"></ul>
     </section>
 
-    <section data-area="lied">
+    <section data-area="tafel" data-part="songs">
+      <h3>Ins Lied übernehmen</h3>
+      <div class="themes">
+        <button type="button" class="btn theme" id="btnToLied">
+          <span>Als Noten ins Lied übernehmen</span>
+          <span class="desc">Macht aus der Tafel echte Noten im Bereich Lied – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</span>
+        </button>
+      </div>
+    </section>
+
+    <section data-area="lied" data-part="songs">
       <h3>Bekannte Lieder</h3>
       <ul class="songs" id="liedSongs"></ul>
     </section>
 
-    <section data-area="lied">
-      <h3>Transponieren</h3>
-      <div class="sizes">
-        <button type="button" class="btn" id="btnTransDown">½ Ton tiefer</button>
-        <button type="button" class="btn" id="btnTransUp">½ Ton höher</button>
-      </div>
-      <p class="hint">Das ganze Lied wandert mit seiner Tonart, z. B. passend zur Stimmlage der Klasse. Zweimal tippen ist ein ganzer Ton.</p>
-    </section>
 
-    <section data-area="lied">
+    <section data-area="lied" data-part="songs">
       <h3>Exportieren</h3>
       <div class="themes">
         <button type="button" class="btn theme" id="btnLiedPrint">
@@ -362,18 +374,9 @@
       </div>
     </section>
 
-    <div class="mcard" id="menuSettings">
+    <div class="mcard" id="menuSettings" data-part="settings">
       <h3 class="ctitle" id="menuSettingsTitle">Einstellungen</h3>
 
-      <section data-area="tafel">
-        <h3>Ins Lied übernehmen</h3>
-        <div class="themes">
-          <button type="button" class="btn theme" id="btnToLied">
-            <span>Als Noten ins Lied übernehmen</span>
-            <span class="desc">Macht aus der Tafel echte Noten im Bereich Lied – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</span>
-          </button>
-        </div>
-      </section>
 
       <section id="themesSec" data-area="tafel">
         <h3>Farben</h3>
@@ -423,7 +426,7 @@
   </div>
 
   <!-- Gilt für alle Modi gleich -->
-  <div class="mgroup global" aria-labelledby="menuGlobalTitle" role="group">
+  <div class="mgroup global" aria-labelledby="menuGlobalTitle" role="group" data-part="settings">
     <h2 class="mtitle" id="menuGlobalTitle">Für alle Modi</h2>
 
     <section>

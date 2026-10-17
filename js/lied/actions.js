@@ -325,7 +325,7 @@ export function receiveSong({ name, song, colors }) {
   L.last = null;
   if (colors) { opts.colors = true; persistOpts(); }
   commit();
-  toast('Ins Lied übernommen. Das vorherige Lied liegt im Menü unter „Zuletzt ersetzt“.');
+  toast('Ins Lied übernommen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }
 // Lädt ein Lied (oder den Autosave). Das bisherige wandert in den Autosave-Platz.
 export function loadSong(s) {
@@ -336,5 +336,5 @@ export function loadSong(s) {
   L.sel = L.song.ev.length;
   L.last = null;
   commit();
-  toast('„' + (s.name || 'Ohne Namen') + '“ geladen. Das vorherige Lied liegt im Menü unter „Zuletzt ersetzt“.');
+  toast('„' + (s.name || 'Ohne Namen') + '“ geladen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }

@@ -291,7 +291,7 @@ export function receiveRows({ name, rows, lines, skipped, cut }) {
   const notes = [];
   if (skipped) notes.push(skipped === 1 ? 'Ein Ton liegt außerhalb der Farbpunkte und ist jetzt eine Pause.' : skipped + ' Töne liegen außerhalb der Farbpunkte und sind jetzt Pausen.');
   if (cut) notes.push('Nur die ersten ' + clean.length + ' Zeilen passen auf die Tafel.');
-  toast('Als Melodie übernommen. ' + (notes.length ? notes.join(' ') : 'Die vorherige Melodie liegt im Menü unter „Zuletzt ersetzt“.'), notes.length > 0);
+  toast('Als Melodie übernommen. ' + (notes.length ? notes.join(' ') : 'Die vorherige Melodie liegt in der Liedersammlung unter „Zuletzt ersetzt“.'), notes.length > 0);
 }
 // Lädt ein Lied (oder den Autosave). Die bisherige Tafel wandert in den Autosave-Platz;
 // beim Laden des Autosaves tauschen beide also die Plätze. song.rows tragen line und meter an den Zeilen.
@@ -304,5 +304,5 @@ export function loadSong(song) {
   S.name = song.name;
   S.sel = appendPos(S.rows);
   commit();
-  toast('„' + (song.name || 'Ohne Namen') + '“ geladen. Die vorherige Tafel liegt im Menü unter „Zuletzt ersetzt“.');
+  toast('„' + (song.name || 'Ohne Namen') + '“ geladen. Die vorherige Tafel liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }

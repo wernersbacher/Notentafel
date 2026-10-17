@@ -41,6 +41,8 @@
 .keyrow { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 5px; align-items: center; }
 .keyrow .btn { min-height: 42px; font: 800 .95rem var(--font-ui); }
 .keyrow .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-size: 1.2rem; font-weight: 400; }
+.transrow { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.transrow .btn { min-height: 42px; font: 800 .85rem var(--font-ui); }
 .keyname { text-align: center; font: 800 .95rem var(--font-ui); }
 .tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tools.three .btn { min-height: 52px; }

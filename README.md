@@ -93,16 +93,18 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 
 ### Lied (echtes Notenblatt)
 
-Fünf Notenlinien mit Violinschlüssel, ohne Farben. Bisher gibt es nur Töne, Pausen und Takte; Haltebögen, Auftakt und automatische Zählzeiten kommen noch (siehe `plan-lied.md`).
+Fünf Notenlinien mit Violinschlüssel, ohne Farben. Wiederholungszeichen und Liedtext gibt es (noch) nicht (siehe `plan-lied.md`).
 
 - **Notenwert vorwählen:** Unter *Notenwert* einen Wert antippen (Ganze, Halbe, Viertel, Achtel, Sechzehntel), danach bekommen alle folgenden Töne und Pausen diesen Wert. Der Punkt (anderthalbmal so lang) wird nach dem Wert dazugetippt und gilt ebenfalls weiter; ein neuer Wert ist wieder ohne Punkt. Eine punktierte Sechzehntel gibt es nicht.
 - **Töne:** *C D E F G A H* setzen einen Ton. Er kommt in die Oktave, die dem vorigen Ton am nächsten liegt (der erste in c'–h'). Mit *höher* / *tiefer* verschiebt man ihn um eine Oktave (von c bis h'''). *Kreuz*, *Be* und *Auflöser* schalten das Vorzeichen um, nochmal tippen nimmt es weg. Oktave und Vorzeichen wirken auf den zuletzt gesetzten Ton (blau), bis man woanders hin tippt; dann auf den markierten.
 - **Pause:** setzt eine Pause mit dem vorgewählten Wert.
+- **Bogen:** Haltebogen vom zuletzt gesetzten (oder markierten) Ton zur nächsten Note, nochmal tippen nimmt ihn weg. Zwei gleiche Töne mit Bogen klingen als ein langer Ton, der zweite wird nicht neu angeschlagen. Tippt man nach dem Bogen denselben Ton, übernimmt er das Vorzeichen. Steht die nächste Note in der nächsten Zeile, läuft der Bogen bis zum Zeilenende und beginnt dort neu.
 - **Markieren:** Eine Note antippen. Der Stift übernimmt ihren Wert. Ein Tonname tauscht dann nur die Tonhöhe (der Wert bleibt), ein Notenwert oder Punkt ändert den Wert der markierten Note. Tippt man neben die Noten, kommt die Markierung ans Zeilenende.
 - **einfügen:** Töne und Pausen kommen an der Markierung dazu, statt zu ersetzen; Notenwerte ändern dann nur den Stift.
 - **entfernen:** Eine Note wird zur Pause gleicher Länge, damit die Takte stimmen. Eine Pause oder das letzte Zeichen verschwinden ganz. Im Einfügen-Modus (*Lücke zu*) verschwindet das Zeichen immer.
 - **Umbruch:** Ab der Markierung geht es in einer neuen Zeile weiter; nochmal tippen holt die Zeile wieder hoch. Zeilen bricht man (erst einmal) nur von Hand um.
-- **Takt …** öffnet ein Feld mit der Taktart des Lieds (ohne, 2/2, 2/4, 3/4, 4/4, 6/8), *Taktstrich* und *Schlussstrich* vor der Markierung und *Taktstriche automatisch* (Standard: an; wie auf der Tafel, von Hand gesetzte Taktstriche sind dann ausgeblendet, der Schlussstrich bleibt).
+- **Takt …** öffnet ein Feld mit der Taktart des Lieds (ohne, 2/2, 2/4, 3/4, 4/4, 6/8), dem **Auftakt** (ohne, Achtel, Viertel, punktierte Viertel, Halbe, punktierte Halbe; nur was kürzer als ein Takt ist), *Taktstrich* und *Schlussstrich* vor der Markierung, *Taktstriche automatisch* (Standard: an; wie auf der Tafel, von Hand gesetzte Taktstriche sind dann ausgeblendet, der Schlussstrich bleibt) und *Zählzeiten automatisch*. Mit Auftakt zählen Taktstriche und Zählzeiten erst danach los; der Auftakt bekommt die letzten Zählzeiten des Takts (z. B. „3“ im 3/4-Takt).
+- **Zählzeiten** stehen wie auf der Tafel unter dem System: die Zahl auf der Zählzeit, „+“ genau dazwischen, gehaltene Zählzeiten blasser an ihrer Stelle. Im 6/8-Takt wird in Achteln gezählt, im 2/2 in Halben. Eine Note hinter einem Haltebogen zählt blass, weil sie nicht neu angeschlagen wird.
 - **Balken:** Achtel und Sechzehntel innerhalb eines Schlags bekommen von selbst einen Balken (im 6/8-Takt drei Achtel). Pausen, Taktstriche und Umbrüche unterbrechen ihn.
 - **Abspielen** klingt wie ein Klavier.
 - Das Notenblatt wird so groß, dass die längste Zeile die Breite füllt; ist sie zu lang, lässt es sich seitlich wischen.
@@ -131,7 +133,7 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 | `notentafel.autosave.v1` / `notentafel.rhy.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz pro Bereich) |
 | `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich, die Automatik-Schalter, Breite nach Notenlänge und Bildschirm anlassen |
 | `notentafel.lied.v1`, `notentafel.lied.songs.v1`, `notentafel.lied.autosave.v1` | Das aktuelle Lied, gespeicherte Lieder und das zuletzt ersetzte Lied |
-| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche automatisch, Notennamen |
+| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche und Zählzeiten automatisch, Notennamen |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.
 

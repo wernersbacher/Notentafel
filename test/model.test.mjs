@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -118,4 +118,37 @@ test('canStepDown: nur am Zeilenende und wenn die nächste Zeile leer ist', () =
   assert.equal(canStepDown(rows, { r: 0, c: 1 }), false);
   assert.equal(canStepDown(rows, { r: 1, c: 0 }), false); // nächste Zeile nicht leer
   assert.equal(canStepDown(rows, { r: 2, c: 1 }), false); // letzte Zeile
+});
+
+test('emptyRows: Rhythmus startet mit Notenlinie in jeder Zeile', () => {
+  assert.ok(emptyRows(true).every((row) => row.line === true && row.length === 0));
+  assert.ok(emptyRows().every((row) => !row.line));
+  assert.deepEqual(packLines(emptyRows(true)), [1, 1, 1]);
+});
+
+test('reflow: was nicht in die Zeile passt, rutscht an den Anfang der nächsten', () => {
+  const b = (d) => ({ k: 'b', d });
+  const rows = emptyRows(true);
+  rows[0].push(b(1), b(1), b(1), b(2), b(0.5));
+  rows[1].push(b(4));
+  assert.equal(reflow(rows, 0, 4), true);
+  assert.deepEqual([...rows[0]], [b(1), b(1), b(1), b(2)]);
+  assert.deepEqual([...rows[1]], [b(0.5), b(4)]);
+  // Am Ende der Tafel kommt eine neue Zeile mit derselben Notenlinie dazu
+  const one = emptyRows(true).slice(0, 1);
+  one[0].push(b(1), b(1), b(1));
+  assert.equal(reflow(one, 0, 2), true);
+  assert.equal(one.length, 2);
+  assert.equal(one[1].line, true);
+  assert.deepEqual([...one[1]], [b(1)]);
+});
+
+test('canCloseGap: löschen geht auf einem Platz, hinter dem letzten Zeichen und am Anfang einer leeren Zeile', () => {
+  const rows = emptyRows(true);
+  rows[0].push({ k: 'b', d: 1 });
+  assert.equal(canCloseGap(rows, { r: 0, c: 0 }), true); // auf dem Zeichen
+  assert.equal(canCloseGap(rows, { r: 0, c: 1 }), true); // dahinter: das Zeichen davor
+  assert.equal(canCloseGap(rows, { r: 1, c: 0 }), true); // leere Zeile: Ende der Zeile darüber
+  assert.equal(canCloseGap(rows, { r: 2, c: 0 }), false); // darüber auch leer
+  assert.equal(canCloseGap(emptyRows(), { r: 0, c: 0 }), false);
 });

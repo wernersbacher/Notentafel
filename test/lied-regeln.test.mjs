@@ -61,14 +61,14 @@ test('Takt-Prüfung: zu kurzer Takt mit einem Strich von Hand', () => {
   assert.deepEqual(badMeasures(s, false), [{ first: 0, last: 1, ticks: 16, want: 32 }]);
 });
 
-test('Takt-Prüfung: eine Note über die Grenze macht den Abschnitt zu lang', () => {
-  // 16 + 24 + 8 + 16 = 64: erst hier geht ein Takt auf
-  const s = song([n('c1', 2), n('d1', 2, { dot: 1 }), n('e1'), n('f1', 2), n('g1', 1)]);
-  assert.deepEqual(badMeasures(s, true), [{ first: 0, last: 3, ticks: 64, want: 32 }]);
+test('Takt-Prüfung: eine Note über die Grenze macht den Takt zu lang, danach wird neu gezählt', () => {
+  // 16 + 24 = 40: die punktierte Halbe ragt über die Grenze, der Strich kommt hinter sie
+  const s = song([n('c1', 2), n('d1', 2, { dot: 1 }), n('e1'), n('f1', 2), n('g1'), n('a1', 1)]);
+  assert.deepEqual(badMeasures(s, true), [{ first: 0, last: 1, ticks: 40, want: 32 }]);
 });
 
 test('Takt-Prüfung: Auftakt richtig und falsch', () => {
-  assert.deepEqual(badMeasures(song([n('g0'), n('c1', 1), n('d1')], '3/4', 8), true), []);
+  assert.deepEqual(badMeasures(song([n('g0'), n('c1', 2, { dot: 1 }), n('d1')], '3/4', 8), true), []);
   assert.deepEqual(badMeasures(song([n('g0', 4, { bar: 1 }), n('c1', 2, { dot: 1, bar: 1 }), n('d1')], '3/4', 8), false), []);
   const wrong = song([n('g0', 2, { bar: 1 }), n('c1', 2, { dot: 1, bar: 1 }), n('d1')], '3/4', 8);
   assert.deepEqual(badMeasures(wrong, false), [{ first: 0, last: 0, ticks: 16, want: 8 }]);
@@ -101,15 +101,16 @@ test('Layout: Platz und Zeichen nur für gezeichnete Vorzeichen', () => {
 });
 
 test('Layout: Takt-Prüfung nur mit check, über einen Umbruch in zwei Stücken', () => {
-  const ev = [n('c1', 2), n('d1', 2, { dot: 1 }), n('e1', 4, { brk: 1 }), n('f1', 2), n('g1', 1), n('a1')];
+  // Halbe + Viertel, Umbruch, dann eine Halbe über die Grenze: der zu volle Takt liegt in beiden Systemen
+  const ev = [n('c1', 2), n('d1', 4, { brk: 1 }), n('e1', 2), n('f1'), n('g1')];
   assert.deepEqual(layout(song(ev), { autoBar: true }).systems.map((s) => s.bad), [[], []]);
   const { systems, at } = layout(song(ev), { autoBar: true, check: true });
-  assert.deepEqual(systems[0].bad, [{ x1: at[0].l, x2: at[2].r }]);
+  assert.deepEqual(systems[0].bad, [{ x1: at[0].l, x2: at[1].r }]);
   // Im zweiten System endet das Stück kurz vor dem Taktstrich
   const bar = systems[1].bars[0].x;
   assert.equal(systems[1].bad.length, 1);
-  assert.equal(systems[1].bad[0].x1, at[3].l);
-  assert.ok(systems[1].bad[0].x2 < bar && systems[1].bad[0].x2 > at[3].x);
+  assert.equal(systems[1].bad[0].x1, at[2].l);
+  assert.ok(systems[1].bad[0].x2 < bar && systems[1].bad[0].x2 > at[2].x);
 });
 
 test('Zeichnen: Rechteck der Klasse bad vor den Notenlinien', () => {

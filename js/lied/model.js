@@ -44,30 +44,19 @@ export function freq(e) {
   return 440 * 2 ** ((midi - 69) / 12);
 }
 
-// Deutscher Notenname, z. B. C, Fis, B, Es
+// Deutscher Notenname in der Schreibweise mit Oktavstrichen, z. B. c', fis'', b', es (kleine Oktave ohne Strich)
 export function noteName(e) {
-  const base = STEPS[parsePitch(e.p).step], a = e.acc || 0;
+  const { step, oct } = parsePitch(e.p), base = STEPS[step], a = e.acc || 0;
   let n = base;
   if (a === 1) n = base + 'is';
   else if (a === -1) n = base === 'h' ? 'b' : base === 'e' ? 'es' : base === 'a' ? 'as' : base + 'es';
-  return n[0].toUpperCase() + n.slice(1);
+  return n + "'".repeat(oct);
 }
 
-// Stammton step in der Oktave, die dem Ton prev am nächsten liegt (ohne prev: c'–h')
-export function nearestPitch(step, prev) {
-  if (!prev) return makePitch(step, 1);
-  const d0 = diatonic(prev);
-  let best = null;
-  for (let o = OCT_MIN; o <= OCT_MAX; o++) {
-    const d = o * 7 + step;
-    if (!best || Math.abs(d - d0) < Math.abs(best.d - d0)) best = { d, o };
-  }
-  return makePitch(step, best.o);
-}
-// Eine Oktave höher (by = 1) oder tiefer (−1); am Rand bleibt der Ton, wie er ist
-export function shiftOct(p, by) {
-  const { step, oct } = parsePitch(p), o = oct + by;
-  return o < OCT_MIN || o > OCT_MAX ? p : makePitch(step, o);
+// Musikalische Bezeichnung ohne Vorzeichen: c (kleine Oktave), c', c'', c'''
+export function pitchLabel(p) {
+  const { step, oct } = parsePitch(p);
+  return STEPS[step] + "'".repeat(oct);
 }
 // Um steps Stufen (Linien und Zwischenräume) höher oder tiefer, begrenzt auf den Tonvorrat c bis h'''
 export function stepPitch(p, steps) {
@@ -87,21 +76,64 @@ export const pickupsFor = (m) => (m ? PICKUPS.filter((t) => t < measureTicks(m))
 // Verschiebung auf das Taktraster: Mit Auftakt beginnt das Lied so viele Ticks vor dem ersten vollen Takt,
 // das erste Ereignis steht also bei Takt − Auftakt. Ohne Taktart oder Auftakt 0.
 export const gridOffset = (song) => (song.meter && song.pickup ? measureTicks(song.meter) - song.pickup : 0);
-// Beginn jedes Ereignisses auf dem Taktraster in Ticks (ein Vielfaches der Taktlänge ist ein Taktanfang)
-export function gridStarts(song) {
-  let pos = gridOffset(song);
-  return song.ev.map((e) => { const p = pos; pos += ticks(e); return p; });
-}
-// Strich hinter jedem Ereignis: 0 keiner, 1 Taktstrich, 2 Schlussstrich.
-// Automatisch (wie in der Tafel): Taktstriche nach der Taktart, wo ein Takt genau aufgeht (nach dem Auftakt gezählt); von Hand gesetzte
-// Taktstriche sind dann ausgeblendet, der Schlussstrich bleibt.
-export function barsAfter(song, auto) {
-  const len = auto && song.meter ? measureTicks(song.meter) : 0;
+// Beginn und Ende jedes Ereignisses auf dem Taktraster in Ticks (ein Vielfaches der Taktlänge ist ein Taktanfang).
+// Ragt ein Zeichen über eine Taktgrenze, endet der Takt hinter ihm und der nächste beginnt neu; sonst wären alle
+// folgenden Takte verschoben.
+function grid(song) {
+  const len = song.meter ? measureTicks(song.meter) : 0;
   let pos = gridOffset(song);
   return song.ev.map((e) => {
+    const start = pos;
     pos += ticks(e);
+    if (len && pos % len && Math.floor((pos - 1) / len) > Math.floor(start / len)) pos = Math.ceil(pos / len) * len;
+    return { start, end: pos };
+  });
+}
+export const gridStarts = (song) => grid(song).map((g) => g.start);
+
+// Notenwerte [v, dot] nach Länge in Ticks, die längsten zuerst
+const PIECES = [[1, 0], [2, 1], [2, 0], [4, 1], [4, 0], [8, 1], [8, 0], [16, 0]].map(([v, dot]) => ({ v, dot, t: ticks({ v, dot }) }));
+// Eine Länge in Ticks als Folge von Notenwerten, die längsten zuerst (z. B. 10 = Viertel + Sechzehntel)
+function piecesOf(t) {
+  const out = [];
+  for (const p of PIECES) while (t >= p.t) { out.push(p); t -= p.t; }
+  return out;
+}
+// Ragt Ereignis i über einen Taktstrich (der Taktart nach), wird es dort aufgeteilt: Der Teil, der noch passt, bleibt im
+// Takt, der Rest kommt in den nächsten (und übernächsten …) Takt. Noten werden mit Haltebögen verbunden und behalten
+// Tonhöhe und Vorzeichen; Strich und Umbruch hinter dem Ereignis wandern ans letzte Stück. Liefert die Ereignisse, die
+// an die Stelle von Ereignis i treten (ohne Taktart oder wenn es passt: nur das Ereignis selbst).
+export function splitAtBar(song, i) {
+  const e = song.ev[i], len = song.meter ? measureTicks(song.meter) : 0;
+  if (!e || !len) return [e];
+  let room = len - grid(song)[i].start % len, left = ticks(e);
+  if (left <= room) return [e];
+  const parts = [];
+  while (left > 0) {
+    const t = Math.min(left, room);
+    parts.push(...piecesOf(t));
+    left -= t;
+    room = len;
+  }
+  return parts.map(({ v, dot }, k) => {
+    const o = isNote(e) ? { p: e.p, v } : { v }, last = k === parts.length - 1;
+    if (dot) o.dot = 1;
+    if (isNote(e) && e.acc != null) o.acc = e.acc;
+    if (isNote(e) && (!last || e.tie)) o.tie = 1;
+    if (last && e.bar) o.bar = e.bar;
+    if (last && e.brk) o.brk = 1;
+    return o;
+  });
+}
+// Strich hinter jedem Ereignis: 0 keiner, 1 Taktstrich, 2 Schlussstrich.
+// Automatisch (wie in der Tafel): Taktstriche nach der Taktart, wo ein Takt aufgeht (nach dem Auftakt gezählt), und hinter
+// einem Zeichen, das über die Taktgrenze ragt (dieser Takt ist dann zu voll); von Hand gesetzte Taktstriche sind dann
+// ausgeblendet, der Schlussstrich bleibt.
+export function barsAfter(song, auto) {
+  const len = auto && song.meter ? measureTicks(song.meter) : 0, g = grid(song);
+  return song.ev.map((e, i) => {
     if (e.bar === 2) return 2;
-    if (auto) return len && pos % len === 0 ? 1 : 0;
+    if (auto) return len && g[i].end % len === 0 ? 1 : 0;
     return e.bar ? 1 : 0;
   });
 }

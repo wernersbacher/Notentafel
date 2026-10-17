@@ -1,5 +1,7 @@
-// Zeichen der Notenschrift als SVG, alle selbst gezeichnet (keine Notenschrift aus dem Netz).
+// Zeichen der Notenschrift als SVG, selbst gezeichnet (keine Notenschrift aus dem Netz); der Violinschlüssel kommt aus Violinschlüssel.svg, die Viertelpause aus Viertelpause.png (core/shapes.js).
 // Maße in Linienabständen (sp); y wächst nach unten. Linien und Flächen nehmen die Textfarbe (currentColor).
+
+import { QUARTER_REST } from '../core/shapes.js';
 
 const f = (n) => +n.toFixed(3);
 // y eines Platzes, gemessen von der obersten Linie
@@ -16,11 +18,13 @@ function ellipse(cx, cy, rx, ry, rot) {
 }
 
 /* ---------- Noten ---------- */
-// Kopf: v = 1 Ganze, 2 Halbe (beide hohl), sonst gefüllt
-export function head(x, y, v) {
-  if (v === 1) return '<path class="hd" fill-rule="evenodd" d="' + ellipse(x, y, 0.82, 0.52, 0) + ellipse(x, y, 0.36, 0.27, 55) + '"/>';
-  if (v === 2) return '<path class="hd" fill-rule="evenodd" d="' + ellipse(x, y, 0.66, 0.46, -22) + ellipse(x, y, 0.5, 0.19, -32) + '"/>';
-  return '<path class="hd" d="' + ellipse(x, y, 0.66, 0.46, -22) + '"/>';
+// Kopf: v = 1 Ganze, 2 Halbe (beide hohl), sonst gefüllt. Mit color bekommt er diese Farbe und einen dunklen Rand,
+// damit auch helle Farben (Gelb) auf Weiß zu sehen sind.
+export function head(x, y, v, color) {
+  const c = color ? ' fill="' + color + '" stroke="currentColor" stroke-width="0.07"' : '';
+  if (v === 1) return '<path class="hd"' + c + ' fill-rule="evenodd" d="' + ellipse(x, y, 0.82, 0.52, 0) + ellipse(x, y, 0.36, 0.27, 55) + '"/>';
+  if (v === 2) return '<path class="hd"' + c + ' fill-rule="evenodd" d="' + ellipse(x, y, 0.66, 0.46, -22) + ellipse(x, y, 0.5, 0.19, -32) + '"/>';
+  return '<path class="hd"' + c + ' d="' + ellipse(x, y, 0.66, 0.46, -22) + '"/>';
 }
 export const stem = (x, y1, y2) => line(x, y1, x, y2, 0.12);
 export const ledger = (x, y, half = 1) => line(x - half, y, x + half, y, 0.14);
@@ -62,15 +66,16 @@ export function accidental(x, y, a) {
 }
 
 /* ---------- Pausen (x: Mitte) ---------- */
-// Viertel-, Achtel- und Sechzehntelpause als Linienzug in einem Rahmen von 22 × 30, verkleinert
+// Achtel- und Sechzehntelpause als Linienzug in einem Rahmen von 22 × 30, die Viertelpause als Fläche (Rahmen 64 × 64),
+// jeweils verkleinert
 const REST_PATHS = {
-  4: '<path d="M8.5 3.5l5.5 6.5-4.5 5 5.5 6c-3.5-1.5-7-.3-4.5 4" fill="none" stroke-width="2.4" stroke-linejoin="round"/>',
+  4: '<path d="' + QUARTER_REST + '" stroke="none"/>',
   8: '<circle cx="8.5" cy="11" r="2.6"/><path d="M8 13.2c3 .8 5.5-.3 7.5-3L10 25" fill="none" stroke-width="2"/>',
   16: '<circle cx="9.5" cy="5" r="2.6"/><path d="M9 7.2c3 .8 5.5-.3 7.5-3L9.5 29" fill="none" stroke-width="2"/>' +
     '<circle cx="7.7" cy="13.5" r="2.6"/><path d="M7.2 15.7c3 .8 5-.3 7-2.8" fill="none" stroke-width="2"/>'
 };
-// Mitte jedes Rahmens (x, y) und Verkleinerung
-const REST_FIT = { 4: [11, 14.2, 0.135], 8: [11, 17, 0.12], 16: [12, 17, 0.12] };
+// Punkt jedes Rahmens, der auf die Mittellinie kommt (x, y), und Verkleinerung; bei der Achtel liegt so der Punkt genau auf der zweiten Linie von oben
+const REST_FIT = { 4: [31, 31.5, 0.047], 8: [11, 19.33, 0.12], 16: [12, 17, 0.12] };
 export function rest(x, v) {
   if (v === 1) return '<rect x="' + f(x - 0.6) + '" y="' + yOf(6) + '" width="1.2" height="0.5"/>';
   if (v === 2) return '<rect x="' + f(x - 0.6) + '" y="' + (yOf(4) - 0.5) + '" width="1.2" height="0.5"/>';
@@ -79,16 +84,14 @@ export function rest(x, v) {
 }
 
 /* ---------- Schlüssel, Taktart, Striche ---------- */
-// Violinschlüssel; (x, y) ist der linke Rand auf der g'-Linie, um die sich die Schnecke legt
+// Violinschlüssel: Umriss aus Violinschlüssel.svg (Potrace), in dessen Einheiten mit y nach oben.
+// Breite 957 bis 5447, Höhe 5 bis 12799; die Mitte der Schnecke liegt bei y = CLEF_G.
+const CLEF_D = 'M4128 12781 c-166 -53 -386 -249 -543 -482 -83 -123 -238 -429 -314 -622 -167 -425 -246 -822 -258 -1307 -9 -350 13 -649 88 -1209 39 -293 40 -305 22 -321 -10 -9 -112 -96 -228 -192 -829 -692 -1259 -1160 -1574 -1715 -183 -323 -306 -697 -352 -1068 -16 -126 -16 -417 0 -555 44 -391 178 -789 374 -1115 138 -230 375 -500 587 -669 400 -318 859 -520 1292 -567 127 -14 488 -5 608 14 47 8 87 13 88 11 2 -1 42 -285 89 -631 l85 -628 2 -235 c1 -249 -5 -311 -51 -475 -106 -384 -378 -636 -766 -710 -103 -20 -326 -19 -439 0 -191 34 -347 104 -443 199 l-60 60 105 8 c315 25 509 136 615 351 52 106 68 196 62 352 -9 227 -71 380 -212 520 -89 89 -157 133 -267 173 -66 24 -86 27 -213 27 -111 0 -151 -4 -195 -19 -242 -83 -419 -260 -499 -501 -43 -128 -55 -219 -48 -360 21 -408 258 -772 627 -963 111 -58 213 -94 354 -124 132 -28 450 -31 590 -5 411 78 705 256 893 543 202 308 250 656 169 1239 -86 627 -167 1237 -164 1239 2 2 39 15 83 30 298 105 598 308 790 537 313 373 455 839 416 1366 -23 312 -79 530 -197 768 -113 229 -270 418 -469 568 -101 76 -308 183 -430 222 -183 60 -417 91 -582 79 -91 -6 -92 -6 -97 17 -3 13 -22 146 -41 294 -20 149 -58 436 -86 640 l-50 370 28 24 c91 77 389 360 514 487 506 518 752 1038 834 1764 57 512 60 849 9 1215 -68 493 -208 904 -401 1177 -133 189 -202 225 -345 179z m284 -1129 c100 -44 172 -142 204 -279 19 -82 21 -275 4 -388 -40 -274 -185 -663 -344 -925 -147 -240 -434 -586 -662 -795 -164 -151 -264 -238 -268 -234 -4 4 -25 147 -46 312 -51 406 -25 763 84 1139 132 451 309 792 526 1008 108 107 171 149 270 177 60 17 173 10 232 -15z m-1043 -4513 l77 -577 -56 -17 c-229 -71 -507 -257 -672 -449 -251 -293 -390 -635 -405 -996 -15 -383 122 -753 372 -1006 143 -146 306 -238 477 -272 71 -14 79 -14 102 2 30 19 34 56 10 81 -9 9 -44 30 -78 47 -249 125 -411 349 -462 641 -73 415 180 878 579 1062 67 31 234 82 242 73 1 -1 77 -563 168 -1248 113 -848 162 -1247 155 -1251 -6 -4 -56 -14 -112 -23 -284 -43 -581 -46 -780 -6 -408 81 -848 336 -1099 639 -305 366 -448 745 -448 1183 0 237 31 425 106 653 139 424 366 769 795 1208 265 272 942 878 949 849 2 -9 38 -276 80 -593z m596 -1415 c166 -32 355 -114 487 -214 95 -72 235 -224 291 -317 135 -225 184 -429 174 -728 -12 -391 -132 -688 -367 -909 -107 -101 -313 -226 -411 -251 l-25 -6 -27 203 c-15 112 -54 401 -87 643 -173 1284 -210 1562 -210 1582 0 21 3 22 48 17 26 -3 83 -12 127 -20z';
+const CLEF_X0 = 957, CLEF_G = 4500, CLEF_S = 7.5 / 12794; // 7,5 Linienabstände hoch
+// (x, y) ist der linke Rand auf der g'-Linie, um die sich die Schnecke legt
 export function clef(x, y) {
-  return '<g class="clef" transform="translate(' + f(x) + ' ' + f(y) + ')" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' +
-    // Schnecke um die g'-Linie, dann nach links oben in den Bogen
-    '<path stroke-width="0.17" d="M1.85 0.12C1.25 0.18 1.02-0.55 1.55-0.92C2.25-1.4 3.05-0.75 2.75 0.2C2.45 1.1 1.1 1.25 0.55 0.55' +
-    'C-0.05-0.25 0.55-1.35 1.2-2.0C1.85-2.65 2.35-3.25 2.25-4.05C2.15-4.85 1.45-4.75 1.25-4.15C1.05-3.55 1.15-2.9 1.25-2.4L1.95 2.35' +
-    'C2.05 3.05 1.45 3.35 1.0 3.1"/>' +
-    // Kräftiger Bauch rechts und unten
-    '<path stroke-width="0.36" d="M2.2-1.12C2.75-0.95 2.95-0.35 2.75 0.2C2.45 1.1 1.1 1.25 0.6 0.62"/>' +
-    '<circle cx="1.05" cy="2.85" r="0.38" fill="currentColor" stroke="none"/></g>';
+  return '<g class="clef" transform="translate(' + f(x) + ' ' + f(y) + ') scale(' + CLEF_S.toFixed(6) + ' ' + (-CLEF_S).toFixed(6) +
+    ') translate(' + -CLEF_X0 + ' ' + -CLEF_G + ')"><path d="' + CLEF_D + '"/></g>';
 }
 export function meter(x, m) {
   const [top, bottom] = m.split('/');
@@ -119,4 +122,5 @@ export function noteIcon(v, withDot) {
   return icon('-0.3 -4 3.4 4.8', s);
 }
 export const dotIcon = () => icon('-1.7 -1.7 3.4 3.4', dot(0, 0).replace('r="0.2"', 'r="0.4"'));
-export const restIcon = () => icon('-1.3 -0.3 2.6 4.4', rest(0, 4));
+// Pause mit Wert v; Ganze und Halbe brauchen ein Stück der Linie, an der sie hängen bzw. auf der sie liegen
+export const restIcon = (v) => icon('-1.3 -0.3 2.6 4.4', (v <= 2 ? line(-1, yOf(v === 1 ? 6 : 4), 1, yOf(v === 1 ? 6 : 4), 0.14) : '') + rest(0, v));

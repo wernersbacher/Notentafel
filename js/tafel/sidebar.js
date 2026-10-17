@@ -1,6 +1,6 @@
 // Darstellung der Leiste: Töne, Werte, Zählzeiten und der Zustand aller Knöpfe
 import { MAX_ROWS, NOTE_BY, GROUPS, DURS, COUNTS } from './config.js';
-import { isNote, isBeat, isRest, filled, canStepDown } from './model.js';
+import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap } from './model.js';
 import { S, settings, curCell, curRow } from './state.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML, ICONS } from './symbols.js';
 import { el } from './dom.js';
@@ -65,8 +65,8 @@ export function renderSidebar() {
   renderCounts(cur);
 
   pressed(el.btnIns, S.insertMode);
-  el.delLabel.textContent = S.insertMode ? 'Lücke zu' : 'entfernen';
-  el.btnDel.disabled = S.insertMode ? S.sel.c >= row.length : !filled(cur);
+  el.btnDel.disabled = !filled(cur);
+  el.btnGap.disabled = !canCloseGap(S.rows, S.sel);
   el.btnBreak.disabled = S.rows.length >= MAX_ROWS && !canStepDown(S.rows, S.sel);
   pressed(el.btnDone, S.clean);
   el.btnUndo.disabled = S.hist.length === 0;

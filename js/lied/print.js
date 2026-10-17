@@ -11,8 +11,8 @@ export const SP_MM = { 1: 1.8, 2: 2.4, 3: 3.2 };
 
 const xmlEsc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
 
-// o: { name, autoBar, names, counts, wrap, size }
-export function printHTML(song, { name = '', autoBar = true, names = false, counts = false, wrap = true, size = 1 } = {}) {
+// o: { name, autoBar, names, colors, counts, wrap, size }
+export function printHTML(song, { name = '', autoBar = true, names = false, colors = false, counts = false, wrap = true, size = 1 } = {}) {
   const sp = SP_MM[size] || SP_MM[1], page = PAGE_MM / sp;
   // Mit Umbruch wird auf die Seitenbreite umbrochen; ohne bleiben die Zeilen von Hand, und ist eine breiter als die
   // Seite, wird alles kleiner. Alle Zeilen außer der letzten reichen über die ganze Breite (Blocksatz wie im Notensatz).
@@ -20,7 +20,7 @@ export function printHTML(song, { name = '', autoBar = true, names = false, coun
   const J = wrap ? page - 0.1 : Math.max(page - 0.1, ...layout(song, o).systems.map((s) => s.width));
   const lay = layout(song, { ...o, width: wrap ? J : 0, justify: J });
   const W = Math.max(J, ...lay.systems.map((s) => s.width));
-  const { parts } = sheetSVG(song, lay, { width: W, sel: -1, clean: true, insert: false, names, counts, target: -1, playing: -1, fit: true });
+  const { parts } = sheetSVG(song, lay, { width: W, sel: -1, clean: true, insert: false, names, colors, counts, target: -1, playing: -1, fit: true });
   const svgs = parts.map((p) =>
     '<svg class="score" viewBox="0 0 ' + W + ' ' + +p.height.toFixed(3) + '" style="width:' + +(W * sp).toFixed(2) + 'mm" fill="currentColor">' + p.svg + '</svg>'
   ).join('');

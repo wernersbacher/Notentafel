@@ -21,10 +21,14 @@
   gap: var(--g);
   min-height: 0;
 }
-.rownum {
-  align-self: center; text-align: center;
+/* Die Spalte der Zeilennummer bleibt frei; die Nummer selbst sitzt im ersten Platz und steht von dort aus links
+   in dieser Spalte, auf Höhe der Kreismitte (wie die Taktart) */
+.rnum {
+  position: absolute; right: calc(100% + var(--g)); top: calc(var(--d) / 2);
+  width: 1.5rem; transform: translateY(-50%); text-align: center;
   font: 700 .85rem var(--font-ui); color: var(--muted);
 }
+.grid.meters .rnum { right: calc(100% + var(--g) + 2.7rem); }
 .cell {
   container-type: size;
   position: relative;
@@ -146,11 +150,18 @@
 .dot.ghost {
   background: transparent; border: 3px dashed var(--line); box-shadow: none;
 }
-.dot.rest {
-  background: var(--btn); color: var(--fg);
-  border: 3px solid var(--line); box-shadow: none;
+/* Pausen ohne Kreis direkt auf der Notenlinie (Höhe der Kreismitte). Das Zeichen ist --rh hoch, sein Rahmen
+   30 Einheiten: Viertel und Achtel stehen mit der Mitte (15) auf der Linie, die Halbe mit ihrer Unterkante (18.5),
+   die Ganze hängt mit ihrer Oberkante (11.5) daran. */
+.dot.rest { --rh: calc(var(--d) * .8); position: relative; background: none; box-shadow: none; color: var(--fg); }
+.dot.rest .sym {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  height: var(--rh); top: calc(50% - var(--rh) * 15 / 30);
 }
-.dot.rest .sym { height: calc(var(--d) * .62); }
+.dot.rest.sit .sym { top: calc(50% - var(--rh) * 18.5 / 30); }
+.dot.rest.hang .sym { top: calc(50% - var(--rh) * 11.5 / 30); }
+.cell.sel .dot.rest { box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
+.grid.clean .cell.sel .dot.rest { box-shadow: none; }
 /* Plätze hinter dem Zeilenende nur blass, damit man sieht, wo die Zeile aufhört */
 .cell.beyond:not(.sel) .dot.ghost { opacity: .4; }
 /* Buchstabe des Tons (auf der Tafel und in der Leiste) */

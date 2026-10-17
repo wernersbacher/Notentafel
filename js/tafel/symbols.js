@@ -1,4 +1,5 @@
 // HTML-Bausteine für Töne, Noten- und Pausenzeichen und Taktarten
+import { QUARTER_REST } from '../core/shapes.js';
 import { THEME_BY } from './config.js';
 import { settings } from './state.js';
 
@@ -31,12 +32,15 @@ export function noteSym(d, beam) {
 }
 const RESTS = {
   0.5: '<circle cx="8.5" cy="11" r="2.6" fill="currentColor" stroke="none"/><path d="M8 13.2c3 .8 5.5-.3 7.5-3L10 25" fill="none" stroke-width="2"/>',
-  1: '<path d="M8.5 3.5l5.5 6.5-4.5 5 5.5 6c-3.5-1.5-7-.3-4.5 4" fill="none" stroke-width="2.4" stroke-linejoin="round"/>',
+  // Viertelpause: Fläche aus core/shapes.js (Rahmen 64 × 64), so hoch wie zuvor und in der Mitte des Rahmens
+  1: '<path transform="translate(0.15 3.2) scale(0.35)" d="' + QUARTER_REST + '" fill="currentColor" stroke="none"/>',
   2: '<path d="M3 18.5h16" stroke-width="1.8"/><rect x="6" y="13" width="10" height="5.5" fill="currentColor" stroke="none"/>',
   3: '<path d="M2 18.5h14" stroke-width="1.8"/><rect x="4.5" y="13" width="9" height="5.5" fill="currentColor" stroke="none"/><circle cx="19" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
   4: '<path d="M3 11.5h16" stroke-width="1.8"/><rect x="6" y="11.5" width="10" height="5.5" fill="currentColor" stroke="none"/>'
 };
-export const restSym = (d) => sym(RESTS[d]);
+// onLine: Die Pause steht auf der Notenlinie der Zeile; dann fällt ihr eigenes kurzes Linienstück weg (sonst wäre die
+// Linie dort doppelt so dick), es bleibt nur das Rechteck
+export const restSym = (d, onLine) => sym(onLine ? RESTS[d].replace(/<path d="M\d+ [\d.]+h\d+" stroke-width="1.8"\/>/, '') : RESTS[d]);
 
 // Taktart als zwei Zahlen übereinander
 export function meterHTML(m) {

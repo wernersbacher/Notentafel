@@ -1,5 +1,6 @@
 // Zeichnet das berechnete Notenblatt (layout.js) als ein SVG. Maße in Linienabständen (sp); sp ist die Größe in Pixeln.
-import { isNote, noteName } from './model.js';
+import { isNote, noteName, parsePitch } from './model.js';
+import { TONE_COLORS } from '../core/colors.js';
 import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, staffLines } from './glyphs.js';
 import { tie } from './glyphs.js';
 
@@ -11,14 +12,17 @@ const GAP = 0.6;     // Abstand zwischen zwei Systemen
 const rect = (cls, x1, y1, x2, y2, attrs = '') =>
   '<rect class="' + cls + '" x="' + f(x1) + '" y="' + f(y1) + '" width="' + f(x2 - x1) + '" height="' + f(y2 - y1) + '"' + attrs + '/>';
 
-function itemSVG(it, e) {
+// Farbe eines Tons wie bei Melodie, nach dem Stammton (Fis wie F, B wie H)
+const colorOf = (e) => TONE_COLORS['CDEFGAH'[parsePitch(e.p).step]];
+
+function itemSVG(it, e, colors) {
   let s = '';
   if (it.rest) s += rest(it.x, e.v);
   else {
     const y = yOf(it.pos);
     it.ledger.forEach((p) => { s += ledger(it.x, yOf(p), e.v === 1 ? 1.25 : 1.05); });
     if (it.accX != null) s += accidental(it.accX, y, it.acc);
-    s += head(it.x, y, e.v);
+    s += head(it.x, y, e.v, colors ? colorOf(e) : null);
     if (it.stem) {
       s += stem(it.stem.x, y + (it.stem.up ? -0.1 : 0.1), yOf(it.stem.end));
       if (it.flags) s += flags(it.stem.x, yOf(it.stem.end), it.flags, it.stem.up);
@@ -28,7 +32,7 @@ function itemSVG(it, e) {
   return s;
 }
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, counts, target, playing, fit }.
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, target, playing, fit }.
 // fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
 // Liefert { svg, height, parts } – height in sp, damit der Aufrufer die Größe setzen kann; parts sind die Systeme
 // einzeln ({ svg, height }, jedes ab seiner Oberkante), z. B. für den Druck.
@@ -51,14 +55,15 @@ export function sheetSVG(song, lay, o) {
     }
     // Takte, die nicht aufgehen, sanft hinter den Noten
     s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
+    // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen)
     const last = s.bars[s.bars.length - 1];
-    const end = !o.fit ? W : last && last.x > s.width - 2.5 ? last.x + (last.k === 2 ? 0.03 : 0) : s.width - 0.6;
+    const end = s.barEnd ? last.x + (last.k === 2 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
     g += staffLines(0, end) + clef(s.clefX, yOf(2));
     if (s.meterX != null) g += meter(s.meterX, song.meter);
     s.items.forEach((it) => {
       const e = ev[it.i];
       const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
-      g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e);
+      g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e, o.colors);
       // Zählzeiten direkt unter dem System, darunter die Notennamen
       if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
       if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.55) + '">' + noteName(e) + '</text>';

@@ -16,7 +16,7 @@ const saved = loadBoard(variant);
 export const S = {
   variant,
   // Ohne gespeicherten Stand startet die Tafel leer
-  rows: saved ? saved.rows : emptyRows(),
+  rows: saved ? saved.rows : emptyRows(variant === 'rhy'),
   name: saved ? saved.name : '',
   sel: appendPos(saved ? saved.rows : []), // markierter Platz, am Anfang hinter dem letzten Ton
   hist: [], // Rückgängig-Verlauf (als JSON)
@@ -24,8 +24,12 @@ export const S = {
   parked: {},
   insertMode: false,
   clean: false, // „Fertig“: Markierung und leere Plätze ausgeblendet
-  countAt: null // Platz, unter dem gerade mehrere Zählzeiten getippt werden
+  countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
+  cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };
+// Zeilen werden automatisch umbrochen, wenn sie voll sind (höchstens MAX_PER_ROW Plätze; bei Rhythmus so viele, wie bei
+// fester Größe in die Breite passen)
+export const wraps = () => S.cap > 0;
 
 // Schaltet auf die Tafel v um: Zustand und Einstellungen (geladen wird in area.js)
 export function useVariant(v) {

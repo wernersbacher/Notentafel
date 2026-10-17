@@ -74,3 +74,18 @@ test('widestMeasure: breitester Takt samt Zeilenanfang; mit dieser Breite wird n
   lay.systems.slice(0, -1).forEach((s) => assert.equal(bars[s.end - 1], 1));
   assert.ok(lay.systems.every((s) => s.width <= w + 0.01));
 });
+
+test('höchstens fünf Takte in einer Zeile, auch wenn mehr passen würden', () => {
+  const song = { meter: '2/4', ev: Array.from({ length: 24 }, () => n('c1')) };
+  const lay = layout(song, { autoBar: true, width: 400 });
+  assert.deepEqual(lines(lay), [[0, 10], [10, 20], [20, 24]]);
+});
+
+test('ohne Taktart: Umbruch nach je einer Ganzen, die Noten bleiben groß', () => {
+  const song = { meter: '', ev: quarters(12) };
+  const lay = layout(song, { autoBar: true, width: 400 });
+  assert.deepEqual(lines(lay), [[0, 20], [20, 40], [40, 48]]);
+  assert.ok(lay.systems.every((s) => s.bars.length === 0), 'ohne Taktart keine Striche');
+  // Der breiteste „Takt“ ist eine Ganze, nicht das ganze Lied
+  assert.ok(widestMeasure(song, { autoBar: true }) < widestMeasure({ meter: '4/4', ev: quarters(2) }, { autoBar: true }));
+});

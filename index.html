@@ -82,12 +82,15 @@
 
     <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
 
-    <div class="tools">
+    <div class="tools five">
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
       </button>
-      <button type="button" class="btn" id="btnDel" title="Ton entfernen">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></span><span class="small" id="delLabel">entfernen</span>
+      <button type="button" class="btn" id="btnGap" title="Zeichen löschen, der Rest rückt nach vorn">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M20 12h-9M15 8l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">löschen</span>
+      </button>
+      <button type="button" class="btn" id="btnDel" title="Zeichen entfernen, der Platz bleibt (eine Note wird zur Pause)">
+        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></span><span class="small">entfernen</span>
       </button>
       <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
@@ -157,33 +160,47 @@
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
       <section class="group">
-        <h2 class="glabel">Töne <span>in der Oktave nah am vorigen Ton</span></h2>
-        <div class="steps" id="liedSteps"></div>
-        <div class="tools t5">
-          <button type="button" class="btn" id="liedDown" title="Eine Oktave tiefer">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">tiefer</span>
-          </button>
-          <button type="button" class="btn" id="liedSharp" aria-pressed="false" title="Kreuz: einen Halbton höher"><span class="big acc">♯</span><span class="small">Kreuz</span></button>
-          <button type="button" class="btn" id="liedFlat" aria-pressed="false" title="Be: einen Halbton tiefer"><span class="big acc">♭</span><span class="small">Be</span></button>
-          <button type="button" class="btn" id="liedNat" aria-pressed="false" title="Auflösungszeichen"><span class="big acc">♮</span><span class="small">Auflöser</span></button>
-          <button type="button" class="btn" id="liedUp" title="Eine Oktave höher">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">höher</span>
-          </button>
-        </div>
+        <h2 class="glabel">Taktart</h2>
+        <div class="meters" id="liedMeters"></div>
+        <h2 class="glabel sub">Auftakt</h2>
+        <div class="meters" id="liedPickups"></div>
       </section>
       <section class="group">
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
       </section>
-      <div class="tools t3">
-        <button type="button" class="btn" id="liedRest" title="Pause mit dem gewählten Notenwert"><span class="small">Pause</span></button>
+      <section class="group">
+        <h2 class="glabel">Pausen <span>antippen setzt sie</span></h2>
+        <div class="values v6" id="liedRests"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Töne</h2>
+        <div class="steps" id="liedSteps"></div>
+        <button type="button" class="btn more" id="liedMore" aria-expanded="false" aria-controls="liedSteps"></button>
+        <div class="tools accs">
+          <button type="button" class="btn" id="liedSharp" aria-pressed="false" aria-label="Kreuz" title="Kreuz: einen Halbton höher"><span class="big acc">♯</span></button>
+          <button type="button" class="btn" id="liedFlat" aria-pressed="false" aria-label="Be" title="Be: einen Halbton tiefer"><span class="big acc">♭</span></button>
+          <button type="button" class="btn" id="liedNat" aria-pressed="false" title="Auflösungszeichen"><span class="big acc">♮</span><span class="small">Auflöser</span></button>
+        </div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Anzeige</h2>
+        <div class="tools shows">
+          <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Notennamen</button>
+          <button type="button" class="btn" id="liedShowColors" aria-pressed="false" title="Notenköpfe in den Farben der Töne"><span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Farben</button>
+          <button type="button" class="btn" id="liedShowCounts" aria-pressed="false" title="Zählzeiten nach der Taktart unter den Noten">Zählzeiten</button>
+        </div>
+      </section>
+      <div class="tools three">
         <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
           <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10c4 6 14 6 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span class="small">Bogen</span>
         </button>
-        <button type="button" class="btn" id="liedTakt" aria-haspopup="true" aria-expanded="false" aria-controls="liedTaktPop" title="Taktart, Auftakt, Taktstriche, Zählzeiten">
-          <span id="liedMeterShow"></span><span class="small">Takt …</span>
+        <button type="button" class="btn" id="liedBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
+          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
         </button>
-        <div class="meterpop taktpop" id="liedTaktPop" role="group" aria-label="Takt" hidden></div>
+        <button type="button" class="btn" id="liedEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
+          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+        </button>
       </div>
     </div>
 
@@ -296,7 +313,15 @@
       <section data-area="lied" class="switches">
         <button type="button" class="btn switch" id="btnNamesToggle" aria-pressed="false">
           <span class="sname">Notennamen unter den Noten</span><span class="state" id="namesToggleState">aus</span>
-          <span class="desc">Zeigt unter jeder Note ihren Namen, z. B. C, Fis oder B.</span>
+          <span class="desc">Zeigt unter jeder Note ihren Namen mit Oktavstrichen, z. B. c', fis'' oder b.</span>
+        </button>
+        <button type="button" class="btn switch" id="btnColorsToggle" aria-pressed="false">
+          <span class="sname">Noten farbig</span><span class="state" id="colorsToggleState">aus</span>
+          <span class="desc">Färbt die Notenköpfe wie die Punkte bei Melodie: C rot, D orange, E gelb, F hellgrün, G grün, A lila, H pink – in jeder Oktave gleich.</span>
+        </button>
+        <button type="button" class="btn switch" id="btnAutoBarToggle" aria-pressed="true">
+          <span class="sname">Taktstriche automatisch</span><span class="state" id="autoBarToggleState">an</span>
+          <span class="desc">Setzt die Taktstriche nach der Taktart. Passt eine Note nicht mehr in den Takt, wird sie am Taktstrich aufgeteilt und übergebunden. Aus: Taktstriche setzt man selbst mit dem Knopf „Taktstrich“.</span>
         </button>
         <button type="button" class="btn switch" id="btnWrapToggle" aria-pressed="true">
           <span class="sname">Zeilen automatisch umbrechen</span><span class="state" id="wrapToggleState">an</span>

@@ -1,5 +1,5 @@
-// Leiste des Lieds: Stammtöne, Oktave, Vorzeichen, Notenwerte, Pause, Bogen und das Feld „Takt …“
-import { STEPS, VALUES, METERS, isNote, canDot, pickupsFor } from './model.js';
+// Leiste des Lieds: Taktart und Auftakt, Notenwerte, Pausen, Töne (c'–h'', die übrigen ausklappbar), Vorzeichen, Anzeige, Bogen und Striche
+import { STEPS, OCT_MIN, OCT_MAX, VALUES, METERS, isNote, canDot, pickupsFor, makePitch, pitchLabel } from './model.js';
 import { noteIcon, dotIcon, restIcon } from './glyphs.js';
 import { L, opts } from './state.js';
 import { el } from './dom.js';
@@ -18,40 +18,48 @@ const meterHTML = (m) => {
   return '<span class="mtr"><span>' + top + '</span><span>' + bottom + '</span></span>';
 };
 
-// Einmal beim Start: Knöpfe für die Stammtöne und die Notenwerte
+// Knöpfe für die Töne, eine Reihe je Oktave, die höchste oben: sonst c'–h'', ausgeklappt c–h'''
+export function buildSteps() {
+  const lo = opts.allTones ? OCT_MIN : 1, hi = opts.allTones ? OCT_MAX : 2;
+  let html = '';
+  for (let o = hi; o >= lo; o--) {
+    for (let s = 0; s < STEPS.length; s++) {
+      const p = makePitch(s, o);
+      html += '<button type="button" class="btn step" data-p="' + p + '">' + pitchLabel(p) + '</button>';
+    }
+  }
+  el.liedSteps.innerHTML = html;
+  el.liedMore.textContent = opts.allTones ? "▴ nur c' bis h''" : "▾ auch c bis h und c''' bis h'''";
+  el.liedMore.setAttribute('aria-expanded', opts.allTones ? 'true' : 'false');
+}
+
+// Einmal beim Start: Taktarten, Töne, Notenwerte und Pausen
 export function buildPanel() {
-  el.liedSteps.innerHTML = STEPS.map((s, i) =>
-    '<button type="button" class="btn step" data-step="' + i + '" aria-label="' + s.toUpperCase() + '">' + s.toUpperCase() + '</button>'
+  buildSteps();
+  el.liedMeters.innerHTML = [''].concat(METERS).map((m) =>
+    '<button type="button" class="btn" data-m="' + m + '" aria-label="' + (m ? 'Taktart ' + m : 'ohne Taktart') + '">' +
+    (m ? meterHTML(m) : '<span class="small">ohne</span>') + '</button>'
   ).join('');
   el.liedValues.innerHTML = VALUES.map((v) =>
     '<button type="button" class="btn" data-v="' + v + '" title="' + VALUE_NAMES[v] + '" aria-label="' + VALUE_NAMES[v] + '">' + noteIcon(v) + '</button>'
   ).join('') + '<button type="button" class="btn" data-dot title="Punkt (anderthalbmal so lang)" aria-label="Punkt">' + dotIcon() + '</button>';
-  el.liedRest.insertAdjacentHTML('afterbegin', '<span class="big">' + restIcon() + '</span>');
+  el.liedRests.innerHTML = VALUES.map((v) =>
+    '<button type="button" class="btn" data-rv="' + v + '" title="' + VALUE_NAMES[v] + 'pause" aria-label="' + VALUE_NAMES[v] + 'pause">' + restIcon(v) + '</button>'
+  ).join('');
 }
 
-// Inhalt des Felds „Takt …“: Taktart, Auftakt, Takt- und Schlussstrich vor der Markierung, Automatik für Taktstriche und Zählzeiten
-export function fillTaktPop() {
-  const prev = L.song.ev[L.sel - 1], bar = prev ? prev.bar : 0, pk = L.song.pickup;
-  const label = (t) => '<p class="poplabel">' + t + '</p>';
-  el.liedTaktPop.innerHTML = label('Taktart') + [''].concat(METERS).map((m) =>
-    '<button type="button" class="btn' + (m === L.song.meter ? ' on' : '') + '" data-m="' + m + '" aria-label="' + (m ? 'Taktart ' + m : 'ohne Taktart') + '">' +
-    (m ? meterHTML(m) : '<span class="small">ohne</span>') + '</button>'
-  ).join('') +
-    label('Auftakt') + '<button type="button" class="btn' + (!pk ? ' on' : '') + '" data-pk="0" aria-label="ohne Auftakt"><span class="small">ohne</span></button>' +
-    pickupsFor(L.song.meter).map((t) =>
-      '<button type="button" class="btn' + (t === pk ? ' on' : '') + '" data-pk="' + t + '" aria-label="Auftakt: ' + valueName(PICKUP_NOTES[t]) + '">' +
-      noteIcon(PICKUP_NOTES[t][0], PICKUP_NOTES[t][1]) + '</button>'
-    ).join('') +
-    label('Striche und Zählzeiten') + '<button type="button" class="btn wide' + (bar === 1 && !opts.autoBar ? ' on' : '') + '" data-bar="1"' + (!prev || opts.autoBar ? ' disabled' : '') + '>Taktstrich</button>' +
-    '<button type="button" class="btn wide' + (bar === 2 ? ' on' : '') + '" data-bar="2"' + (!prev ? ' disabled' : '') + '>Schlussstrich</button>' +
-    '<button type="button" class="btn wide' + (opts.autoBar ? ' on' : '') + '" data-auto aria-pressed="' + opts.autoBar + '">Taktstriche automatisch</button>' +
-    '<button type="button" class="btn wide' + (opts.autoZ ? ' on' : '') + '" data-autoz aria-pressed="' + opts.autoZ + '">Zählzeiten automatisch</button>';
+// Auftakte, die zur Taktart passen (ohne Taktart keiner); der gewählte ist gedrückt
+function renderPickups() {
+  const pk = L.song.pickup, list = pickupsFor(L.song.meter);
+  const btn = (t, inner, label) => '<button type="button" class="btn' + (t === pk ? ' on' : '') + '" data-pk="' + t + '" aria-pressed="' + (t === pk) + '" aria-label="' + label + '">' + inner + '</button>';
+  el.liedPickups.innerHTML = btn(0, '<span class="small">ohne</span>', 'ohne Auftakt') +
+    list.map((t) => btn(t, noteIcon(PICKUP_NOTES[t][0], PICKUP_NOTES[t][1]), 'Auftakt: ' + valueName(PICKUP_NOTES[t]))).join('');
 }
 
 export function renderSidebar() {
   const ev = L.song.ev, cur = ev[L.sel];
   const t = L.last != null && isNote(ev[L.last]) ? ev[L.last] : isNote(cur) ? cur : null;
-  [el.liedDown, el.liedUp, el.liedTie].forEach((b) => { b.disabled = !t; });
+  el.liedTie.disabled = !t;
   pressed(el.liedTie, !!t && !!t.tie);
   [[el.liedSharp, 1], [el.liedFlat, -1], [el.liedNat, 0]].forEach(([b, a]) => {
     b.disabled = !t;
@@ -61,13 +69,22 @@ export function renderSidebar() {
   const dotBtn = el.liedValues.querySelector('[data-dot]');
   pressed(dotBtn, !!L.pen.dot);
   dotBtn.disabled = !canDot(L.pen.v);
-  el.liedMeterShow.innerHTML = L.song.meter ? meterHTML(L.song.meter) : '<span class="mtr off"><span>?</span><span>?</span></span>';
-  if (!el.liedTaktPop.hidden) fillTaktPop();
+  pressed(el.liedShowNames, opts.names);
+  pressed(el.liedShowColors, opts.colors);
+  pressed(el.liedShowCounts, opts.autoZ);
+  // Takt- und Schlussstrich hinter dem Zeichen vor der Markierung; Taktstriche von Hand nur ohne Automatik
+  const prev = ev[L.sel - 1], bar = prev ? prev.bar : 0;
+  el.liedBar.disabled = !prev || opts.autoBar;
+  pressed(el.liedBar, bar === 1 && !opts.autoBar);
+  el.liedEnd.disabled = !prev;
+  pressed(el.liedEnd, bar === 2);
+  el.liedMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === L.song.meter));
+  renderPickups();
 
   // Gemeinsame Knöpfe
   pressed(el.btnIns, L.insertMode);
-  el.delLabel.textContent = L.insertMode ? 'Lücke zu' : 'entfernen';
   el.btnDel.disabled = !cur;
+  el.btnGap.disabled = !cur && L.sel === 0;
   el.btnBreak.disabled = L.sel === 0;
   pressed(el.btnDone, L.clean);
   el.btnUndo.disabled = L.hist.length === 0;

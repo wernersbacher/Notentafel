@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ticks, staffPos, freq, noteName, nearestPitch, shiftOct, measureTicks, barsAfter, cleanSong, parsePitch,
-  pickupsFor, gridOffset, gridStarts, stepPitch
+  ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, cleanSong, parsePitch,
+  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -30,29 +30,22 @@ test('freq: a\' = 440, Vorzeichen verschieben um einen Halbton', () => {
   assert.equal(freq(n('a1', 4, { acc: 0 })), 440);
 });
 
-test('noteName: deutsche Namen', () => {
-  assert.equal(noteName(n('c1')), 'C');
-  assert.equal(noteName(n('f1', 4, { acc: 1 })), 'Fis');
-  assert.equal(noteName(n('h1', 4, { acc: -1 })), 'B');
-  assert.equal(noteName(n('e2', 4, { acc: -1 })), 'Es');
-  assert.equal(noteName(n('a0', 4, { acc: -1 })), 'As');
-  assert.equal(noteName(n('d1', 4, { acc: -1 })), 'Des');
-  assert.equal(noteName(n('h1', 4, { acc: 0 })), 'H');
+test('noteName: deutsche Namen mit Oktavstrichen', () => {
+  assert.equal(noteName(n('c1')), "c'");
+  assert.equal(noteName(n('f1', 4, { acc: 1 })), "fis'");
+  assert.equal(noteName(n('h1', 4, { acc: -1 })), "b'");
+  assert.equal(noteName(n('e2', 4, { acc: -1 })), "es''");
+  assert.equal(noteName(n('a0', 4, { acc: -1 })), 'as');
+  assert.equal(noteName(n('d1', 4, { acc: -1 })), "des'");
+  assert.equal(noteName(n('h1', 4, { acc: 0 })), "h'");
+  assert.equal(noteName(n('g3')), "g'''");
 });
 
-test('nearestPitch: Oktave am nächsten am vorigen Ton', () => {
-  assert.equal(nearestPitch(0, null), 'c1');
-  assert.equal(nearestPitch(4, 'f1'), 'g1'); // eine Stufe hoch
-  assert.equal(nearestPitch(0, 'a1'), 'c2'); // Terz hoch statt Sexte runter
-  assert.equal(nearestPitch(4, 'c1'), 'g0'); // Quarte runter statt Quinte hoch
-  assert.equal(nearestPitch(6, 'c0'), 'h0'); // am unteren Rand bleibt es im Tonvorrat
-});
-
-test('shiftOct: bleibt im Tonvorrat', () => {
-  assert.equal(shiftOct('c1', 1), 'c2');
-  assert.equal(shiftOct('c1', -1), 'c0');
-  assert.equal(shiftOct('c0', -1), 'c0');
-  assert.equal(shiftOct('h3', 1), 'h3');
+test('pitchLabel: musikalische Bezeichnung mit Strichen', () => {
+  assert.equal(pitchLabel('a0'), 'a');
+  assert.equal(pitchLabel('c1'), "c'");
+  assert.equal(pitchLabel('g2'), "g''");
+  assert.equal(pitchLabel('h3'), "h'''");
 });
 
 test('barsAfter: von Hand, automatisch, Schlussstrich bleibt', () => {
@@ -66,6 +59,33 @@ test('barsAfter: von Hand, automatisch, Schlussstrich bleibt', () => {
   assert.deepEqual(barsAfter({ meter: '2/4', ev: [n('c1'), n('d1'), r(2)] }, true), [0, 1, 1]);
   // Ohne Taktart keine automatischen Striche
   assert.deepEqual(barsAfter({ meter: '', ev: [n('c1', 1)] }, true), [0]);
+});
+
+test('splitAtBar: Note über den Taktstrich wird zu übergebundenen Noten', () => {
+  // 4/4, Halbe auf Zählzeit 4: zwei Viertel mit Bogen, Vorzeichen an beiden
+  const s = { meter: '4/4', ev: [n('c1'), n('d1'), n('e1'), n('f1', 2, { acc: 1 })] };
+  assert.deepEqual(splitAtBar(s, 3), [n('f1', 4, { acc: 1, tie: 1 }), n('f1', 4, { acc: 1 })]);
+  // Passt sie, bleibt sie
+  assert.deepEqual(splitAtBar(s, 2), [s.ev[2]]);
+  // Halbe auf der „und“ von 4: Achtel + punktierte Viertel; Strich und Umbruch ans letzte Stück, Bogen weiter
+  const t = { meter: '4/4', ev: [n('c1', 2, { dot: 1 }), n('d1', 8), n('e1', 2, { tie: 1, brk: 1 })] };
+  assert.deepEqual(splitAtBar(t, 2), [n('e1', 8, { tie: 1 }), n('e1', 4, { dot: 1, tie: 1, brk: 1 })]);
+  // Pausen ohne Bogen; Ganze im 3/4 ab Taktanfang: punktierte Halbe + Viertel
+  assert.deepEqual(splitAtBar({ meter: '3/4', ev: [{ v: 1 }] }, 0), [{ v: 2, dot: 1 }, { v: 4 }]);
+  // Mit Auftakt (Viertel im 3/4): eine Halbe als Auftakt wird Viertel + Viertel
+  assert.deepEqual(splitAtBar({ meter: '3/4', pickup: 8, ev: [n('g0', 2)] }, 0), [n('g0', 4, { tie: 1 }), n('g0')]);
+  // Ohne Taktart nichts
+  assert.deepEqual(splitAtBar({ meter: '', ev: [n('c1', 1)] }, 0), [n('c1', 1)]);
+});
+
+test('barsAfter: ragt eine Note über den Takt, steht der Strich hinter ihr und es wird neu gezählt', () => {
+  // 4/4: drei Viertel, dann eine Halbe über die Grenze; danach wieder volle Takte
+  const song = { meter: '4/4', ev: [n('c1'), n('d1'), n('e1'), n('f1', 2), n('g1'), n('a1'), n('h1'), n('c2')] };
+  assert.deepEqual(barsAfter(song, true), [0, 0, 0, 1, 0, 0, 0, 1]);
+  assert.deepEqual(gridStarts(song), [0, 8, 16, 24, 64, 72, 80, 88]);
+  assert.deepEqual(badMeasures(song, true), [{ first: 0, last: 3, ticks: 40, want: 32 }]);
+  // Ganze im 3/4-Takt ab dem Taktanfang: Strich dahinter, nächster Takt beginnt neu
+  assert.deepEqual(barsAfter({ meter: '3/4', ev: [n('c1', 1), n('d1', 2), n('e1')] }, true), [1, 0, 1]);
 });
 
 test('cleanSong: prüft und säubert', () => {

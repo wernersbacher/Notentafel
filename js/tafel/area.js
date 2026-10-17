@@ -21,7 +21,7 @@ function enter(v) {
     S.parked[S.variant] = { sel: S.sel, hist: S.hist };
     useVariant(v);
     const d = loadBoard(v), p = S.parked[v];
-    S.rows = d ? d.rows : emptyRows();
+    S.rows = d ? d.rows : emptyRows(v === 'rhy');
     S.name = d ? d.name : '';
     S.hist = p ? p.hist : [];
     S.sel = p && p.sel.r < S.rows.length ? p.sel : appendPos(S.rows);
@@ -47,6 +47,7 @@ function plan() {
 
 const tools = {
   insert: act.toggleInsert,
+  gap: act.closeGap,
   del: act.deleteCell,
   brk: act.lineBreak,
   done: act.toggleClean,
@@ -83,6 +84,13 @@ export function registerTafel() {
   initControls();
   initBoardInput();
   initTafelMenu();
+  // Ändert sich die Breite (z. B. beim Drehen des Tablets), passen bei Rhythmus mehr oder weniger Plätze in eine Zeile
+  let width = 0;
+  new ResizeObserver(() => {
+    if (S.variant !== 'rhy' || el.grid.hidden || el.board.clientWidth === width) return;
+    width = el.board.clientWidth;
+    render();
+  }).observe(el.board);
   register(area('mel', 'Melodie', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
   register(area('rhy', 'Rhythmus', el.panelRhy, { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
 }

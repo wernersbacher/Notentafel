@@ -5,7 +5,7 @@
 //   panel, board     seine Elemente in der Leiste und im Rahmen der Tafel
 //   enter()          wird sichtbar: Stand laden und zeichnen
 //   leave()          wird verlassen (optional)
-//   tools            gemeinsame Knöpfe: insert, del, brk, done, undo, addRow, delRow(btn), clear(btn);
+//   tools            gemeinsame Knöpfe: insert, gap, del, brk, done, undo, addRow, delRow(btn), clear(btn);
 //                    fehlt einer, ist der Knopf ausgeblendet. Ihren Zustand zeichnet der Bereich selbst.
 //   plan(), mark(pos)  Abspielen (siehe player.js); ohne plan kein Abspielen-Knopf
 //   songs            Speichern und Laden (optional): store (aus makeStore), texts { menu, save, songs },
@@ -24,7 +24,7 @@ export const register = (area) => { areas.push(area); };
 export const current = () => cur;
 
 /* ---------- Bereiche ---------- */
-const TOOL_BTNS = { insert: 'btnIns', del: 'btnDel', brk: 'btnBreak', done: 'btnDone', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
+const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', done: 'btnDone', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
 
 function show(a) {
   areas.forEach((x) => { x.panel.hidden = x !== a; });
@@ -33,7 +33,7 @@ function show(a) {
   el.tabs.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.area === a.id ? 'true' : 'false'));
   const tools = a.tools || {};
   for (const k in TOOL_BTNS) el[TOOL_BTNS[k]].hidden = !tools[k];
-  el.sharedTools.hidden = !['insert', 'del', 'brk', 'done'].some((k) => tools[k]);
+  el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk', 'done'].some((k) => tools[k]);
   el.btnPlay.hidden = !a.plan;
   el.btnSaveSide.hidden = !a.songs;
 }

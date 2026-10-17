@@ -17,10 +17,30 @@ export const filled = (c) => isNote(c) || !!(c && c.k);
 export const sounds = (c) => isNote(c) || isBeat(c);
 export const dur = (c) => (c && c.d) || 1;
 
-export function emptyRows() {
+// Leere Tafel; line: alle Zeilen mit Notenlinie (Rhythmus)
+export function emptyRows(line = false) {
   const rs = [];
-  for (let i = 0; i < START_ROWS; i++) rs.push([]);
+  for (let i = 0; i < START_ROWS; i++) rs.push(newRow(line));
   return rs;
+}
+export function newRow(line = false) {
+  const row = [];
+  row.line = line;
+  row.meter = '';
+  return row;
+}
+// Automatischer Umbruch: Hat Zeile r mehr als cap Plätze, rutscht der Überhang an den Anfang der nächsten Zeile
+// (die neu angelegt wird, wenn es keine gibt, mit derselben Notenlinie), und so weiter. false, wenn die Tafel schon
+// MAX_ROWS Zeilen hat und nichts mehr nach unten rutschen kann (der Überhang bleibt dann stehen).
+export function reflow(rows, r, cap) {
+  for (let i = r; i < rows.length && rows[i].length > cap; i++) {
+    if (i + 1 >= rows.length) {
+      if (rows.length >= MAX_ROWS) return false;
+      rows.push(newRow(rows[i].line));
+    }
+    rows[i + 1].unshift(...rows[i].splice(cap));
+  }
+  return true;
 }
 export const hasNotes = (rows) => rows.some((row) => row.some(filled));
 export const hasMeter = (rows) => rows.some((row) => row.meter);
@@ -33,6 +53,11 @@ export function appendPos(rows) {
 // Umbruch ohne neue Zeile: Hinter der Markierung steht nichts und die nächste Zeile ist leer
 export function canStepDown(rows, sel) {
   return sel.c >= rows[sel.r].length && sel.r + 1 < rows.length && rows[sel.r + 1].length === 0;
+}
+// Gibt es für „löschen“ etwas zu tun? Ein Platz an der Markierung, sonst ein Zeichen davor (auch am Ende der Zeile darüber)
+export function canCloseGap(rows, sel) {
+  const row = rows[sel.r];
+  return sel.c < row.length || row.length > 0 || (sel.r > 0 && rows[sel.r - 1].length > 0);
 }
 // Setzt einen Platz; liegt er hinter dem Zeilenende, wird die Lücke mit Pausen aufgefüllt
 export function put(row, c, v) {

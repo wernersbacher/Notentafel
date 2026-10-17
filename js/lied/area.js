@@ -1,7 +1,7 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
-import { confirmTap, popover, delegate, esc, toast, downloadFile } from '../core/ui.js';
+import { confirmTap, delegate, esc, toast, downloadFile } from '../core/ui.js';
 import { settings } from '../core/settings.js';
 import { playPlan } from './model.js';
 import { store } from './storage.js';
@@ -10,31 +10,29 @@ import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { printHTML } from './print.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
-import { buildPanel, fillTaktPop } from './sidebar.js';
+import { buildPanel, buildSteps } from './sidebar.js';
 import { initSheetInput } from './input.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
 
-let taktPop;
-
 function initControls() {
-  delegate(el.liedSteps, '[data-step]', (b) => act.placePitch(+b.dataset.step));
+  delegate(el.liedSteps, '[data-p]', (b) => act.placePitch(b.dataset.p));
   delegate(el.liedValues, '[data-v]', (b) => act.setValue(+b.dataset.v));
   delegate(el.liedValues, '[data-dot]', act.toggleDot);
-  el.liedRest.addEventListener('click', act.placeRest);
+  delegate(el.liedRests, '[data-rv]', (b) => act.placeRest(+b.dataset.rv));
   el.liedTie.addEventListener('click', act.toggleTie);
   el.liedSharp.addEventListener('click', () => act.setAcc(1));
   el.liedFlat.addEventListener('click', () => act.setAcc(-1));
   el.liedNat.addEventListener('click', () => act.setAcc(0));
-  el.liedUp.addEventListener('click', () => act.shift(1));
-  el.liedDown.addEventListener('click', () => act.shift(-1));
 
-  taktPop = popover(el.liedTaktPop, el.liedTakt, { onOpen: fillTaktPop });
-  delegate(el.liedTaktPop, '[data-m]', (b) => act.setMeter(b.dataset.m));
-  delegate(el.liedTaktPop, '[data-bar]', (b) => act.toggleBar(+b.dataset.bar));
-  delegate(el.liedTaktPop, '[data-pk]', (b) => act.setPickup(+b.dataset.pk));
-  delegate(el.liedTaktPop, '[data-auto]', act.toggleAutoBar);
-  delegate(el.liedTaktPop, '[data-autoz]', act.toggleAutoZ);
+  delegate(el.liedMeters, '[data-m]', (b) => act.setMeter(b.dataset.m));
+  delegate(el.liedPickups, '[data-pk]', (b) => act.setPickup(+b.dataset.pk));
+  // Töne der kleinen und dreigestrichenen Oktave ein- und ausklappen
+  el.liedMore.addEventListener('click', () => { opts.allTones = !opts.allTones; persistOpts(); buildSteps(); });
+  el.liedBar.addEventListener('click', () => act.toggleBar(1));
+  el.liedEnd.addEventListener('click', () => act.toggleBar(2));
+  el.liedShowCounts.addEventListener('click', act.toggleAutoZ);
+  el.btnAutoBarToggle.addEventListener('click', () => { act.toggleAutoBar(); renderToggle(AUTOBAR); });
 
   initSheetInput();
   // Ändert sich die Breite, wird neu eingeteilt
@@ -47,6 +45,8 @@ function initControls() {
 }
 
 const NAMES = { key: 'names', btn: el.btnNamesToggle, state: el.namesToggleState, obj: opts, save: persistOpts };
+const AUTOBAR = { key: 'autoBar', btn: el.btnAutoBarToggle, state: el.autoBarToggleState, obj: opts };
+const COLORS = { key: 'colors', btn: el.btnColorsToggle, state: el.colorsToggleState, obj: opts, save: persistOpts };
 const CHECK = { key: 'check', btn: el.btnCheckToggle, state: el.checkToggleState, obj: opts, save: persistOpts };
 const WRAP = { key: 'wrap', btn: el.btnWrapToggle, state: el.wrapToggleState, obj: opts, save: persistOpts };
 
@@ -79,7 +79,7 @@ function exportMusicXML() {
 // Druckansicht füllen und den Druckdialog öffnen (dort „Als PDF speichern“)
 function printSheet() {
   if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
-  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, counts: opts.autoZ, wrap: opts.wrap, size: opts.size });
+  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, wrap: opts.wrap, size: opts.size });
   closeMenu();
   window.print();
 }
@@ -88,7 +88,11 @@ export function registerLied() {
   buildPanel();
   initControls();
   toggleSetting(NAMES, render);
+  toggleSetting(COLORS, render);
   toggleSetting(CHECK, render);
+  // Dieselben Schalter als Knöpfe in der Leiste
+  el.liedShowNames.addEventListener('click', () => { opts.names = !opts.names; persistOpts(); render(); });
+  el.liedShowColors.addEventListener('click', () => { opts.colors = !opts.colors; persistOpts(); render(); });
   toggleSetting(WRAP, render);
   delegate(el.liedSongs, '[data-known]', (b) => {
     const s = SONGS[+b.dataset.known];
@@ -102,9 +106,9 @@ export function registerLied() {
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,
     enter() { L.insertMode = false; L.clean = false; render(); },
-    leave: () => taktPop.close(),
     tools: {
       insert: act.toggleInsert,
+      gap: act.removeEv,
       del: act.deleteEv,
       brk: act.lineBreak,
       done: act.toggleClean,
@@ -125,6 +129,8 @@ export function registerLied() {
       open() {
         el.drawer.querySelectorAll('[data-area="lied"]').forEach((sec) => { sec.hidden = false; });
         renderToggle(NAMES);
+        renderToggle(COLORS);
+        renderToggle(AUTOBAR);
         renderToggle(CHECK);
         renderToggle(WRAP);
         renderSizes();

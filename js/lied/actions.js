@@ -1,13 +1,14 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
-import { MAX_EV, isNote, canDot, nearestPitch, shiftOct, pickupsFor } from './model.js';
+import { MAX_EV, isNote, canDot, pickupsFor, splitAtBar } from './model.js';
 import { L, opts, persistOpts, snap, restore, stashSong } from './state.js';
 import { render, commit } from './render.js';
 
 const ev = () => L.song.ev;
 const cur = () => L.song.ev[L.sel];
-// Neues Ereignis mit dem vorgewählten Wert
+// Neues Ereignis mit dem vorgewählten Wert (außer es bringt seinen Wert schon mit)
 function fresh(o) {
+  if (o.v) return o;
   o.v = L.pen.v;
   if (L.pen.dot && canDot(L.pen.v)) o.dot = 1;
   return o;
@@ -37,14 +38,23 @@ export function select(i) {
 export function toggleInsert() { L.insertMode = !L.insertMode; L.clean = false; render(); }
 export function toggleClean() { L.clean = !L.clean; render(); }
 
-// Der Ton, auf den Vorzeichen und Oktave wirken: der zuletzt gesetzte, sonst der markierte (oder keiner)
+// Der Ton, auf den Vorzeichen und Bogen wirken: der zuletzt gesetzte, sonst der markierte (oder keiner)
 export function target() {
   if (L.last != null && isNote(ev()[L.last])) return L.last;
   return isNote(cur()) ? L.sel : null;
 }
 
 /* ---------- Zeichen setzen ---------- */
-// Setzt ein Ereignis an der Markierung: am Ende oder im Einfügen-Modus kommt es dazu, sonst ersetzt es das Zeichen dort
+// Passt das Zeichen an Index i nicht mehr in seinen Takt, wird es am Taktstrich aufgeteilt (Noten mit Haltebogen);
+// nur mit Taktart und automatischen Taktstrichen. Liefert die Anzahl der Stücke.
+function splitHere(i) {
+  if (!opts.autoBar) return 1;
+  const parts = splitAtBar(L.song, i);
+  if (parts.length > 1) ev().splice(i, 1, ...parts);
+  return parts.length;
+}
+// Setzt ein Ereignis an der Markierung: am Ende oder im Einfügen-Modus kommt es dazu, sonst ersetzt es das Zeichen dort.
+// Der zuletzt gesetzte Ton ist bei einer aufgeteilten Note ihr letztes Stück (dort setzt ein Bogen an).
 function place(o, keepValue) {
   const prev = cur();
   if (L.insertMode || !prev) {
@@ -56,22 +66,20 @@ function place(o, keepValue) {
     if (keepValue) { o.v = prev.v; if (prev.dot) o.dot = 1; } else fresh(o);
     ev()[L.sel] = keepMarks(prev, o);
   }
-  L.last = L.sel;
-  L.sel++;
+  const k = splitHere(L.sel);
+  L.last = L.sel + k - 1;
+  L.sel += k;
   commit();
 }
-// Stammton step (0 = c … 6 = h) in der Oktave, die dem vorigen Ton am nächsten liegt.
-// Beim Ersetzen bleibt der Wert des Zeichens, damit der Rhythmus stimmt. Hängt der Ton an einem Haltebogen
-// und ist es derselbe, übernimmt er das Vorzeichen (sonst wäre es kein Haltebogen mehr).
-export function placePitch(step) {
-  let prev = null;
-  for (let i = L.sel - 1; i >= 0 && !prev; i--) if (isNote(ev()[i])) prev = ev()[i].p;
-  const o = { p: nearestPitch(step, prev) }, before = ev()[L.sel - 1];
+// Ton p (z. B. 'c1' = c') setzen. Beim Ersetzen bleibt der Wert des Zeichens, damit der Rhythmus stimmt.
+// Hängt der Ton an einem Haltebogen und ist es derselbe, übernimmt er das Vorzeichen (sonst wäre es kein Haltebogen mehr).
+export function placePitch(p) {
+  const o = { p }, before = ev()[L.sel - 1];
   if (isNote(before) && before.tie && before.p === o.p && before.acc != null) o.acc = before.acc;
   place(o, true);
 }
-// Pause mit dem vorgewählten Wert
-export const placeRest = () => place({}, false);
+// Pause mit dem Wert v (1 Ganze … 16 Sechzehntel), ohne Punkt
+export const placeRest = (v) => place({ v }, false);
 
 // Zeichen an der Markierung, das ein Notenwert oder Punkt mit ändert (im Einfügen-Modus keins: dort ist die Markierung nur die Einfügestelle)
 const valueTarget = () => (L.insertMode ? null : cur());
@@ -84,6 +92,7 @@ export function setValue(v) {
   snap();
   e.v = v;
   delete e.dot;
+  splitHere(L.sel);
   commit();
 }
 export function toggleDot() {
@@ -93,15 +102,21 @@ export function toggleDot() {
   if (!e || !canDot(e.v)) { render(); return; }
   snap();
   if (L.pen.dot) e.dot = 1; else delete e.dot;
+  splitHere(L.sel);
   commit();
 }
-// Vorzeichen (1 ♯, −1 ♭, 0 ♮) am Ton umschalten
+// Vorzeichen (1 ♯, −1 ♭, 0 ♮) am Ton umschalten; es gilt für alle Noten, die mit ihm durch Haltebögen zu einem Ton
+// verbunden sind (sonst wäre es kein Haltebogen mehr)
 export function setAcc(a) {
   const t = target();
   if (t == null) return;
   snap();
-  const e = ev()[t];
-  if (e.acc === a) delete e.acc; else e.acc = a;
+  const e = ev()[t], same = (x) => isNote(x) && x.p === e.p;
+  let i = t, j = t;
+  while (same(ev()[i - 1]) && ev()[i - 1].tie) i--;
+  while (ev()[j].tie && same(ev()[j + 1])) j++;
+  const off = e.acc === a;
+  for (let k = i; k <= j; k++) { if (off) delete ev()[k].acc; else ev()[k].acc = a; }
   commit();
 }
 // Haltebogen von der Note zur nächsten an- oder abschalten (zwei gleiche Töne werden ein langer)
@@ -111,16 +126,6 @@ export function toggleTie() {
   snap();
   const e = ev()[t];
   if (e.tie) delete e.tie; else e.tie = 1;
-  commit();
-}
-// Eine Oktave höher (1) oder tiefer (−1)
-export function shift(by) {
-  const t = target();
-  if (t == null) return;
-  const e = ev()[t], p = shiftOct(e.p, by);
-  if (p === e.p) { toast(by > 0 ? 'Höher geht es nicht.' : 'Tiefer geht es nicht.', true); return; }
-  snap();
-  e.p = p;
   commit();
 }
 
@@ -193,17 +198,26 @@ export function toggleAutoZ() {
 }
 
 /* ---------- Entfernen und Umbruch ---------- */
-// Ein Ton wird zur Pause gleicher Länge, damit die Takte stimmen. Pausen und das letzte Zeichen verschwinden ganz.
-// Im Einfügen-Modus („Lücke zu“) verschwindet das Zeichen immer, der Rest rückt nach.
+// Entfernen: Eine Note wird zur Pause gleicher Länge (damit die Takte stimmen); eine Pause oder das letzte Zeichen verschwinden
 export function deleteEv() {
   const e = cur();
   if (!e) return;
   snap();
-  if (!L.insertMode && isNote(e) && L.sel < ev().length - 1) {
+  if (isNote(e) && L.sel < ev().length - 1) {
     const o = { v: e.v };
     if (e.dot) o.dot = 1;
     ev()[L.sel] = keepMarks(e, o);
   } else ev().splice(L.sel, 1);
+  L.last = null;
+  commit();
+}
+// Löschen wie die Löschtaste: Das Zeichen an der Markierung verschwindet ganz, alles dahinter rückt nach vorn (mehrmals
+// tippen löscht nach rechts). Steht die Markierung am Ende, verschwindet das Zeichen davor (wie die Rücktaste).
+export function removeEv() {
+  if (!cur() && L.sel === 0) return;
+  snap();
+  if (cur()) ev().splice(L.sel, 1);
+  else ev().splice(--L.sel, 1);
   L.last = null;
   commit();
 }

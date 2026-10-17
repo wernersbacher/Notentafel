@@ -14,32 +14,36 @@
 .score .caret { fill: var(--mark); }
 .score .ghost { opacity: .22; }
 .score .bad { fill: var(--bad); }
-/* Der zuletzt gesetzte Ton (auf ihn wirken Vorzeichen und Oktave) und der gerade klingende */
+/* Der zuletzt gesetzte Ton (auf ihn wirken Vorzeichen und Bogen) und der gerade klingende */
 .score .ev.target { color: var(--mark); }
 .score .ev.playing { color: var(--play); }
 /* Taktart: zwei Ziffern übereinander, jede so hoch wie zwei Linienabstände */
-.score .mt { font: 700 2.75px Georgia, "Times New Roman", serif; text-anchor: middle; dominant-baseline: central; }
+/* Versalziffern: Georgias Mediävalziffern (3, 4, 5 …) reichen unter die Grundlinie und säßen zu tief */
+.score .mt { font: 700 2.75px "Times New Roman", Times, "Noto Serif", serif; font-variant-numeric: lining-nums; text-anchor: middle; dominant-baseline: central; }
 .score .nm { font: 800 1.25px var(--font-ui); text-anchor: middle; fill: var(--muted); }
 .score .cnt { font: 700 1.35px var(--font-display); text-anchor: middle; }
 .score .cnt.held { opacity: .4; }
 
 /* ---------- Leiste des Lieds ---------- */
 .steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
-.steps .btn { padding: 0; min-height: 54px; font: 700 1.5rem/1 var(--font-display); }
-.tools.t5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.steps .btn { padding: 0; min-height: 40px; font: 700 1.2rem/1 var(--font-display); }
+.meters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.meters .btn { min-height: 48px; padding: 0; }
+.meters .mtr { font-size: 1.05rem; }
+.meters .sym { height: 1.7rem; }
+.glabel.sub { margin-top: 6px; }
+.tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.btn.more { width: 100%; min-height: 34px; margin: 5px 0; font: 800 .78rem var(--font-ui); color: var(--muted); }
+.tools.shows { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.shows .btn { min-height: 40px; font: 800 .85rem var(--font-ui); }
+.shows .dots { display: inline-flex; gap: 2px; }
+.shows .dots i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); }
+.tools.accs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tools.accs .btn { min-height: 44px; }
 .btn .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-weight: 400; }
 .values.v6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .values.v6 .sym { height: 1.9rem; }
-#liedRest .sym { height: 1.6rem; }
-#liedMeterShow .mtr { font-size: .85rem; }
-#liedMeterShow .mtr.off { opacity: .45; }
-.tools.t3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.tools.t3 .btn { flex-direction: row; gap: .4rem; min-height: 48px; }
-.tools.t3 .big .ico { width: 1.3rem; height: 1.3rem; }
-/* Feld „Takt …“: Taktarten, Auftakte, darunter Striche und Automatik, jeweils mit Überschrift */
-.taktpop .poplabel { grid-column: 1 / -1; margin: 2px 2px -2px; font: 800 .7rem var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.taktpop .sym { height: 1.7rem; }
-.taktpop .btn.wide { grid-column: span 3; min-height: 48px; padding: 0 .3rem; font-size: .82rem; line-height: 1.1; }
+#liedRests .sym { height: 2.2rem; }
 
 /* ---------- Ziehen auf dem Notenblatt ---------- */
 /* Die markierte Note lässt sich ziehen: Ein unsichtbares Feld liegt darüber, dort scrollt der Finger nicht */

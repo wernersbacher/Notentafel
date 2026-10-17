@@ -3,7 +3,7 @@ import { pushState, popState } from '../core/history.js';
 import { emptySong, cleanSong } from './model.js';
 import { store, loadLiedSettings, saveLiedSettings } from './storage.js';
 
-// Einstellungen nur für Lied: autoBar, names, autoZ, check, size, wrap
+// Einstellungen nur für Lied: autoBar, names, colors, autoZ, check, size, wrap, allTones
 export const opts = loadLiedSettings();
 export const persistOpts = () => saveLiedSettings(opts);
 
@@ -15,7 +15,7 @@ export const L = {
   hist: [], // Rückgängig-Verlauf (als JSON)
   insertMode: false,
   clean: false, // „Fertig“: Markierung und leerer Platz ausgeblendet
-  last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Oktave, bis man woanders hin tippt
+  last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt
   pen: { v: 4, dot: 0 } // vorgewählter Notenwert für die nächsten Töne und Pausen
 };
 

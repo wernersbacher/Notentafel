@@ -1,14 +1,31 @@
 // Alles, was die Tafel verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { MAX_LEN, MAX_ROWS } from './config.js';
-import { isNote, isBeat, filled, emptyRows, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
+import { isNote, isBeat, filled, dur, canCloseGap, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
 import { countSlots } from './theory.js';
-import { S, curCell, curRow, snap, restore, stashBoard } from './state.js';
+import { S, settings, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
 import { toast } from '../core/ui.js';
 
+// Rhythmus: Ist die Zeile mit dem Platz c voll? Mit Breite nach Notenlänge zählen Schläge (ein Platz je Schlag).
+function fullAt(row, c) {
+  if (!wraps()) return false;
+  if (!settings.prop) return c + 1 >= S.cap;
+  let u = 0;
+  for (let k = 0; k <= c; k++) u += Math.round(dur(row[k]) * 2);
+  return u >= 2 * S.cap;
+}
 // Ein Platz weiter in derselben Zeile – auch beim Austauschen, damit man mehrere Töne am Stück korrigieren kann.
-// Am Ende einer vollen Zeile bleibt die Markierung stehen.
+// Bei Rhythmus geht es am Ende einer vollen Zeile in der nächsten weiter (die angelegt wird, wenn es keine gibt);
+// sonst bleibt die Markierung am Ende einer vollen Zeile stehen.
 function advance() {
+  if (fullAt(curRow(), S.sel.c)) {
+    if (S.sel.r + 1 >= S.rows.length) {
+      if (S.rows.length >= MAX_ROWS) { toast('Die Tafel ist voll (' + MAX_ROWS + ' Zeilen).', true); return; }
+      S.rows.push(newRow(curRow().line));
+    }
+    S.sel = { r: S.sel.r + 1, c: 0 };
+    return;
+  }
   if (S.sel.c + 1 < MAX_LEN) { S.sel = { r: S.sel.r, c: S.sel.c + 1 }; return; }
   toast('Die Zeile ist voll (' + MAX_LEN + ' Plätze). Mit „Umbruch“ geht es in der nächsten Zeile weiter.', true);
 }
@@ -38,17 +55,25 @@ export function unclean() { if (S.clean) { S.clean = false; render(); } }
 
 /* ---------- Zeichen setzen ---------- */
 // Fügt an der Markierung ein; der Rest der Zeile rückt einen Platz weiter
+// Bei Rhythmus rutscht, was nicht mehr in die Zeile passt, in die nächste.
 function insertCell(v) {
   const row = curRow();
-  if (row.length >= MAX_LEN) {
-    toast('Die Zeile ist voll (' + MAX_LEN + ' Plätze). Entferne zuerst einen Ton oder mach einen Umbruch.', true);
+  if (row.length >= MAX_LEN || (wraps() && row.length >= S.cap && !reflowRoom())) {
+    toast(wraps() ? 'Die Tafel ist voll. Entferne zuerst einen Ton.' : 'Die Zeile ist voll (' + MAX_LEN + ' Plätze). Entferne zuerst einen Ton oder mach einen Umbruch.', true);
     return;
   }
   snap();
   if (S.sel.c >= row.length) put(row, S.sel.c, v);
   else row.splice(S.sel.c, 0, v);
+  if (wraps()) reflow(S.rows, S.sel.r, S.cap);
   advance();
   commit();
+}
+// Ist unten noch Platz für ein Zeichen, das beim Einfügen aus der Zeile rutscht?
+function reflowRoom() {
+  const test = S.rows.map((row) => row.slice());
+  test[S.sel.r].push(null);
+  return reflow(test, S.sel.r, S.cap);
 }
 // Bunter Punkt. Beim Austauschen bleiben r/l und ein Notenwert erhalten, damit der Rhythmus stimmt
 // (auch wenn vorher ein eigenständiges Notenzeichen dort stand).
@@ -132,16 +157,24 @@ export function setMeter(m) {
 }
 
 /* ---------- Entfernen ---------- */
-// Entfernt den Platz an der Markierung; der Rest der Zeile rückt nach vorne
-function closeGap() {
-  const row = curRow();
-  if (S.sel.c >= row.length) return;
+// Löschen wie die Löschtaste: Steht die Markierung auf einem Platz, verschwindet er und der Rest der Zeile rückt nach
+// vorne (mehrmals tippen löscht nach rechts). Steht sie hinter dem letzten Zeichen, verschwindet das Zeichen davor und die
+// Markierung rückt nach (wie die Rücktaste); am Anfang einer leeren Zeile geht es am Ende der Zeile darüber weiter.
+export function closeGap() {
+  if (!canCloseGap(S.rows, S.sel)) return;
   snap();
-  row.splice(S.sel.c, 1);
+  let row = curRow();
+  if (S.sel.c < row.length) row.splice(S.sel.c, 1);
+  else {
+    if (!row.length) { S.sel = { r: S.sel.r - 1, c: 0 }; row = curRow(); }
+    row.pop();
+    trimRow(row);
+    S.sel = { r: S.sel.r, c: row.length };
+  }
   commit();
 }
+// Entfernen: Der Platz wird leer (ein stiller Schlag), der Rest der Zeile bleibt stehen
 export function deleteCell() {
-  if (S.insertMode) { closeGap(); return; }
   const row = curRow();
   if (!filled(row[S.sel.c])) return;
   snap();
@@ -167,7 +200,7 @@ export function lineBreak() {
 export function addRow() {
   if (S.rows.length >= MAX_ROWS) return;
   snap();
-  S.rows.push([]);
+  S.rows.push(newRow(S.variant === 'rhy'));
   commit();
 }
 export function delRow() {
@@ -186,7 +219,7 @@ export function undo() {
 export function clearAll() {
   snap();
   stashBoard();
-  S.rows = emptyRows();
+  S.rows = emptyRows(S.variant === 'rhy');
   S.name = '';
   S.sel = { r: 0, c: 0 };
   commit();

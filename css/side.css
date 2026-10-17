@@ -21,6 +21,7 @@
 .tab[aria-selected="true"] { background: var(--btn); color: var(--fg); box-shadow: 0 1px 4px var(--shadow); }
 .panel { display: flex; flex-direction: column; gap: 10px; }
 .tools { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.tools.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .tools.t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tools.t2 .btn { flex-direction: row; gap: .5rem; min-height: 48px; }
 /* Zählzeiten von Hand: 1–6, + und Löschen */

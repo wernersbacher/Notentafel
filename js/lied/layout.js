@@ -65,47 +65,55 @@ export function beamGroups(song, bars, brks) {
 
 // Waagerechte Maße: Platz eines Zeichens ohne (advance) bzw. mit Vorzeichen und Strich dahinter (wOf),
 // und der Anfang einer Zeile bis zum ersten Zeichen (lead; in der ersten Zeile mit Taktart)
+// cuts: Stellen, an denen ein Takt endet und umbrochen werden darf – hinter jedem Strich, ohne Taktart zusätzlich
+// nach je einer Ganzen (wie 4/4, nur ohne gezeichnete Striche), damit auch dann Zeilen entstehen.
 function measurer(song, autoBar) {
   const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar);
   const advance = (i) => Math.max(spacing(ticks(ev[i])), G.head + (ev[i].dot ? 1 : 0) + 0.9);
   const wOf = (i) => (shown[i] != null ? G.acc : 0) + advance(i) + (bars[i] ? G.bar : 0);
   const lead = (first) => G.left + G.clef + (first && song.meter ? G.meter : 0) + G.lead;
-  return { bars, shown, advance, wOf, lead };
+  let pos = 0;
+  const cuts = ev.map((e, i) => { pos += ticks(e); return !!bars[i] || (!song.meter && pos % 32 === 0); });
+  return { bars, cuts, shown, advance, wOf, lead };
 }
 // Breite einer Zeile, die nur den breitesten Takt enthält (samt Schlüssel, in der ersten Zeile auch Taktart).
 // Damit lässt sich die Notengröße so begrenzen, dass ein Takt immer in eine Zeile passt.
 export function widestMeasure(song, { autoBar = false } = {}) {
-  const { bars, wOf, lead } = measurer(song, autoBar);
+  const { cuts, wOf, lead } = measurer(song, autoBar);
   let w = lead(true), max = w;
   song.ev.forEach((e, i) => {
     w += wOf(i);
     max = Math.max(max, w);
-    if (bars[i] || e.brk) w = lead(false);
+    if (cuts[i] || e.brk) w = lead(false);
   });
   return max + 0.6;
 }
 
-// Automatische Umbrüche: Jede Zeile wird Takt für Takt gefüllt, solange sie in die Breite passt. Passt etwas nicht mehr,
-// wird hinter dem letzten Taktstrich der Zeile umbrochen, gibt es keinen, direkt davor (ein Takt allein ist zu breit).
-// Der leere Platz am Ende zählt mit. Umbrüche von Hand bleiben. Liefert brk (Umbruch hinter Ereignis i) und
-// full (Zeile endet mit einem automatischen Umbruch, also voll – die wird gestreckt).
-function wrap(ev, bars, wOf, lead, width) {
+// Höchstens so viele Takte stehen in einer automatisch umbrochenen Zeile
+export const MAX_MEASURES = 5;
+// Automatische Umbrüche: Jede Zeile wird Takt für Takt gefüllt, solange sie in die Breite passt und höchstens
+// MAX_MEASURES Takte hat. Passt etwas nicht mehr, wird hinter dem letzten Taktende (cuts) der Zeile umbrochen, gibt es
+// keins, direkt davor (ein Takt allein ist zu breit). Der leere Platz am Ende zählt mit. Umbrüche von Hand bleiben.
+// Liefert brk (Umbruch hinter Ereignis i) und full (Zeile endet mit einem automatischen Umbruch – die wird gestreckt).
+function wrap(ev, cuts, wOf, lead, width) {
   const brk = ev.map((e) => !!e.brk), full = [];
-  let start = 0, x = lead(true);
+  let start = 0, x = lead(true), count = 0;
   for (let i = 0; i <= ev.length; i++) {
     const w = i < ev.length ? wOf(i) : G.ghost;
     while (x + w + 0.6 > width && i > start) {
       let b = i - 1;
-      for (let k = i - 1; k >= start; k--) if (bars[k]) { b = k; break; }
+      for (let k = i - 1; k >= start; k--) if (cuts[k]) { b = k; break; }
       brk[b] = true;
       full[b] = true;
       start = b + 1;
       x = lead(false);
-      for (let k = start; k < i; k++) x += wOf(k);
+      count = 0;
+      for (let k = start; k < i; k++) { x += wOf(k); if (cuts[k]) count++; }
     }
     if (i === ev.length) break;
     x += w;
-    if (brk[i]) { start = i + 1; x = lead(false); }
+    if (cuts[i] && ++count === MAX_MEASURES && i < ev.length - 1 && !brk[i]) { brk[i] = true; full[i] = true; }
+    if (brk[i]) { start = i + 1; x = lead(false); count = 0; }
   }
   return { brk, full };
 }
@@ -131,7 +139,7 @@ function noteShape(it, e) {
 //   clefX, meterX   Lage von Schlüssel und Taktart (meterX nur in der ersten Zeile mit Taktart)
 //   items           pro Ereignis: i, x (Mitte des Kopfs), l/r (Spalte zum Antippen), pos, ledger, stem { up, end, x },
 //                   flags, dot (Platz des Punkts), acc/accX (gezeichnetes Vorzeichen und seine Lage), rest
-//   bars            { x, k } Takt- (1) und Schlussstriche (2)
+//   bars            { x, k } Takt- (1) und Schlussstriche (2); barEnd: das letzte Zeichen der Zeile hat einen Strich
 //   beams           { up, x1, x2, end1, end2, sub: [[x1, x2]] } Balken von (x1, end1) nach (x2, end2); sub sind die
 //                   zweiten Balken der Sechzehntel
 //   ghost           der leere Platz am Ende (nur in der letzten Zeile)
@@ -144,8 +152,8 @@ function noteShape(it, e) {
 // leeren Platz am Ende weg.
 export function layout(song, { autoBar = false, counts = false, check = false, width = 0, justify = 0, ghost = true } = {}) {
   const ev = song.ev, at = [], barX = [];
-  const { bars, shown, advance, wOf, lead } = measurer(song, autoBar);
-  const { brk, full } = width ? wrap(ev, bars, wOf, lead, width) : { brk: ev.map((e) => !!e.brk), full: [] };
+  const { bars, cuts, shown, advance, wOf, lead } = measurer(song, autoBar);
+  const { brk, full } = width ? wrap(ev, cuts, wOf, lead, width) : { brk: ev.map((e) => !!e.brk), full: [] };
   // Zeilen: hinter einem Umbruch beginnt eine neue (auch, wenn danach noch nichts steht)
   const systems = [{ first: 0, end: 0 }];
   ev.forEach((e, i) => {
@@ -187,6 +195,7 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
       s.ghost = { l: x - 0.5, x: x + 0.3 + G.head / 2, r: x + G.ghost };
       x += G.ghost;
     }
+    s.barEnd = !s.ghost && s.end > s.first && !!bars[s.end - 1];
     s.width = x + 0.6;
   });
 

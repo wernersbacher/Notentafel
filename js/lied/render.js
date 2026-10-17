@@ -33,7 +33,7 @@ export function renderSheet() {
   const last = !L.clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
-    width: W, sel: L.sel, clean: L.clean, insert: L.insertMode, names: opts.names, counts: opts.autoZ,
+    width: W, sel: L.sel, clean: L.clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ,
     target: last, playing: pos == null ? -1 : pos
   });
   el.sheet.innerHTML = '<svg class="score' + (L.clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +

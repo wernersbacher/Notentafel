@@ -1,7 +1,7 @@
 // Alles, was die Tafel verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { MAX_LEN, MAX_ROWS } from './config.js';
 import { isNote, isBeat, filled, dur, canCloseGap, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
-import { countSlots } from './theory.js';
+import { countSlots, openMeasureAt } from './theory.js';
 import { S, propOn, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
 import { toast } from '../core/ui.js';
@@ -22,24 +22,34 @@ function makeRoom(v) {
   let u = 0;
   row.forEach((x) => { u += Math.round(dur(x) * 2); });
   if (u + Math.round(dur(v) * 2) <= 2 * S.cap) return;
-  if (S.sel.r + 1 >= S.rows.length) {
-    if (S.rows.length >= MAX_ROWS) return;
-    S.rows.push(newRow(row.line));
+  nextLine();
+}
+// Weiter in der nächsten Zeile. Ein Takt geht nicht über zwei Zeilen: Ist am Ende der Zeile ein Takt angefangen
+// (und beginnt er nicht schon am Zeilenanfang), wandert er ganz in die nächste Zeile, und es geht hinter ihm weiter.
+// Die nächste Zeile wird dafür angelegt (oder eine leere genutzt); bei MAX_ROWS Zeilen bleibt alles, wie es ist.
+function nextLine() {
+  const r = S.sel.r, row = curRow(), open = openMeasureAt(S.rows, r);
+  const move = open > 0 && open < row.length ? row.splice(open) : [];
+  let next = S.rows[r + 1];
+  if (move.length && next && next.some(Boolean)) next = null; // nicht vor eine beschriebene Zeile schieben
+  if (!next) {
+    if (S.rows.length >= MAX_ROWS) {
+      row.push(...move);
+      toast('Die Tafel ist voll (' + MAX_ROWS + ' Zeilen).', true);
+      return false;
+    }
+    next = newRow(row.line);
+    S.rows.splice(r + 1, 0, next);
   }
-  S.sel = { r: S.sel.r + 1, c: 0 };
+  next.unshift(...move);
+  S.sel = { r: r + 1, c: move.length };
+  return true;
 }
 // Ein Platz weiter in derselben Zeile – auch beim Austauschen, damit man mehrere Töne am Stück korrigieren kann.
 // Bei Rhythmus geht es am Ende einer vollen Zeile in der nächsten weiter (die angelegt wird, wenn es keine gibt);
 // sonst bleibt die Markierung am Ende einer vollen Zeile stehen.
 function advance() {
-  if (fullAt(curRow(), S.sel.c)) {
-    if (S.sel.r + 1 >= S.rows.length) {
-      if (S.rows.length >= MAX_ROWS) { toast('Die Tafel ist voll (' + MAX_ROWS + ' Zeilen).', true); return; }
-      S.rows.push(newRow(curRow().line));
-    }
-    S.sel = { r: S.sel.r + 1, c: 0 };
-    return;
-  }
+  if (fullAt(curRow(), S.sel.c)) { nextLine(); return; }
   if (S.sel.c + 1 < MAX_LEN) { S.sel = { r: S.sel.r, c: S.sel.c + 1 }; return; }
   toast('Die Zeile ist voll (' + MAX_LEN + ' Plätze). Mit „Umbruch“ geht es in der nächsten Zeile weiter.', true);
 }

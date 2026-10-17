@@ -48,6 +48,26 @@ export function autoMarks(rows, on) {
   });
   return res;
 }
+// Wo in Zeile r der angefangene letzte Takt beginnt (gezählt wie autoMarks, über die Zeilen hinweg). Ohne Taktart oder
+// wenn die Zeile mit einem vollen Takt endet: die Länge der Zeile (nichts angefangen). 0: Der Takt beginnt schon am
+// Zeilenanfang (dann lässt er sich nicht in die nächste Zeile schieben).
+export function openMeasureAt(rows, r) {
+  let mi = null, pos = 0;
+  for (let q = 0; q < r; q++) {
+    if (rows[q].meter) { mi = meterInfo(rows[q].meter); pos = 0; }
+    rows[q].forEach((x) => { pos += dur(x); });
+  }
+  const row = rows[r];
+  if (row.meter) { mi = meterInfo(row.meter); pos = 0; }
+  if (!mi) return row.length;
+  let start = 0;
+  row.forEach((x, c) => {
+    if (pos % mi.len === 0) start = c;
+    pos += dur(x);
+  });
+  return pos % mi.len === 0 ? row.length : start;
+}
+
 // Strich vor Platz c: 0 keiner, 1 Taktstrich, 2 Schlussstrich. a sind die automatischen Marken der Zeile.
 // Der Schlussstrich bleibt immer stehen; von Hand gesetzte Taktstriche weichen den automatischen.
 export function barAt(cell, c, a, autoBar) {

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { autoMarks, meterInfo, countSlots, barAt } from '../js/tafel/theory.js';
+import { autoMarks, meterInfo, countSlots, barAt, openMeasureAt } from '../js/tafel/theory.js';
+import { attachLines } from '../js/tafel/model.js';
 
 const q = { n: 'C', h: '' };          // Punkt ohne Notenwert: ein Schlag
 const n = (d) => ({ n: 'C', h: '', d });
@@ -86,4 +87,17 @@ test('barAt: Schlussstrich bleibt, Automatik ersetzt Taktstriche von Hand', () =
   assert.equal(barAt(null, 2, a, true), 1);
   assert.equal(barAt({ bar: 1 }, 0, a, false), 1);
   assert.equal(barAt(null, 2, a, false), 0);
+});
+
+test('openMeasureAt: Anfang des angefangenen Takts am Zeilenende', () => {
+  const b = (d) => ({ k: 'b', d });
+  // 4/4: ein voller Takt, dann zwei Viertel angefangen (ab Platz 4)
+  const rows = attachLines([[b(1), b(1), b(2), b(1), b(1)], [b(2)]], [{ l: 1, m: '4/4' }, 0]);
+  assert.equal(openMeasureAt(rows, 0), 3);
+  // Die zweite Zeile zählt weiter: zwei Viertel + Halbe = voller Takt, nichts angefangen
+  assert.equal(openMeasureAt(rows, 1), 1);
+  // Ohne Taktart: nichts angefangen
+  assert.equal(openMeasureAt(attachLines([[b(1), b(1)]], [0]), 0), 2);
+  // Takt beginnt am Zeilenanfang: 0
+  assert.equal(openMeasureAt(attachLines([[b(1), b(1)]], [{ l: 1, m: '4/4' }]), 0), 0);
 });

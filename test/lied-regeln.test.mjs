@@ -1,0 +1,124 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { shownAccidentals, badMeasures } from '../js/lied/model.js';
+import { layout } from '../js/lied/layout.js';
+import { sheetSVG } from '../js/lied/sheet.js';
+
+const n = (p, v = 4, x = {}) => ({ p, v, ...x });
+const r = (v = 4, x = {}) => ({ v, ...x });
+const song = (ev, meter = '4/4', pickup = 0) => ({ meter, pickup, ev });
+const shown = (ev, autoBar = false, meter = '4/4') => shownAccidentals(song(ev, meter), autoBar);
+
+/* ---------- Vorzeichen ---------- */
+test('Vorzeichen: im Takt nicht wiederholt, ohne Vorzeichen danach ein ♮', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 1 }), n('f1', 4, { acc: 1 }), n('f1'), n('f1')]), [1, null, 0, null]);
+  assert.deepEqual(shown([n('h1', 4, { acc: -1 }), r(), n('h1', 4, { acc: 1 })]), [-1, null, 1]);
+  // Ohne Vorzeichen bleibt ohne
+  assert.deepEqual(shown([n('c1'), n('c1')]), [null, null]);
+});
+
+test('Vorzeichen: nach einem automatischen Taktstrich beginnt alles neu', () => {
+  const ev = [n('f1', 2, { acc: 1 }), n('f1', 2, { acc: 1 }), n('f1', 2, { acc: 1 }), n('f1', 2)];
+  assert.deepEqual(shown(ev, true), [1, null, 1, 0]);
+  // Ohne automatische Striche läuft der Takt weiter
+  assert.deepEqual(shown(ev, false), [1, null, null, 0]);
+});
+
+test('Vorzeichen: nach einem Takt- oder Schlussstrich von Hand beginnt alles neu', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 1, bar: 1 }), n('f1', 4, { acc: 1 }), n('f1', 4, { bar: 2 }), n('f1')]), [1, 1, 0, null]);
+  // Von Hand gesetzte Taktstriche sind mit Automatik ausgeblendet und zählen dann auch nicht
+  assert.deepEqual(shown([n('f1', 4, { acc: 1, bar: 1 }), n('f1', 4, { acc: 1 })], true), [1, null]);
+});
+
+test('Vorzeichen: eine andere Oktave ist unabhängig', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 1 }), n('f2'), n('f2', 4, { acc: 1 }), n('f1', 4, { acc: 1 })]), [1, null, 1, null]);
+});
+
+test('Vorzeichen: hinter einem Haltebogen keins, auch über den Taktstrich', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 1, tie: 1 }), n('f1', 4, { acc: 1 }), n('f1')]), [1, null, 0]);
+  const ev = [n('c1', 2), n('f1', 2, { acc: 1, tie: 1 }), n('f1', 4, { acc: 1 }), n('f1', 4, { acc: 1 })];
+  // Die gehaltene Note zeigt nichts und ändert nichts: die nächste braucht das ♯ wieder
+  assert.deepEqual(shown(ev, true), [null, 1, null, 1]);
+});
+
+test('Vorzeichen: ein ausdrückliches ♮ steht immer da', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 0 }), n('f1', 4, { acc: 0 }), n('f1')]), [0, 0, null]);
+  assert.deepEqual(shown([n('h1', 4, { acc: -1 }), n('h1', 4, { acc: 0 }), n('h1')]), [-1, 0, null]);
+});
+
+test('Vorzeichen: ein Zeilenumbruch ohne Strich setzt nichts zurück', () => {
+  assert.deepEqual(shown([n('f1', 4, { acc: 1, brk: 1 }), n('f1', 4, { acc: 1 }), n('f1')]), [1, null, 0]);
+});
+
+/* ---------- Takt-Prüfung ---------- */
+test('Takt-Prüfung: volle Takte sind in Ordnung', () => {
+  assert.deepEqual(badMeasures(song([n('c1', 1), n('d1', 2), n('e1'), n('f1'), n('g1')]), true), []);
+  assert.deepEqual(badMeasures(song([n('c1', 4, { dot: 1 }), n('d1', 8), n('e1', 2, { bar: 1 }), n('f1')]), false), []);
+});
+
+test('Takt-Prüfung: zu kurzer Takt mit einem Strich von Hand', () => {
+  const s = song([n('c1'), n('d1', 4, { bar: 1 }), n('e1', 1, { bar: 1 }), n('f1')]);
+  assert.deepEqual(badMeasures(s, false), [{ first: 0, last: 1, ticks: 16, want: 32 }]);
+});
+
+test('Takt-Prüfung: eine Note über die Grenze macht den Abschnitt zu lang', () => {
+  // 16 + 24 + 8 + 16 = 64: erst hier geht ein Takt auf
+  const s = song([n('c1', 2), n('d1', 2, { dot: 1 }), n('e1'), n('f1', 2), n('g1', 1)]);
+  assert.deepEqual(badMeasures(s, true), [{ first: 0, last: 3, ticks: 64, want: 32 }]);
+});
+
+test('Takt-Prüfung: Auftakt richtig und falsch', () => {
+  assert.deepEqual(badMeasures(song([n('g0'), n('c1', 1), n('d1')], '3/4', 8), true), []);
+  assert.deepEqual(badMeasures(song([n('g0', 4, { bar: 1 }), n('c1', 2, { dot: 1, bar: 1 }), n('d1')], '3/4', 8), false), []);
+  const wrong = song([n('g0', 2, { bar: 1 }), n('c1', 2, { dot: 1, bar: 1 }), n('d1')], '3/4', 8);
+  assert.deepEqual(badMeasures(wrong, false), [{ first: 0, last: 0, ticks: 16, want: 8 }]);
+});
+
+test('Takt-Prüfung: der Schlusstakt wird nicht geprüft', () => {
+  // Strich hinter dem letzten Ereignis
+  assert.deepEqual(badMeasures(song([n('c1', 1), n('d1', 2, { bar: 2 })]), true), []);
+  assert.deepEqual(badMeasures(song([n('c1', 1, { bar: 1 }), n('d1', 4, { bar: 1 })]), false), []);
+  // Alles nach dem letzten Strich
+  assert.deepEqual(badMeasures(song([n('c1', 1), n('d1')]), true), []);
+  // Ohne Striche gibt es nur einen Abschnitt, den letzten
+  assert.deepEqual(badMeasures(song([n('c1', 2, { dot: 1 }), n('d1', 2)]), true), []);
+});
+
+test('Takt-Prüfung: ohne Taktart nichts', () => {
+  assert.deepEqual(badMeasures(song([n('c1', 4, { bar: 1 }), n('d1', 4, { bar: 1 }), n('e1')], ''), false), []);
+});
+
+/* ---------- Layout und Zeichnen ---------- */
+test('Layout: Platz und Zeichen nur für gezeichnete Vorzeichen', () => {
+  const { at } = layout(song([n('f1', 4, { acc: 1 }), n('f1', 4, { acc: 1 }), n('f1'), n('g1', 4, { acc: 0 })]));
+  assert.ok(at[0].accX != null && at[0].acc === 1);
+  assert.equal(at[1].accX, undefined);
+  assert.equal(at[1].acc, undefined);
+  assert.ok(at[2].accX != null && at[2].acc === 0);
+  assert.ok(at[3].accX != null && at[3].acc === 0);
+  // Die Spalte ohne Vorzeichen ist schmaler
+  assert.ok(at[1].r - at[1].l < at[0].r - at[0].l);
+});
+
+test('Layout: Takt-Prüfung nur mit check, über einen Umbruch in zwei Stücken', () => {
+  const ev = [n('c1', 2), n('d1', 2, { dot: 1 }), n('e1', 4, { brk: 1 }), n('f1', 2), n('g1', 1), n('a1')];
+  assert.deepEqual(layout(song(ev), { autoBar: true }).systems.map((s) => s.bad), [[], []]);
+  const { systems, at } = layout(song(ev), { autoBar: true, check: true });
+  assert.deepEqual(systems[0].bad, [{ x1: at[0].l, x2: at[2].r }]);
+  // Im zweiten System endet das Stück kurz vor dem Taktstrich
+  const bar = systems[1].bars[0].x;
+  assert.equal(systems[1].bad.length, 1);
+  assert.equal(systems[1].bad[0].x1, at[3].l);
+  assert.ok(systems[1].bad[0].x2 < bar && systems[1].bad[0].x2 > at[3].x);
+});
+
+test('Zeichnen: Rechteck der Klasse bad vor den Notenlinien', () => {
+  const s = song([n('c1'), n('d1', 4, { bar: 1 }), n('e1', 1, { bar: 1 }), n('f1')]);
+  const { svg } = sheetSVG(s, layout(s, { check: true }), { width: 40, clean: true });
+  const i = svg.indexOf('class="bad"');
+  assert.ok(i > 0 && svg.indexOf('rx="0.6"', i) > 0);
+  assert.equal(svg.split('class="bad"').length, 2);
+  // Vor allen Linien und Köpfen, also hinter den Noten
+  assert.ok(!svg.slice(0, i).includes('<line') && !svg.slice(0, i).includes('<path'));
+  assert.match(svg.slice(i - 12, i + 80), /y="-0\.6".*height="5\.2"/);
+});

@@ -147,6 +147,42 @@ export function cleanSong(raw) {
   };
 }
 
+/* ---------- Regeln im Takt ---------- */
+// Gezeichnete Vorzeichen pro Ereignis (1 ♯, −1 ♭, 0 ♮, null keins). Ein Vorzeichen gilt bis zum nächsten Strich für
+// denselben Ton in derselben Oktave; ohne Vorzeichen danach bekommt er ein ♮. Ein acc: 0 am Modell zeigt immer ♮.
+// Eine Note hinter einem Haltebogen zeigt keins und ändert nichts. Ein Umbruch ohne Strich setzt nichts zurück.
+export function shownAccidentals(song, autoBar) {
+  const bars = barsAfter(song, autoBar);
+  let now = {};
+  return song.ev.map((e, i) => {
+    let out = null;
+    if (isNote(e) && !tiedFrom(song.ev[i - 1], e)) {
+      const a = e.acc || 0;
+      if (e.acc === 0 || a !== (now[e.p] || 0)) out = a;
+      now[e.p] = a;
+    }
+    if (bars[i]) now = {};
+    return out;
+  });
+}
+
+// Takte, die nicht aufgehen: Abschnitte zwischen zwei gezeichneten Strichen, deren Länge nicht der Taktart entspricht
+// (der erste bei Auftakt dem Auftakt). Der letzte Abschnitt (Schlusstakt) und Lieder ohne Taktart werden nicht geprüft.
+// Liefert [{ first, last, ticks, want }] mit den Indizes der Ereignisse.
+export function badMeasures(song, autoBar) {
+  if (!song.meter) return [];
+  const bars = barsAfter(song, autoBar), len = measureTicks(song.meter), n = song.ev.length, out = [];
+  let first = 0, sum = 0;
+  song.ev.forEach((e, i) => {
+    sum += ticks(e);
+    if (!bars[i]) return;
+    const want = first === 0 && song.pickup > 0 ? song.pickup : len;
+    if (i < n - 1 && sum !== want) out.push({ first, last: i, ticks: sum, want });
+    first = i + 1; sum = 0;
+  });
+  return out;
+}
+
 /* ---------- Abspielen ---------- */
 // Ablaufplan für den Player: alle Zeichen nacheinander bis zum letzten Ton, Zeiten in Vierteln.
 // Eine Note hinter einem Haltebogen klingt nicht neu, sondern verlängert die vorige.

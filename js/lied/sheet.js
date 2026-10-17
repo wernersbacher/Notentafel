@@ -17,7 +17,7 @@ function itemSVG(it, e) {
   else {
     const y = yOf(it.pos);
     it.ledger.forEach((p) => { s += ledger(it.x, yOf(p), e.v === 1 ? 1.25 : 1.05); });
-    if (it.accX != null) s += accidental(it.accX, y, e.acc);
+    if (it.accX != null) s += accidental(it.accX, y, it.acc);
     s += head(it.x, y, e.v);
     if (it.stem) {
       s += stem(it.stem.x, y + (it.stem.up ? -0.1 : 0.1), yOf(it.stem.end));
@@ -46,6 +46,8 @@ export function sheetSVG(song, lay, o) {
         if (o.insert) g += rect('caret', col.l - 0.12, -s.top + 0.4, col.l + 0.12, 4 + bottom - 0.4);
       }
     }
+    // Takte, die nicht aufgehen, sanft hinter den Noten
+    s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
     g += staffLines(0, W) + clef(s.clefX, yOf(2));
     if (s.meterX != null) g += meter(s.meterX, song.meter);
     s.items.forEach((it) => {

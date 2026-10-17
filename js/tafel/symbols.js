@@ -52,7 +52,6 @@ export function meterHTML(m) {
 }
 
 export const ICONS = {
-  dot: '<svg class="sym" viewBox="-1.7 -1.7 3.4 3.4" fill="currentColor" aria-hidden="true"><circle r="0.4"/></svg>',
   clearCount: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h11v14H9l-6-7z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>' +
     '<path d="M12 9.5l5 5M17 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
 };

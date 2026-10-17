@@ -60,7 +60,7 @@
 .btn .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-weight: 400; }
 .values.v6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .values.v6 .sym { height: 1.9rem; }
-#liedRests .sym { height: 2.2rem; }
+#liedRests .sym, #rests .sym, #restsMel .sym { height: 2.2rem; }
 
 /* ---------- Ziehen auf dem Notenblatt ---------- */
 /* Die markierte Note lässt sich ziehen: Ein unsichtbares Feld liegt darüber, dort scrollt der Finger nicht */

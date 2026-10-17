@@ -24,6 +24,7 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 | `js/core/history.js` | Rückgängig-Verlauf |
 | `js/core/colors.js` | Farben der Stammtöne, gemeinsam für Melodie und Lied |
 | `js/core/shapes.js` | Gemeinsame Formen der Notenschrift (Viertelpause) für Tafel und Lied |
+| `js/core/glyphs.js` | Gemeinsame Zeichen der Notenschrift (Köpfe, Hälse, Fähnchen, Pausen, Knopf-Zeichen) für Lied und Tafel |
 | `js/core/menu.js` | Das Menü: Speichern, Lieder, Zuletzt ersetzt, Tempo, Bildschirm |
 | `js/core/plan.js` | Hilfen für Ablaufpläne: Zählschlag einer Taktart, Abspielen ab einer Stelle |
 | `js/core/player.js`, `js/core/audio.js` | Abspielen eines Ablaufplans und Klangerzeugung |

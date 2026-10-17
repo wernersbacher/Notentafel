@@ -2,7 +2,8 @@
 import { MAX_ROWS, NOTE_BY, GROUPS, DUR_BY, VALUE_BTNS, COUNTS } from './config.js';
 import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap, dotTargetIn } from './model.js';
 import { S, settings, curCell, curRow } from './state.js';
-import { colorStyle, noteLabel, noteSym, restSym, ICONS } from './symbols.js';
+import { colorStyle, noteLabel, ICONS } from './symbols.js';
+import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
 import { el } from './dom.js';
 
 const pressed = (btn, on) => {
@@ -28,20 +29,21 @@ export function buildCounts() {
 
 // Noten- und Pausenwerte wie im Lied angeordnet: Ganze, Halbe, Viertel, Achtel, (frei), Punkt. Hervorgehoben ist der Wert
 // des markierten Platzes (ein punktierter zählt als sein Grundwert mit Punkt).
-const BASE = { 1.5: 1, 3: 2 };
+// Die Zeichen sind dieselben wie im Lied (core/glyphs.js); V: Länge in Schlägen → Notenwert (1 Ganze … 8 Achtel).
+const BASE = { 1.5: 1, 3: 2 }, V = { 4: 1, 2: 2, 1: 4, 0.5: 8 };
 function valueBtns(on, sym, names) {
   return VALUE_BTNS.map((d) =>
     '<button type="button" class="btn' + (d === (BASE[on] || on) ? ' on' : '') + '" data-d="' + d + '" title="' + DUR_BY[d][names] +
-    '" aria-label="' + DUR_BY[d][names] + '">' + sym(d) + '</button>'
+    '" aria-label="' + DUR_BY[d][names] + '">' + sym(V[d]) + '</button>'
   ).join('');
 }
 const dotBtn = (on) => '<span class="vgap" aria-hidden="true"></span><button type="button" class="btn' + (on ? ' on' : '') +
-  '" data-dot title="Punkt: aus der Halben eine punktierte Halbe, aus der Viertel eine punktierte Viertel" aria-label="Punkt">' + ICONS.dot + '</button>';
+  '" data-dot title="Punkt: aus der Halben eine punktierte Halbe, aus der Viertel eine punktierte Viertel" aria-label="Punkt">' + dotIcon() + '</button>';
 function renderValues(cur) {
   const dt = dotTargetIn(S.rows, S.sel), dotted = !!(dt && BASE[dt.d]);
-  el.valuesMel.innerHTML = valueBtns(isNote(cur) && cur.d, noteSym, 'n') + dotBtn(dotted);
-  el.values.innerHTML = valueBtns((isNote(cur) || isBeat(cur)) && cur.d, noteSym, 'n') + dotBtn(dotted);
-  el.restsMel.innerHTML = el.rests.innerHTML = valueBtns(isRest(cur) && cur.d, restSym, 'p');
+  el.valuesMel.innerHTML = valueBtns(isNote(cur) && cur.d, noteIcon, 'n') + dotBtn(dotted);
+  el.values.innerHTML = valueBtns((isNote(cur) || isBeat(cur)) && cur.d, noteIcon, 'n') + dotBtn(dotted);
+  el.restsMel.innerHTML = el.rests.innerHTML = valueBtns(isRest(cur) && cur.d, restIcon, 'p');
 }
 // Aus, solange die Zählzeiten automatisch kommen
 function renderCounts(cur) {

@@ -17,6 +17,7 @@
 /* Der zuletzt gesetzte Ton (auf ihn wirken Vorzeichen und Bogen) und der gerade klingende */
 .score .ev.target { color: var(--mark); }
 .score .ev.playing { color: var(--play); }
+.score .playbar { fill: var(--play-bg); }
 /* Taktart: zwei Ziffern übereinander, jede so hoch wie zwei Linienabstände */
 /* Versalziffern: Georgias Mediävalziffern (3, 4, 5 …) reichen unter die Grundlinie und säßen zu tief */
 .score .mt { font: 700 2.75px "Times New Roman", Times, "Noto Serif", serif; font-variant-numeric: lining-nums; text-anchor: middle; dominant-baseline: central; }

@@ -51,6 +51,11 @@ export function sheetSVG(song, lay, o) {
     let g = '';
     // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
     g += rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
+    // Beim Abspielen: farbiger Balken hinter der klingenden Note (über die ganze Höhe des Systems)
+    if (o.playing >= s.first && o.playing < s.end) {
+      const col = lay.at[o.playing];
+      g += rect('playbar', col.l + 0.1, -s.top + 0.2, col.r - 0.1, 4 + bottom - 0.2, ' rx="0.8"');
+    }
     // Markierung (nicht nach „fertig“)
     if (!o.clean) {
       const col = o.sel < ev.length ? (o.sel >= s.first && o.sel < s.end ? lay.at[o.sel] : null) : s.ghost;

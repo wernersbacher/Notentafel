@@ -77,9 +77,23 @@ export function commit() {
 }
 
 // Hebt beim Abspielen das klingende Zeichen hervor (i = null: keins)
+// Hebt beim Abspielen die klingende Note hervor: farbig und mit einem Balken dahinter (so groß wie ihre Tippfläche,
+// ganz hinten im System, damit er nichts verdeckt)
 export function markPlaying(i) {
   const old = el.sheet.querySelector('.ev.playing');
   if (old) old.classList.remove('playing');
+  el.sheet.querySelectorAll('.playbar').forEach((b) => b.remove());
   const now = i != null && el.sheet.querySelector('.ev[data-i="' + i + '"]');
-  if (now) now.classList.add('playing');
+  if (!now) return;
+  now.classList.add('playing');
+  const hit = el.sheet.querySelector('.hit[data-i="' + i + '"]:not(:first-child)');
+  if (!hit) return;
+  const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  const x = +hit.getAttribute('x') + 0.1, y = +hit.getAttribute('y') + 0.2;
+  bar.setAttribute('class', 'playbar');
+  bar.setAttribute('x', x); bar.setAttribute('y', y);
+  bar.setAttribute('width', Math.max(0, +hit.getAttribute('width') - 0.2));
+  bar.setAttribute('height', Math.max(0, +hit.getAttribute('height') - 0.4));
+  bar.setAttribute('rx', 0.8);
+  hit.parentNode.insertBefore(bar, hit.parentNode.firstChild);
 }

@@ -212,7 +212,9 @@
 /* „Fertig“: Markierung und leere Plätze ausblenden, nur die Töne bleiben */
 .grid.clean .dot.ghost { visibility: hidden; }
 .grid.clean .cell.sel .dot { box-shadow: inset 0 calc(var(--d) * -.05) 0 rgba(0, 0, 0, .16); }
-.cell.playing .dot:not(.ghost) { transform: scale(1.14); }
+/* Beim Abspielen: der klingende Platz leuchtet als farbiger Balken über die ganze Zeilenhöhe, das Zeichen wird größer */
+.cell.playing { background: var(--play-bg); box-shadow: 0 0 0 4px var(--play-bg); }
+.cell.playing .dot:not(.ghost) { transform: scale(1.22); }
 .cell.lifting { opacity: .3; }
 .cell.drop .dot { transform: scale(1.08); }
 .dot.dragging {

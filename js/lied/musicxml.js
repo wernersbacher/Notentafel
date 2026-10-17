@@ -115,7 +115,7 @@ export function songToMusicXML(song, { name = '', autoBar = true, tempo = 0 } = 
   return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
     '<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">\n' +
     '<score-partwise version="4.0">' + title +
-    '<identification><encoding><software>Notentafel</software></encoding></identification>' +
+    '<identification><encoding><software>Musiktafel</software></encoding></identification>' +
     '<part-list><score-part id="P1"><part-name print-object="no">Lied</part-name></score-part></part-list>' +
     '<part id="P1">' + body + '</part></score-partwise>\n';
 }

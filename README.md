@@ -1,6 +1,6 @@
-# Notentafel
+# Musiktafel
 
-Eine digitale Notentafel für den Musikunterricht. Gebaut fürs **Tablet mit Touch-Bedienung**: Töne antippen, auf die Tafel setzen, verschieben, abspielen.
+Eine digitale Musiktafel für den Musikunterricht. Gebaut fürs **Tablet mit Touch-Bedienung**: Töne antippen, auf die Tafel setzen, verschieben, abspielen.
 
 ## Dateien
 

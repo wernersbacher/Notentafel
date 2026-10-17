@@ -1,6 +1,6 @@
-# Plan: Notentafel als Online-Dienst (Testversion, Konto, Bezahlen)
+# Plan: Musiktafel als Online-Dienst (Testversion, Konto, Bezahlen)
 
-Bisher läuft die Notentafel als statische Seite über GitHub Pages und speichert alles im `localStorage` des Geräts. Daraus soll ein Dienst werden:
+Bisher läuft die Musiktafel als statische Seite über GitHub Pages und speichert alles im `localStorage` des Geräts. Daraus soll ein Dienst werden:
 
 - Eine **offene Testversion** ohne Anmeldung, wie heute: Speichern nur auf dem Gerät, nicht alle Funktionen.
 - Eine **volle Version mit Konto**: Lieder liegen im Konto statt auf dem Gerät, alle Funktionen sind da, eventuell gegen Bezahlung.

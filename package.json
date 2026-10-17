@@ -2,7 +2,7 @@
   "name": "notentafel",
   "version": "1.0.0",
   "private": true,
-  "description": "Digitale Notentafel für den Musikunterricht",
+  "description": "Digitale Musiktafel für den Musikunterricht",
   "scripts": {
     "start": "node tools/serve.js",
     "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON",

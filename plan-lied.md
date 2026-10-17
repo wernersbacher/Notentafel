@@ -194,12 +194,17 @@ Markierung: farbig hinterlegte Spalte. Hinter der letzten Note steht eine blasse
 
 **Fertig, wenn:** man „Alle meine Entchen“ und „Hänschen klein“ in wenigen Minuten nur per Tippen als Noten aufschreiben, abspielen und speichern kann und das Bild als Notenblatt erkennbar ist.
 
-## Phase 2: Musikalisch richtig
+## Phase 2: Musikalisch richtig – erledigt
 
-- [ ] **Balken nach Taktart:** 2/4, 3/4: pro Schlag; 4/4: Achtel pro halbem Takt; 2/2: pro Halbe; 6/8: pro punktierter Viertel. Sechzehntel immer pro Schlag. Pausen unterbrechen den Balken. Leicht geneigte Balken.
-- [ ] **Haltebogen:** Knopf „Bogen“ an der markierten Note (nur zur nächsten Note gleicher Tonhöhe). Bogen zeichnen, auch über den Zeilenumbruch, und beim Abspielen zusammenziehen.
-- [ ] **Auftakt:** im Feld „Takt …“ die Länge wählen (keiner, ¼, ½, 1, 2, 3 Schläge). Die automatischen Taktstriche und Zählzeiten zählen danach richtig, der Auftakt bekommt die letzten Zählzeiten des Takts (z. B. „4“).
-- [ ] **Zählzeiten automatisch** unter dem System, wie in der Tafel
+- [x] **Balken nach Taktart:** 2/4, 3/4: pro Schlag; 4/4: Achtel pro halbem Takt; 2/2: pro Halbe; 6/8: pro punktierter Viertel. Sechzehntel immer pro Schlag. Pausen unterbrechen den Balken. Leicht geneigte Balken.
+- [x] **Haltebogen:** Knopf „Bogen“ an der markierten Note (nur zur nächsten Note gleicher Tonhöhe). Bogen zeichnen, auch über den Zeilenumbruch, und beim Abspielen zusammenziehen.
+- [x] **Auftakt:** im Feld „Takt …“ die Länge wählen (keiner, ¼, ½, 1, 2, 3 Schläge). Die automatischen Taktstriche und Zählzeiten zählen danach richtig, der Auftakt bekommt die letzten Zählzeiten des Takts (z. B. „4“).
+- [x] **Zählzeiten automatisch** unter dem System, wie in der Tafel
+
+Umsetzung im Detail:
+- **Balken:** In 4/4 werden zwei volle Schläge aus einfachen Achteln in derselben Takthälfte zusammengefasst. Mit Sechzehnteln oder Punkten bleibt es pro Schlag. In 2/2 werden Gruppen mit Sechzehnteln pro Viertel getrennt. Neigung aus erstem und letztem Kopf, höchstens ein Linienabstand. Waagerecht, wenn ein innerer Kopf weiter außen liegt. Jeder Hals ist mindestens 3,5 Linienabstände lang.
+- **Haltebogen:** Er lässt sich an jede Note setzen und wird zur nächsten Note gezeichnet. Zusammengezogen (ein langer Ton, zweite Zählzeit blass) wird nur bei gleicher Tonhöhe samt Vorzeichen. Hat die letzte Note einen Bogen, erscheint er als kurzer Ansatz.
+- **Auftakt:** Achtel, Viertel, punktierte Viertel, Halbe, punktierte Halbe, jeweils nur wenn kürzer als ein Takt. Ändert man die Taktart und der Auftakt passt nicht mehr, fällt er weg.
 
 ## Phase 3: Feinschliff
 

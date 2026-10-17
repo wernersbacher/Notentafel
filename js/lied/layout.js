@@ -184,7 +184,7 @@ function addTies(ev, systems, at) {
     const t = sysOf(i + 1), pos = b.rest ? a.pos : b.pos;
     if (t === s) { s.ties.push({ x1: a.x + 0.5, x2: b.x - 0.5, pos: a.pos, down }); return; }
     s.ties.push({ x1: a.x + 0.5, x2: null, pos: a.pos, down }); // x2 null: bis zum Zeilenende
-    t.ties.push({ x1: Math.max(b.x - 2.6, G.left + G.clef), x2: b.x - 0.5, pos, down });
+    t.ties.push({ x1: Math.max(b.x - 2.6, G.left + G.clef + 0.6), x2: b.x - 0.5, pos, down });
   });
 }
 

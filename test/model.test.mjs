@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown } from '../js/model.js';
-import { MAX_LEN, MAX_ROWS } from '../js/config.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown } from '../js/tafel/model.js';
+import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
 const nulls = (k) => Array(k).fill(null);

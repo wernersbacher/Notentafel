@@ -23,10 +23,15 @@ Vorgehen in zwei Schritten:
 | Balken nach Taktart, Haltebogen | Kommt mit (Phase 2). |
 | Wiederholungen, 1./2. Ende | Erst einmal nicht. |
 | Melodie | Bleibt genau so, wie sie ist. |
+| Tonumfang | Alle Töne. Die Leiste zeigt die Stammtöne c–h, die Oktave wählt man dazu. |
+| Vorzeichen | Frei an jeder Note: ♯, ♭ und ♮ schalten an der markierten Note um. |
+| Zeilenumbruch | Erst einmal nur von Hand („Umbruch“), wie in der Tafel. |
+| Notennamen | Lassen sich unter den Noten einblenden (Schalter im Menü). |
+| Klang | Klavierähnlich (neuer Klang in `core/audio.js`). |
 
 ---
 
-## Phase 0: Technisch aufteilen (Verhalten bleibt gleich)
+## Phase 0: Technisch aufteilen (Verhalten bleibt gleich) – erledigt
 
 Ziel: Nach Phase 0 sieht man in der App nur einen neuen, leeren Reiter „Lied“ mit leeren Notenlinien. Melodie und Rhythmus verhalten sich genau wie vorher, alle bisherigen Tests laufen weiter und gespeicherte Stände bleiben erhalten.
 
@@ -119,7 +124,7 @@ song = {
 
 - **`v`** ist der Grundwert als Bruch der Ganzen: 1, 2, 4, 8, 16. Dazu kommt **`dot`**.
 - **Dauer in Ticks** (ganze Zahlen, keine Kommazahlen): Viertel = 8 Ticks, also Ganze 32, Halbe 16, Achtel 4, Sechzehntel 2. Mit Punkt mal 1,5: punktierte Halbe 24, punktierte Viertel 12, punktierte Achtel 6. Die punktierte Sechzehntel lassen wir weg.
-- **Tonhöhe `p`:** Buchstabe + Oktave, `c1` = c', `c2` = c''. Vorzeichen stecken im Namen (`fis1`, `b1`, `es2`). Daraus berechnen sich Frequenz und **Linienplatz**: der Abstand in Stufen (halben Linienabständen) von der untersten Linie e' (e' = 0, f' = 1, g' = 2 … c' = −2).
+- **Tonhöhe `p`:** Stammton + Oktave, `c1` = c', `c2` = c'', `a0` = a (klein). Das Vorzeichen ist ein eigenes Feld `acc` (1 ♯, −1 ♭, 0 ♮ ausdrücklich, fehlt = keins), damit Ton und Vorzeichen getrennt umschaltbar sind. Daraus berechnen sich Frequenz und **Linienplatz**: der Abstand in Stufen (halben Linienabständen) von der untersten Linie e' (e' = 0, f' = 1, g' = 2 … c' = −2).
 - Prüfen, Packen und Entpacken gespeicherter Stände wie in der Tafel (`cleanSong`). Alles sind reine Funktionen mit Tests.
 
 ### Markierung und Eingabe
@@ -136,16 +141,14 @@ song = {
 ### Leiste im Bereich Lied
 
 ```
-[ c' d' e' f' g' a' h' ]      Tonnamen (neutral, ohne Farbe)
-[ c'' d'' e'' f'' g'' a'' ]   hohe Töne
-[ ♯ ] [ ♭ ]                   Vorzeichen an der markierten Note umschalten
+[ c d e f g a h ]             Stammtöne (neutral, ohne Farbe)
+[ tiefer ] [ c' ] [ höher ]   Oktave der nächsten Töne (und der markierten Note)
+[ ♯ ] [ ♭ ] [ ♮ ]             Vorzeichen an der markierten Note umschalten
 [𝅝] [𝅗𝅥] [♩] [♪] [𝅘𝅥𝅯] [ · ]       Stift: 5 Werte + Punkt
 [ Pause ] [ Bogen ]           Pause mit Stift-Wert, Haltebogen zur nächsten Note
 [ Takt … ]                    klappt auf: Taktart, Auftakt, Taktstrich, Schlussstrich,
                               automatisch: Taktstriche / Zählzeiten
 ```
-
-Tonumfang und Vorzeichen-Knöpfe siehe offene Fragen.
 
 ### Zeichnen (`lied/layout.js` + `lied/sheet.js`)
 
@@ -153,7 +156,7 @@ Getrennt in zwei Schritte, damit sich die Rechnung ohne Browser testen lässt:
 
 1. **`layout.js` (rein, mit Tests):** Ereignisse + verfügbare Breite → Takte (automatisch oder von Hand) → Systeme (Zeilen). Pro Note: x-Position, Linienplatz, Halsrichtung, Hilfslinien, Vorzeichen, Balkengruppe, Bogen.
    - **Abstand:** Jede Note bekommt eine Grundbreite plus etwas mehr, je länger sie ist (ungefähr logarithmisch, wie im Notensatz üblich). Die Takte einer Zeile werden auf die volle Breite gestreckt.
-   - **Umbruch:** automatisch an Taktgrenzen, sobald die Zeile voll ist. Ein `brk` von Hand erzwingt einen Umbruch. Jede Zeile beginnt mit dem Violinschlüssel, die erste auch mit der Taktart.
+   - **Umbruch:** erst einmal nur von Hand (`brk`). Wird eine Zeile zu lang, schrumpft das Notenbild bzw. lässt sich seitlich wischen, wie in der Tafel. Jede Zeile beginnt mit dem Violinschlüssel, die erste auch mit der Taktart.
    - **Halsrichtung:** ab h' (Linienplatz 4) nach unten, sonst nach oben. Bei Balken entscheidet die Note, die am weitesten von der Mittellinie entfernt ist.
    - **Hilfslinien:** unter Platz −2 (c') und über Platz 10 (a'').
 2. **`sheet.js`:** baut daraus ein **SVG**. Die Zeichen (Violinschlüssel, Köpfe, Fähnchen, Pausen, ♯ ♭ ♮, Punkt) liegen als eigene SVG-Pfade in `lied/glyphs.js`, **keine Notenschrift aus dem Netz**: Die App muss auch ohne Internet richtig aussehen. Die Pausenpfade aus `tafel/symbols.js` werden dafür kopiert, nicht importiert (Unabhängigkeit geht hier vor).
@@ -162,7 +165,7 @@ Markierung: farbig hinterlegte Spalte. Hinter der letzten Note steht eine blasse
 
 ### Abspielen
 
-`lied/schedule.js` macht aus den Ereignissen den Ablaufplan für `core/player.js`. Ticks werden in Schläge umgerechnet, Noten mit Haltebogen zusammengezogen. Klang zuerst das Glockenspiel aus `core/audio.js`.
+`lied/schedule.js` macht aus den Ereignissen den Ablaufplan für `core/player.js`. Ticks werden in Schläge umgerechnet, Noten mit Haltebogen zusammengezogen. Klang: ein neuer, klavierähnlicher Ton in `core/audio.js`.
 
 ### Speicher
 
@@ -212,25 +215,16 @@ Markierung: farbig hinterlegte Spalte. Hinter der letzten Note steht eine blasse
 - Tonart-Vorzeichen am Zeilenanfang (z. B. F-Dur mit einem ♭)
 - Triolen, Bassschlüssel, mehrere Stimmen
 - Automatisches Teilen einer Note am Taktstrich mit Haltebogen
+- Automatischer Zeilenumbruch nach Breite
 - Export/Import von Liedern (passt zum Eintrag in `todo.md`)
 
 ---
 
 ## Risiken und Probleme
 
-- **Platz in der Leiste:** Mit 13 Tonknöpfen, Vorzeichen, 6 Wertknöpfen und Pause/Bogen wird es auf dem Tablet trotzdem eng. Vor Phase 1 auf dem echten Gerät mit einem Entwurf ausprobieren.
+- **Platz in der Leiste:** Mit 7 Stammtönen, Oktave, 3 Vorzeichen, 6 Wertknöpfen und Pause/Bogen wird es auf dem Tablet trotzdem eng. Vor Phase 1 auf dem echten Gerät mit einem Entwurf ausprobieren.
 - **Treffsicherheit beim Tippen:** Notenköpfe sind klein. Darum die breite Tippfläche pro Note und eine ausreichend große Notenschrift. Tonhöhe per Ziehen (Phase 3) braucht große Linienabstände.
 - **Notensatz:** Balken, Halsrichtung und Abstände haben viele Sonderfälle. Ziel ist „gut lesbar“, nicht „wie gedruckt“. Darum ist die Rechnung in `layout.js` getrennt und testbar, damit man später nachbessern kann, ohne das Zeichnen anzufassen.
 - **Violinschlüssel als SVG-Pfad:** Der muss einmal ordentlich gezeichnet werden. Ohne fertige Notenschrift ist das der aufwendigste Einzelglyph.
 - **Aufteilen in Phase 0:** Viele Dateien werden verschoben. Gefahr: die Speicherstände. Darum bleiben alle bisherigen Schlüssel exakt gleich, und ein Test lädt ein altes Format.
 - **Doppelter Code:** Durch die Trennung gibt es manches zweimal (Taktart-Rechnung, Pausenzeichen). Das ist gewollt. Gemeinsam wird nur, was wirklich nichts über Noten weiß (Speicher, Audio, Player, Oberflächen-Bausteine).
-
----
-
-## Offene Fragen
-
-1. **Tonumfang:** Reicht c' bis a'' (wie oben skizziert), oder sollen auch tiefe Töne (g, a, h) dabei sein?
-2. **Vorzeichen:** Zwei Knöpfe ♯/♭, die an der markierten Note umschalten (dann geht jeder Halbton)? Oder wie in der Melodie nur feste Töne (Fis, B)?
-3. **Zeilenumbruch:** Automatisch nach Breite plus Umbruch von Hand (Vorschlag), oder nur von Hand wie in der Tafel?
-4. **Notennamen unter den Noten** als Hilfe einblendbar machen?
-5. **Klang:** Glockenspiel wie bisher, oder für Lieder eher klavierähnlich?

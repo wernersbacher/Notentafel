@@ -1,0 +1,49 @@
+// Laufender Zustand der Tafel. Alle Module der Tafel lesen und ändern diese beiden Objekte direkt.
+import { useSettings } from '../core/settings.js';
+import { pushState, popState } from '../core/history.js';
+import { emptyRows, appendPos, hasNotes, attachLines, packLines } from './model.js';
+import { loadBoard, saveBoard, saveAuto, cleanTafelSettings } from './storage.js';
+
+// Gemeinsame Einstellungen samt denen der Tafel (theme, lens, autoBar, autoZ, prop)
+export const settings = useSettings(cleanTafelSettings);
+
+// Welche Tafel gerade offen ist: 'mel' (Melodie) oder 'rhy' (Rhythmus)
+const variant = settings.mode === 'rhy' ? 'rhy' : 'mel';
+const saved = loadBoard(variant);
+export const S = {
+  variant,
+  // Ohne gespeicherten Stand startet die Tafel leer
+  rows: saved ? saved.rows : emptyRows(),
+  name: saved ? saved.name : '',
+  sel: appendPos(saved ? saved.rows : []), // markierter Platz, am Anfang hinter dem letzten Ton
+  hist: [], // Rückgängig-Verlauf (als JSON)
+  // Markierung und Rückgängig-Verlauf der gerade nicht sichtbaren Tafel (nur bis zum Schließen der App)
+  parked: {},
+  insertMode: false,
+  clean: false, // „Fertig“: Markierung und leere Plätze ausgeblendet
+  countAt: null // Platz, unter dem gerade mehrere Zählzeiten getippt werden
+};
+
+export const curCell = () => S.rows[S.sel.r][S.sel.c];
+export const curRow = () => S.rows[S.sel.r];
+
+export const persistBoard = () => saveBoard(S.variant, S.rows, S.name);
+// Die bisherige Tafel wandert in den Autosave-Platz ihres Bereichs (nur, wenn etwas darauf steht)
+export function stashBoard() {
+  if (hasNotes(S.rows)) saveAuto(S.variant, S.rows, S.name);
+}
+
+// Merkt sich den Stand vor einer Änderung für „Rückgängig“
+export function snap() {
+  pushState(S.hist, { rows: S.rows, lines: packLines(S.rows), sel: S.sel, name: S.name });
+}
+// Holt den letzten gemerkten Stand zurück; false, wenn es keinen gibt
+export function restore() {
+  const d = popState(S.hist);
+  if (!d) return false;
+  S.rows = attachLines(d.rows, d.lines);
+  S.sel = d.sel;
+  S.name = d.name || '';
+  S.countAt = null;
+  return true;
+}

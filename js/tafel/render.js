@@ -2,7 +2,7 @@
 import { S, persistBoard } from './state.js';
 import { renderBoard, markPlaying } from './board.js';
 import { renderSidebar } from './sidebar.js';
-import { stopPlay, playingPos } from './player.js';
+import { stopPlay, playingPos } from '../core/player.js';
 
 export function render() {
   renderBoard();

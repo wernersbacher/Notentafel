@@ -2,10 +2,9 @@
 import { MAX_LEN, MAX_ROWS } from './config.js';
 import { isNote, isBeat, filled, emptyRows, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
 import { countSlots } from './theory.js';
-import { S, settings, curCell, curRow, snap, restore, stashBoard, persistBoard } from './state.js';
-import { songExists, saveSong } from './storage.js';
+import { S, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
-import { toast, confirmTap } from './ui.js';
+import { toast } from '../core/ui.js';
 
 // Ein Platz weiter in derselben Zeile – auch beim Austauschen, damit man mehrere Töne am Stück korrigieren kann.
 // Am Ende einer vollen Zeile bleibt die Markierung stehen.
@@ -64,7 +63,7 @@ export function placeNote(id) {
 // Im Bereich Melodie gibt es nur Notenwerte unter bunten Punkten.
 export function placeValue(d) {
   const prev = curCell();
-  if (settings.mode === 'mel') {
+  if (S.variant === 'mel') {
     if (!isNote(prev)) { toast('Hier kommt der Notenwert unter einen bunten Punkt. Notenzeichen ohne Punkt gibt es unter „Rhythmus“.', true); return; }
   } else if (S.insertMode) { insertCell({ k: 'b', d }); return; }
   snap();
@@ -216,18 +215,4 @@ export function loadSong(song) {
   S.sel = appendPos(S.rows);
   commit();
   toast('„' + (song.name || 'Ohne Namen') + '“ geladen. Die vorherige Tafel liegt im Menü unter „Zuletzt ersetzt“.');
-}
-// Speichert die Tafel unter dem Namen aus input (im Menü oder in der Leiste). Gleicher Name heißt ersetzen,
-// dafür muss btn ein zweites Mal getippt werden. report(text, warn) meldet das Ergebnis.
-export function saveAs(input, btn, report) {
-  const n = input.value.trim();
-  if (!n) { report('Bitte zuerst einen Namen eingeben.', true); input.focus(); return; }
-  const doSave = () => {
-    if (!saveSong(settings.mode, S.rows, n)) { report('Speichern hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
-    S.name = n;
-    persistBoard();
-    report('Gespeichert: „' + n + '“');
-  };
-  if (songExists(settings.mode, n)) confirmTap(btn, 'Ersetzen?', doSave);
-  else doSave();
 }

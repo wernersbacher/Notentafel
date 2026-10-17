@@ -9,7 +9,7 @@ globalThis.localStorage = {
   removeItem: (k) => { store.delete(k); },
   clear: () => store.clear()
 };
-const S = await import('../js/storage.js');
+const S = await import('../js/tafel/storage.js');
 
 beforeEach(() => store.clear());
 
@@ -61,29 +61,4 @@ test('defekte Daten ergeben leere Liste bzw. nichts', () => {
   assert.deepEqual(S.loadSongs('mel').map((s) => s.name), ['ok']);
   store.set('notentafel.v1', 'nicht json');
   assert.equal(S.loadBoard('mel'), null);
-});
-
-test('loadSettings: Standardwerte, auch bei defekten Daten', () => {
-  for (const raw of [null, '{kaputt', JSON.stringify({ theme: 'gibtsnicht', tempo: 999, mode: 'x' })]) {
-    store.clear();
-    if (raw) store.set('notentafel.settings.v1', raw);
-    const s = S.loadSettings();
-    assert.equal(s.theme, 'oktave');
-    assert.equal(s.tempo, 90);
-    assert.equal(s.lens, true);
-    assert.equal(s.mode, 'mel');
-    assert.equal(s.autoBar, false);
-    assert.equal(s.autoZ, false);
-    assert.equal(s.prop, false);
-  }
-});
-
-test('saveSettings/loadSettings: Rundreise', () => {
-  S.saveSettings({ theme: 'original', tempo: 120, lens: false, mode: 'rhy', autoBar: true, autoZ: true, prop: true });
-  const s = S.loadSettings();
-  assert.equal(s.theme, 'original');
-  assert.equal(s.tempo, 120);
-  assert.equal(s.lens, false);
-  assert.equal(s.mode, 'rhy');
-  assert.equal(s.autoBar && s.autoZ && s.prop, true);
 });

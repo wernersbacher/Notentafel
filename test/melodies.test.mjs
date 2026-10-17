@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MELODIES, melodyRows } from '../js/melodies.js';
-import { cleanRows, packLines, dur } from '../js/model.js';
-import { meterInfo } from '../js/theory.js';
+import { MELODIES, melodyRows } from '../js/tafel/melodies.js';
+import { cleanRows, packLines, dur } from '../js/tafel/model.js';
+import { meterInfo } from '../js/tafel/theory.js';
 
 for (const m of MELODIES) {
   test(`${m.name}: übersteht cleanRows unverändert`, () => {

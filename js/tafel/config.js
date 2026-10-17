@@ -1,9 +1,7 @@
-// Feste Größen und Tabellen der App
+// Feste Größen und Tabellen der Tafel (Melodie und Rhythmus)
 
 // Zeilen sind beliebig lang (bis MAX_LEN)
 export const MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
-// So viele Schritte nimmt „Rückgängig“ zurück
-export const HISTORY = 60;
 
 // f = Frequenz in Hz (C = c', hohe Töne eine Oktave darüber).
 // Die Schrift ist auf allen Tönen schwarz; jede Farbe muss dafür hell genug sein (Kontrast ≥ 4,5).
@@ -51,5 +49,3 @@ export const DUR_BY = Object.fromEntries(DURS.map((x) => [x.d, x]));
 export const METERS = ['2/2', '2/4', '3/4', '4/4', '6/8'];
 // Zählzeiten zum Tippen: 1–6 und „+“ (und)
 export const COUNTS = ['1', '2', '3', '4', '5', '6', '+'];
-
-export const TEMPO = { min: 50, max: 160, start: 90 };

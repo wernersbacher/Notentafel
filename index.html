@@ -8,31 +8,40 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+DE+Grund:wght@100..400&family=Nunito:wght@600;700;800&display=swap">
 <link rel="stylesheet" href="css/base.css?v=1.0.0">
-<link rel="stylesheet" href="css/board.css?v=1.0.0">
+<link rel="stylesheet" href="css/tafel.css?v=1.0.0">
+<link rel="stylesheet" href="css/lied.css?v=1.0.0">
 <link rel="stylesheet" href="css/side.css?v=1.0.0">
 <link rel="stylesheet" href="css/menu.css?v=1.0.0">
 <script type="importmap">
 { "imports": {
-  "./js/actions.js": "./js/actions.js?v=1.0.0",
-  "./js/audio.js": "./js/audio.js?v=1.0.0",
-  "./js/board.js": "./js/board.js?v=1.0.0",
-  "./js/config.js": "./js/config.js?v=1.0.0",
-  "./js/controls.js": "./js/controls.js?v=1.0.0",
-  "./js/dom.js": "./js/dom.js?v=1.0.0",
-  "./js/input.js": "./js/input.js?v=1.0.0",
+  "./js/core/audio.js": "./js/core/audio.js?v=1.0.0",
+  "./js/core/dom.js": "./js/core/dom.js?v=1.0.0",
+  "./js/core/history.js": "./js/core/history.js?v=1.0.0",
+  "./js/core/menu.js": "./js/core/menu.js?v=1.0.0",
+  "./js/core/player.js": "./js/core/player.js?v=1.0.0",
+  "./js/core/settings.js": "./js/core/settings.js?v=1.0.0",
+  "./js/core/shell.js": "./js/core/shell.js?v=1.0.0",
+  "./js/core/store.js": "./js/core/store.js?v=1.0.0",
+  "./js/core/ui.js": "./js/core/ui.js?v=1.0.0",
+  "./js/core/wake.js": "./js/core/wake.js?v=1.0.0",
+  "./js/lied/area.js": "./js/lied/area.js?v=1.0.0",
   "./js/main.js": "./js/main.js?v=1.0.0",
-  "./js/melodies.js": "./js/melodies.js?v=1.0.0",
-  "./js/menu.js": "./js/menu.js?v=1.0.0",
-  "./js/model.js": "./js/model.js?v=1.0.0",
-  "./js/player.js": "./js/player.js?v=1.0.0",
-  "./js/render.js": "./js/render.js?v=1.0.0",
-  "./js/sidebar.js": "./js/sidebar.js?v=1.0.0",
-  "./js/state.js": "./js/state.js?v=1.0.0",
-  "./js/storage.js": "./js/storage.js?v=1.0.0",
-  "./js/symbols.js": "./js/symbols.js?v=1.0.0",
-  "./js/theory.js": "./js/theory.js?v=1.0.0",
-  "./js/ui.js": "./js/ui.js?v=1.0.0",
-  "./js/wake.js": "./js/wake.js?v=1.0.0"
+  "./js/tafel/actions.js": "./js/tafel/actions.js?v=1.0.0",
+  "./js/tafel/area.js": "./js/tafel/area.js?v=1.0.0",
+  "./js/tafel/board.js": "./js/tafel/board.js?v=1.0.0",
+  "./js/tafel/config.js": "./js/tafel/config.js?v=1.0.0",
+  "./js/tafel/controls.js": "./js/tafel/controls.js?v=1.0.0",
+  "./js/tafel/dom.js": "./js/tafel/dom.js?v=1.0.0",
+  "./js/tafel/input.js": "./js/tafel/input.js?v=1.0.0",
+  "./js/tafel/melodies.js": "./js/tafel/melodies.js?v=1.0.0",
+  "./js/tafel/menu.js": "./js/tafel/menu.js?v=1.0.0",
+  "./js/tafel/model.js": "./js/tafel/model.js?v=1.0.0",
+  "./js/tafel/render.js": "./js/tafel/render.js?v=1.0.0",
+  "./js/tafel/sidebar.js": "./js/tafel/sidebar.js?v=1.0.0",
+  "./js/tafel/state.js": "./js/tafel/state.js?v=1.0.0",
+  "./js/tafel/storage.js": "./js/tafel/storage.js?v=1.0.0",
+  "./js/tafel/symbols.js": "./js/tafel/symbols.js?v=1.0.0",
+  "./js/tafel/theory.js": "./js/tafel/theory.js?v=1.0.0"
 } }
 </script>
 <script type="module" src="js/main.js?v=1.0.0"></script>
@@ -41,7 +50,10 @@
 
 <div class="app">
   <div class="boardwrap">
-    <div class="board"><div class="grid" id="grid" aria-label="Notentafel"></div></div>
+    <div class="board">
+      <div class="grid" id="grid" aria-label="Notentafel"></div>
+      <div class="sheet" id="sheet" aria-label="Notenblatt" hidden></div>
+    </div>
     <div class="tray" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </div>
@@ -54,10 +66,7 @@
       </button>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="Bereich">
-      <button type="button" class="tab" role="tab" id="tabMel" aria-controls="panelMel">Melodie</button>
-      <button type="button" class="tab" role="tab" id="tabRhy" aria-controls="panelRhy">Rhythmus</button>
-    </div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
 
     <div class="tools">
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
@@ -74,7 +83,7 @@
       </button>
     </div>
 
-    <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tabMel">
+    <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tab-mel">
       <section class="group">
         <h2 class="glabel">Notennamen</h2>
         <div class="palette" id="palette"></div>
@@ -92,7 +101,7 @@
       </section>
     </div>
 
-    <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tabRhy" hidden>
+    <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
       <section class="group">
         <h2 class="glabel">Takt</h2>
         <div class="tools">
@@ -132,6 +141,10 @@
       </section>
     </div>
 
+    <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
+      <p class="soon">Hier entsteht das Notenblatt: Töne und Notenwerte zusammen, auf fünf Notenlinien.</p>
+    </div>
+
     <div class="actions">
       <div class="savepop" id="savePop" role="group" aria-label="Tafel speichern" hidden>
         <div class="saverow">
@@ -161,7 +174,7 @@
     </button>
   </div>
 
-  <section>
+  <section id="saveSec">
     <h3 id="saveTitle">Lied speichern</h3>
     <div class="saverow">
       <input id="songName" type="text" maxlength="40" placeholder="Name des Lieds" autocomplete="off" enterkeyhint="done">
@@ -176,22 +189,22 @@
     <p class="hint">Die Tafel vor dem letzten Laden oder „Alles löschen“.</p>
   </section>
 
-  <section>
+  <section id="songsSec">
     <h3 id="songsTitle">Gespeicherte Lieder</h3>
     <ul class="songs" id="songs"></ul>
   </section>
 
-  <section id="melodiesSec">
+  <section id="melodiesSec" data-area="tafel">
     <h3>Bekannte Lieder</h3>
     <ul class="songs" id="melodies"></ul>
   </section>
 
-  <section>
+  <section data-area="tafel">
     <h3>Farben</h3>
     <div class="themes" id="themes"></div>
   </section>
 
-  <section>
+  <section data-area="tafel">
     <h3>Notenzeichen</h3>
     <button type="button" class="btn theme" id="btnLensToggle" aria-pressed="true">
       <span>Unter den Tönen: <span id="lensToggleState">an</span></span>
@@ -199,7 +212,7 @@
     </button>
   </section>
 
-  <section>
+  <section data-area="tafel">
     <h3>Breite nach Notenlänge</h3>
     <button type="button" class="btn theme" id="btnPropToggle" aria-pressed="false">
       <span>Platz nach Schlägen: <span id="propToggleState">aus</span></span>

@@ -1,5 +1,5 @@
 // Bildschirm anlassen (Screen Wake Lock), solange die Einstellung an ist
-import { settings } from './state.js';
+import { settings } from './settings.js';
 import { el } from './dom.js';
 
 const can = 'wakeLock' in navigator;

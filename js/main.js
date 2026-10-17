@@ -1,20 +1,14 @@
-// Einstieg: Knöpfe verdrahten und die Tafel zum ersten Mal zeichnen
-import { appendPos } from './model.js';
-import { S } from './state.js';
-import { render } from './render.js';
-import { renderPalette, buildCounts } from './sidebar.js';
-import { initPlayer } from './player.js';
-import { initControls } from './controls.js';
-import { initMenu } from './menu.js';
-import { initBoardInput } from './input.js';
-import { initWake } from './wake.js';
+// Einstieg: Bereiche anmelden, Kern starten
+import { initPlayer } from './core/player.js';
+import { initMenu } from './core/menu.js';
+import { initWake } from './core/wake.js';
+import { startShell } from './core/shell.js';
+import { registerTafel } from './tafel/area.js';
+import { registerLied } from './lied/area.js';
 
 initPlayer();
-buildCounts();
-renderPalette();
-initControls();
+registerTafel();
+registerLied();
 initMenu();
-initBoardInput();
 initWake();
-S.sel = appendPos(S.rows);
-render();
+startShell();

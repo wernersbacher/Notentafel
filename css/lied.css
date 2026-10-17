@@ -1,0 +1,7 @@
+/* ---------- Lied: echtes Notenblatt ---------- */
+.sheet { flex: 1; min-width: 0; padding: 32px 24px; color: var(--fg); }
+.staff { display: block; width: 100%; height: 96px; }
+.staff line { stroke: currentColor; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+
+/* Hinweis in der Leiste, solange der Bereich noch leer ist */
+.soon { margin: 0; font-size: .95rem; font-weight: 700; color: var(--muted); }

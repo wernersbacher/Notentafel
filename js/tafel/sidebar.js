@@ -60,11 +60,6 @@ export function renderSidebar() {
   el.meterShow.innerHTML = row.meter ? meterHTML(row.meter) : '<span class="mtr off"><span>?</span><span>?</span></span>';
   el.btnMeter.classList.toggle('on', !!row.meter);
 
-  const mel = settings.mode === 'mel';
-  el.tabMel.setAttribute('aria-selected', mel ? 'true' : 'false');
-  el.tabRhy.setAttribute('aria-selected', mel ? 'false' : 'true');
-  el.panelMel.hidden = !mel;
-  el.panelRhy.hidden = mel;
   pressed(el.btnAutoBar, settings.autoBar);
   pressed(el.btnAutoZ, settings.autoZ);
   renderCounts(cur);

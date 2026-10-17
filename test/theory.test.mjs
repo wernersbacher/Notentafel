@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { autoMarks, meterInfo, countSlots, barAt } from '../js/theory.js';
+import { autoMarks, meterInfo, countSlots, barAt } from '../js/tafel/theory.js';
 
 const q = { n: 'C', h: '' };          // Punkt ohne Notenwert: ein Schlag
 const n = (d) => ({ n: 'C', h: '', d });

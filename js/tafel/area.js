@@ -3,7 +3,7 @@ import { register } from '../core/shell.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos } from './model.js';
-import { S, persistBoard } from './state.js';
+import { S, persistBoard, useVariant } from './state.js';
 import { loadBoard, stores } from './storage.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
@@ -19,7 +19,7 @@ import { el } from './dom.js';
 function enter(v) {
   if (S.variant !== v) {
     S.parked[S.variant] = { sel: S.sel, hist: S.hist };
-    S.variant = v;
+    useVariant(v);
     const d = loadBoard(v), p = S.parked[v];
     S.rows = d ? d.rows : emptyRows();
     S.name = d ? d.name : '';

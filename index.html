@@ -216,118 +216,119 @@
     </button>
   </div>
 
-  <section id="saveSec">
-    <h3 id="saveTitle">Lied speichern</h3>
-    <div class="saverow">
-      <input id="songName" type="text" maxlength="40" placeholder="Name des Lieds" autocomplete="off" enterkeyhint="done">
-      <button type="button" class="btn" id="btnSave">Speichern</button>
+  <!-- Alles, was nur für den offenen Modus gilt: oben Speichern, Laden und Exportieren, darunter seine Einstellungen -->
+  <div class="mgroup" aria-labelledby="menuAreaTitle" role="group">
+    <h2 class="mtitle"><span class="kicker">Modus</span> <span id="menuAreaTitle"></span></h2>
+
+    <section id="saveSec">
+      <h3 id="saveTitle">Lied speichern</h3>
+      <div class="saverow">
+        <input id="songName" type="text" maxlength="40" placeholder="Name des Lieds" autocomplete="off" enterkeyhint="done">
+        <button type="button" class="btn" id="btnSave">Speichern</button>
+      </div>
+      <p class="hint" id="saveHint" aria-live="polite"></p>
+    </section>
+
+    <section id="songsSec">
+      <h3 id="songsTitle">Gespeicherte Lieder</h3>
+      <ul class="songs" id="songs"></ul>
+    </section>
+
+    <section id="autoSec" hidden>
+      <h3>Zuletzt ersetzt</h3>
+      <div class="song one" id="autosave"></div>
+      <p class="hint">Die Tafel vor dem letzten Laden oder „Alles löschen“.</p>
+    </section>
+
+    <section id="melodiesSec" data-area="tafel">
+      <h3>Bekannte Lieder</h3>
+      <ul class="songs" id="melodies"></ul>
+    </section>
+
+    <section data-area="lied">
+      <h3>Bekannte Lieder</h3>
+      <ul class="songs" id="liedSongs"></ul>
+    </section>
+
+    <section data-area="lied">
+      <h3>Exportieren</h3>
+      <div class="themes">
+        <button type="button" class="btn theme" id="btnLiedPrint">
+          <span>Als PDF drucken</span>
+          <span class="desc">Öffnet den Druckdialog, dort „Als PDF speichern“ wählen. Gedruckt wird das Notenblatt so, wie es eingestellt ist (mit Notennamen und Zählzeiten, falls an), auf A4.</span>
+        </button>
+        <button type="button" class="btn theme" id="btnLiedExport">
+          <span>Als MusicXML speichern</span>
+          <span class="desc">Lädt das Lied als Datei herunter. MusicXML können alle Notenprogramme öffnen, z. B. MuseScore. Dort lässt es sich weiter bearbeiten und als PDF drucken.</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="mcard" id="menuSettings">
+      <h3 class="ctitle" id="menuSettingsTitle">Einstellungen</h3>
+
+      <section id="themesSec" data-area="tafel">
+        <h3>Farben</h3>
+        <div class="themes" id="themes"></div>
+      </section>
+
+      <section data-area="tafel" class="switches">
+        <button type="button" class="btn switch" id="btnLensToggle" aria-pressed="true">
+          <span class="sname">Notenzeichen unter den Tönen</span><span class="state" id="lensToggleState">an</span>
+          <span class="desc">Zeigt die Tonlänge als Note unter jedem Kreis. Ausgeschaltet werden die Kreise größer.</span>
+        </button>
+        <button type="button" class="btn switch" id="btnPropToggle" aria-pressed="false">
+          <span class="sname">Breite nach Notenlänge</span><span class="state" id="propToggleState">aus</span>
+          <span class="desc">Eine Halbe bekommt so viel Platz wie zwei Viertel oder vier Achtel. Achtel werden halb so groß, jeder Takt ist gleich breit.</span>
+        </button>
+      </section>
+
+      <section data-area="lied">
+        <h3>Notengröße</h3>
+        <div class="sizes" id="liedSizes" role="group" aria-label="Notengröße">
+          <button type="button" class="btn" data-size="1" aria-pressed="true">normal</button>
+          <button type="button" class="btn" data-size="2" aria-pressed="false">groß</button>
+          <button type="button" class="btn" data-size="3" aria-pressed="false">sehr groß</button>
+        </div>
+        <p class="hint">Zum Zeigen vor der Klasse.</p>
+      </section>
+
+      <section data-area="lied" class="switches">
+        <button type="button" class="btn switch" id="btnNamesToggle" aria-pressed="false">
+          <span class="sname">Notennamen unter den Noten</span><span class="state" id="namesToggleState">aus</span>
+          <span class="desc">Zeigt unter jeder Note ihren Namen, z. B. C, Fis oder B.</span>
+        </button>
+        <button type="button" class="btn switch" id="btnWrapToggle" aria-pressed="true">
+          <span class="sname">Zeilen automatisch umbrechen</span><span class="state" id="wrapToggleState">an</span>
+          <span class="desc">Passt eine Zeile nicht auf den Bildschirm, geht es nach dem letzten Takt, der noch passt, in der nächsten Zeile weiter. Umbrüche von Hand bleiben. Aus: Die Zeilen bleiben, wie man sie umbrochen hat, und das Notenblatt wird kleiner oder lässt sich seitlich wischen.</span>
+        </button>
+        <button type="button" class="btn switch" id="btnCheckToggle" aria-pressed="true">
+          <span class="sname">Falsche Takte markieren</span><span class="state" id="checkToggleState">an</span>
+          <span class="desc">Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt und Schlusstakt sind ausgenommen.</span>
+        </button>
+      </section>
     </div>
-    <p class="hint" id="saveHint" aria-live="polite"></p>
-  </section>
+  </div>
 
-  <section id="autoSec" hidden>
-    <h3>Zuletzt ersetzt</h3>
-    <div class="song one" id="autosave"></div>
-    <p class="hint">Die Tafel vor dem letzten Laden oder „Alles löschen“.</p>
-  </section>
+  <!-- Gilt für alle Modi gleich -->
+  <div class="mgroup global" aria-labelledby="menuGlobalTitle" role="group">
+    <h2 class="mtitle" id="menuGlobalTitle">Für alle Modi</h2>
 
-  <section id="songsSec">
-    <h3 id="songsTitle">Gespeicherte Lieder</h3>
-    <ul class="songs" id="songs"></ul>
-  </section>
+    <section>
+      <h3>Tempo beim Abspielen</h3>
+      <div class="temporow">
+        <input type="range" id="tempo" min="50" max="160" step="5" aria-label="Tempo">
+        <output id="tempoOut" for="tempo"></output>
+      </div>
+    </section>
 
-  <section id="melodiesSec" data-area="tafel">
-    <h3>Bekannte Lieder</h3>
-    <ul class="songs" id="melodies"></ul>
-  </section>
-
-  <section data-area="tafel">
-    <h3>Farben</h3>
-    <div class="themes" id="themes"></div>
-  </section>
-
-  <section data-area="tafel">
-    <h3>Notenzeichen</h3>
-    <button type="button" class="btn theme" id="btnLensToggle" aria-pressed="true">
-      <span>Unter den Tönen: <span id="lensToggleState">an</span></span>
-      <span class="desc">Zeigt die Tonlänge als Note unter jedem Kreis. Ausgeschaltet werden die Kreise größer.</span>
-    </button>
-  </section>
-
-  <section data-area="tafel">
-    <h3>Breite nach Notenlänge</h3>
-    <button type="button" class="btn theme" id="btnPropToggle" aria-pressed="false">
-      <span>Platz nach Schlägen: <span id="propToggleState">aus</span></span>
-      <span class="desc">Eine Halbe bekommt so viel Platz wie zwei Viertel oder vier Achtel. Achtel werden halb so groß, jeder Takt ist gleich breit.</span>
-    </button>
-  </section>
-
-  <section data-area="lied">
-    <h3>Bekannte Lieder</h3>
-    <ul class="songs" id="liedSongs"></ul>
-  </section>
-
-  <section data-area="lied">
-    <h3>Notennamen</h3>
-    <button type="button" class="btn theme" id="btnNamesToggle" aria-pressed="false">
-      <span>Unter den Noten: <span id="namesToggleState">aus</span></span>
-      <span class="desc">Zeigt unter jeder Note ihren Namen, z. B. C, Fis oder B.</span>
-    </button>
-  </section>
-
-  <section data-area="lied">
-    <h3>Notengröße</h3>
-    <div class="sizes" id="liedSizes" role="group" aria-label="Notengröße">
-      <button type="button" class="btn" data-size="1" aria-pressed="true">normal</button>
-      <button type="button" class="btn" data-size="2" aria-pressed="false">groß</button>
-      <button type="button" class="btn" data-size="3" aria-pressed="false">sehr groß</button>
-    </div>
-    <p class="hint">Zum Zeigen vor der Klasse.</p>
-  </section>
-
-  <section data-area="lied">
-    <h3>Zeilen</h3>
-    <button type="button" class="btn theme" id="btnWrapToggle" aria-pressed="true">
-      <span>Automatisch umbrechen: <span id="wrapToggleState">an</span></span>
-      <span class="desc">Passt eine Zeile nicht auf den Bildschirm, geht es nach dem letzten Takt, der noch passt, in der nächsten Zeile weiter. Umbrüche von Hand bleiben. Aus: Die Zeilen bleiben, wie man sie umbrochen hat, und das Notenblatt wird kleiner oder lässt sich seitlich wischen.</span>
-    </button>
-  </section>
-
-  <section data-area="lied">
-    <h3>Takte prüfen</h3>
-    <button type="button" class="btn theme" id="btnCheckToggle" aria-pressed="true">
-      <span>Falsche Takte markieren: <span id="checkToggleState">an</span></span>
-      <span class="desc">Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt und Schlusstakt sind ausgenommen.</span>
-    </button>
-  </section>
-
-  <section data-area="lied">
-    <h3>Exportieren</h3>
-    <button type="button" class="btn theme" id="btnLiedPrint">
-      <span>Als PDF drucken</span>
-      <span class="desc">Öffnet den Druckdialog, dort „Als PDF speichern“ wählen. Gedruckt wird das Notenblatt so, wie es eingestellt ist (mit Notennamen und Zählzeiten, falls an), auf A4.</span>
-    </button>
-    <button type="button" class="btn theme" id="btnLiedExport">
-      <span>Als MusicXML speichern</span>
-      <span class="desc">Lädt das Lied als Datei herunter. MusicXML können alle Notenprogramme öffnen, z. B. MuseScore. Dort lässt es sich weiter bearbeiten und als PDF drucken.</span>
-    </button>
-  </section>
-
-  <section id="wakeSec">
-    <h3>Bildschirm</h3>
-    <button type="button" class="btn theme" id="btnWakeToggle" aria-pressed="true">
-      <span>Bildschirm anlassen: <span id="wakeToggleState">an</span></span>
-      <span class="desc">Das Tablet schaltet den Bildschirm nicht ab, solange die Notentafel offen ist.</span>
-    </button>
-  </section>
-
-  <section>
-    <h3>Tempo beim Abspielen</h3>
-    <div class="temporow">
-      <input type="range" id="tempo" min="50" max="160" step="5" aria-label="Tempo">
-      <output id="tempoOut" for="tempo"></output>
-    </div>
-  </section>
+    <section id="wakeSec" class="switches">
+      <button type="button" class="btn switch" id="btnWakeToggle" aria-pressed="true">
+        <span class="sname">Bildschirm anlassen</span><span class="state" id="wakeToggleState">an</span>
+        <span class="desc">Das Tablet schaltet den Bildschirm nicht ab, solange die Notentafel offen ist.</span>
+      </button>
+    </section>
+  </div>
 
   <p class="version">Version 1.0.0</p>
 </aside>

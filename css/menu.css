@@ -17,6 +17,21 @@
 .drawer.open { transform: none; visibility: visible; transition: transform .22s ease; }
 .drawer h2 { font: 700 1.3rem var(--font-display); margin: 0; }
 .drawer h3 { font: 800 .8rem var(--font-ui); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+/* Zwei Gruppen: der offene Modus und darunter, abgesetzt, die Einstellungen für alle Modi */
+.mgroup { display: flex; flex-direction: column; gap: 18px; }
+.mgroup.global { margin-top: 8px; padding: 14px 12px; border-radius: 14px; background: var(--bg); }
+.mtitle {
+  font: 700 1.15rem var(--font-display); margin: 0;
+  padding-bottom: 8px; border-bottom: 2px solid var(--line);
+}
+.mtitle .kicker { display: block; font: 800 .7rem var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.mgroup.global .mtitle { border-bottom: 0; padding-bottom: 0; }
+/* Die Einstellungen des Modus als eigene Karte */
+.mcard {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 12px; border-radius: 14px; border: 2px solid var(--line);
+}
+.mcard .ctitle { color: var(--fg); }
 .drawer .hint { margin: 6px 0 0; font-size: .85rem; color: var(--muted); min-height: 1.2em; }
 .drawer .hint.warn { color: var(--danger); }
 .songs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -38,6 +53,19 @@
 .theme .desc { font-size: .78rem; font-weight: 700; opacity: .8; }
 .swatches { display: flex; gap: 5px; }
 .swatches span { width: 22px; height: 22px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--board); }
+/* An/Aus-Schalter: links, was geschaltet wird, rechts der Zustand */
+.switches { display: flex; flex-direction: column; gap: 8px; }
+.switch {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
+  text-align: left; padding: 10px 12px; font-weight: 800;
+}
+.switch.on { background: var(--btn); color: var(--fg); border-color: var(--btn-line); }
+.switch .state {
+  min-width: 3.2em; padding: 4px 10px; border-radius: 999px; text-align: center;
+  font-size: .8rem; border: 2px solid var(--btn-line); color: var(--muted);
+}
+.switch.on .state { background: var(--fg); border-color: var(--fg); color: var(--board); }
+.switch .desc { grid-column: 1 / -1; font-size: .78rem; font-weight: 700; opacity: .8; }
 .temporow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
 .temporow input { width: 100%; min-height: 44px; accent-color: var(--fg); }
 .temporow output { font-weight: 800; min-width: 6.5em; text-align: right; }

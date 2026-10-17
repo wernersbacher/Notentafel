@@ -4,7 +4,7 @@ const ids = [
   'btnIns', 'btnDel', 'delLabel', 'btnBreak', 'btnDone',
   'btnPlay', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
-  'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
+  'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs',
   'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut'
 ];

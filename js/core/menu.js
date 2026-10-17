@@ -1,4 +1,5 @@
-// Menü (Slide-in): Lieder des offenen Bereichs speichern und laden, Tempo, Bildschirm anlassen.
+// Menü (Slide-in) in zwei Gruppen: oben der offene Bereich (Lieder speichern und laden, seine eigenen Abschnitte und
+// darunter seine Einstellungen), unten die Einstellungen für alle Bereiche (Tempo, Bildschirm anlassen).
 // Eigene Abschnitte eines Bereichs tragen im HTML data-area und werden von ihm selbst eingeblendet.
 import { settings, persistSettings } from './settings.js';
 import { current, saveAs, closeSavePop } from './shell.js';
@@ -69,7 +70,9 @@ function openMenu() {
   stopPlay();
   closeSavePop();
   hint('');
-  el.drawerTitle.textContent = 'Menü · ' + a.label;
+  el.menuAreaTitle.textContent = a.label;
+  el.menuSettingsTitle.textContent = 'Einstellungen für ' + a.label;
+  el.menuSettings.hidden = !a.menu;
   el.saveSec.hidden = el.songsSec.hidden = !s;
   el.autoSec.hidden = true;
   if (s) {

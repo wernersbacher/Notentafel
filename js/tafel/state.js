@@ -4,11 +4,14 @@ import { pushState, popState } from '../core/history.js';
 import { emptyRows, appendPos, hasNotes, attachLines, packLines } from './model.js';
 import { loadBoard, saveBoard, saveAuto, cleanTafelSettings } from './storage.js';
 
-// Gemeinsame Einstellungen samt denen der Tafel (theme, lens, autoBar, autoZ, prop)
-export const settings = useSettings(cleanTafelSettings);
+// Gemeinsame Einstellungen samt denen der Tafel, je ein Set für Melodie und Rhythmus (unter mel und rhy)
+const all = useSettings(cleanTafelSettings);
 
 // Welche Tafel gerade offen ist: 'mel' (Melodie) oder 'rhy' (Rhythmus)
-const variant = settings.mode === 'rhy' ? 'rhy' : 'mel';
+const variant = all.mode === 'rhy' ? 'rhy' : 'mel';
+// Einstellungen der offenen Tafel (theme, lens, autoBar, autoZ, prop); wechselt mit useVariant.
+// Gespeichert wird mit persistSettings aus dem Kern, denn das Set hängt im gemeinsamen Objekt.
+export let settings = all[variant];
 const saved = loadBoard(variant);
 export const S = {
   variant,
@@ -23,6 +26,12 @@ export const S = {
   clean: false, // „Fertig“: Markierung und leere Plätze ausgeblendet
   countAt: null // Platz, unter dem gerade mehrere Zählzeiten getippt werden
 };
+
+// Schaltet auf die Tafel v um: Zustand und Einstellungen (geladen wird in area.js)
+export function useVariant(v) {
+  S.variant = v;
+  settings = all[v];
+}
 
 export const curCell = () => S.rows[S.sel.r][S.sel.c];
 export const curRow = () => S.rows[S.sel.r];

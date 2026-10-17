@@ -37,7 +37,13 @@ export const loadAuto = (mode) => stores[mode].loadAuto();
 export const saveAuto = (mode, rows, name) => stores[mode].saveAuto(rows, name);
 
 /* ---------- Einstellungen der Tafel (im gemeinsamen Speicherplatz der Einstellungen) ---------- */
+// Melodie und Rhythmus haben je eigene Einstellungen unter mel und rhy. Ältere Stände hatten nur ein gemeinsames Set
+// direkt in den Einstellungen; das übernehmen dann beide.
 export function cleanTafelSettings(s) {
+  const own = (v) => cleanVariant(s[v] && typeof s[v] === 'object' ? s[v] : s);
+  return { mel: own('mel'), rhy: own('rhy') };
+}
+function cleanVariant(s) {
   return {
     theme: THEME_BY[s.theme] ? s.theme : 'oktave',
     lens: s.lens !== false, // Notenzeichen unter den Tönen anzeigen

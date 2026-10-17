@@ -1,4 +1,5 @@
-// Abschnitte der Tafel im Menü: Bekannte Lieder (nur Melodie), Farben, Notenzeichen, Breite nach Notenlänge
+// Abschnitte der Tafel im Menü: Bekannte Lieder und Farben (nur Melodie), Notenzeichen, Breite nach Notenlänge.
+// Die Einstellungen gelten jeweils für die offene Tafel; settings aus state.js wechselt mit ihr.
 import { THEMES, NOTE_BY, SWATCHES } from './config.js';
 import { MELODIES, melodyRows } from './melodies.js';
 import { S, settings } from './state.js';
@@ -25,14 +26,14 @@ function renderThemes() {
   }).join('');
 }
 const TOGGLES = [
-  { key: 'lens', btn: el.btnLensToggle, state: el.lensToggleState },
-  { key: 'prop', btn: el.btnPropToggle, state: el.propToggleState }
+  { key: 'lens', btn: el.btnLensToggle, state: el.lensToggleState, get obj() { return settings; } },
+  { key: 'prop', btn: el.btnPropToggle, state: el.propToggleState, get obj() { return settings; } }
 ];
 
-// Blendet die Abschnitte der Tafel ein; die bekannten Lieder sind Melodien
+// Blendet die Abschnitte der Tafel ein; die bekannten Lieder sind Melodien, und Farben haben nur Töne
 export function openTafelMenu() {
   el.drawer.querySelectorAll('[data-area="tafel"]').forEach((sec) => { sec.hidden = false; });
-  el.melodiesSec.hidden = S.variant !== 'mel';
+  el.melodiesSec.hidden = el.themesSec.hidden = S.variant !== 'mel';
   renderMelodies();
   renderThemes();
   TOGGLES.forEach(renderToggle);

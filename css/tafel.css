@@ -60,13 +60,25 @@
 /* Achtel im geteilten Feld (Rhythmus): das Zeichen ist so groß wie sonst und steht mittig über seiner halben Spalte;
    der Balken reicht nur bis zur nächsten Achtel (eine halbe Stapelbreite) */
 .grid.prop .cell.half { justify-items: center; }
-.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .064); }
+/* ein leerer halber Platz (nach einer einzelnen Achtel) bekommt einen kleineren Kreis, damit er den nächsten nicht überdeckt */
+.grid.prop .cell.half .dot.ghost { transform: scale(.5); }
+.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .04); }
+/* Rhythmus: feinere Zeichen (Hals 1,5 statt 2,4 im Rahmen 22 × 30, also .04 × Kreis breit); der Balken entsprechend dünner */
+.grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .06); top: calc(var(--d) * -.108); height: calc(var(--d) * .085); }
+.grid.rhy:not(.prop) .stack.bbeam::after { width: calc(100% + var(--g) + var(--d) * .04); }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);
 }
 /* Rhythmussprache unter eigenständigen Notenzeichen (ta, ti-ti, taja …) */
 .len .syl { align-self: center; white-space: nowrap; font: 700 calc(var(--d) * .3)/1 var(--font-display); color: var(--fg); }
+/* Bogen unter Silben, die zusammen gesprochen werden: von der Mitte des Zeichens bis --w Platzbreiten weiter */
+.len .sarc {
+  position: absolute; top: calc(50% + var(--d) * .17); left: calc(50% - var(--d) * .14);
+  width: calc(100cqw * var(--w) + var(--d) * .28); height: calc(var(--d) * .13);
+  border: calc(var(--d) * .028) solid var(--fg); border-top: 0; border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  opacity: .75; box-sizing: border-box;
+}
 /* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
 .len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */

@@ -92,14 +92,18 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
     label = where + ': ' + n.n + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
     if (cell.d) len = noteSym(cell.d, beam);
   } else if (isBeat(cell)) {
-    dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
+    dot = '<div class="dot beat">' + noteSym(cell.d, beam, S.variant === 'rhy') + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
     if (beam === 1) stackCls = ' bbeam';
     // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);
     // mit Breite nach Notenlänge auf die Schläge verteilt (Halbe: ta unter Schlag 1, ja unter Schlag 2)
+    // Was zusammen gesprochen wird, verbindet ein Bogen darunter: ta ja (ja …) einer langen Note und ti ti zweier Achtel
+    // mit Balken (der Bogen der ersten reicht bis zur Mitte der zweiten, eine halbe Feldbreite weiter)
     if (settings.syl && S.variant === 'rhy') {
-      len = geo ? syllableParts(cell, beam).map(([t, o]) => o ? '<span class="syl at" style="--t:' + geoFrac(geo, o).toFixed(4) + '">' + t + '</span>' : '<span class="syl">' + t + '</span>').join('')
-        : '<span class="syl">' + syllable(cell, beam) + '</span>';
+      const parts = geo ? syllableParts(cell, beam) : [[syllable(cell, beam), 0]];
+      len = parts.map(([t, o]) => o ? '<span class="syl at" style="--t:' + geoFrac(geo, o).toFixed(4) + '">' + t + '</span>' : '<span class="syl">' + t + '</span>').join('');
+      const reach = parts.length > 1 ? geoFrac(geo, parts[parts.length - 1][1]) : geo && beam === 1 ? 1 : 0;
+      if (reach) len += '<span class="sarc" style="--w:' + reach.toFixed(4) + '"></span>';
     }
   } else if (isRest(cell)) {
     // Halbe (auch punktiert) liegen auf der Linie, die Ganze hängt darunter
@@ -157,6 +161,7 @@ export function renderBoard() {
   else S.cap = MAX_PER_ROW;
   const grid = el.grid, prop = propOn(), cols = prop ? unitCount() : colCount();
   grid.classList.toggle('prop', prop);
+  grid.classList.toggle('rhy', S.variant === 'rhy');
   const Ps = prop ? S.rows.map((row) => colFrs(cols, row)) : null;
   if (prop) grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
   grid.style.setProperty('--rows', S.rows.length);

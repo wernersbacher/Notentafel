@@ -153,10 +153,10 @@ test('canCloseGap: löschen geht auf einem Platz, hinter dem letzten Zeichen und
   assert.equal(canCloseGap(emptyRows(), { r: 0, c: 0 }), false);
 });
 
-test('syllable: Rhythmussprache ta, ti-ti, taja, tajaja, tajajaja', () => {
+test('syllable: Rhythmussprache ta, ti ti, taja, tajaja, tajajaja', () => {
   const b = (d) => ({ k: 'b', d });
   assert.equal(syllable(b(1)), 'ta');
-  assert.equal(syllable(b(0.5), 1), 'ti-');
+  assert.equal(syllable(b(0.5), 1), 'ti');
   assert.equal(syllable(b(0.5), 2), 'ti');
   assert.equal(syllable(b(0.5)), 'ti');
   assert.equal(syllable(b(2)), 'taja');
@@ -181,6 +181,6 @@ test('syllableParts: Silben auf die Schläge verteilt', () => {
   assert.deepEqual(syllableParts(b(2)), [['ta', 0], ['ja', 2]]);
   assert.deepEqual(syllableParts(b(3)), [['ta', 0], ['ja', 2], ['ja', 4]]);
   assert.deepEqual(syllableParts(b(4)), [['ta', 0], ['ja', 2], ['ja', 4], ['ja', 6]]);
-  assert.deepEqual(syllableParts(b(0.5), 1), [['ti-', 0]]);
+  assert.deepEqual(syllableParts(b(0.5), 1), [['ti', 0]]);
   assert.deepEqual(syllableParts({ k: 'r', d: 2 }), []);
 });

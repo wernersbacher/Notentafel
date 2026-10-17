@@ -18,14 +18,16 @@ export function noteLabel(n) {
 // beam: Achtel ohne Fähnchen, der Balken zur nächsten Achtel kommt aus dem CSS.
 const HEAD = 'cx="9.4" cy="24.6" transform="rotate(-22 9.4 24.6)"';
 const sym = (s) => '<svg class="sym" viewBox="0 0 22 30" stroke="currentColor" stroke-linecap="round" aria-hidden="true">' + s + '</svg>';
-export function noteSym(d, beam) {
+// thin: feinere Striche (Rhythmus-Tafel, wo die Zeichen groß und ohne Kreis stehen)
+export function noteSym(d, beam, thin) {
+  const w = thin ? { stem: 1.5, ring: 1.8, whole: 2, flag: 1.6, rx: 5, ry: 3.5 } : { stem: 2.4, ring: 2.4, whole: 2.6, flag: 2.2, rx: 5.3, ry: 3.8 };
   let s;
-  if (d === 4) s = '<ellipse cx="11" cy="24.6" rx="6.4" ry="4.3" fill="none" stroke-width="2.6"/>';
+  if (d === 4) s = '<ellipse cx="11" cy="24.6" rx="6.4" ry="4.3" fill="none" stroke-width="' + w.whole + '"/>';
   else {
-    s = '<path d="M14 24V2.5" stroke-width="2.4"/>' + (d >= 2
-      ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="2.4"/>'
-      : '<ellipse ' + HEAD + ' rx="5.3" ry="3.8" fill="currentColor" stroke="none"/>');
-    if (d === 0.5 && !beam) s += '<path d="M14 2.5c.5 5 7 6.5 5.2 14" fill="none" stroke-width="2.2"/>';
+    s = '<path d="M14 24V2.5" stroke-width="' + w.stem + '"/>' + (d >= 2
+      ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="' + w.ring + '"/>'
+      : '<ellipse ' + HEAD + ' rx="' + w.rx + '" ry="' + w.ry + '" fill="currentColor" stroke="none"/>');
+    if (d === 0.5 && !beam) s += '<path d="M14 2.5c.5 5 7 6.5 5.2 14" fill="none" stroke-width="' + w.flag + '"/>';
     if (d === 3) s += '<circle cx="19.8" cy="25" r="1.9" fill="currentColor" stroke="none"/>';
   }
   return sym(s);

@@ -69,6 +69,11 @@ export function shiftOct(p, by) {
   const { step, oct } = parsePitch(p), o = oct + by;
   return o < OCT_MIN || o > OCT_MAX ? p : makePitch(step, o);
 }
+// Um steps Stufen (Linien und Zwischenräume) höher oder tiefer, begrenzt auf den Tonvorrat c bis h'''
+export function stepPitch(p, steps) {
+  const d = Math.max(OCT_MIN * 7, Math.min(OCT_MAX * 7 + 6, diatonic(p) + steps));
+  return makePitch(d % 7, Math.floor(d / 7));
+}
 
 /* ---------- Takte ---------- */
 // Länge eines Takts in Ticks, z. B. 32 für 4/4, 24 für 6/8

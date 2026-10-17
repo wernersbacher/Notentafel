@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ticks, staffPos, freq, noteName, nearestPitch, shiftOct, measureTicks, barsAfter, cleanSong, parsePitch,
-  pickupsFor, gridOffset, gridStarts
+  pickupsFor, gridOffset, gridStarts, stepPitch
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -99,4 +99,13 @@ test('Auftakt: Taktraster und automatische Taktstriche zählen nach dem Auftakt'
   assert.deepEqual(gridStarts(s), [24, 32, 40, 48, 56, 64]);
   assert.deepEqual(barsAfter(s, true), [1, 0, 0, 0, 1, 0]);
   assert.equal(gridOffset({ ...s, meter: '' }), 0);
+});
+
+test('stepPitch: stufenweise, begrenzt auf den Tonvorrat', () => {
+  assert.equal(stepPitch('c1', 1), 'd1');
+  assert.equal(stepPitch('h1', 1), 'c2');
+  assert.equal(stepPitch('c1', -1), 'h0');
+  assert.equal(stepPitch('e1', 7), 'e2');
+  assert.equal(stepPitch('d0', -5), 'c0');
+  assert.equal(stepPitch('a3', 9), 'h3');
 });

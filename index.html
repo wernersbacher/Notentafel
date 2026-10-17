@@ -28,6 +28,7 @@
   "./js/lied/area.js": "./js/lied/area.js?v=1.0.0",
   "./js/lied/dom.js": "./js/lied/dom.js?v=1.0.0",
   "./js/lied/glyphs.js": "./js/lied/glyphs.js?v=1.0.0",
+  "./js/lied/input.js": "./js/lied/input.js?v=1.0.0",
   "./js/lied/layout.js": "./js/lied/layout.js?v=1.0.0",
   "./js/lied/model.js": "./js/lied/model.js?v=1.0.0",
   "./js/lied/render.js": "./js/lied/render.js?v=1.0.0",
@@ -263,6 +264,24 @@
     <button type="button" class="btn theme" id="btnNamesToggle" aria-pressed="false">
       <span>Unter den Noten: <span id="namesToggleState">aus</span></span>
       <span class="desc">Zeigt unter jeder Note ihren Namen, z. B. C, Fis oder B.</span>
+    </button>
+  </section>
+
+  <section data-area="lied">
+    <h3>Notengröße</h3>
+    <div class="sizes" id="liedSizes" role="group" aria-label="Notengröße">
+      <button type="button" class="btn" data-size="1" aria-pressed="true">normal</button>
+      <button type="button" class="btn" data-size="2" aria-pressed="false">groß</button>
+      <button type="button" class="btn" data-size="3" aria-pressed="false">sehr groß</button>
+    </div>
+    <p class="hint">Zum Zeigen vor der Klasse. Passt eine Zeile nicht mehr, lässt sich das Notenblatt seitlich wischen.</p>
+  </section>
+
+  <section data-area="lied">
+    <h3>Takte prüfen</h3>
+    <button type="button" class="btn theme" id="btnCheckToggle" aria-pressed="true">
+      <span>Falsche Takte markieren: <span id="checkToggleState">an</span></span>
+      <span class="desc">Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt und Schlusstakt sind ausgenommen.</span>
     </button>
   </section>
 

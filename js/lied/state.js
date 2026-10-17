@@ -3,7 +3,7 @@ import { pushState, popState } from '../core/history.js';
 import { emptySong, cleanSong } from './model.js';
 import { store, loadLiedSettings, saveLiedSettings } from './storage.js';
 
-// Einstellungen nur für Lied: autoBar, names, autoZ
+// Einstellungen nur für Lied: autoBar, names, autoZ, check, size
 export const opts = loadLiedSettings();
 export const persistOpts = () => saveLiedSettings(opts);
 

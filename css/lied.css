@@ -39,3 +39,13 @@
 .taktpop .poplabel { grid-column: 1 / -1; margin: 2px 2px -2px; font: 800 .7rem var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .taktpop .sym { height: 1.7rem; }
 .taktpop .btn.wide { grid-column: span 3; min-height: 48px; padding: 0 .3rem; font-size: .82rem; line-height: 1.1; }
+
+/* ---------- Ziehen auf dem Notenblatt ---------- */
+/* Die markierte Note lässt sich ziehen: Ein unsichtbares Feld liegt darüber, dort scrollt der Finger nicht */
+.sheet { position: relative; }
+.grabber { position: absolute; touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.score .ev.lifting { opacity: .35; }
+.score .ev.drop { color: var(--mark); }
+
+/* ---------- Menü: Notengröße ---------- */
+.sizes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

@@ -58,3 +58,15 @@ export function togglePlay(getPlan, mark) {
   else startPlay(getPlan(), mark);
 }
 export const initPlayer = () => showButton(false);
+
+// Ein einzelner kurzer Ton zum Vorhören (z. B. beim Ziehen einer Note), unabhängig vom Abspielen
+let preview = null;
+export function previewTone(f) {
+  const ctx = audioCtx();
+  if (!ctx) return;
+  if (preview) { try { preview.disconnect(); } catch (e) { /* schon getrennt */ } }
+  preview = ctx.createGain();
+  preview.gain.value = 0.5;
+  preview.connect(ctx.destination);
+  piano(preview, f, ctx.currentTime + 0.01, 0.35);
+}

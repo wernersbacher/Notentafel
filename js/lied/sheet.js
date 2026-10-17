@@ -71,7 +71,8 @@ export function sheetSVG(song, lay, o) {
       g += tie(t.x1, t.x2 == null ? W - 0.6 : t.x2, y, t.down);
     });
     // Tippflächen über den Zeichen: jede Spalte reicht über die ganze Höhe des Systems
-    s.items.forEach((it) => { g += rect('hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
+    // Die markierte Spalte lässt sich ziehen (grab), alle anderen scrollen wie gewohnt
+    s.items.forEach((it) => { g += rect(it.i === o.sel && !o.clean ? 'hit grab' : 'hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
     if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');
     out += '<g transform="translate(0 ' + f(top) + ')">' + g + '</g>';
     y += h + GAP;

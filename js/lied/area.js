@@ -7,6 +7,7 @@ import { store } from './storage.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
 import { buildPanel, fillTaktPop } from './sidebar.js';
+import { initSheetInput } from './input.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
 
@@ -31,11 +32,7 @@ function initControls() {
   delegate(el.liedTaktPop, '[data-auto]', act.toggleAutoBar);
   delegate(el.liedTaktPop, '[data-autoz]', act.toggleAutoZ);
 
-  // Antippen auf dem Notenblatt markiert den Platz darunter
-  el.sheet.addEventListener('click', (e) => {
-    const hit = e.target.closest('[data-i]');
-    if (hit) act.select(+hit.dataset.i);
-  });
+  initSheetInput();
   // Ändert sich die Breite, wird neu eingeteilt
   let width = 0;
   new ResizeObserver(() => {
@@ -46,11 +43,23 @@ function initControls() {
 }
 
 const NAMES = { key: 'names', btn: el.btnNamesToggle, state: el.namesToggleState, obj: opts, save: persistOpts };
+const CHECK = { key: 'check', btn: el.btnCheckToggle, state: el.checkToggleState, obj: opts, save: persistOpts };
+
+// Notengröße: drei Knöpfe, der gewählte ist hervorgehoben
+function renderSizes() {
+  el.liedSizes.querySelectorAll('[data-size]').forEach((b) => {
+    const on = +b.dataset.size === opts.size;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
 
 export function registerLied() {
   buildPanel();
   initControls();
   toggleSetting(NAMES, render);
+  toggleSetting(CHECK, render);
+  delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,
     enter() { L.insertMode = false; L.clean = false; render(); },
@@ -77,6 +86,8 @@ export function registerLied() {
       open() {
         el.drawer.querySelectorAll('[data-area="lied"]').forEach((sec) => { sec.hidden = false; });
         renderToggle(NAMES);
+        renderToggle(CHECK);
+        renderSizes();
       }
     }
   });

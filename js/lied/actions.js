@@ -124,6 +124,37 @@ export function shift(by) {
   commit();
 }
 
+/* ---------- Ziehen ---------- */
+// Tonhöhe beim Ziehen: Der Stand vor dem Ziehen wird einmal gemerkt, gespeichert wird erst am Ende (endDrag).
+// Das Vorzeichen fällt weg, weil es zum alten Ton gehörte.
+let dragged = false;
+export function dragPitch(i, p) {
+  const e = ev()[i];
+  if (!isNote(e) || e.p === p) return;
+  if (!dragged) { snap(); dragged = true; }
+  e.p = p;
+  delete e.acc;
+  L.last = null;
+  render();
+}
+export function endDrag() {
+  if (!dragged) return;
+  dragged = false;
+  commit();
+}
+// Tauscht zwei Zeichen (Ziehen zur Seite). Takt-, Schlussstrich und Umbruch bleiben an ihrer Stelle.
+export function swap(i, j) {
+  const a = ev()[i], b = ev()[j];
+  if (!a || !b || i === j) return;
+  snap();
+  const content = (e) => { const o = { ...e }; delete o.bar; delete o.brk; return o; };
+  ev()[i] = keepMarks(a, content(b));
+  ev()[j] = keepMarks(b, content(a));
+  L.sel = j;
+  L.last = null;
+  commit();
+}
+
 /* ---------- Takt ---------- */
 // Takt- (1) oder Schlussstrich (2) vor der Markierung, also hinter dem Zeichen davor
 export function toggleBar(kind) {

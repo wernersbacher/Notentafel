@@ -7,14 +7,17 @@ import { L, opts, persistSong } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 
-// Größe eines Linienabstands in Pixeln: so groß wie möglich, bis die längste Zeile die Breite füllt.
-// Passt sie auch bei der kleinsten Größe nicht, lässt sich das Notenblatt seitlich wischen.
-const SP = { min: 8, max: 20 };
+// Größe eines Linienabstands in Pixeln je nach Notengröße (normal, groß, sehr groß): so groß wie möglich, bis die
+// längste Zeile die Breite füllt. Passt sie auch bei der kleinsten Größe nicht, lässt sich das Notenblatt seitlich wischen.
+const SP = { 1: [8, 20], 2: [11, 26], 3: [14, 34] };
+// Aktuelle Größe eines Linienabstands in Pixeln (zum Umrechnen beim Ziehen)
+export let spPx = 16;
 
 export function renderSheet() {
-  const lay = layout(L.song, { autoBar: opts.autoBar, counts: opts.autoZ });
+  const lay = layout(L.song, { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check });
   const avail = el.sheet.clientWidth || 600, U = Math.max(...lay.systems.map((s) => s.width));
-  const sp = Math.max(SP.min, Math.min(SP.max, avail / U)), W = Math.max(U, avail / sp - 0.1);
+  const [min, max] = SP[opts.size], sp = Math.max(min, Math.min(max, avail / U)), W = Math.max(U, avail / sp - 0.1);
+  spPx = sp;
   const last = !L.clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
@@ -23,7 +26,19 @@ export function renderSheet() {
   });
   el.sheet.innerHTML = '<svg class="score' + (L.clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';
+  placeGrabber();
   showMark();
+}
+// Über die markierte Note kommt ein unsichtbares HTML-Feld zum Ziehen. Anders als SVG-Elemente beachten es alle
+// Browser mit touch-action: none, sodass der Finger dort zieht statt zu scrollen.
+function placeGrabber() {
+  const g = el.sheet.querySelector('.hit.grab');
+  if (!g) return;
+  const r = g.getBoundingClientRect(), b = el.sheet.getBoundingClientRect(), d = document.createElement('div');
+  d.className = 'grabber';
+  d.dataset.i = g.dataset.i;
+  d.style.cssText = 'left:' + (r.left - b.left + el.sheet.scrollLeft) + 'px;top:' + (r.top - b.top + el.sheet.scrollTop) + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+  el.sheet.appendChild(d);
 }
 // Holt die Markierung ins Bild, wenn sie außerhalb liegt (z. B. nach dem Schreiben am unteren Rand)
 function showMark() {

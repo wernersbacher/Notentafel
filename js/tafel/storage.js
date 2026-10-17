@@ -49,6 +49,7 @@ function cleanVariant(s) {
     lens: s.lens !== false, // Notenzeichen unter den Tönen anzeigen
     autoBar: !!s.autoBar, // Taktstriche nach der Taktart
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
-    prop: !!s.prop // Breite nach Notenlänge
+    prop: !!s.prop, // Breite nach Notenlänge
+    syl: !!s.syl // Rhythmussprache (ta, ti-ti, taja …) unter den Notenzeichen
   };
 }

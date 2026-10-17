@@ -39,6 +39,7 @@ export function initControls() {
 
   el.btnAutoBar.addEventListener('click', () => toggleAuto('autoBar'));
   el.btnAutoZ.addEventListener('click', () => toggleAuto('autoZ'));
+  el.btnSyl.addEventListener('click', () => { settings.syl = !settings.syl; persistSettings(); render(); });
   el.btnBar.addEventListener('click', () => act.toggleBar(1));
   el.btnEnd.addEventListener('click', () => act.toggleBar(2));
   el.btnLine.addEventListener('click', act.toggleLine);

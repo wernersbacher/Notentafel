@@ -1,5 +1,5 @@
 // Leiste des Lieds: Taktart und Auftakt, Notenwerte, Pausen, Töne (c'–h'', die übrigen ausklappbar), Vorzeichen, Anzeige, Bogen und Striche
-import { STEPS, OCT_MIN, OCT_MAX, VALUES, METERS, isNote, canDot, pickupsFor, makePitch, pitchLabel } from './model.js';
+import { STEPS, OCT_MIN, OCT_MAX, VALUES, METERS, isNote, canDot, pickupsFor, makePitch, pitchLabel, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { noteIcon, dotIcon, restIcon } from './glyphs.js';
 import { L, opts } from './state.js';
 import { el } from './dom.js';
@@ -78,8 +78,23 @@ export function renderSidebar() {
   pressed(el.liedBar, bar === 1 && !opts.autoBar);
   el.liedEnd.disabled = !prev;
   pressed(el.liedEnd, bar === 2);
+  el.liedRepStart.disabled = el.liedRepEnd.disabled = !prev;
+  pressed(el.liedRepStart, bar === 4 || bar === 5);
+  pressed(el.liedRepEnd, bar === 3 || bar === 5);
+  el.liedVolta.disabled = !(bar === 3 || bar === 5);
+  pressed(el.liedVolta, !!(prev && prev.volta));
   el.liedMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === L.song.meter));
   renderPickups();
+  // Liedtext der markierten Note (beim Schreiben nicht überschreiben)
+  const lt = isNote(cur) && !tiedFrom(ev[L.sel - 1], cur) ? cur : null;
+  el.liedLyric.disabled = !lt;
+  el.liedLyricNext.disabled = !ev.slice(L.sel + 1).some(isNote);
+  el.liedLyric.placeholder = lt ? 'Silbe, z. B. Al-' : 'erst eine Note antippen';
+  if (document.activeElement !== el.liedLyric) el.liedLyric.value = lt && lt.ly ? lt.ly : '';
+  const k = L.song.key || 0;
+  el.liedKeyName.textContent = keyName(k) + (k ? ' · ' + Math.abs(k) + (k > 0 ? '♯' : '♭') : '');
+  el.liedKeyDown.disabled = k <= KEY_MIN;
+  el.liedKeyUp.disabled = k >= KEY_MAX;
 
   // Gemeinsame Knöpfe
   pressed(el.btnIns, L.insertMode);

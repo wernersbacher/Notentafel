@@ -59,6 +59,11 @@ export function clave(out, t0) {
   src.stop(t0 + 0.03);
 }
 
+// Metronom: kurzer, heller Klick; accent (erster Schlag im Takt) höher und lauter
+export function tick(out, t0, accent) {
+  partial(out, accent ? 1760 : 1320, t0, accent ? 0.5 : 0.32, 0.001, 0.02, 0, t0 + 0.1);
+}
+
 // Glockenspiel: eine Oktave über dem notierten Ton wie beim echten Instrument,
 // mit den unharmonischen Teiltönen eines Metallstabs. Klingt natürlich aus und wird am Ende der Notenlänge
 // abgedämpft, damit man lange und kurze Töne unterscheidet.

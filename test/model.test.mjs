@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, rowsToSong } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -151,4 +151,26 @@ test('canCloseGap: löschen geht auf einem Platz, hinter dem letzten Zeichen und
   assert.equal(canCloseGap(rows, { r: 1, c: 0 }), true); // leere Zeile: Ende der Zeile darüber
   assert.equal(canCloseGap(rows, { r: 2, c: 0 }), false); // darüber auch leer
   assert.equal(canCloseGap(emptyRows(), { r: 0, c: 0 }), false);
+});
+
+test('syllable: Rhythmussprache ta, ti-ti, taja, tajaja, tajajaja', () => {
+  const b = (d) => ({ k: 'b', d });
+  assert.equal(syllable(b(1)), 'ta');
+  assert.equal(syllable(b(0.5), 1), 'ti-');
+  assert.equal(syllable(b(0.5), 2), 'ti');
+  assert.equal(syllable(b(0.5)), 'ti');
+  assert.equal(syllable(b(2)), 'taja');
+  assert.equal(syllable(b(3)), 'tajaja');
+  assert.equal(syllable(b(4)), 'tajajaja');
+  assert.equal(syllable({ k: 'r', d: 1 }), '');
+  assert.equal(syllable(null), '');
+});
+
+test('rowsToSong: Melodie und Rhythmus als Lied', () => {
+  const rows = attachLines([[{ n: 'C', h: '' }, { n: 'Fis', h: 'r', d: 2 }, null], [{ k: 'b', d: 0.5 }, { k: 'r', d: 1 }, { n: 'C+', h: '', d: 3 }], []], [{ l: 0, m: '3/4' }, 0, 0]);
+  assert.deepEqual(rowsToSong(rows), {
+    meter: '3/4', pickup: 0, key: 0,
+    ev: [{ p: 'c1', v: 4 }, { p: 'f1', v: 2, acc: 1 }, { v: 4, brk: 1 }, { p: 'h1', v: 8 }, { v: 4 }, { p: 'c2', v: 2, dot: 1, bar: 2 }]
+  });
+  assert.deepEqual(rowsToSong(emptyRows()).ev, []);
 });

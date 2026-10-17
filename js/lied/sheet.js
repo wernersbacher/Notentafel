@@ -1,14 +1,18 @@
 // Zeichnet das berechnete Notenblatt (layout.js) als ein SVG. Maße in Linienabständen (sp); sp ist die Größe in Pixeln.
-import { isNote, noteName, parsePitch } from './model.js';
+import { isNote, noteName, parsePitch, keySignature, hasLyrics } from './model.js';
 import { TONE_COLORS } from '../core/colors.js';
-import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, staffLines } from './glyphs.js';
+import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, volta, staffLines } from './glyphs.js';
 import { tie } from './glyphs.js';
 
 const f = (n) => +n.toFixed(3);
 const NAMES_H = 1.8; // Platz für die Notennamen unter dem System
 const COUNTS_H = 1.9; // Platz für die Zählzeiten unter dem System
+const LYRICS_H = 2;   // Platz für den Liedtext darunter
 const GAP = 0.6;     // Abstand zwischen zwei Systemen
+// Plätze der Tonart-Vorzeichen im Violinschlüssel (unterste Linie = 0): ♯ f'' c'' g'' d'' a' e'' h', ♭ b' es'' as' des'' ges' ces'' fes'
+const SHARP_POS = [8, 5, 9, 6, 3, 7, 4], FLAT_POS = [4, 7, 3, 6, 2, 5, 1];
 
+const escText = (t) => String(t).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch]);
 const rect = (cls, x1, y1, x2, y2, attrs = '') =>
   '<rect class="' + cls + '" x="' + f(x1) + '" y="' + f(y1) + '" width="' + f(x2 - x1) + '" height="' + f(y2 - y1) + '"' + attrs + '/>';
 
@@ -37,11 +41,13 @@ function itemSVG(it, e, colors) {
 // Liefert { svg, height, parts } – height in sp, damit der Aufrufer die Größe setzen kann; parts sind die Systeme
 // einzeln ({ svg, height }, jedes ab seiner Oberkante), z. B. für den Druck.
 export function sheetSVG(song, lay, o) {
-  const ev = song.ev, W = o.width;
+  const ev = song.ev, W = o.width, lyrics = hasLyrics(song);
   let y = 0, out = '';
   const parts = [];
   lay.systems.forEach((s) => {
-    const zz = o.counts ? COUNTS_H : 0, top = y + s.top, bottom = s.bottom + zz + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
+    // Unter dem System: Zählzeiten, dann Liedtext, dann Notennamen
+    const zz = o.counts ? COUNTS_H : 0, ly = lyrics ? LYRICS_H : 0;
+    const top = y + s.top, bottom = s.bottom + zz + ly + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
     let g = '';
     // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
     g += rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
@@ -57,8 +63,12 @@ export function sheetSVG(song, lay, o) {
     s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
     // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen)
     const last = s.bars[s.bars.length - 1];
-    const end = s.barEnd ? last.x + (last.k === 2 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
+    const end = s.barEnd ? last.x + (last.k === 2 || last.k === 3 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
     g += staffLines(0, end) + clef(s.clefX, yOf(2));
+    // Tonart-Vorzeichen in der üblichen Lage (♯ ab f'', ♭ ab b')
+    keySignature(song.key || 0).forEach(([, a], j) => {
+      g += accidental(s.keyX + 0.45 + j * 0.9, yOf((a > 0 ? SHARP_POS : FLAT_POS)[j]), a);
+    });
     if (s.meterX != null) g += meter(s.meterX, song.meter);
     s.items.forEach((it) => {
       const e = ev[it.i];
@@ -66,7 +76,8 @@ export function sheetSVG(song, lay, o) {
       g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e, o.colors);
       // Zählzeiten direkt unter dem System, darunter die Notennamen
       if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
-      if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.55) + '">' + noteName(e) + '</text>';
+      if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';
+      if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.55) + '">' + noteName(e, song.key) + '</text>';
       g += '</g>';
     });
     s.beams.forEach((b) => {
@@ -77,6 +88,8 @@ export function sheetSVG(song, lay, o) {
       b.sub.forEach(([x1, x2]) => { g += beam(x1, by(x1), x2, by(x2), b.up); });
     });
     s.bars.forEach((b) => { g += barline(b.x, b.k); });
+    if (s.rep != null) g += barline(s.rep, 4);
+    s.voltas.forEach((v) => { g += volta(v.x1, v.x2, -s.top + 0.6, v.n, v.open); });
     if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
     s.ties.forEach((t) => {
       const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);

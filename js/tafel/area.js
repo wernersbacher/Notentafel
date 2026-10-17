@@ -1,5 +1,6 @@
 // Meldet Melodie und Rhythmus beim Kern an. Beide nutzen dieselbe Tafel, jede mit eigenem Stand.
 import { register } from '../core/shell.js';
+import { beatsOf, startAt } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos } from './model.js';
@@ -42,7 +43,10 @@ function plan() {
       if (sounds(cell)) { last = items.length - 1; end = t; }
     });
   });
-  return { items: items.slice(0, last + 1), end };
+  // Zählschlag nach der ersten Taktart auf der Tafel; abgespielt wird ab der Markierung (dahinter nichts mehr: von vorn)
+  const plan = { items: items.slice(0, last + 1), end, ...beatsOf((S.rows.find((row) => row.meter) || {}).meter || '') };
+  const sel = S.sel;
+  return startAt(plan, plan.items.findIndex((s) => s.pos.r > sel.r || (s.pos.r === sel.r && s.pos.c >= sel.c)));
 }
 
 const tools = {

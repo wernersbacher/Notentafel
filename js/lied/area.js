@@ -1,9 +1,10 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
-import { confirmTap, delegate, esc, toast, downloadFile } from '../core/ui.js';
+import { confirmTap, delegate, esc, toast, downloadFile, onEnter } from '../core/ui.js';
 import { settings } from '../core/settings.js';
-import { playPlan } from './model.js';
+import { playPlan, QUARTER } from './model.js';
+import { beatsOf, startAt } from '../core/plan.js';
 import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
@@ -27,10 +28,29 @@ function initControls() {
 
   delegate(el.liedMeters, '[data-m]', (b) => act.setMeter(b.dataset.m));
   delegate(el.liedPickups, '[data-pk]', (b) => act.setPickup(+b.dataset.pk));
+  // Liedtext: tippen schreibt die Silbe der markierten Note, Eingabe oder „weiter“ springt zur nächsten
+  el.liedLyric.addEventListener('focus', act.beginLyric);
+  el.liedLyric.addEventListener('input', () => act.setLyric(el.liedLyric.value));
+  const nextLyric = () => {
+    if (!act.nextLyric()) { el.liedLyric.blur(); return; }
+    el.liedLyric.value = L.song.ev[L.sel].ly || '';
+    act.beginLyric();
+    el.liedLyric.focus();
+    el.liedLyric.select();
+  };
+  onEnter(el.liedLyric, nextLyric);
+  el.liedLyricNext.addEventListener('click', nextLyric);
+  el.liedKeyDown.addEventListener('click', () => act.stepKey(-1));
+  el.liedKeyUp.addEventListener('click', () => act.stepKey(1));
+  el.btnTransDown.addEventListener('click', () => act.transposeSong(-1));
+  el.btnTransUp.addEventListener('click', () => act.transposeSong(1));
   // Töne der kleinen und dreigestrichenen Oktave ein- und ausklappen
   el.liedMore.addEventListener('click', () => { opts.allTones = !opts.allTones; persistOpts(); buildSteps(); });
   el.liedBar.addEventListener('click', () => act.toggleBar(1));
   el.liedEnd.addEventListener('click', () => act.toggleBar(2));
+  el.liedRepStart.addEventListener('click', () => act.toggleRepeat('start'));
+  el.liedRepEnd.addEventListener('click', () => act.toggleRepeat('end'));
+  el.liedVolta.addEventListener('click', act.toggleVolta);
   el.liedShowCounts.addEventListener('click', act.toggleAutoZ);
   el.btnAutoBarToggle.addEventListener('click', () => { act.toggleAutoBar(); renderToggle(AUTOBAR); });
 
@@ -115,7 +135,12 @@ export function registerLied() {
       undo: act.undo,
       clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
     },
-    plan: () => playPlan(L.song),
+    // Ab der Markierung (steht sie hinter der letzten Note, von vorn), mit Zählschlag und Auftakt für den Player
+    receive: act.receiveSong,
+    plan: () => {
+      const p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
+      return startAt(p, p.items.findIndex((s) => s.pos >= L.sel));
+    },
     mark: markPlaying,
     songs: {
       store,

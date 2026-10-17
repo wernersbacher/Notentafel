@@ -75,5 +75,5 @@ export function songOf(def) {
     if (m[5]) e.tie = 1;
     ev.push(e);
   }
-  return { name: def.name, song: { meter: def.meter, pickup: def.pickup || 0, ev } };
+  return { name: def.name, song: { meter: def.meter, pickup: def.pickup || 0, key: def.key || 0, ev } };
 }

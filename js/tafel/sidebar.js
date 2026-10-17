@@ -62,6 +62,7 @@ export function renderSidebar() {
 
   pressed(el.btnAutoBar, settings.autoBar);
   pressed(el.btnAutoZ, settings.autoZ);
+  pressed(el.btnSyl, settings.syl);
   renderCounts(cur);
 
   pressed(el.btnIns, S.insertMode);

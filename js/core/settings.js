@@ -9,7 +9,9 @@ export function cleanCoreSettings(s) {
   return {
     tempo: (s.tempo >= TEMPO.min && s.tempo <= TEMPO.max) ? s.tempo : TEMPO.start,
     mode: typeof s.mode === 'string' ? s.mode : '', // offener Bereich; ob es ihn gibt, prüft die Shell
-    wake: s.wake !== false // Bildschirm anlassen
+    wake: s.wake !== false, // Bildschirm anlassen
+    countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
+    metro: !!s.metro // beim Abspielen jeden Schlag mitklicken
   };
 }
 

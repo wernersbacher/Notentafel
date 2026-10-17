@@ -7,7 +7,7 @@ const SETTINGS_KEY = 'notentafel.lied.settings.v1';
 
 // Ein gespeicherter Stand: Taktart, Auftakt, Ereignisse und Name
 function pack(song, name, savedAt) {
-  const o = { meter: song.meter, pickup: song.pickup, ev: song.ev, name };
+  const o = { meter: song.meter, pickup: song.pickup, key: song.key || 0, ev: song.ev, name };
   if (savedAt) o.savedAt = savedAt;
   return o;
 }

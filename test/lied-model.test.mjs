@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, cleanSong, parsePitch,
-  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar
+  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -100,7 +100,9 @@ test('cleanSong: prüft und säubert', () => {
     { v: 16 },
     { p: 'a0', v: 1 }
   ]);
-  assert.deepEqual(cleanSong({ meter: '6/8', ev: [] }), { meter: '6/8', pickup: 0, ev: [] });
+  assert.deepEqual(cleanSong({ meter: '6/8', ev: [] }), { meter: '6/8', pickup: 0, key: 0, ev: [] });
+  assert.equal(cleanSong({ key: 2, ev: [] }).key, 2);
+  assert.equal(cleanSong({ key: 9, ev: [] }).key, 0);
   // Auftakt nur, wenn er kürzer als ein Takt ist; Haltebogen nur an Noten
   assert.equal(cleanSong({ meter: '3/4', pickup: 8, ev: [] }).pickup, 8);
   assert.equal(cleanSong({ meter: '3/4', pickup: 24, ev: [] }).pickup, 0);
@@ -128,4 +130,70 @@ test('stepPitch: stufenweise, begrenzt auf den Tonvorrat', () => {
   assert.equal(stepPitch('e1', 7), 'e2');
   assert.equal(stepPitch('d0', -5), 'c0');
   assert.equal(stepPitch('a3', 9), 'h3');
+});
+
+test('Tonart: Vorzeichen der Tonart gelten, ♮ hebt sie auf', () => {
+  assert.equal(keyAcc(1, 3), 1); // G-Dur: fis
+  assert.equal(keyAcc(1, 0), 0);
+  assert.equal(keyAcc(-2, 6), -1); // B-Dur: b und es
+  assert.equal(keyAcc(-2, 2), -1);
+  assert.deepEqual(keySignature(2), [[3, 1], [0, 1]]);
+  assert.equal(keyName(-3), 'Es-Dur');
+  const s = { meter: '4/4', key: 1, ev: [n('f1'), n('f1', 4, { acc: 0 }), n('f1')] };
+  assert.equal(noteName(s.ev[0], 1), "fis'");
+  assert.equal(noteName(s.ev[1], 1), "f'");
+  // fis ohne Zeichen (Tonart), f mit ♮, danach fis wieder mit ♯ (im selben Takt)
+  assert.deepEqual(shownAccidentals(s, true), [null, 0, 1]);
+  assert.ok(Math.abs(freq(s.ev[0], 1) - freq(n('f1', 4, { acc: 1 }))) < 1e-9);
+});
+
+test('transpose: Tonart und Noten wandern mit, richtig geschrieben', () => {
+  const s = { meter: '4/4', pickup: 0, key: 0, ev: [n('c1'), n('e1'), n('g1'), { v: 4 }, n('f1', 4, { acc: 1 })] };
+  // Ganzton höher: D-Dur, d' fis' a' … gis' (eigenes ♯, weil D-Dur kein gis hat)
+  const up = transpose(transpose(s, 1), 1);
+  assert.equal(up.key, 2);
+  assert.deepEqual(up.ev.map((e) => e.p && noteName(e, up.key)), ["d'", "fis'", "a'", undefined, "gis'"]);
+  // Halbton höher von C: Des-Dur (weniger Vorzeichen als Cis-Dur)
+  const des = transpose(s, 1);
+  assert.equal(des.key, -5);
+  assert.equal(noteName(des.ev[0], des.key), "des'");
+  // Zurück ergibt wieder C-Dur und dieselben Töne
+  assert.deepEqual(transpose(des, -1).ev.map((e) => e.p && noteName(e, 0)), ["c'", "e'", "g'", undefined, "fis'"]);
+  // Aus dem Tonvorrat heraus: null
+  assert.equal(transpose({ ...s, ev: [n('h3')] }, 2), null);
+});
+
+test('playOrder: Wiederholung mit und ohne 1./2. Klammer', () => {
+  const q = (p, x = {}) => n(p, 4, x);
+  // 4/4, zwei Takte, :‖ am Ende von Takt 2: beide Takte zweimal
+  const a = { meter: '4/4', ev: [q('c1'), q('d1'), q('e1'), q('f1'), q('g1'), q('a1'), q('h1'), q('c2', { bar: 3 }), q('d2')] };
+  assert.deepEqual(playOrder(a), [0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  // ‖: hinter Takt 1: nur Takt 2 wird wiederholt
+  const b = { ...a, ev: a.ev.map((e, i) => (i === 3 ? { ...e, bar: 4 } : e)) };
+  assert.deepEqual(playOrder(b), [0, 1, 2, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8]);
+  // Mit Klammer: beim zweiten Mal wird Takt 2 (1. Klammer) übersprungen, weiter mit Takt 3 (2. Klammer)
+  const c = { ...a, ev: a.ev.map((e, i) => (i === 7 ? { ...e, volta: 1 } : e)) };
+  assert.deepEqual(playOrder(c), [0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 8]);
+  // Abspielplan: Zeiten laufen durch, Position ist der Index
+  const plan = playPlan(c);
+  assert.deepEqual(plan.items.map((s) => s.pos), [0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 8]);
+  assert.equal(plan.end, 13);
+});
+
+test('cleanSong: Wiederholungsstriche und Klammer', () => {
+  const s = cleanSong({ ev: [n('c1', 4, { bar: 5, volta: 1 }), n('d1', 4, { bar: 4, volta: 1 }), n('e1', 4, { bar: 9 })] });
+  assert.deepEqual(s.ev.map((e) => [e.bar, e.volta]), [[5, 1], [4, undefined], [1, undefined]]);
+});
+
+test('Liedtext: gespeichert nur an Noten, gekürzt; beim Aufteilen am ersten Stück', () => {
+  const s = cleanSong({ ev: [n('c1', 4, { ly: '  Al-  ' }), { v: 4, ly: 'x' }, n('d1', 4, { ly: 'x'.repeat(30) })] });
+  assert.deepEqual(s.ev.map((e) => e.ly), ['Al-', undefined, 'x'.repeat(16)]);
+  const t = { meter: '4/4', ev: [n('c1'), n('d1'), n('e1'), n('f1', 2, { ly: 'Ho' })] };
+  assert.deepEqual(splitAtBar(t, 3).map((e) => e.ly), ['Ho', undefined]);
+});
+
+test('splitAll: alles, was über einen Taktstrich ragt, wird aufgeteilt', () => {
+  const s = splitAll({ meter: '4/4', ev: [n('c1'), n('d1'), n('e1'), n('f1', 2), n('g1', 1)] });
+  // Halbe auf der 4: zwei Viertel; die Ganze beginnt dann auf der 2: punktierte Halbe + Viertel
+  assert.deepEqual(s.ev.map((e) => [e.p, e.v, !!e.dot, !!e.tie]), [['c1', 4, false, false], ['d1', 4, false, false], ['e1', 4, false, false], ['f1', 4, false, true], ['f1', 4, false, false], ['g1', 2, true, true], ['g1', 4, false, false]]);
 });

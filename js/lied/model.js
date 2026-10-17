@@ -1,12 +1,15 @@
 // Datenmodell des Lieds. Alle Funktionen hier sind rein.
 //
-// Ein Lied ist { meter, pickup, ev }: die Taktart ('' = ohne), der Auftakt in Ticks (0 = keiner) und eine durchgehende
-// Folge von Ereignissen.
+// Ein Lied ist { meter, pickup, key, ev }: die Taktart ('' = ohne), der Auftakt in Ticks (0 = keiner), die Tonart als
+// Zahl der Vorzeichen (1 = ein ♯ wie G-Dur, −1 = ein ♭ wie F-Dur, 0 = C-Dur) und eine durchgehende Folge von Ereignissen.
 //   { p, v, dot?, acc? }  Note: p Tonhöhe ('c1' = c', 'a0' = a, 'c2' = c''), v Grundwert (1 Ganze, 2 Halbe, 4 Viertel,
-//                         8 Achtel, 16 Sechzehntel), dot punktiert, acc Vorzeichen (1 ♯, −1 ♭, 0 ♮; fehlt = keins)
+//                         8 Achtel, 16 Sechzehntel), dot punktiert, acc Vorzeichen (1 ♯, −1 ♭, 0 ♮; fehlt = wie die Tonart)
 //   tie: 1               an einer Note: Haltebogen zur nächsten Note
+//   ly: 'Al-'            an einer Note: Silbe des Liedtexts (ein „-“ am Ende verbindet mit der nächsten Silbe)
 //   { v, dot? }           Pause
-// Jedes Ereignis kann zusätzlich tragen: bar (1 Taktstrich, 2 Schlussstrich) und brk (Zeilenumbruch), beide dahinter.
+// Jedes Ereignis kann zusätzlich tragen: bar (dahinter: 1 Taktstrich, 2 Schlussstrich, 3 Wiederholung Ende :‖,
+// 4 Wiederholung Anfang ‖:, 5 beides :‖:), volta (nur mit 3 oder 5: der Takt davor ist die 1. Klammer, der danach die 2.)
+// und brk (Zeilenumbruch dahinter).
 // Die Zeilen (Notensysteme) entstehen erst beim Zeichnen.
 
 export const STEPS = ['c', 'd', 'e', 'f', 'g', 'a', 'h'];
@@ -15,17 +18,36 @@ export const METERS = ['2/2', '2/4', '3/4', '4/4', '6/8'];
 // Oktaven von der kleinen (c) bis zur dreigestrichenen (c''')
 export const OCT_MIN = 0, OCT_MAX = 3;
 export const MAX_EV = 2000;
+export const MAX_LY = 16; // Zeichen einer Silbe des Liedtexts
 // Dauer in Ticks, damit auch punktierte Werte ganze Zahlen bleiben: Viertel = 8, Ganze = 32
 export const QUARTER = 8;
 
 export const isNote = (e) => !!(e && e.p);
 export const isRest = (e) => !!e && !e.p;
+export const hasLyrics = (song) => song.ev.some((e) => e.ly);
 export const canDot = (v) => v < 16; // eine punktierte Sechzehntel gibt es nicht
 export const ticks = (e) => 32 / e.v * (e.dot ? 1.5 : 1);
 
 export function emptySong() {
-  return { meter: '4/4', pickup: 0, ev: [] };
+  return { meter: '4/4', pickup: 0, key: 0, ev: [] };
 }
+
+/* ---------- Tonart ---------- */
+// Tonarten von 6 ♭ bis 6 ♯; die Vorzeichen kommen in der üblichen Reihenfolge dazu (Stufen 0 = c … 6 = h)
+export const KEY_MIN = -6, KEY_MAX = 6;
+const SHARP_ORDER = [3, 0, 4, 1, 5, 2, 6], FLAT_ORDER = [6, 2, 5, 1, 4, 0, 3];
+const KEY_NAMES = { '-6': 'Ges', '-5': 'Des', '-4': 'As', '-3': 'Es', '-2': 'B', '-1': 'F', 0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'H', 6: 'Fis' };
+export const keyName = (k) => KEY_NAMES[k] + '-Dur';
+// Vorzeichen, das die Tonart k der Stufe step gibt (1, −1 oder 0)
+export function keyAcc(k, step) {
+  if (k > 0) return SHARP_ORDER.slice(0, k).includes(step) ? 1 : 0;
+  if (k < 0) return FLAT_ORDER.slice(0, -k).includes(step) ? -1 : 0;
+  return 0;
+}
+// Die Vorzeichen der Tonart als [Stufe, Vorzeichen] in der Reihenfolge, in der sie gezeichnet werden
+export const keySignature = (k) => (k >= 0 ? SHARP_ORDER.slice(0, k).map((s) => [s, 1]) : FLAT_ORDER.slice(0, -k).map((s) => [s, -1]));
+// Vorzeichen, mit dem eine Note klingt: ihr eigenes, sonst das der Tonart
+export const accOf = (e, k = 0) => (e.acc != null ? e.acc : keyAcc(k, parsePitch(e.p).step));
 
 /* ---------- Tonhöhen ---------- */
 export function parsePitch(p) {
@@ -38,15 +60,16 @@ const diatonic = (p) => { const x = parsePitch(p); return x.oct * 7 + x.step; };
 export const staffPos = (p) => diatonic(p) - 9;
 
 const SEMI = [0, 2, 4, 5, 7, 9, 11];
-export function freq(e) {
+// Frequenz einer Note in der Tonart k
+export function freq(e, k = 0) {
   const { step, oct } = parsePitch(e.p);
-  const midi = 48 + oct * 12 + SEMI[step] + (e.acc || 0);
+  const midi = 48 + oct * 12 + SEMI[step] + accOf(e, k);
   return 440 * 2 ** ((midi - 69) / 12);
 }
 
 // Deutscher Notenname in der Schreibweise mit Oktavstrichen, z. B. c', fis'', b', es (kleine Oktave ohne Strich)
-export function noteName(e) {
-  const { step, oct } = parsePitch(e.p), base = STEPS[step], a = e.acc || 0;
+export function noteName(e, k = 0) {
+  const { step, oct } = parsePitch(e.p), base = STEPS[step], a = accOf(e, k);
   let n = base;
   if (a === 1) n = base + 'is';
   else if (a === -1) n = base === 'h' ? 'b' : base === 'e' ? 'es' : base === 'a' ? 'as' : base + 'es';
@@ -62,6 +85,49 @@ export function pitchLabel(p) {
 export function stepPitch(p, steps) {
   const d = Math.max(OCT_MIN * 7, Math.min(OCT_MAX * 7 + 6, diatonic(p) + steps));
   return makePitch(d % 7, Math.floor(d / 7));
+}
+
+// Alle Zeichen, die über einen Taktstrich ragen, dort aufteilen (z. B. nach dem Übernehmen von der Tafel)
+export function splitAll(song) {
+  const s = { ...song, ev: song.ev.slice() };
+  for (let i = 0; i < s.ev.length; i++) {
+    const parts = splitAtBar(s, i);
+    if (parts.length > 1) { s.ev.splice(i, 1, ...parts); i += parts.length - 1; }
+  }
+  return s;
+}
+
+/* ---------- Transponieren ---------- */
+// Grundton (Stufe) der Dur-Tonart k: eine Quinte sind vier Stufen
+const rootStep = (k) => ((k * 4) % 7 + 7) % 7;
+// Das ganze Lied um semis Halbtöne höher (positiv) oder tiefer. Die Tonart wandert mit (die mit den wenigsten
+// Vorzeichen), jede Note um dasselbe Intervall, richtig geschrieben in der neuen Tonart. null, wenn ein Ton aus dem
+// Tonvorrat c bis h''' fiele.
+export function transpose(song, semis) {
+  const k0 = song.key || 0;
+  let k = null;
+  for (let c = KEY_MIN; c <= KEY_MAX; c++) {
+    if (((c - k0 - 7 * semis) % 12 + 12) % 12 === 0 && (k === null || Math.abs(c) < Math.abs(k))) k = c;
+  }
+  let ds = rootStep(k) - rootStep(k0);
+  if (semis > 0 && ds < 0) ds += 7;
+  if (semis < 0 && ds > 0) ds -= 7;
+  const ev = [];
+  for (const e of song.ev) {
+    if (!isNote(e)) { ev.push({ ...e }); continue; }
+    const { step, oct } = parsePitch(e.p), target = oct * 12 + SEMI[step] + accOf(e, k0) + semis;
+    let d = oct * 7 + step + ds;
+    let acc = target - (Math.floor(d / 7) * 12 + SEMI[d % 7]);
+    // Doppelte Vorzeichen vermeiden: dann den Nachbarton nehmen
+    if (acc > 1) { d += 1; acc = target - (Math.floor(d / 7) * 12 + SEMI[d % 7]); }
+    if (acc < -1) { d -= 1; acc = target - (Math.floor(d / 7) * 12 + SEMI[d % 7]); }
+    const o = Math.floor(d / 7);
+    if (o < OCT_MIN || o > OCT_MAX) return null;
+    const n = { ...e, p: makePitch(d % 7, o) };
+    if (acc === keyAcc(k, d % 7)) delete n.acc; else n.acc = acc;
+    ev.push(n);
+  }
+  return { ...song, key: k, ev };
 }
 
 /* ---------- Takte ---------- */
@@ -120,6 +186,7 @@ export function splitAtBar(song, i) {
     if (dot) o.dot = 1;
     if (isNote(e) && e.acc != null) o.acc = e.acc;
     if (isNote(e) && (!last || e.tie)) o.tie = 1;
+    if (k === 0 && e.ly) o.ly = e.ly; // die Silbe gehört zum Anschlag
     if (last && e.bar) o.bar = e.bar;
     if (last && e.brk) o.brk = 1;
     return o;
@@ -132,7 +199,7 @@ export function splitAtBar(song, i) {
 export function barsAfter(song, auto) {
   const len = auto && song.meter ? measureTicks(song.meter) : 0, g = grid(song);
   return song.ev.map((e, i) => {
-    if (e.bar === 2) return 2;
+    if (e.bar >= 2) return e.bar; // Schluss- und Wiederholungsstriche gelten auch mit Automatik
     if (auto) return len && g[i].end % len === 0 ? 1 : 0;
     return e.bar ? 1 : 0;
   });
@@ -169,7 +236,9 @@ function cleanEvent(e) {
   if (e.dot && canDot(e.v)) o.dot = 1;
   if (o.p && [-1, 0, 1].includes(e.acc)) o.acc = e.acc;
   if (o.p && e.tie) o.tie = 1;
-  if (e.bar) o.bar = e.bar === 2 ? 2 : 1;
+  if (o.p && typeof e.ly === 'string' && e.ly.trim()) o.ly = e.ly.trim().slice(0, MAX_LY);
+  if (e.bar) o.bar = [2, 3, 4, 5].includes(e.bar) ? e.bar : 1;
+  if (e.volta && (o.bar === 3 || o.bar === 5)) o.volta = 1;
   if (e.brk) o.brk = 1;
   return o;
 }
@@ -180,22 +249,24 @@ export function cleanSong(raw) {
   return {
     meter,
     pickup: pickupsFor(meter).includes(raw.pickup) ? raw.pickup : 0,
+    key: Number.isInteger(raw.key) && raw.key >= KEY_MIN && raw.key <= KEY_MAX ? raw.key : 0,
     ev: raw.ev.map(cleanEvent).filter(Boolean)
   };
 }
 
 /* ---------- Regeln im Takt ---------- */
-// Gezeichnete Vorzeichen pro Ereignis (1 ♯, −1 ♭, 0 ♮, null keins). Ein Vorzeichen gilt bis zum nächsten Strich für
-// denselben Ton in derselben Oktave; ohne Vorzeichen danach bekommt er ein ♮. Ein acc: 0 am Modell zeigt immer ♮.
-// Eine Note hinter einem Haltebogen zeigt keins und ändert nichts. Ein Umbruch ohne Strich setzt nichts zurück.
+// Gezeichnete Vorzeichen pro Ereignis (1 ♯, −1 ♭, 0 ♮, null keins). Ohne eigenes Vorzeichen gilt die Tonart; ein
+// gesetztes Vorzeichen gilt bis zum nächsten Strich für denselben Ton in derselben Oktave, danach wird es nötigenfalls
+// aufgelöst. Ein acc: 0 am Modell zeigt immer ♮. Eine Note hinter einem Haltebogen zeigt keins und ändert nichts.
+// Ein Umbruch ohne Strich setzt nichts zurück.
 export function shownAccidentals(song, autoBar) {
-  const bars = barsAfter(song, autoBar);
+  const bars = barsAfter(song, autoBar), k = song.key || 0;
   let now = {};
   return song.ev.map((e, i) => {
     let out = null;
     if (isNote(e) && !tiedFrom(song.ev[i - 1], e)) {
-      const a = e.acc || 0;
-      if (e.acc === 0 || a !== (now[e.p] || 0)) out = a;
+      const a = accOf(e, k), was = e.p in now ? now[e.p] : keyAcc(k, parsePitch(e.p).step);
+      if (e.acc === 0 || a !== was) out = a;
       now[e.p] = a;
     }
     if (bars[i]) now = {};
@@ -223,21 +294,45 @@ export function badMeasures(song, autoBar) {
 /* ---------- Abspielen ---------- */
 // Ablaufplan für den Player: alle Zeichen nacheinander bis zum letzten Ton, Zeiten in Vierteln.
 // Eine Note hinter einem Haltebogen klingt nicht neu, sondern verlängert die vorige.
-export function playPlan(song) {
+// Reihenfolge, in der die Ereignisse erklingen: Wiederholungen ausgeschrieben. Am Wiederholungsende (:‖) geht es einmal
+// zurück zum letzten Wiederholungsanfang (‖:, sonst zum Anfang); mit volta wird beim zweiten Mal der Takt davor
+// (1. Klammer) übersprungen und gleich hinter dem Strich weitergespielt (2. Klammer).
+export function playOrder(song, autoBar = true) {
+  const ev = song.ev, bars = barsAfter(song, autoBar), order = [], done = new Set();
+  const measureStart = (i) => { let j = i; while (j > 0 && !bars[j - 1]) j--; return j; };
+  let i = 0, start = 0, skip = null;
+  while (i < ev.length) {
+    if (skip && i === skip.from) { i = skip.to; skip = null; continue; }
+    order.push(i);
+    const b = bars[i];
+    if ((b === 3 || b === 5) && !done.has(i)) {
+      done.add(i);
+      if (ev[i].volta) skip = { from: measureStart(i), to: i + 1 };
+      i = start;
+      continue;
+    }
+    if (b === 4 || b === 5) start = i + 1;
+    i++;
+  }
+  return order;
+}
+export function playPlan(song, autoBar = true) {
   const items = [];
-  let t = 0, end = 0, last = -1, held = null;
-  song.ev.forEach((e, i) => {
+  let t = 0, end = 0, last = -1, held = null, prev = -1;
+  playOrder(song, autoBar).forEach((i) => {
+    const e = song.ev[i];
     const len = ticks(e) / QUARTER;
-    if (held && tiedFrom(song.ev[i - 1], e)) {
+    if (held && prev === i - 1 && tiedFrom(song.ev[i - 1], e)) {
       held.len += len;
       items.push({ t, len, sound: '', f: 0, pos: i });
     } else {
-      const it = { t, len, sound: isNote(e) ? 'piano' : '', f: isNote(e) ? freq(e) : 0, pos: i };
+      const it = { t, len, sound: isNote(e) ? 'piano' : '', f: isNote(e) ? freq(e, song.key) : 0, pos: i };
       items.push(it);
       held = isNote(e) ? it : null;
     }
     t += len;
-    if (isNote(e)) { last = i; end = t; }
+    prev = i;
+    if (isNote(e)) { last = items.length - 1; end = t; }
   });
   return { items: items.slice(0, last + 1), end };
 }

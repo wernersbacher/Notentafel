@@ -5,7 +5,9 @@ import { MELODIES, melodyRows } from './melodies.js';
 import { S, settings } from './state.js';
 import { persistSettings } from '../core/settings.js';
 import { closeMenu, renderToggle, toggleSetting } from '../core/menu.js';
-import { esc, delegate } from '../core/ui.js';
+import { esc, delegate, toast } from '../core/ui.js';
+import { handOver } from '../core/shell.js';
+import { hasNotes, rowsToSong } from './model.js';
 import { render } from './render.js';
 import { renderPalette } from './sidebar.js';
 import { loadSong } from './actions.js';
@@ -54,4 +56,9 @@ export function initTafelMenu() {
     render();
   });
   TOGGLES.forEach((t) => toggleSetting(t, render));
+  el.btnToLied.addEventListener('click', () => {
+    if (!hasNotes(S.rows)) { toast('Auf der Tafel steht noch nichts.', true); return; }
+    closeMenu();
+    handOver('lied', { name: S.name, song: rowsToSong(S.rows), colors: S.variant === 'mel' });
+  });
 }

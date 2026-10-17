@@ -35,7 +35,7 @@ test('songOf: Haltebogen, Zeilenumbruch, Taktstrich wird ignoriert', () => {
 
 test('songOf: Name, Taktart und Auftakt', () => {
   assert.deepEqual(songOf({ name: 'A', meter: '3/4', pickup: 8, notes: 'c1' }),
-    { name: 'A', song: { meter: '3/4', pickup: 8, ev: [{ p: 'c1', v: 4 }] } });
+    { name: 'A', song: { meter: '3/4', pickup: 8, key: 0, ev: [{ p: 'c1', v: 4 }] } });
   assert.equal(songOf({ name: 'B', meter: '4/4', notes: 'c1' }).song.pickup, 0);
 });
 

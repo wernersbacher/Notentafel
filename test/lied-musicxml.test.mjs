@@ -129,3 +129,26 @@ test('Dateiname aus dem Liednamen', () => {
   assert.equal(fileNameOf('a/b: c?'), 'a b c.musicxml');
   assert.equal(fileNameOf(''), 'Lied.musicxml');
 });
+
+test('Tonart und Wiederholungen mit 1./2. Klammer', () => {
+  const q = (p, x = {}) => n(p, 4, x);
+  const s = { meter: '2/4', pickup: 0, key: 1, ev: [q('f1'), q('g1', { bar: 4 }), q('a1'), q('h1', { bar: 3, volta: 1 }), q('c2'), q('d2')] };
+  const xml = songToMusicXML(s, { autoBar: true });
+  wellFormed(xml);
+  assert.match(xml, /<key><fifths>1<\/fifths><\/key>/);
+  // f' in G-Dur klingt als fis', ohne gezeichnetes Vorzeichen
+  assert.match(notes(xml)[0], /<step>F<\/step><alter>1<\/alter>/);
+  assert.doesNotMatch(notes(xml)[0], /<accidental>/);
+  const ms = measures(xml);
+  assert.match(ms[1].body, /<barline location="left"><bar-style>heavy-light<\/bar-style><ending number="1" type="start"\/><repeat direction="forward"\/><\/barline>/);
+  assert.match(ms[1].body, /<ending number="1" type="stop"\/><repeat direction="backward"\/>/);
+  assert.match(ms[2].body, /<ending number="2" type="start"\/>/);
+  assert.match(ms[2].body, /<ending number="2" type="discontinue"\/>/);
+});
+
+test('Liedtext: Silben mit Bindestrich werden verbunden', () => {
+  const xml = songToMusicXML(song([n('c1', 4, { ly: 'Al-' }), n('d1', 4, { ly: 'le' }), n('e1', 4, { ly: 'mei-' }), n('f1', 4, { ly: 'ne' }), n('g1', 4, { ly: 'Ent-' }), n('g1', 4, { ly: 'chen' })]));
+  wellFormed(xml);
+  const ly = notes(xml).map((x) => /<syllabic>(\w+)<\/syllabic><text>([^<]*)<\/text>/.exec(x).slice(1).join(':'));
+  assert.deepEqual(ly, ['begin:Al', 'end:le', 'begin:mei', 'end:ne', 'begin:Ent', 'end:chen']);
+});

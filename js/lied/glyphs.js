@@ -98,9 +98,21 @@ export function meter(x, m) {
   const t = (s, pos) => '<text x="' + f(x) + '" y="' + yOf(pos) + '" class="mt">' + s + '</text>';
   return t(top, 6) + t(bottom, 2);
 }
+// Strich an x: 1 Taktstrich, 2 Schlussstrich, 3 Wiederholung Ende (Punkte links), 4 Wiederholung Anfang (Punkte rechts),
+// 5 beides (dicker Strich in der Mitte)
+const repDots = (x) => '<circle cx="' + f(x) + '" cy="1.5" r="0.24"/><circle cx="' + f(x) + '" cy="2.5" r="0.24"/>';
+const thick = (x1) => '<rect x="' + f(x1) + '" y="0" width="0.45" height="4"/>';
 export function barline(x, k) {
-  if (k === 2) return line(x - 0.75, 0, x - 0.75, 4, 0.14) + '<rect x="' + f(x - 0.42) + '" y="0" width="0.45" height="4"/>';
+  if (k === 2) return line(x - 0.75, 0, x - 0.75, 4, 0.14) + thick(x - 0.42);
+  if (k === 3) return repDots(x - 1.3) + line(x - 0.75, 0, x - 0.75, 4, 0.14) + thick(x - 0.42);
+  if (k === 4) return thick(x - 0.03) + line(x + 0.75, 0, x + 0.75, 4, 0.14) + repDots(x + 1.3);
+  if (k === 5) return repDots(x - 1.6) + line(x - 1.05, 0, x - 1.05, 4, 0.14) + thick(x - 0.22) + line(x + 0.65, 0, x + 0.65, 4, 0.14) + repDots(x + 1.2);
   return line(x, 0, x, 4, 0.14);
+}
+// Klammer der 1. oder 2. Wiederholung über dem System von x1 bis x2 auf Höhe y; open: rechts ohne Haken
+export function volta(x1, x2, y, n, open) {
+  return '<path d="M' + f(x1) + ' ' + f(y + 1.6) + 'V' + f(y) + 'H' + f(x2) + (open ? '' : 'V' + f(y + 1.6)) +
+    '" fill="none" stroke="currentColor" stroke-width="0.12"/><text class="vt" x="' + f(x1 + 0.4) + '" y="' + f(y + 1.25) + '">' + n + '.</text>';
 }
 export const staffLines = (x1, x2) => [0, 1, 2, 3, 4].map((y) => line(x1, y, x2, y, 0.11)).join('');
 // Haltebogen von x1 nach x2 auf Höhe y, nach unten (down) oder oben gewölbt: eine schmale Sichel

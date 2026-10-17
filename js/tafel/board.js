@@ -1,6 +1,6 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter } from './model.js';
+import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable } from './model.js';
 import { autoMarks, barAt } from './theory.js';
 import { S, settings, wraps } from './state.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
@@ -94,6 +94,8 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
     dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
     if (beam === 1) stackCls = ' bbeam';
+    // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist)
+    if (settings.syl && S.variant === 'rhy') len = '<span class="syl">' + syllable(cell, beam) + '</span>';
   } else if (isRest(cell)) {
     // Halbe (auch punktiert) liegen auf der Linie, die Ganze hängt darunter
     dot = '<div class="dot rest' + (cell.d === 4 ? ' hang' : cell.d >= 2 ? ' sit' : '') + '">' + restSym(cell.d, !!line) + '</div>';
@@ -156,7 +158,7 @@ export function renderBoard() {
   grid.classList.toggle('meters', hasMeter(S.rows));
   grid.classList.toggle('inserting', S.insertMode);
   grid.classList.toggle('clean', S.clean);
-  grid.classList.toggle('nolen', !settings.lens);
+  grid.classList.toggle('nolen', !settings.lens && !(settings.syl && S.variant === 'rhy'));
   const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));

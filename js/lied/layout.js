@@ -6,6 +6,8 @@ export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
   clef: 3.6,   // Breite des Violinschlüssels
   meter: 3.2,  // Breite der Taktart
+  keyAcc: 0.9, // Platz für ein Vorzeichen der Tonart (dazu einmal keyPad)
+  keyPad: 0.5,
   lead: 1.4,   // Abstand vor dem ersten Zeichen
   acc: 1.5,    // Platz für ein Vorzeichen vor dem Kopf
   head: 1.3,   // Breite eines Notenkopfs
@@ -17,6 +19,10 @@ export const G = {
 // Platz für ein Zeichen nach seiner Dauer in Ticks: Sechzehntel 1,6, Achtel 2,5, Viertel 3,4, Halbe 4,3, Ganze 5,2
 // (mindestens Kopf, Punkt und etwas Luft, siehe layout)
 export const spacing = (t) => 1.6 + 0.9 * Math.log2(t / 2);
+// Zusätzlicher Platz vor und hinter Wiederholungsstrichen (für die Punkte)
+export const barExtra = (k) => ({ before: k === 3 || k === 5 ? 0.9 : 0, after: k === 4 || k === 5 ? 1.3 : 0 });
+// Breite der Tonart-Vorzeichen hinter dem Schlüssel (in jeder Zeile)
+export const keyWidth = (song) => (song.key ? Math.abs(song.key) * G.keyAcc + G.keyPad : 0);
 
 // Achtel und Sechzehntel innerhalb eines Schlags bekommen einen gemeinsamen Balken. Schlag: Viertel, im 2/2-Takt Halbe,
 // im 6/8-Takt punktierte Viertel. Im 4/4-Takt teilen sich zwei volle Schläge einfacher Achtel in derselben Takthälfte
@@ -70,8 +76,8 @@ export function beamGroups(song, bars, brks) {
 function measurer(song, autoBar) {
   const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar);
   const advance = (i) => Math.max(spacing(ticks(ev[i])), G.head + (ev[i].dot ? 1 : 0) + 0.9);
-  const wOf = (i) => (shown[i] != null ? G.acc : 0) + advance(i) + (bars[i] ? G.bar : 0);
-  const lead = (first) => G.left + G.clef + (first && song.meter ? G.meter : 0) + G.lead;
+  const wOf = (i) => (shown[i] != null ? G.acc : 0) + advance(i) + (bars[i] ? G.bar + barExtra(bars[i]).before + barExtra(bars[i]).after : 0);
+  const lead = (first) => G.left + G.clef + keyWidth(song) + (first && song.meter ? G.meter : 0) + G.lead;
   let pos = 0;
   const cuts = ev.map((e, i) => { pos += ticks(e); return !!bars[i] || (!song.meter && pos % 32 === 0); });
   return { bars, cuts, shown, advance, wOf, lead };
@@ -136,7 +142,7 @@ function noteShape(it, e) {
 
 // Ergebnis: { systems, at } – at[i] ist das Zeichen von Ereignis i. Ein System (eine Zeile) hat
 //   first, end      Ereignisse first … end−1
-//   clefX, meterX   Lage von Schlüssel und Taktart (meterX nur in der ersten Zeile mit Taktart)
+//   clefX, keyX, meterX   Lage von Schlüssel, Tonart-Vorzeichen und Taktart (meterX nur in der ersten Zeile mit Taktart)
 //   items           pro Ereignis: i, x (Mitte des Kopfs), l/r (Spalte zum Antippen), pos, ledger, stem { up, end, x },
 //                   flags, dot (Platz des Punkts), acc/accX (gezeichnetes Vorzeichen und seine Lage), rest
 //   bars            { x, k } Takt- (1) und Schlussstriche (2); barEnd: das letzte Zeichen der Zeile hat einen Strich
@@ -177,6 +183,8 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
     let x = G.left;
     s.clefX = x;
     x += G.clef;
+    s.keyX = x;
+    x += keyWidth(song);
     if (si === 0 && song.meter) { s.meterX = x + G.meter / 2; x += G.meter; }
     x += G.lead;
     for (let i = s.first; i < s.end; i++) {
@@ -188,7 +196,13 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
       else { it.rest = true; if (e.dot) it.dot = 5; }
       s.items.push(it);
       at[i] = it;
-      if (bars[i]) { barX[i] = x - 0.5; s.bars.push({ x: barX[i], k: bars[i] }); x += G.bar; }
+      if (bars[i]) {
+        const ex = barExtra(bars[i]);
+        x += ex.before;
+        barX[i] = x - 0.5;
+        s.bars.push({ x: barX[i], k: bars[i], i });
+        x += G.bar + ex.after;
+      }
     }
     s.items.forEach((it, j) => { it.r = j + 1 < s.items.length ? s.items[j + 1].l : x - 0.5; });
     if (ghost && si === systems.length - 1) {
@@ -199,6 +213,7 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
     s.width = x + 0.6;
   });
 
+  addRepeatStarts(systems, bars, barX);
   beamGroups(song, bars, brk).forEach((idx) => {
     const its = idx.map((i) => at[i]);
     // Die Note, die am weitesten von der Mittellinie entfernt ist, bestimmt die Richtung aller Hälse
@@ -239,6 +254,7 @@ export function layout(song, { autoBar = false, counts = false, check = false, w
     s.top = Math.max(2.5, (hi - 8) / 2 + 1.5);
     s.bottom = Math.max(2.5, -lo / 2 + 1.5);
   });
+  addVoltas(song.ev, systems, bars, at, barX);
   addTies(ev, systems, at);
   if (counts) addCounts(song, systems);
   if (check) addBad(song, autoBar, systems, at, barX);
@@ -253,6 +269,54 @@ function addBad(song, autoBar, systems, at, barX) {
       if (a <= b) s.bad.push({ x1: at[a].l, x2: barX[b] != null ? barX[b] - 0.25 : at[b].r });
     });
   });
+}
+
+// Ein Wiederholungsanfang am Zeilenende gehört an den Anfang der nächsten Zeile: dort steht ‖: (rep), am Ende der Zeile
+// bleibt ein einfacher Strich bzw. bei :‖: das Wiederholungsende. Die Zeichen der neuen Zeile rücken dafür etwas nach rechts.
+function addRepeatStarts(systems, bars, barX) {
+  systems.forEach((s, si) => {
+    const p = systems[si - 1], pb = p && p.end > p.first ? bars[p.end - 1] : 0;
+    if (pb !== 4 && pb !== 5) return;
+    const last = p.bars[p.bars.length - 1];
+    if (last) last.k = pb === 5 ? 3 : 1;
+    const first = s.items[0];
+    if (!first) return;
+    s.rep = first.l - 0.1;
+    const d = 1.9;
+    s.items.forEach((it) => {
+      it.x += d; it.l += d; it.r += d;
+      if (it.accX != null) it.accX += d;
+    });
+    s.bars.forEach((b) => { b.x += d; barX[b.i] = b.x; });
+    if (s.ghost) { s.ghost.x += d; s.ghost.l += d; s.ghost.r += d; }
+    s.width += d;
+  });
+}
+// Klammern der 1. und 2. Wiederholung: die 1. über dem Takt vor einem :‖ mit volta, die 2. über dem Takt dahinter
+// (rechts offen). Pro System ein Stück; das System bekommt oben Platz dafür.
+function addVoltas(ev, systems, bars, at, barX) {
+  systems.forEach((s) => { s.voltas = []; });
+  const sysOf = (i) => systems.find((s) => i < s.end);
+  ev.forEach((e, i) => {
+    if (!e.volta || !(bars[i] === 3 || bars[i] === 5)) return;
+    let a = i;
+    while (a > 0 && !bars[a - 1]) a--;
+    let b = i + 1;
+    while (b < ev.length - 1 && !bars[b]) b++;
+    const put = (from, to, n, open, x1, x2) => {
+      const s1 = sysOf(from), s2 = sysOf(to);
+      if (!s1) return;
+      if (s1 === s2 || !s2) s1.voltas.push({ x1, x2: s2 ? x2 : at[from].r, n, open });
+      else {
+        s1.voltas.push({ x1, x2: at[s1.end - 1].r, n, open: true });
+        s2.voltas.push({ x1: at[s2.first].l, x2, n: '', open });
+      }
+    };
+    put(a, i, 1, false, at[a].l, barX[i] - 0.2);
+    // Die 2. Klammer beginnt am Strich, steht sie am Anfang einer neuen Zeile, beim ersten Zeichen dort
+    if (i + 1 < ev.length) put(i + 1, b, 2, true, sysOf(i) === sysOf(i + 1) ? barX[i] + 0.4 : at[i + 1].l, barX[b] != null ? barX[b] - 0.2 : at[b].r);
+  });
+  systems.forEach((s) => { if (s.voltas.length) s.top += 1.8; });
 }
 
 // Haltebögen: von einer Note mit tie zur nächsten. Sie liegen gegenüber dem Hals (bei Hälsen nach oben unter den Köpfen).

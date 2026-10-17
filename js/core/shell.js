@@ -11,6 +11,7 @@
 //   songs            Speichern und Laden (optional): store (aus makeStore), texts { menu, save, songs },
 //                    name(), data(), saved(name) nach dem Speichern, load(song) aus der Liste oder dem Autosave
 //   menu             eigene Abschnitte im Menü (optional): open() blendet sie ein (sie tragen data-area im HTML)
+//   receive(data)    nimmt etwas aus einem anderen Bereich entgegen (optional, siehe handOver)
 import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
 import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
@@ -36,6 +37,15 @@ function show(a) {
   el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk', 'done'].some((k) => tools[k]);
   el.btnPlay.hidden = !a.plan;
   el.btnSaveSide.hidden = !a.songs;
+}
+// Übergibt data an den Bereich id und wechselt dorthin (z. B. eine Melodie als Lied). Was data ist, vereinbaren die
+// beiden Bereiche; der Kern reicht es nur weiter. false, wenn es den Bereich nicht gibt oder er nichts annimmt.
+export function handOver(id, data) {
+  const a = areas.find((x) => x.id === id);
+  if (!a || !a.receive) return false;
+  setArea(id);
+  a.receive(data);
+  return true;
 }
 function setArea(id) {
   savePop.close();

@@ -62,6 +62,8 @@ export function toggleSetting(t, apply) {
   });
 }
 const WAKE = { key: 'wake', btn: el.btnWakeToggle, state: el.wakeToggleState };
+const COUNT_IN = { key: 'countIn', btn: el.btnCountInToggle, state: el.countInToggleState };
+const METRO = { key: 'metro', btn: el.btnMetroToggle, state: el.metroToggleState };
 function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
 
 /* ---------- Öffnen und schließen ---------- */
@@ -85,6 +87,8 @@ function openMenu() {
   el.drawer.querySelectorAll('[data-area]').forEach((sec) => { sec.hidden = true; });
   if (a.menu) a.menu.open();
   renderToggle(WAKE);
+  renderToggle(COUNT_IN);
+  renderToggle(METRO);
   el.tempo.value = settings.tempo;
   renderTempo();
   el.backdrop.hidden = false;
@@ -132,6 +136,8 @@ export function initMenu() {
   });
 
   toggleSetting(WAKE, updateWake);
+  toggleSetting(COUNT_IN, () => {});
+  toggleSetting(METRO, () => {});
   el.tempo.addEventListener('input', () => {
     settings.tempo = +el.tempo.value;
     renderTempo();

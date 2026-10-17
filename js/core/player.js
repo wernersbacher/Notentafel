@@ -1,7 +1,9 @@
 // Abspielen. Der Bereich liefert einen fertigen Ablaufplan, der Player kennt weder Zeilen noch Takte.
-// Plan: { items: [{ t, len, sound, f, pos }], end } – Zeiten in Schlägen; sound ist 'bell', 'piano', 'clave' oder leer (still).
-// pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die Stelle hervorheben kann.
-import { audioCtx, bell, clave, piano } from './audio.js';
+// Plan: { items: [{ t, len, sound, f, pos }], end, beat?, perBar?, barStart? } – Zeiten in Schlägen (Vierteln); sound ist
+// 'bell', 'piano', 'clave' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
+// Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
+// z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
+import { audioCtx, bell, clave, piano, tick } from './audio.js';
 import { settings } from './settings.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
@@ -28,10 +30,22 @@ function startPlay(plan, mark) {
   const out = ctx.createGain();
   out.gain.value = 0.6;
   out.connect(ctx.destination);
-  const step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08;
+  const beat = plan.beat || 1, perBar = plan.perBar || 4, bar = beat * perBar;
+  // Einzählen: ein ganzer Takt Klicks vorweg, danach beginnt das Stück
+  const pre = settings.countIn ? bar : 0;
+  const step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08 + pre * step;
   // Verzögerung bis Schlag t in Millisekunden
   const delay = (beats) => (t0 - ctx.currentTime + beats * step) * 1000;
   play = { out, timers: [], cur: null, mark };
+  for (let k = 0; k < perBar && pre; k++) tick(out, t0 - pre * step + k * beat * step, k === 0);
+  // Metronom: jeder Schlag des Stücks, betont am Taktanfang (gerechnet ab barStart)
+  if (settings.metro) {
+    const first = ((plan.barStart || 0) % beat + beat) % beat;
+    for (let t = first; t < plan.end - 1e-9; t += beat) {
+      const inBar = ((t - (plan.barStart || 0)) % bar + bar) % bar;
+      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6);
+    }
+  }
   plan.items.forEach((s) => {
     if (s.sound === 'bell') bell(out, s.f, t0 + s.t * step, s.len * step * 0.95);
     else if (s.sound === 'piano') piano(out, s.f, t0 + s.t * step, s.len * step * 0.95);

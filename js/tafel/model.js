@@ -99,6 +99,41 @@ export function beams(row) {
   return b;
 }
 
+// Rhythmussprache unter einem Notenzeichen: Viertel ta, Halbe taja, punktierte Halbe tajaja, Ganze tajajaja;
+// zwei Achtel mit Balken ti-ti (beam 1: erste, 2: zweite), eine einzelne Achtel ti. Pausen und leere Plätze: nichts.
+const SYL = { 1: 'ta', 2: 'taja', 3: 'tajaja', 4: 'tajajaja' };
+export function syllable(c, beam) {
+  if (!(isBeat(c) || (isNote(c) && c.d))) return '';
+  if (c.d === 0.5) return beam === 1 ? 'ti-' : 'ti';
+  return SYL[c.d] || '';
+}
+
+/* ---------- Ins Lied übernehmen ---------- */
+// Tonhöhe im Lied ('c1' = c') und Vorzeichen zu jedem bunten Punkt
+const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: ['a1'], H: ['h1'],
+  'C+': ['c2'], 'D+': ['d2'], 'E+': ['e2'], 'F+': ['f2'], Fis: ['f1', 1], B: ['h1', -1] };
+// Länge in Schlägen als Notenwert im Lied [v, dot]
+const LIED_VALUE = { 0.5: [8], 1: [4], 2: [2], 3: [2, 1], 4: [1] };
+// Die Tafel als Lied (Format wie in lied/model.js): bunte Punkte werden Noten auf ihrer Tonhöhe, eigenständige
+// Notenzeichen Noten auf der Mittellinie (h'), Pausen und leere Plätze Pausen. Jede Zeile endet mit einem Umbruch,
+// das letzte Zeichen mit einem Schlussstrich; die Taktart ist die erste der Tafel.
+export function rowsToSong(rows) {
+  const ev = [];
+  rows.forEach((row) => {
+    if (!row.some(Boolean)) return;
+    row.forEach((c) => {
+      const [v, dot] = LIED_VALUE[dur(c)] || [4];
+      const o = isNote(c) ? { p: LIED_PITCH[c.n][0], v } : isBeat(c) ? { p: 'h1', v } : { v };
+      if (isNote(c) && LIED_PITCH[c.n][1]) o.acc = LIED_PITCH[c.n][1];
+      if (dot) o.dot = 1;
+      ev.push(o);
+    });
+    ev[ev.length - 1].brk = 1;
+  });
+  if (ev.length) { delete ev[ev.length - 1].brk; ev[ev.length - 1].bar = 2; }
+  return { meter: (rows.find((row) => row.meter) || {}).meter || '', pickup: 0, key: 0, ev };
+}
+
 /* ---------- Gespeicherte Stände prüfen ---------- */
 function cleanCell(c) {
   if (!c) return null;

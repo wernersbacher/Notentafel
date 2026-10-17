@@ -48,7 +48,7 @@ function onMove(e) {
     const p = stepPitch(drag.p0, steps);
     if (p === L.song.ev[drag.i].p) return;
     act.dragPitch(drag.i, p);
-    previewTone(freq(L.song.ev[drag.i]));
+    previewTone(freq(L.song.ev[drag.i], L.song.key));
   } else if (drag.mode === 'move') {
     const j = hitAt(e.clientX, e.clientY), target = j != null && j !== drag.i && L.song.ev[j] ? j : null;
     if (target === drag.over) return;

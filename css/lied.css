@@ -20,6 +20,8 @@
 /* Taktart: zwei Ziffern übereinander, jede so hoch wie zwei Linienabstände */
 /* Versalziffern: Georgias Mediävalziffern (3, 4, 5 …) reichen unter die Grundlinie und säßen zu tief */
 .score .mt { font: 700 2.75px "Times New Roman", Times, "Noto Serif", serif; font-variant-numeric: lining-nums; text-anchor: middle; dominant-baseline: central; }
+.score .ly { font: 600 1.4px var(--font-ui); text-anchor: middle; }
+.score .vt { font: 700 1.2px var(--font-ui); }
 .score .nm { font: 800 1.25px var(--font-ui); text-anchor: middle; fill: var(--muted); }
 .score .cnt { font: 700 1.35px var(--font-display); text-anchor: middle; }
 .score .cnt.held { opacity: .4; }
@@ -32,7 +34,17 @@
 .meters .mtr { font-size: 1.05rem; }
 .meters .sym { height: 1.7rem; }
 .glabel.sub { margin-top: 6px; }
+.lyrow { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
+.lyrow input { min-width: 0; min-height: 42px; padding: 0 .6rem; border: 2px solid var(--line); border-radius: 10px; font: 600 1.05rem var(--font-ui); color: var(--fg); background: var(--btn); }
+.lyrow input:disabled { opacity: .5; }
+.lyrow .btn { min-height: 42px; padding: 0 .7rem; font: 800 .85rem var(--font-ui); }
+.keyrow { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 5px; align-items: center; }
+.keyrow .btn { min-height: 42px; font: 800 .95rem var(--font-ui); }
+.keyrow .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-size: 1.2rem; font-weight: 400; }
+.keyname { text-align: center; font: 800 .95rem var(--font-ui); }
 .tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tools.three .btn { min-height: 52px; }
+.btn .volta { font: 800 1rem/1 var(--font-ui); letter-spacing: .02em; }
 .btn.more { width: 100%; min-height: 34px; margin: 5px 0; font: 800 .78rem var(--font-ui); color: var(--muted); }
 .tools.shows { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .shows .btn { min-height: 40px; font: 800 .85rem var(--font-ui); }

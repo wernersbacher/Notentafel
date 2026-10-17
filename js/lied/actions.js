@@ -1,8 +1,8 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
-import { MAX_EV, isNote, canDot, pickupsFor, splitAtBar } from './model.js';
-import { L, opts, persistOpts, snap, restore, stashSong } from './state.js';
-import { render, commit } from './render.js';
+import { MAX_EV, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
+import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
+import { render, renderSheet, commit } from './render.js';
 
 const ev = () => L.song.ev;
 const cur = () => L.song.ev[L.sel];
@@ -160,6 +160,27 @@ export function swap(i, j) {
   commit();
 }
 
+/* ---------- Liedtext ---------- */
+// Note, die eine Silbe bekommen kann: die markierte, wenn sie nicht nur eine übergebundene Fortsetzung ist
+export const lyricTarget = () => { const e = cur(); return isNote(e) && !tiedFrom(ev()[L.sel - 1], e) ? e : null; };
+// Beim Schreiben einer Silbe wird nur einmal (beim Hineintippen ins Feld) für „Rückgängig“ gemerkt
+export function beginLyric() { if (lyricTarget()) snap(); }
+export function setLyric(text) {
+  const e = lyricTarget();
+  if (!e) return;
+  const t = text.trim().slice(0, MAX_LY);
+  if (t) e.ly = t; else delete e.ly;
+  persistSong();
+  renderSheet();
+}
+// Markierung zur nächsten Note mit eigenem Ton (Pausen und übergebundene Fortsetzungen überspringen)
+export function nextLyric() {
+  for (let i = L.sel + 1; i < ev().length; i++) {
+    if (isNote(ev()[i]) && !tiedFrom(ev()[i - 1], ev()[i])) { L.sel = i; L.last = null; render(); return true; }
+  }
+  return false;
+}
+
 /* ---------- Takt ---------- */
 // Takt- (1) oder Schlussstrich (2) vor der Markierung, also hinter dem Zeichen davor
 export function toggleBar(kind) {
@@ -169,6 +190,29 @@ export function toggleBar(kind) {
   if (e.bar === kind) delete e.bar; else e.bar = kind;
   commit();
 }
+// Wiederholungszeichen hinter dem Zeichen vor der Markierung: which 'start' (‖:) oder 'end' (:‖) an- oder abschalten.
+// Beide zusammen ergeben :‖: (5). Fällt das Ende weg, fällt auch die 1./2. Klammer weg.
+export function toggleRepeat(which) {
+  const e = ev()[L.sel - 1];
+  if (!e) return;
+  snap();
+  let start = e.bar === 4 || e.bar === 5, end = e.bar === 3 || e.bar === 5;
+  if (which === 'start') start = !start; else end = !end;
+  if (start && end) e.bar = 5;
+  else if (start) e.bar = 4;
+  else if (end) e.bar = 3;
+  else delete e.bar;
+  if (!end) delete e.volta;
+  commit();
+}
+// 1./2. Klammer am Wiederholungsende vor der Markierung an- oder abschalten
+export function toggleVolta() {
+  const e = ev()[L.sel - 1];
+  if (!e || !(e.bar === 3 || e.bar === 5)) return;
+  snap();
+  if (e.volta) delete e.volta; else e.volta = 1;
+  commit();
+}
 // Taktart des Lieds; ein Auftakt, der in der neuen Taktart nicht passt, fällt weg
 export function setMeter(m) {
   if (L.song.meter === m) return;
@@ -176,6 +220,23 @@ export function setMeter(m) {
   L.song.meter = m;
   if (!pickupsFor(m).includes(L.song.pickup)) L.song.pickup = 0;
   commit();
+}
+// Tonart: by = 1 ein ♯ mehr (bzw. ein ♭ weniger), −1 umgekehrt. Die Noten bleiben auf ihren Linien und klingen nach der Tonart.
+export function stepKey(by) {
+  const k = (L.song.key || 0) + by;
+  if (k < KEY_MIN || k > KEY_MAX) return;
+  snap();
+  L.song.key = k;
+  commit();
+}
+// Das ganze Lied um semis Halbtöne verschieben, samt Tonart
+export function transposeSong(semis) {
+  const t = transpose(L.song, semis);
+  if (!t) { toast(semis > 0 ? 'Höher geht es nicht, ein Ton läge über h\'\'\'.' : 'Tiefer geht es nicht, ein Ton läge unter c.', true); return; }
+  snap();
+  L.song = t;
+  commit();
+  toast('Jetzt in ' + keyName(t.key) + '.');
 }
 // Auftakt in Ticks (0 = keiner)
 export function setPickup(t) {
@@ -238,11 +299,26 @@ export function undo() {
 export function clearAll() {
   snap();
   stashSong();
-  L.song = { meter: L.song.meter, pickup: L.song.pickup, ev: [] };
+  L.song = { meter: L.song.meter, pickup: L.song.pickup, key: L.song.key || 0, ev: [] };
   L.name = '';
   L.sel = 0;
   L.last = null;
   commit();
+}
+// Nimmt ein Lied aus Melodie oder Rhythmus an ({ name, song, colors }); das bisherige wandert in den Autosave-Platz.
+// Was über einen Taktstrich ragt, wird aufgeteilt; aus Melodie kommen die Noten farbig.
+export function receiveSong({ name, song, colors }) {
+  const s = cleanSong(song);
+  if (!s) return;
+  snap();
+  stashSong();
+  L.song = opts.autoBar ? splitAll(s) : s;
+  L.name = name || '';
+  L.sel = L.song.ev.length;
+  L.last = null;
+  if (colors) { opts.colors = true; persistOpts(); }
+  commit();
+  toast('Ins Lied übernommen. Das vorherige Lied liegt im Menü unter „Zuletzt ersetzt“.');
 }
 // Lädt ein Lied (oder den Autosave). Das bisherige wandert in den Autosave-Platz.
 export function loadSong(s) {

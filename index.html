@@ -154,6 +154,7 @@
         <div class="autos">
           <button type="button" class="btn" id="btnAutoBar" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Taktstriche</button>
           <button type="button" class="btn" id="btnAutoZ" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zählzeiten</button>
+          <button type="button" class="btn" id="btnSyl" aria-pressed="false" title="Rhythmussprache: ta, ti-ti, taja, tajajaja">Rhythmussprache</button>
         </div>
       </section>
     </div>
@@ -164,6 +165,12 @@
         <div class="meters" id="liedMeters"></div>
         <h2 class="glabel sub">Auftakt</h2>
         <div class="meters" id="liedPickups"></div>
+        <h2 class="glabel sub">Tonart <span>Vorzeichen vorn im System</span></h2>
+        <div class="keyrow">
+          <button type="button" class="btn" id="liedKeyDown" title="Ein ♭ mehr bzw. ein ♯ weniger"><span class="acc">♭</span> ◀</button>
+          <span class="keyname" id="liedKeyName" aria-live="polite"></span>
+          <button type="button" class="btn" id="liedKeyUp" title="Ein ♯ mehr bzw. ein ♭ weniger">▶ <span class="acc">♯</span></button>
+        </div>
       </section>
       <section class="group">
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
@@ -184,6 +191,13 @@
         </div>
       </section>
       <section class="group">
+        <h2 class="glabel">Liedtext <span>Note antippen, Silbe schreiben</span></h2>
+        <div class="lyrow">
+          <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
+          <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
+        </div>
+      </section>
+      <section class="group">
         <h2 class="glabel">Anzeige</h2>
         <div class="tools shows">
           <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Notennamen</button>
@@ -200,6 +214,15 @@
         </button>
         <button type="button" class="btn" id="liedEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
           <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+        </button>
+        <button type="button" class="btn" id="liedRepStart" aria-pressed="false" title="Wiederholung beginnt hier (vor dem markierten Platz)">
+          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+        </button>
+        <button type="button" class="btn" id="liedRepEnd" aria-pressed="false" title="Wiederholung endet hier (vor dem markierten Platz)">
+          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+        </button>
+        <button type="button" class="btn" id="liedVolta" aria-pressed="false" title="1. und 2. Klammer: beim zweiten Mal wird der Takt vor dem Wiederholungsende übersprungen">
+          <span class="big volta">1.|2.</span><span class="small">Klammer</span>
         </button>
       </div>
     </div>
@@ -268,6 +291,15 @@
     </section>
 
     <section data-area="lied">
+      <h3>Transponieren</h3>
+      <div class="sizes">
+        <button type="button" class="btn" id="btnTransDown">½ Ton tiefer</button>
+        <button type="button" class="btn" id="btnTransUp">½ Ton höher</button>
+      </div>
+      <p class="hint">Das ganze Lied wandert mit seiner Tonart, z. B. passend zur Stimmlage der Klasse. Zweimal tippen ist ein ganzer Ton.</p>
+    </section>
+
+    <section data-area="lied">
       <h3>Exportieren</h3>
       <div class="themes">
         <button type="button" class="btn theme" id="btnLiedPrint">
@@ -283,6 +315,16 @@
 
     <div class="mcard" id="menuSettings">
       <h3 class="ctitle" id="menuSettingsTitle">Einstellungen</h3>
+
+      <section data-area="tafel">
+        <h3>Ins Lied übernehmen</h3>
+        <div class="themes">
+          <button type="button" class="btn theme" id="btnToLied">
+            <span>Als Noten ins Lied übernehmen</span>
+            <span class="desc">Macht aus der Tafel echte Noten im Bereich Lied – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</span>
+          </button>
+        </div>
+      </section>
 
       <section id="themesSec" data-area="tafel">
         <h3>Farben</h3>
@@ -345,6 +387,17 @@
         <input type="range" id="tempo" min="50" max="160" step="5" aria-label="Tempo">
         <output id="tempoOut" for="tempo"></output>
       </div>
+    </section>
+
+    <section class="switches">
+      <button type="button" class="btn switch" id="btnCountInToggle" aria-pressed="false">
+        <span class="sname">Einzählen</span><span class="state" id="countInToggleState">aus</span>
+        <span class="desc">Vor dem Abspielen klickt ein Takt vorweg (nach der Taktart), damit alle gemeinsam einsetzen können.</span>
+      </button>
+      <button type="button" class="btn switch" id="btnMetroToggle" aria-pressed="false">
+        <span class="sname">Metronom</span><span class="state" id="metroToggleState">aus</span>
+        <span class="desc">Beim Abspielen klickt jeder Schlag leise mit, der erste im Takt etwas heller.</span>
+      </button>
     </section>
 
     <section id="wakeSec" class="switches">

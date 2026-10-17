@@ -45,6 +45,7 @@ function initControls() {
 
 const NAMES = { key: 'names', btn: el.btnNamesToggle, state: el.namesToggleState, obj: opts, save: persistOpts };
 const CHECK = { key: 'check', btn: el.btnCheckToggle, state: el.checkToggleState, obj: opts, save: persistOpts };
+const WRAP = { key: 'wrap', btn: el.btnWrapToggle, state: el.wrapToggleState, obj: opts, save: persistOpts };
 
 // Bekannte Lieder im Menü; das gerade geladene ist hervorgehoben
 function renderKnown() {
@@ -68,6 +69,7 @@ export function registerLied() {
   initControls();
   toggleSetting(NAMES, render);
   toggleSetting(CHECK, render);
+  toggleSetting(WRAP, render);
   delegate(el.liedSongs, '[data-known]', (b) => {
     const s = SONGS[+b.dataset.known];
     if (!s) return;
@@ -102,6 +104,7 @@ export function registerLied() {
         el.drawer.querySelectorAll('[data-area="lied"]').forEach((sec) => { sec.hidden = false; });
         renderToggle(NAMES);
         renderToggle(CHECK);
+        renderToggle(WRAP);
         renderSizes();
         renderKnown();
       }

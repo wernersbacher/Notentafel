@@ -24,7 +24,8 @@ export function cleanLiedSettings(s) {
     names: !!s.names, // Notennamen unter den Noten
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
     check: s.check !== false, // Takte prüfen (Standard: an)
-    size: [1, 2, 3].includes(s.size) ? s.size : 1 // Notengröße: normal, groß, sehr groß
+    size: [1, 2, 3].includes(s.size) ? s.size : 1, // Notengröße: normal, groß, sehr groß
+    wrap: s.wrap !== false // Zeilen automatisch umbrechen (Standard: an)
   };
 }
 export const loadLiedSettings = () => cleanLiedSettings(readJSON(SETTINGS_KEY));

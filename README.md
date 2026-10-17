@@ -105,17 +105,17 @@ Fünf Notenlinien mit Violinschlüssel, ohne Farben. Wiederholungszeichen und Li
 - **Ziehen:** Die markierte Note mit dem Finger nach oben oder unten ziehen ändert die Tonhöhe Stufe für Stufe, man hört dabei den neuen Ton (ein Vorzeichen fällt weg). Zur Seite auf ein anderes Zeichen ziehen tauscht beide, Takt-, Schlussstrich und Umbruch bleiben an ihrer Stelle. Nur die markierte Note lässt sich ziehen; überall sonst scrollt der Finger das Notenblatt wie gewohnt.
 - **einfügen:** Töne und Pausen kommen an der Markierung dazu, statt zu ersetzen; Notenwerte ändern dann nur den Stift.
 - **entfernen:** Eine Note wird zur Pause gleicher Länge, damit die Takte stimmen. Eine Pause oder das letzte Zeichen verschwinden ganz. Im Einfügen-Modus (*Lücke zu*) verschwindet das Zeichen immer.
-- **Umbruch:** Ab der Markierung geht es in einer neuen Zeile weiter; nochmal tippen holt die Zeile wieder hoch. Zeilen bricht man (erst einmal) nur von Hand um.
+- **Umbruch:** Ab der Markierung geht es in einer neuen Zeile weiter; nochmal tippen holt die Zeile wieder hoch. Dazu bricht das Notenblatt von selbst um (siehe Menü, *Zeilen*).
 - **Takt …** öffnet ein Feld mit der Taktart des Lieds (ohne, 2/2, 2/4, 3/4, 4/4, 6/8), dem **Auftakt** (ohne, Achtel, Viertel, punktierte Viertel, Halbe, punktierte Halbe; nur was kürzer als ein Takt ist), *Taktstrich* und *Schlussstrich* vor der Markierung, *Taktstriche automatisch* (Standard: an; wie auf der Tafel, von Hand gesetzte Taktstriche sind dann ausgeblendet, der Schlussstrich bleibt) und *Zählzeiten automatisch*. Mit Auftakt zählen Taktstriche und Zählzeiten erst danach los; der Auftakt bekommt die letzten Zählzeiten des Takts (z. B. „3“ im 3/4-Takt).
 - **Zählzeiten** stehen wie auf der Tafel unter dem System: die Zahl auf der Zählzeit, „+“ genau dazwischen, gehaltene Zählzeiten blasser an ihrer Stelle. Im 6/8-Takt wird in Achteln gezählt, im 2/2 in Halben. Eine Note hinter einem Haltebogen zählt blass, weil sie nicht neu angeschlagen wird.
 - **Balken:** Achtel und Sechzehntel innerhalb eines Schlags bekommen von selbst einen Balken (im 6/8-Takt drei Achtel, im 2/2 eine Halbe). Im 4/4-Takt bekommen vier einfache Achtel in einer Takthälfte einen gemeinsamen Balken. Pausen, Taktstriche und Umbrüche unterbrechen ihn. Der Balken folgt leicht der Melodie (höchstens einen Linienabstand).
 - **Abspielen** klingt wie ein Klavier.
 - **Vorzeichen** werden wie in echten Noten gezeichnet: Ein ♯ oder ♭ gilt bis zum Taktstrich und wird im selben Takt nicht wiederholt; steht danach derselbe Ton ohne Vorzeichen, bekommt er von selbst ein ♮. Gespielt wird immer der Ton, den man eingegeben hat. Ein ausdrücklich gesetztes ♮ (*Auflöser*) bleibt immer sichtbar.
-- Das Notenblatt wird so groß, dass die längste Zeile die Breite füllt; ist sie zu lang, lässt es sich seitlich wischen.
+- **Zeilen automatisch umbrechen** (Menü, Standard: an): Die Notengröße steht fest, und jede Zeile wird Takt für Takt gefüllt, solange sie auf den Bildschirm passt; dann geht es hinter dem letzten Taktstrich in der nächsten Zeile weiter. Volle Zeilen werden auf die ganze Breite gestreckt. Umbrüche von Hand bleiben. Passt nicht einmal der breiteste Takt in eine Zeile, werden die Noten so weit kleiner. Beim Drehen des Tablets wird neu umbrochen. Ausgeschaltet bleiben die Zeilen, wie man sie umbrochen hat: Das Notenblatt wird so groß, dass die längste Zeile die Breite füllt, und lässt sich sonst seitlich wischen.
 - Im Menü:
   - **Bekannte Lieder:** Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude (jetzt mit punktierter Viertel) und Zum Geburtstag viel Glück (mit Auftakt). Neue trägt man in `js/lied/songs.js` ein, die Schreibweise steht oben in der Datei.
   - **Notennamen** unter den Noten (C, Fis, B, Es …).
-  - **Notengröße** *normal*, *groß*, *sehr groß* zum Zeigen vor der Klasse. Bei großen Noten lieber kürzere Zeilen umbrechen, sonst muss man seitlich wischen.
+  - **Notengröße** *normal*, *groß*, *sehr groß* zum Zeigen vor der Klasse (14, 20 bzw. 28 Pixel pro Linienabstand, mit automatischem Umbruch).
   - **Takte prüfen** (Standard: an): Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt (mit seiner eigenen Länge) und Schlusstakt sind ausgenommen.
 
 ### Menü
@@ -141,7 +141,7 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 | `notentafel.autosave.v1` / `notentafel.rhy.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz pro Bereich) |
 | `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich, die Automatik-Schalter, Breite nach Notenlänge und Bildschirm anlassen |
 | `notentafel.lied.v1`, `notentafel.lied.songs.v1`, `notentafel.lied.autosave.v1` | Das aktuelle Lied, gespeicherte Lieder und das zuletzt ersetzte Lied |
-| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche und Zählzeiten automatisch, Notennamen, Takte prüfen, Notengröße |
+| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche und Zählzeiten automatisch, Notennamen, Takte prüfen, Notengröße, Zeilen automatisch umbrechen |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.
 

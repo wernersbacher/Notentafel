@@ -1,23 +1,34 @@
 // Zeichnet Notenblatt und Leiste neu (render) und schließt Änderungen ab (commit)
 import { stopPlay, playingPos } from '../core/player.js';
 import { isNote } from './model.js';
-import { layout } from './layout.js';
+import { layout, widestMeasure } from './layout.js';
 import { sheetSVG } from './sheet.js';
 import { L, opts, persistSong } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 
-// Größe eines Linienabstands in Pixeln je nach Notengröße (normal, groß, sehr groß): so groß wie möglich, bis die
-// längste Zeile die Breite füllt, aber nie kleiner als das Minimum der Stufe. Passt eine Zeile dann nicht, lässt sich
-// das Notenblatt seitlich wischen (für große Noten vor der Klasse lieber kürzere Zeilen umbrechen).
+// Größe eines Linienabstands in Pixeln je nach Notengröße (normal, groß, sehr groß).
+// Mit automatischem Umbruch steht sie fest (WRAP) und die Zeilen werden so umbrochen, dass sie in die Breite passen;
+// kleiner wird sie nur, wenn sonst nicht einmal der breiteste Takt in eine Zeile passt (aber nicht unter 8 Pixel).
+// Ohne: so groß wie möglich, bis die längste Zeile die Breite füllt, aber nie kleiner als das Minimum der Stufe (SP);
+// passt eine Zeile dann nicht, lässt sich das Notenblatt seitlich wischen.
+const WRAP = { 1: 14, 2: 20, 3: 28 };
 const SP = { 1: [8, 20], 2: [16, 28], 3: [22, 36] };
 // Aktuelle Größe eines Linienabstands in Pixeln (zum Umrechnen beim Ziehen)
 export let spPx = 16;
 
 export function renderSheet() {
-  const lay = layout(L.song, { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check });
-  const avail = el.sheet.clientWidth || 600, U = Math.max(...lay.systems.map((s) => s.width));
-  const [min, max] = SP[opts.size], sp = Math.max(min, Math.min(max, avail / U)), W = Math.max(U, avail / sp - 0.1);
+  const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check };
+  let lay, sp;
+  if (opts.wrap) {
+    sp = Math.max(8, Math.min(WRAP[opts.size], avail / (widestMeasure(L.song, o) + 0.2)));
+    lay = layout(L.song, { ...o, width: avail / sp - 0.1 });
+  } else {
+    lay = layout(L.song, o);
+    const [min, max] = SP[opts.size];
+    sp = Math.max(min, Math.min(max, avail / Math.max(...lay.systems.map((s) => s.width))));
+  }
+  const W = Math.max(...lay.systems.map((s) => s.width), avail / sp - 0.1);
   spPx = sp;
   const last = !L.clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();

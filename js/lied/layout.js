@@ -21,13 +21,14 @@ export const spacing = (t) => 1.6 + 0.9 * Math.log2(t / 2);
 // Achtel und Sechzehntel innerhalb eines Schlags bekommen einen gemeinsamen Balken. Schlag: Viertel, im 2/2-Takt Halbe,
 // im 6/8-Takt punktierte Viertel. Im 4/4-Takt teilen sich zwei volle Schläge einfacher Achtel in derselben Takthälfte
 // einen Balken. Im 2/2-Takt werden Gruppen mit Sechzehnteln wieder pro Viertel getrennt (nach dem Beginn jeder Note).
-// Pausen, Taktstriche und Zeilenumbrüche unterbrechen den Balken. Liefert Gruppen von Indizes (mindestens zwei).
-export function beamGroups(song, bars) {
+// Pausen, Taktstriche und Zeilenumbrüche unterbrechen den Balken (brks: Umbruch hinter jedem Ereignis; ohne: die von Hand).
+// Liefert Gruppen von Indizes (mindestens zwei).
+export function beamGroups(song, bars, brks) {
   const m = song.meter, ev = song.ev, starts = gridStarts(song);
   const beat = m === '2/2' ? 16 : m === '6/8' ? 12 : 8;
   // Die Taktlänge ist ein Vielfaches des Schlags, die Schläge zählen also einfach vom Anfang des Rasters
   const key = (p) => Math.floor(p / beat);
-  const linked = (i) => !bars[i - 1] && !ev[i - 1].brk;
+  const linked = (i) => !bars[i - 1] && !(brks ? brks[i - 1] : ev[i - 1].brk);
   let groups = [], cur = null;
   ev.forEach((e, i) => {
     const p = starts[i], k = key(p);
@@ -62,6 +63,53 @@ export function beamGroups(song, bars) {
   return groups.map((g) => g.idx).filter((g) => g.length > 1);
 }
 
+// Waagerechte Maße: Platz eines Zeichens ohne (advance) bzw. mit Vorzeichen und Strich dahinter (wOf),
+// und der Anfang einer Zeile bis zum ersten Zeichen (lead; in der ersten Zeile mit Taktart)
+function measurer(song, autoBar) {
+  const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar);
+  const advance = (i) => Math.max(spacing(ticks(ev[i])), G.head + (ev[i].dot ? 1 : 0) + 0.9);
+  const wOf = (i) => (shown[i] != null ? G.acc : 0) + advance(i) + (bars[i] ? G.bar : 0);
+  const lead = (first) => G.left + G.clef + (first && song.meter ? G.meter : 0) + G.lead;
+  return { bars, shown, advance, wOf, lead };
+}
+// Breite einer Zeile, die nur den breitesten Takt enthält (samt Schlüssel, in der ersten Zeile auch Taktart).
+// Damit lässt sich die Notengröße so begrenzen, dass ein Takt immer in eine Zeile passt.
+export function widestMeasure(song, { autoBar = false } = {}) {
+  const { bars, wOf, lead } = measurer(song, autoBar);
+  let w = lead(true), max = w;
+  song.ev.forEach((e, i) => {
+    w += wOf(i);
+    max = Math.max(max, w);
+    if (bars[i] || e.brk) w = lead(false);
+  });
+  return max + 0.6;
+}
+
+// Automatische Umbrüche: Jede Zeile wird Takt für Takt gefüllt, solange sie in die Breite passt. Passt etwas nicht mehr,
+// wird hinter dem letzten Taktstrich der Zeile umbrochen, gibt es keinen, direkt davor (ein Takt allein ist zu breit).
+// Der leere Platz am Ende zählt mit. Umbrüche von Hand bleiben. Liefert brk (Umbruch hinter Ereignis i) und
+// full (Zeile endet mit einem automatischen Umbruch, also voll – die wird gestreckt).
+function wrap(ev, bars, wOf, lead, width) {
+  const brk = ev.map((e) => !!e.brk), full = [];
+  let start = 0, x = lead(true);
+  for (let i = 0; i <= ev.length; i++) {
+    const w = i < ev.length ? wOf(i) : G.ghost;
+    while (x + w + 0.6 > width && i > start) {
+      let b = i - 1;
+      for (let k = i - 1; k >= start; k--) if (bars[k]) { b = k; break; }
+      brk[b] = true;
+      full[b] = true;
+      start = b + 1;
+      x = lead(false);
+      for (let k = start; k < i; k++) x += wOf(k);
+    }
+    if (i === ev.length) break;
+    x += w;
+    if (brk[i]) { start = i + 1; x = lead(false); }
+  }
+  return { brk, full };
+}
+
 function noteShape(it, e) {
   const pos = staffPos(e.p);
   it.pos = pos;
@@ -90,14 +138,25 @@ function noteShape(it, e) {
 //   ties            Haltebögen { x1, x2, pos, down }; über einen Umbruch hinweg in zwei Stücken
 //   bad             { x1, x2 } Takte, die nicht aufgehen (nur mit check); über einen Umbruch pro System ein Stück
 //   width, top, bottom   Breite und Platz über bzw. unter dem System in sp
-// counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }]); check: Takte prüfen
-export function layout(song, { autoBar = false, counts = false, check = false } = {}) {
-  const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar), at = [], barX = [];
-  // Zeilen: hinter einem Ereignis mit brk beginnt eine neue (auch, wenn danach noch nichts steht)
+// counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }]); check: Takte prüfen;
+// width: verfügbare Breite in sp – dann wird zusätzlich automatisch umgebrochen (siehe wrap), sonst nur von Hand
+export function layout(song, { autoBar = false, counts = false, check = false, width = 0 } = {}) {
+  const ev = song.ev, at = [], barX = [];
+  const { bars, shown, advance, wOf, lead } = measurer(song, autoBar);
+  const { brk, full } = width ? wrap(ev, bars, wOf, lead, width) : { brk: ev.map((e) => !!e.brk), full: [] };
+  // Zeilen: hinter einem Umbruch beginnt eine neue (auch, wenn danach noch nichts steht)
   const systems = [{ first: 0, end: 0 }];
   ev.forEach((e, i) => {
     systems[systems.length - 1].end = i + 1;
-    if (e.brk) systems.push({ first: i + 1, end: i + 1 });
+    if (brk[i]) systems.push({ first: i + 1, end: i + 1 });
+  });
+  // Automatisch umbrochene Zeilen werden auf die ganze Breite gestreckt, gleichmäßig verteilt auf ihre Zeichen
+  systems.forEach((s, si) => {
+    s.stretch = 0;
+    if (s.end === s.first || !full[s.end - 1]) return;
+    let w = lead(si === 0);
+    for (let i = s.first; i < s.end; i++) w += wOf(i);
+    s.stretch = Math.max(0, Math.min(3, (width - 0.6 - w) / (s.end - s.first)));
   });
 
   systems.forEach((s, si) => {
@@ -111,7 +170,7 @@ export function layout(song, { autoBar = false, counts = false, check = false } 
       const e = ev[i], it = { i, l: x - 0.5 };
       if (shown[i] != null) { it.acc = shown[i]; it.accX = x + 0.4; x += G.acc; }
       it.x = x + G.head / 2;
-      x += Math.max(spacing(ticks(e)), G.head + (e.dot ? 1 : 0) + 0.9);
+      x += advance(i) + s.stretch;
       if (isNote(e)) noteShape(it, e);
       else { it.rest = true; if (e.dot) it.dot = 5; }
       s.items.push(it);
@@ -126,7 +185,7 @@ export function layout(song, { autoBar = false, counts = false, check = false } 
     s.width = x + 0.6;
   });
 
-  beamGroups(song, bars).forEach((idx) => {
+  beamGroups(song, bars, brk).forEach((idx) => {
     const its = idx.map((i) => at[i]);
     // Die Note, die am weitesten von der Mittellinie entfernt ist, bestimmt die Richtung aller Hälse
     const far = its.reduce((a, b) => (Math.abs(b.pos - 4) > Math.abs(a.pos - 4) ? b : a));

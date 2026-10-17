@@ -66,6 +66,7 @@ function area(id, label, panel, texts) {
   return {
     id, label, panel, board: el.grid, tools,
     enter: () => enter(id),
+    receive: act.receiveRows,
     plan,
     mark: markPlaying,
     songs: {

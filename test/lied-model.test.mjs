@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, cleanSong, parsePitch,
-  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll
+  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -196,4 +196,20 @@ test('splitAll: alles, was über einen Taktstrich ragt, wird aufgeteilt', () => 
   const s = splitAll({ meter: '4/4', ev: [n('c1'), n('d1'), n('e1'), n('f1', 2), n('g1', 1)] });
   // Halbe auf der 4: zwei Viertel; die Ganze beginnt dann auf der 2: punktierte Halbe + Viertel
   assert.deepEqual(s.ev.map((e) => [e.p, e.v, !!e.dot, !!e.tie]), [['c1', 4, false, false], ['d1', 4, false, false], ['e1', 4, false, false], ['f1', 4, false, true], ['f1', 4, false, false], ['g1', 2, true, true], ['g1', 4, false, false]]);
+});
+
+test('songToMelody: Noten werden Farbpunkte, Takte bleiben in einer Zeile', () => {
+  // 4/4 in G-Dur: f' klingt als fis' (Fis), Haltebogen über zwei Viertel wird eine Halbe, a'' liegt außerhalb
+  const s = { meter: '4/4', pickup: 0, key: 1, ev: [n('c1'), n('d1', 4, { tie: 1 }), n('d1'), n('f1'), n('c2', 2), n('a2', 2, { bar: 3 }), n('e1', 16), { v: 4 }] };
+  const m = songToMelody(s, true);
+  assert.equal(m.skipped, 1);
+  assert.deepEqual(m.lines, [{ l: 0, m: '4/4' }]);
+  assert.deepEqual(m.rows[0], [
+    { n: 'C', h: '', d: 1 }, { n: 'D', h: '', d: 2 }, { n: 'Fis', h: '', d: 1 },
+    { n: 'C+', h: '', d: 2 }, { k: 'r', d: 2 },
+    { n: 'E', h: '', d: 0.5, bar: 3 }, { k: 'r', d: 1 } // Sechzehntel wird Achtel; :‖ steht vor dem nächsten Platz
+  ]);
+  // Zehn Schläge pro Zeile: drei 4/4-Takte verteilen sich auf zwei Zeilen (2 + 1)
+  const long = { meter: '4/4', pickup: 0, key: 0, ev: Array.from({ length: 12 }, () => n('g1')) };
+  assert.deepEqual(songToMelody(long, true).rows.map((r) => r.length), [8, 4]);
 });

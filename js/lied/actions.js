@@ -1,6 +1,7 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
-import { MAX_EV, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
+import { handOver } from '../core/shell.js';
+import { MAX_EV, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
 import { render, renderSheet, commit } from './render.js';
 
@@ -304,6 +305,12 @@ export function clearAll() {
   L.sel = 0;
   L.last = null;
   commit();
+}
+// Übergibt das Lied als Melodie an den Bereich Melodie (der Kern wechselt dorthin)
+export function sendToMelody() {
+  if (!ev().some(isNote)) { toast('Im Lied steht noch keine Note.', true); return; }
+  const m = songToMelody(L.song, opts.autoBar);
+  handOver('mel', { name: L.name, rows: m.rows, lines: m.lines, skipped: m.skipped, cut: m.cut });
 }
 // Nimmt ein Lied aus Melodie oder Rhythmus an ({ name, song, colors }); das bisherige wandert in den Autosave-Platz.
 // Was über einen Taktstrich ragt, wird aufgeteilt; aus Melodie kommen die Noten farbig.

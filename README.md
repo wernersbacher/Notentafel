@@ -11,6 +11,7 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Aufbau der Seite |
+| `css/fonts.css`, `fonts/` | Die Schriften als lokale Dateien (WOFF2) mit ihren Lizenzen (SIL Open Font License, `fonts/OFL-*.txt`) |
 | `css/base.css` | Farben, Schriften, Grundlayout, Knöpfe, Rahmen der Tafel |
 | `css/tafel.css` | Die Tafel (Melodie und Rhythmus) |
 | `css/lied.css` | Das Notenblatt (Lied) |
@@ -58,7 +59,7 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 
 **Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository, es gibt nichts zu bauen. Vor dem Push die Version hochsetzen: `npm run version:set 1.0.1` (ohne Nummer wird nur `index.html` auf den Stand von `package.json` gebracht, z. B. nach einem neuen Modul). Das Skript schreibt die Nummer in `package.json`, hängt in `index.html` `?v=1.0.1` an Stylesheets und Einstiegs-Script und erneuert die Import Map, die jedes Modul unter `js/` (auch in Unterordnern) auf `js/…?v=1.0.1` umleitet; auch neue Module kommen so automatisch dazu. Damit lädt der Browser nach einem Update alle Dateien neu, statt alte und neue Module zu mischen. Die Version steht ganz unten im Menü.
 
-**Lokal starten:** `npm start` und dann http://localhost:8000/ öffnen (anderer Port: `PORT=8080 npm start`). Der Server in `tools/serve.js` braucht nur Node, keine Pakete. Direkt über `file://` geht es nicht, weil Browser dort keine Module laden. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
+**Lokal starten:** `npm start` und dann http://localhost:8000/ öffnen (anderer Port: `PORT=8080 npm start`). Der Server in `tools/serve.js` braucht nur Node, keine Pakete. Direkt über `file://` geht es nicht, weil Browser dort keine Module laden. Die Schriften liegen im Projekt (`fonts/`): Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, und Nunito für die Knöpfe. Es werden keine Schriften aus dem Netz geladen, die App sieht also auch ohne Internet gleich aus.
 
 **Tests:** `npm test` (eingebauter Testrunner von Node, keine Pakete).
 

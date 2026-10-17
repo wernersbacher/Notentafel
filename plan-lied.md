@@ -220,7 +220,10 @@ Umsetzung im Detail:
 - **Takt-Prüfung** (`badMeasures`): Abschnitte zwischen gezeichneten Strichen; der erste wird am Auftakt gemessen, der letzte nie. Schalter im Menü, Standard an.
 - **Notengröße:** normal, groß, sehr groß setzen die kleinste Größe eines Linienabstands auf 8, 16 bzw. 22 Pixel; passt eine Zeile nicht, wird seitlich gewischt.
 - **Bekannte Lieder:** die sechs der Tafel plus „Zum Geburtstag viel Glück“ (3/4 mit Auftakt).
-## Nachtrag: Automatischer Zeilenumbruch – erledigtDamit das Notenblatt nicht mehr seitlich gewischt werden muss. Mit dem Schalter „Zeilen automatisch umbrechen“ (Menü, Standard an) steht die Notengröße fest (14, 20, 28 Pixel pro Linienabstand) und `layout(song, { width })` füllt jede Zeile Takt für Takt (`wrap`). Umbrochen wird hinter dem letzten Taktstrich, der noch passt, nur wenn ein Takt allein nicht passt, mitten im Takt. Umbrüche von Hand bleiben. Volle Zeilen werden gestreckt (höchstens 3 sp mehr pro Zeichen). Damit ein Takt immer in eine Zeile passt, wird die Größe auf den breitesten Takt begrenzt (`widestMeasure`). Ohne Schalter gilt das alte Verhalten.
+
+## Nachtrag: Automatischer Zeilenumbruch – erledigt
+
+Damit das Notenblatt nicht mehr seitlich gewischt werden muss. Mit dem Schalter „Zeilen automatisch umbrechen“ (Menü, Standard an) steht die Notengröße fest (14, 20, 28 Pixel pro Linienabstand) und `layout(song, { width })` füllt jede Zeile Takt für Takt (`wrap`). Umbrochen wird hinter dem letzten Taktstrich, der noch passt, nur wenn ein Takt allein nicht passt, mitten im Takt. Umbrüche von Hand bleiben. Volle Zeilen werden gestreckt (höchstens 3 sp mehr pro Zeichen). Damit ein Takt immer in eine Zeile passt, wird die Größe auf den breitesten Takt begrenzt (`widestMeasure`). Ohne Schalter gilt das alte Verhalten.
 
 ## Später / bewusst nicht jetzt
 

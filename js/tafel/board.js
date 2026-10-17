@@ -7,6 +7,8 @@ import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js
 import { el } from './dom.js';
 
 const NO_MARKS = { b: {}, z: [] };
+// Klassen der Striche vor einem Platz: Schluss, Wiederholung Ende, Anfang, beides
+const BAR_CLS = { 2: ' final', 3: ' final rep-end', 4: ' final rep-start', 5: ' final rep-end rep-start' };
 
 
 /* ---------- Breite nach Notenlänge ---------- */
@@ -96,7 +98,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   const a = marks || NO_MARKS;
   const bar = barAt(cell, c, a, settings.autoBar);
   const zz = settings.autoZ ? a.z[c] : (cell && cell.z ? cell.z.split(' ').map((t) => ({ t })) : null);
-  if (bar) label += bar === 2 ? ', Schlussstrich davor' : ', Taktstrich davor';
+  if (bar) label += [', Taktstrich davor', ', Schlussstrich davor', ', Wiederholung endet davor', ', Wiederholung beginnt davor', ', Wiederholung endet und beginnt davor'][bar - 1];
   if (zz && zz.length) label += ', gezählt ' + zz.map((x) => x.t === '+' ? 'und' : x.t).join(' ');
   const hand = (isNote(cell) && cell.h) ? '<span class="hand ' + cell.h + '">' + cell.h + '</span>' : '<span class="hand"></span>';
   // Der Kreis vorn ist immer 2fr breit; --f ist sein Anteil am ganzen Platz
@@ -106,7 +108,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
-    (bar ? '<span class="barline' + (bar === 2 ? ' final' : '') + '"></span>' : '') + dot +
+    (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand + '</div></div>';
 }
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -183,4 +183,14 @@ test('syllableParts: Silben auf die Schläge verteilt', () => {
   assert.deepEqual(syllableParts(b(4)), [['ta', 0], ['ja', 2], ['ja', 4], ['ja', 6]]);
   assert.deepEqual(syllableParts(b(0.5), 1), [['ti', 0]]);
   assert.deepEqual(syllableParts({ k: 'r', d: 2 }), []);
+});
+
+test('playOrderRows: Wiederholungen auf der Tafel', () => {
+  const b = (x = {}) => ({ k: 'b', d: 1, ...x });
+  // Zeile 1: a b | ‖: c d :‖ (Ende als Strich-Platz am Zeilenende), Zeile 2: e
+  const rows = attachLines([[b(), b(), b({ bar: 4 }), b(), { bar: 3 }], [b()]], [0, 0]);
+  assert.deepEqual(playOrderRows(rows).map((p) => p.r + ':' + p.c), ['0:0', '0:1', '0:2', '0:3', '0:2', '0:3', '1:0']);
+  // Ohne ‖: vom Anfang; :‖ vor einem Platz mitten in der Zeile
+  const rows2 = attachLines([[b(), b(), b({ bar: 3 })]], [0]);
+  assert.deepEqual(playOrderRows(rows2).map((p) => p.c), [0, 1, 0, 1, 2]);
 });

@@ -3,7 +3,7 @@ import { register } from '../core/shell.js';
 import { beatsOf, startAt } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
-import { isNote, isBeat, sounds, dur, emptyRows, appendPos } from './model.js';
+import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
 import { S, persistBoard, useVariant } from './state.js';
 import { loadBoard, stores } from './storage.js';
 import { render } from './render.js';
@@ -35,13 +35,13 @@ function enter(v) {
 function plan() {
   const items = [];
   let last = -1, t = 0, end = 0;
-  S.rows.forEach((row, r) => {
-    row.forEach((cell, c) => {
-      const sound = isNote(cell) ? 'bell' : isBeat(cell) ? 'clave' : '';
-      items.push({ t, len: dur(cell), sound, f: isNote(cell) ? NOTE_BY[cell.n].f : 0, pos: { r, c } });
-      t += dur(cell);
-      if (sounds(cell)) { last = items.length - 1; end = t; }
-    });
+  // Wiederholungen werden mitgespielt (playOrderRows)
+  playOrderRows(S.rows).forEach(({ r, c }) => {
+    const cell = S.rows[r][c];
+    const sound = isNote(cell) ? 'bell' : isBeat(cell) ? 'clave' : '';
+    items.push({ t, len: dur(cell), sound, f: isNote(cell) ? NOTE_BY[cell.n].f : 0, pos: { r, c } });
+    t += dur(cell);
+    if (sounds(cell)) { last = items.length - 1; end = t; }
   });
   // Zählschlag nach der ersten Taktart auf der Tafel; abgespielt wird ab der Markierung (dahinter nichts mehr: von vorn)
   const plan = { items: items.slice(0, last + 1), end, ...beatsOf((S.rows.find((row) => row.meter) || {}).meter || '') };

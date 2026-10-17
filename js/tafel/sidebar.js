@@ -56,6 +56,9 @@ export function renderSidebar() {
   el.btnBar.disabled = settings.autoBar;
   el.btnBar.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
   pressed(el.btnEnd, hasEnd);
+  const rb = cur && cur.bar;
+  [el.btnRepStart, el.btnRepStartMel].forEach((b) => pressed(b, rb === 4 || rb === 5));
+  [el.btnRepEnd, el.btnRepEndMel].forEach((b) => pressed(b, rb === 3 || rb === 5));
   pressed(el.btnLine, !!row.line);
   el.rhyMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === (row.meter || '')));
 

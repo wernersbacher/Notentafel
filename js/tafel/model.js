@@ -5,7 +5,8 @@
 //   { n, h, d? }      bunter Punkt; d nur, wenn ein Notenwert darunter ergänzt wurde (sonst ein Schlag)
 //   { k: 'b', d }     eigenständiges Notenzeichen ohne Tonhöhe (klingt wie Klanghölzer)
 //   { k: 'r', d }     Pause
-// Jeder Platz kann zusätzlich bar tragen: 1 = Taktstrich davor, 2 = Schlussstrich davor; ein leerer Platz damit ist z. B. { bar: 1 }.
+// Jeder Platz kann zusätzlich bar tragen (davor): 1 Taktstrich, 2 Schlussstrich, 3 Wiederholung Ende :‖, 4 Wiederholung
+// Anfang ‖:, 5 beides :‖:; ein leerer Platz damit ist z. B. { bar: 1 } (am Zeilenende: der Strich hinter dem letzten Zeichen).
 // Noten und Pausen können z tragen: von Hand getippte Zählzeiten, mit Leerzeichen getrennt (z. B. '1 2' oder '+').
 // Zeilen-Eigenschaften stehen direkt am Zeilen-Array: line (Notenlinie) und meter (Taktart, z. B. '3/4').
 import { MAX_LEN, MAX_ROWS, START_ROWS, NOTE_BY, DUR_BY, METERS } from './config.js';
@@ -115,6 +116,26 @@ export function syllable(c, beam) {
   return SYL[c.d] || '';
 }
 
+/* ---------- Abspielen ---------- */
+// Reihenfolge, in der die Plätze erklingen ([{ r, c }]), Wiederholungen ausgeschrieben: An einem :‖ geht es einmal zurück
+// zum letzten ‖: (sonst zum Anfang). Ein leerer Platz am Zeilenende, der nur einen Strich trägt, ist kein Schlag.
+export function playOrderRows(rows) {
+  const seq = [];
+  rows.forEach((row, r) => row.forEach((x, c) => {
+    seq.push({ r, c, bar: x && x.bar ? x.bar : 0, mark: !filled(x) && !!(x && x.bar) && c === row.length - 1 });
+  }));
+  const order = [], done = new Set();
+  let k = 0, start = 0;
+  while (k < seq.length) {
+    const s = seq[k];
+    if ((s.bar === 3 || s.bar === 5) && !done.has(k)) { done.add(k); k = start; continue; }
+    if (s.bar === 4 || s.bar === 5) start = k;
+    if (!s.mark) order.push({ r: s.r, c: s.c });
+    k++;
+  }
+  return order;
+}
+
 /* ---------- Ins Lied übernehmen ---------- */
 // Tonhöhe im Lied ('c1' = c') und Vorzeichen zu jedem bunten Punkt
 const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: ['a1'], H: ['h1'],
@@ -152,7 +173,7 @@ function cleanCell(c) {
     }
   } else if (DUR_BY[c.d]) o = { k: c.k === 'b' ? 'b' : 'r', d: c.d };
   if (o && typeof c.z === 'string' && /^[1-6+]( [1-6+]){0,5}$/.test(c.z)) o.z = c.z;
-  if (c.bar) { o = o || {}; o.bar = c.bar === 2 ? 2 : 1; }
+  if (c.bar) { o = o || {}; o.bar = [2, 3, 4, 5].includes(c.bar) ? c.bar : 1; }
   return o;
 }
 // Zeilen-Eigenschaften line und meter. Gespeichert als lines: pro Zeile 0, 1 (nur Linie, älteres Format) oder { l, m }.

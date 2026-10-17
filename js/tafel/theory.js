@@ -68,10 +68,11 @@ export function openMeasureAt(rows, r) {
   return pos % mi.len === 0 ? row.length : start;
 }
 
-// Strich vor Platz c: 0 keiner, 1 Taktstrich, 2 Schlussstrich. a sind die automatischen Marken der Zeile.
-// Der Schlussstrich bleibt immer stehen; von Hand gesetzte Taktstriche weichen den automatischen.
+// Strich vor Platz c: 0 keiner, 1 Taktstrich, 2 Schlussstrich, 3–5 Wiederholung (Ende, Anfang, beides). a sind die
+// automatischen Marken der Zeile. Schluss- und Wiederholungsstriche bleiben immer; von Hand gesetzte Taktstriche
+// weichen den automatischen.
 export function barAt(cell, c, a, autoBar) {
-  if (cell && cell.bar === 2) return 2;
+  if (cell && cell.bar >= 2) return cell.bar; // Schluss- und Wiederholungsstriche gelten auch mit Automatik
   if (autoBar) return a && a.b[c] ? 1 : 0;
   return cell && cell.bar ? 1 : 0;
 }

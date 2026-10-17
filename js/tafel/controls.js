@@ -37,6 +37,8 @@ export function initControls() {
   el.btnSyl.addEventListener('click', () => { settings.syl = !settings.syl; persistSettings(); render(); });
   el.btnBar.addEventListener('click', () => act.toggleBar(1));
   el.btnEnd.addEventListener('click', () => act.toggleBar(2));
+  [el.btnRepStart, el.btnRepStartMel].forEach((b) => b.addEventListener('click', () => act.toggleRepeat('start')));
+  [el.btnRepEnd, el.btnRepEndMel].forEach((b) => b.addEventListener('click', () => act.toggleRepeat('end')));
   el.btnLine.addEventListener('click', act.toggleLine);
   el.btnR.addEventListener('click', () => act.setHand('r'));
   el.btnL.addEventListener('click', () => act.setHand('l'));

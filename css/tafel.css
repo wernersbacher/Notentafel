@@ -140,6 +140,19 @@
   left: calc(var(--g) / -2 - 6px); width: 9px; border-radius: 0; background: none;
   border-left: 2px solid var(--fg); border-right: 5px solid var(--fg);
 }
+/* Wiederholung: Anfang ‖: (dicker Strich zuerst, Punkte rechts), Ende :‖ (wie der Schlussstrich, Punkte links),
+   beides :‖: (dicker Strich in der Mitte, Punkte auf beiden Seiten). Die Punkte sitzen über und unter der Notenlinie. */
+.barline.rep-start { border-left-width: 5px; border-right-width: 2px; }
+.barline.rep-end.rep-start { left: calc(var(--g) / -2 - 7px); width: 14px; border-left-width: 2px; border-right-width: 2px;
+  background: linear-gradient(90deg, transparent 3px, var(--fg) 3px, var(--fg) 8px, transparent 8px); }
+.barline.rep-end::before, .barline.rep-start::after {
+  content: ""; position: absolute; top: calc(var(--d) * .48); width: 6px; height: 6px; border-radius: 50%;
+  background: var(--fg); z-index: 1;
+  /* zweiter Punkt darunter; beide mit schmalem Rand in Tafelfarbe, damit sie sich von bunten Kreisen abheben */
+  box-shadow: 0 0 0 2px var(--board), 0 calc(var(--d) * .28) 0 0 var(--fg), 0 calc(var(--d) * .28) 0 2px var(--board);
+}
+.barline.rep-end::before { right: calc(100% + 3px); }
+.barline.rep-start::after { left: calc(100% + 3px); }
 /* Eigenständiges Notenzeichen statt Punkt: Notenkopf sitzt auf der Kreismitte (also auf der Notenlinie) */
 .dot.beat { position: relative; background: none; box-shadow: none; color: var(--fg); }
 .dot.beat .sym {

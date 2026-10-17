@@ -9,7 +9,7 @@
 // Anfang ‖:, 5 beides :‖:; ein leerer Platz damit ist z. B. { bar: 1 } (am Zeilenende: der Strich hinter dem letzten Zeichen).
 // Noten und Pausen können z tragen: von Hand getippte Zählzeiten, mit Leerzeichen getrennt (z. B. '1 2' oder '+').
 // Zeilen-Eigenschaften stehen direkt am Zeilen-Array: line (Notenlinie) und meter (Taktart, z. B. '3/4').
-import { MAX_LEN, MAX_ROWS, START_ROWS, NOTE_BY, DUR_BY, METERS } from './config.js';
+import { MAX_LEN, MAX_ROWS, START_ROWS, NOTE_BY, DUR_BY, METERS, DOTTED } from './config.js';
 
 export const isNote = (c) => !!(c && c.n);
 export const isBeat = (c) => !!(c && c.k === 'b');
@@ -60,6 +60,13 @@ export function canCloseGap(rows, sel) {
   const row = rows[sel.r];
   return sel.c < row.length || row.length > 0 || (sel.r > 0 && rows[sel.r - 1].length > 0);
 }
+// Platz, den der Punkt ändert: der markierte, wenn er einen Notenwert mit Punkt-Möglichkeit hat (Halbe, Viertel oder schon
+// punktiert), sonst – wenn dort nichts steht – der davor (gerade gesetzt). null, wenn keiner passt.
+export function dotTargetIn(rows, sel) {
+  const row = rows[sel.r], here = row[sel.c], before = row[sel.c - 1];
+  const ok = (x) => !!(x && DOTTED[x.d] && (isNote(x) || isBeat(x)));
+  return ok(here) ? here : !filled(here) && ok(before) ? before : null;
+}
 // Setzt einen Platz; liegt er hinter dem Zeilenende, wird die Lücke mit Pausen aufgefüllt
 export function put(row, c, v) {
   while (row.length < c) row.push(null);
@@ -102,10 +109,11 @@ export function beams(row) {
 
 // Rhythmussprache unter einem Notenzeichen: Viertel ta, Halbe taja, punktierte Halbe tajaja, Ganze tajajaja; jede
 // Achtel ti (zwei mit Balken verbindet auf der Tafel ein Bogen). Pausen und leere Plätze: nichts.
-const SYL = { 1: 'ta', 2: 'taja', 3: 'tajaja', 4: 'tajajaja' };
+const SYL = { 1: 'ta', 1.5: 'tai', 2: 'taja', 3: 'tajaja', 4: 'tajajaja' };
 // Verteilt auf die Schläge (bei Breite nach Notenlänge): [Silbe, Abstand in Achteln] – Halbe ta (Schlag 1) ja (Schlag 2),
 // punktierte Halbe ta ja ja, Ganze ta ja ja ja; alles andere eine Silbe am Anfang
 export function syllableParts(c, beam) {
+  if ((isBeat(c) || isNote(c)) && c.d === 1.5) return [['ta', 0], ['i', 2]]; // punktierte Viertel: ta (i auf dem Schlag danach)
   const n = isBeat(c) || (isNote(c) && c.d) ? Math.round(c.d) : 0;
   if (n < 2) { const s = syllable(c, beam); return s ? [[s, 0]] : []; }
   return Array.from({ length: n }, (_, k) => [k ? 'ja' : 'ta', k * 2]);
@@ -141,7 +149,7 @@ export function playOrderRows(rows) {
 const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: ['a1'], H: ['h1'],
   'C+': ['c2'], 'D+': ['d2'], 'E+': ['e2'], 'F+': ['f2'], Fis: ['f1', 1], B: ['h1', -1] };
 // Länge in Schlägen als Notenwert im Lied [v, dot]
-const LIED_VALUE = { 0.5: [8], 1: [4], 2: [2], 3: [2, 1], 4: [1] };
+const LIED_VALUE = { 0.5: [8], 1: [4], 1.5: [4, 1], 2: [2], 3: [2, 1], 4: [1] };
 // Die Tafel als Lied (Format wie in lied/model.js): bunte Punkte werden Noten auf ihrer Tonhöhe, eigenständige
 // Notenzeichen Noten auf der Mittellinie (h'), Pausen und leere Plätze Pausen. Jede Zeile endet mit einem Umbruch,
 // das letzte Zeichen mit einem Schlussstrich; die Taktart ist die erste der Tafel.

@@ -1,6 +1,6 @@
 // Alles, was die Tafel verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
-import { MAX_LEN, MAX_ROWS } from './config.js';
-import { isNote, isBeat, filled, dur, canCloseGap, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
+import { MAX_LEN, MAX_ROWS, DOTTED } from './config.js';
+import { isNote, isBeat, filled, dur, canCloseGap, dotTargetIn, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
 import { countSlots, openMeasureAt } from './theory.js';
 import { S, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
@@ -118,6 +118,15 @@ export function placeValue(d) {
   snap();
   if (isNote(prev)) { prev.d = d; advance(); commit(); }
   else replaceCur({ k: 'b', d });
+}
+// Punkt: macht aus dem Notenwert an der Markierung (steht dort nichts, aus dem davor) den punktierten oder nimmt den
+// Punkt wieder weg (Halbe ↔ punktierte Halbe, Viertel ↔ punktierte Viertel)
+export function toggleDot() {
+  const x = dotTargetIn(S.rows, S.sel);
+  if (!x) { toast('Einen Punkt bekommen nur Halbe und Viertel: zuerst den Notenwert setzen, dann den Punkt.', true); return; }
+  snap();
+  x.d = DOTTED[x.d];
+  commit();
 }
 export function placeRest(d) {
   if (S.insertMode) { insertCell({ k: 'r', d }); return; }

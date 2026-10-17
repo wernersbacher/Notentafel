@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -193,4 +193,14 @@ test('playOrderRows: Wiederholungen auf der Tafel', () => {
   // Ohne ‖: vom Anfang; :‖ vor einem Platz mitten in der Zeile
   const rows2 = attachLines([[b(), b(), b({ bar: 3 })]], [0]);
   assert.deepEqual(playOrderRows(rows2).map((p) => p.c), [0, 1, 0, 1, 2]);
+});
+
+test('dotTargetIn: Punkt für die Note an der Markierung oder die gerade gesetzte davor', () => {
+  const b = (d) => ({ k: 'b', d });
+  const rows = attachLines([[b(2), b(1), b(0.5)]], [0]);
+  assert.equal(dotTargetIn(rows, { r: 0, c: 0 }), rows[0][0]); // Halbe an der Markierung
+  assert.equal(dotTargetIn(rows, { r: 0, c: 2 }), null); // Achtel: kein Punkt
+  rows[0].pop();
+  assert.equal(dotTargetIn(rows, { r: 0, c: 2 }), rows[0][1]); // dahinter leer: die Viertel davor
+  assert.equal(dotTargetIn(attachLines([[{ k: 'r', d: 2 }]], [0]), { r: 0, c: 1 }), null); // Pausen nicht
 });

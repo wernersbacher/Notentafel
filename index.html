@@ -106,63 +106,67 @@
     </div>
 
     <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tab-mel">
-      <section class="group">
+      <section class="group block">
+        <h2 class="btitle"><span class="num">1</span>Einrichten <span>einmal am Anfang</span></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="melMeters"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Automatisch <span>nach der Taktart</span></h2>
+        <h2 class="glabel">Automatisch</h2>
         <div class="autos">
           <button type="button" class="btn" id="btnAutoBarMel" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Taktstriche</button>
           <button type="button" class="btn" id="btnAutoZMel" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zählzeiten</button>
         </div>
       </section>
-      <section class="group">
-        <h2 class="glabel">Notennamen</h2>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">2</span>Melodie schreiben</h2>
+        <h2 class="glabel">Töne</h2>
         <div class="palette" id="palette"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Notenwerte <span>unter den bunten Punkt</span></h2>
-        <div class="values" id="valuesMel"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Wiederholung <span>vor dem markierten Platz</span></h2>
+        <h2 class="glabel">Notenwert <span>unter den bunten Punkt</span></h2>
+        <div class="values v6" id="valuesMel"></div>
+        <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
+        <div class="values v6" id="restsMel"></div>
+        <h2 class="glabel">Wiederholung <span>vor der Markierung</span></h2>
         <div class="tools t2">
           <button type="button" class="btn" id="btnRepStartMel" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span></button>
           <button type="button" class="btn" id="btnRepEndMel" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span></button>
         </div>
-      </section>
-      <section class="group">
         <h2 class="glabel">Hand</h2>
         <div class="tools t2">
           <button type="button" class="btn" id="btnR" title="Rechte Hand"><span class="big">r</span><span class="small">rechts</span></button>
           <button type="button" class="btn" id="btnL" title="Linke Hand"><span class="big">l</span><span class="small">links</span></button>
         </div>
       </section>
-      <section class="group">
-        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
-        <div class="autos">
-          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
-          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">3</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>Abspielen <span>Einzählen und Metronom gelten überall</span></h2>
+        <button type="button" class="btn bigplay" data-playbtn title="Abspielen (ab der Markierung)"></button>
+        <div class="autos playopts">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span><span class="small">Einzählen</span></button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="small">Metronom</span></button>
         </div>
       </section>
     </div>
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
-      <section class="group">
+      <section class="group block">
+        <h2 class="btitle"><span class="num">1</span>Einrichten <span>einmal am Anfang</span></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="rhyMeters"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Automatisch <span>nach der Taktart</span></h2>
+        <h2 class="glabel">Automatisch</h2>
         <div class="autos three">
           <button type="button" class="btn" id="btnAutoBar" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Takt&shy;striche</button>
           <button type="button" class="btn" id="btnAutoZ" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zähl&shy;zeiten</button>
           <button type="button" class="btn" id="btnSyl" aria-pressed="false" title="Rhythmussprache: ta, ti ti, taja, tajajaja">Rhythmus&shy;sprache</button>
         </div>
       </section>
-      <section class="group">
-        <h2 class="glabel">Takt</h2>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">2</span>Rhythmus schreiben</h2>
+        <h2 class="glabel">Notenwert</h2>
+        <div class="values v6" id="values"></div>
+        <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
+        <div class="values v6" id="rests"></div>
+        <h2 class="glabel">Takt und Wiederholung <span>vor der Markierung</span></h2>
         <div class="tools five">
           <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
             <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
@@ -176,24 +180,16 @@
           <button type="button" class="btn" id="btnRepStart" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span></button>
           <button type="button" class="btn" id="btnRepEnd" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span></button>
         </div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Notenwerte <span>unter einen Punkt oder allein</span></h2>
-        <div class="values" id="values"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Pausenwerte</h2>
-        <div class="values" id="rests"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Zählzeiten <span>unter Noten und Pausen</span></h2>
+        <h2 class="glabel">Zählzeiten von Hand <span>unter dem markierten Zeichen</span></h2>
         <div class="zbtns" id="counts"></div>
       </section>
-      <section class="group">
-        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
-        <div class="autos">
-          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
-          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">3</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>Abspielen <span>Einzählen und Metronom gelten überall</span></h2>
+        <button type="button" class="btn bigplay" data-playbtn title="Abspielen (ab der Markierung)"></button>
+        <div class="autos playopts">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span><span class="small">Einzählen</span></button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="small">Metronom</span></button>
         </div>
       </section>
     </div>

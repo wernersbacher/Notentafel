@@ -28,7 +28,7 @@ export function noteSym(d, beam, thin) {
       ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="' + w.ring + '"/>'
       : '<ellipse ' + HEAD + ' rx="' + w.rx + '" ry="' + w.ry + '" fill="currentColor" stroke="none"/>');
     if (d === 0.5 && !beam) s += '<path d="M14 2.5c.5 5 7 6.5 5.2 14" fill="none" stroke-width="' + w.flag + '"/>';
-    if (d === 3) s += '<circle cx="19.8" cy="25" r="1.9" fill="currentColor" stroke="none"/>';
+    if (d === 3 || d === 1.5) s += '<circle cx="19.8" cy="25" r="1.9" fill="currentColor" stroke="none"/>';
   }
   return sym(s);
 }
@@ -36,6 +36,7 @@ const RESTS = {
   0.5: '<circle cx="8.5" cy="11" r="2.6" fill="currentColor" stroke="none"/><path d="M8 13.2c3 .8 5.5-.3 7.5-3L10 25" fill="none" stroke-width="2"/>',
   // Viertelpause: Fläche aus core/shapes.js (Rahmen 64 × 64), so hoch wie zuvor und in der Mitte des Rahmens
   1: '<path transform="translate(0.15 3.2) scale(0.35)" d="' + QUARTER_REST + '" fill="currentColor" stroke="none"/>',
+  1.5: '<path transform="translate(0.15 3.2) scale(0.35)" d="' + QUARTER_REST + '" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor" stroke="none"/>',
   2: '<path d="M3 18.5h16" stroke-width="1.8"/><rect x="6" y="13" width="10" height="5.5" fill="currentColor" stroke="none"/>',
   3: '<path d="M2 18.5h14" stroke-width="1.8"/><rect x="4.5" y="13" width="9" height="5.5" fill="currentColor" stroke="none"/><circle cx="19" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
   4: '<path d="M3 11.5h16" stroke-width="1.8"/><rect x="6" y="11.5" width="10" height="5.5" fill="currentColor" stroke="none"/>'
@@ -51,6 +52,7 @@ export function meterHTML(m) {
 }
 
 export const ICONS = {
+  dot: '<svg class="sym" viewBox="-1.7 -1.7 3.4 3.4" fill="currentColor" aria-hidden="true"><circle r="0.4"/></svg>',
   clearCount: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h11v14H9l-6-7z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>' +
     '<path d="M12 9.5l5 5M17 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
 };

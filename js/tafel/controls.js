@@ -30,7 +30,8 @@ export function initControls() {
 
   delegate(el.palette, '.note', (b) => act.placeNote(b.dataset.id));
   [el.valuesMel, el.values].forEach((box) => delegate(box, '[data-d]', (b) => act.placeValue(+b.dataset.d)));
-  delegate(el.rests, '[data-d]', (b) => act.placeRest(+b.dataset.d));
+  [el.rests, el.restsMel].forEach((box) => delegate(box, '[data-d]', (b) => act.placeRest(+b.dataset.d)));
+  [el.valuesMel, el.values].forEach((box) => delegate(box, '[data-dot]', act.toggleDot));
   delegate(el.counts, 'button', (b) => { if (b.dataset.z) act.placeCount(b.dataset.z); else act.clearCount(); });
 
   // Die Automatik gilt jeweils für die offene Tafel (Melodie und Rhythmus haben eigene Einstellungen)

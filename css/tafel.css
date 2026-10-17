@@ -80,6 +80,7 @@
   border-radius: calc(var(--d) * .21); background: rgba(247, 209, 30, .4);
 }
 .len .sgrp.d05 { background: rgba(90, 160, 240, .32); } /* Achtel: blau */
+.len .sgrp.d15 { background: rgba(40, 180, 170, .3); } /* punktierte Viertel: türkis */
 .len .sgrp.d2 { background: rgba(120, 200, 80, .36); }  /* Halbe: grün */
 .len .sgrp.d3 { background: rgba(160, 110, 220, .3); }  /* punktierte Halbe: lila */
 .len .sgrp.d4 { background: rgba(245, 138, 31, .34); }  /* Ganze: orange */

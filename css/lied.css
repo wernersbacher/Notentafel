@@ -86,11 +86,11 @@
 }
 
 /* ---------- Leiste des Lieds in Blöcken: einrichten, Noten schreiben, Liedtext, abspielen ---------- */
-#panelLied .block {
+.panel .block {
   gap: 7px; padding: 10px 10px 12px; border-radius: 14px;
   background: color-mix(in srgb, var(--fg) 4%, transparent);
 }
-#panelLied .block > .glabel { margin-top: 3px; }
+.panel .block > .glabel { margin-top: 3px; }
 .btitle { margin: 0 0 2px; display: flex; align-items: center; gap: .45rem; font: 800 .82rem var(--font-ui); letter-spacing: .05em; text-transform: uppercase; color: var(--fg); }
 .btitle .num { flex: none; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--fg); color: var(--panel); font-size: .75rem; letter-spacing: 0; }
 .btitle > span:not(.num) { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }

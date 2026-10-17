@@ -41,14 +41,19 @@ export const THEME_BY = Object.fromEntries(THEMES.map((t) => [t.id, t]));
 // Töne, die im Menü als Farbmuster eines Themas gezeigt werden
 export const SWATCHES = ['C', 'D', 'E', 'F', 'C+', 'D+', 'E+', 'F+'];
 
-// Tonlängen in Schlägen; Viertel (1) ist der Normalfall
+// Tonlängen in Schlägen; Viertel (1) ist der Normalfall. Punktierte Werte entstehen mit dem Punkt (DOTTED).
 export const DURS = [
   { d: 0.5, l: '½', n: 'Achtel', p: 'Achtelpause' },
   { d: 1,   l: '1', n: 'Viertel', p: 'Viertelpause' },
+  { d: 1.5, l: '1½', n: 'Punktierte Viertel', p: 'Punktierte Viertelpause' },
   { d: 2,   l: '2', n: 'Halbe', p: 'Halbe Pause' },
   { d: 3,   l: '3', n: 'Punktierte Halbe', p: 'Punktierte halbe Pause' },
   { d: 4,   l: '4', n: 'Ganze', p: 'Ganze Pause' }
 ];
+// Knöpfe wie im Lied: Ganze, Halbe, Viertel, Achtel (der Platz der Sechzehntel bleibt frei), dann der Punkt
+export const VALUE_BTNS = [4, 2, 1, 0.5];
+// Punkt an- und ausschalten: Halbe ↔ punktierte Halbe, Viertel ↔ punktierte Viertel
+export const DOTTED = { 2: 3, 3: 2, 1: 1.5, 1.5: 1 };
 export const DUR_BY = Object.fromEntries(DURS.map((x) => [x.d, x]));
 
 // Taktarten zur Auswahl; sie stehen vorn in der Zeile

@@ -103,7 +103,7 @@ const MEL_IDS = [
   { '0:0': 'C', '1:0': 'D', '2:0': 'E', '3:0': 'F', '3:1': 'Fis', '4:0': 'G', '5:0': 'A', '6:0': 'H', '6:-1': 'B' },
   { '0:0': 'C+', '1:0': 'D+', '2:0': 'E+', '3:0': 'F+' }
 ];
-const MEL_BEATS = [0.5, 1, 2, 3, 4];
+const MEL_BEATS = [0.5, 1, 1.5, 2, 3, 4];
 const MEL_PER_ROW = 10; // Schläge pro Zeile der Melodie (wie MAX_PER_ROW in tafel/config.js)
 const MEL_ROWS = 8;     // Zeilen der Tafel (wie MAX_ROWS)
 // Nächste Länge, die die Melodie kennt (gleich weit: die längere)

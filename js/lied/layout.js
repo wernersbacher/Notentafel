@@ -1,6 +1,6 @@
 // Notensatz: berechnet aus dem Lied die Lage aller Zeichen, ohne DOM. Gezeichnet wird in sheet.js.
 // Waagerecht zählt alles in Linienabständen (sp), senkrecht in Plätzen (pos, halbe Linienabstände, unterste Linie = 0).
-import { isNote, ticks, staffPos, barsAfter, gridStarts, countsOf } from './model.js';
+import { isNote, ticks, staffPos, barsAfter, gridStarts, countsOf, shownAccidentals, badMeasures } from './model.js';
 
 export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
@@ -82,16 +82,17 @@ function noteShape(it, e) {
 //   first, end      Ereignisse first … end−1
 //   clefX, meterX   Lage von Schlüssel und Taktart (meterX nur in der ersten Zeile mit Taktart)
 //   items           pro Ereignis: i, x (Mitte des Kopfs), l/r (Spalte zum Antippen), pos, ledger, stem { up, end, x },
-//                   flags, dot (Platz des Punkts), accX, rest
+//                   flags, dot (Platz des Punkts), acc/accX (gezeichnetes Vorzeichen und seine Lage), rest
 //   bars            { x, k } Takt- (1) und Schlussstriche (2)
 //   beams           { up, x1, x2, end1, end2, sub: [[x1, x2]] } Balken von (x1, end1) nach (x2, end2); sub sind die
 //                   zweiten Balken der Sechzehntel
 //   ghost           der leere Platz am Ende (nur in der letzten Zeile)
 //   ties            Haltebögen { x1, x2, pos, down }; über einen Umbruch hinweg in zwei Stücken
+//   bad             { x1, x2 } Takte, die nicht aufgehen (nur mit check); über einen Umbruch pro System ein Stück
 //   width, top, bottom   Breite und Platz über bzw. unter dem System in sp
-// counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }])
-export function layout(song, { autoBar = false, counts = false } = {}) {
-  const ev = song.ev, bars = barsAfter(song, autoBar), at = [];
+// counts: Zählzeiten berechnen (pro Item counts: [{ t, held, x }]); check: Takte prüfen
+export function layout(song, { autoBar = false, counts = false, check = false } = {}) {
+  const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar), at = [], barX = [];
   // Zeilen: hinter einem Ereignis mit brk beginnt eine neue (auch, wenn danach noch nichts steht)
   const systems = [{ first: 0, end: 0 }];
   ev.forEach((e, i) => {
@@ -100,7 +101,7 @@ export function layout(song, { autoBar = false, counts = false } = {}) {
   });
 
   systems.forEach((s, si) => {
-    s.items = []; s.bars = []; s.beams = [];
+    s.items = []; s.bars = []; s.beams = []; s.bad = [];
     let x = G.left;
     s.clefX = x;
     x += G.clef;
@@ -108,14 +109,14 @@ export function layout(song, { autoBar = false, counts = false } = {}) {
     x += G.lead;
     for (let i = s.first; i < s.end; i++) {
       const e = ev[i], it = { i, l: x - 0.5 };
-      if (isNote(e) && e.acc != null) { it.accX = x + 0.4; x += G.acc; }
+      if (shown[i] != null) { it.acc = shown[i]; it.accX = x + 0.4; x += G.acc; }
       it.x = x + G.head / 2;
       x += Math.max(spacing(ticks(e)), G.head + (e.dot ? 1 : 0) + 0.9);
       if (isNote(e)) noteShape(it, e);
       else { it.rest = true; if (e.dot) it.dot = 5; }
       s.items.push(it);
       at[i] = it;
-      if (bars[i]) { s.bars.push({ x: x - 0.5, k: bars[i] }); x += G.bar; }
+      if (bars[i]) { barX[i] = x - 0.5; s.bars.push({ x: barX[i], k: bars[i] }); x += G.bar; }
     }
     s.items.forEach((it, j) => { it.r = j + 1 < s.items.length ? s.items[j + 1].l : x - 0.5; });
     if (si === systems.length - 1) {
@@ -167,7 +168,18 @@ export function layout(song, { autoBar = false, counts = false } = {}) {
   });
   addTies(ev, systems, at);
   if (counts) addCounts(song, systems);
+  if (check) addBad(song, autoBar, systems, at, barX);
   return { systems, at };
+}
+
+// Takte, die nicht aufgehen: pro System ein Stück von der ersten bis zur letzten Spalte, vor einem Strich nur bis kurz davor
+function addBad(song, autoBar, systems, at, barX) {
+  badMeasures(song, autoBar).forEach((m) => {
+    systems.forEach((s) => {
+      const a = Math.max(m.first, s.first), b = Math.min(m.last, s.end - 1);
+      if (a <= b) s.bad.push({ x1: at[a].l, x2: barX[b] != null ? barX[b] - 0.25 : at[b].r });
+    });
+  });
 }
 
 // Haltebögen: von einer Note mit tie zur nächsten. Sie liegen gegenüber dem Hals (bei Hälsen nach oben unter den Köpfen).

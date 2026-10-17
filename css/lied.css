@@ -1,18 +1,19 @@
 /* ---------- Lied: echtes Notenblatt ---------- */
 .sheet {
-  --mark: #2563eb; --mark-bg: rgba(37, 99, 235, .12); --play: #d1281f;
+  --mark: #2563eb; --mark-bg: rgba(37, 99, 235, .12); --play: #d1281f; --bad: rgba(209, 40, 31, .1);
   flex: 1; min-width: 0; min-height: 0; overflow: auto;
   padding: 8px 0 24px; color: var(--fg);
   -webkit-tap-highlight-color: transparent;
 }
 @media (prefers-color-scheme: dark) {
-  .sheet { --mark: #8fb4ff; --mark-bg: rgba(143, 180, 255, .16); --play: #ff8f86; }
+  .sheet { --mark: #8fb4ff; --mark-bg: rgba(143, 180, 255, .16); --play: #ff8f86; --bad: rgba(255, 143, 134, .16); }
 }
 .score { display: block; }
 .score .hit { fill: transparent; cursor: pointer; }
 .score .cur { fill: var(--mark-bg); stroke: var(--mark); stroke-width: .1; }
 .score .caret { fill: var(--mark); }
 .score .ghost { opacity: .22; }
+.score .bad { fill: var(--bad); }
 /* Der zuletzt gesetzte Ton (auf ihn wirken Vorzeichen und Oktave) und der gerade klingende */
 .score .ev.target { color: var(--mark); }
 .score .ev.playing { color: var(--play); }

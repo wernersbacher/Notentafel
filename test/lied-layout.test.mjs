@@ -60,7 +60,9 @@ test('Hilfslinien und Punkt im Zwischenraum', () => {
 
 test('Balken: Achtel innerhalb eines Schlags, Pausen und Taktstriche trennen', () => {
   const s = song([n('c1', 8), n('d1', 8), n('e1', 8), n('f1', 8), n('g1', 8), r(8), n('a1', 8), n('h1', 8)]);
-  assert.deepEqual(beamGroups(s, barsAfter(s, false)), [[0, 1], [2, 3], [6, 7]]);
+  assert.deepEqual(beamGroups(s, barsAfter(s, false)), [[0, 1, 2, 3], [6, 7]]);
+  const t = song([n('c1', 8, { bar: 1 }), n('d1', 8)]);
+  assert.deepEqual(beamGroups(t, barsAfter(t, false)), []);
   // Punktierte Achtel und Sechzehntel teilen sich einen Schlag
   const d = song([n('c1', 8, { dot: 1 }), n('d1', 16), n('e1', 16), n('f1', 16), n('g1', 8)]);
   assert.deepEqual(beamGroups(d, barsAfter(d, false)), [[0, 1], [2, 3, 4]]);
@@ -72,16 +74,72 @@ test('Balken: Achtel innerhalb eines Schlags, Pausen und Taktstriche trennen', (
   assert.deepEqual(beamGroups(b, barsAfter(b, false)), []);
 });
 
-test('Balken: gemeinsame Richtung und Höhe, Fähnchen fallen weg, Sechzehntel bekommen einen zweiten Balken', () => {
+test('Balken: gemeinsame Richtung, Fähnchen fallen weg, Sechzehntel bekommen einen zweiten Balken', () => {
   const { systems, at } = layout(song([n('c1', 8, { dot: 1 }), n('d1', 16), n('g2', 8), n('f2', 8)]));
   const [b1, b2] = systems[0].beams;
   assert.equal(b1.up, true);
-  assert.equal(b1.end, Math.max(-2, -1) + G.stem);
+  // Leicht steigend; der zweite Hals (d') hat genau die volle Länge
+  assert.deepEqual([b1.end1, b1.end2], [5.5, -1 + G.stem]);
+  assert.deepEqual([at[0].stem.end, at[1].stem.end], [5.5, 6]);
   assert.equal(at[0].flags, undefined);
   assert.deepEqual(b1.sub, [[at[1].stem.x - 1, at[1].stem.x]]);
   assert.equal(b2.up, false);
-  assert.equal(b2.end, 8 - G.stem); // der tiefere Kopf (f'') bestimmt die Höhe
-  assert.equal(at[2].stem.end, at[3].stem.end);
+  assert.deepEqual([b2.end1, b2.end2], [1.5, 8 - G.stem]); // der tiefere Kopf (f'') bestimmt die Höhe
+  assert.deepEqual([at[2].stem.end, at[3].stem.end], [b2.end1, b2.end2]);
+});
+
+const groups = (s) => beamGroups(s, barsAfter(s, false));
+const eighths = (k) => Array.from({ length: k }, () => n('g1', 8));
+
+test('Balken im 4/4-Takt: einfache Achtel pro halbem Takt, Sechzehntel pro Schlag', () => {
+  assert.deepEqual(groups(song(eighths(8))), [[0, 1, 2, 3], [4, 5, 6, 7]]);
+  // Achtel + zwei Sechzehntel füllen Schlag 2, werden aber nicht mit Schlag 1 zusammengefasst
+  assert.deepEqual(groups(song([...eighths(2), n('a1', 16), n('h1', 16), n('c2', 8)])), [[0, 1], [2, 3, 4]]);
+  // Schlag 2 und 3 liegen in verschiedenen Takthälften
+  assert.deepEqual(groups(song([n('g1'), ...eighths(4), n('g1')])), [[1, 2], [3, 4]]);
+});
+
+test('Balken in 2/4, 3/4 und 6/8: pro Schlag', () => {
+  assert.deepEqual(groups(song(eighths(4), '2/4')), [[0, 1], [2, 3]]);
+  assert.deepEqual(groups(song(eighths(6), '3/4')), [[0, 1], [2, 3], [4, 5]]);
+  assert.deepEqual(groups(song([n('c1', 8, { dot: 1 }), n('d1', 16), n('e1', 8), ...eighths(3)], '6/8')), [[0, 1, 2], [3, 4, 5]]);
+});
+
+test('Balken im 2/2-Takt: pro Halbe, mit Sechzehnteln pro Viertel', () => {
+  assert.deepEqual(groups(song(eighths(4), '2/2')), [[0, 1, 2, 3]]);
+  assert.deepEqual(groups(song([...eighths(2), n('a1', 16), n('h1', 16), n('c2', 8)], '2/2')), [[0, 1], [2, 3, 4]]);
+});
+
+test('Balken mit Auftakt: zwei Achtel als Auftakt, danach beginnt der neue Takt', () => {
+  assert.deepEqual(groups({ meter: '4/4', pickup: 8, ev: eighths(6) }), [[0, 1], [2, 3, 4, 5]]);
+});
+
+test('Balken geneigt: höchstens ein Linienabstand, waagerecht bei gleich hohen Enden oder weiter außen liegendem Innenkopf', () => {
+  const rise = layout(song([n('c1', 8), n('e1', 8), n('g1', 8), n('h1', 8)], '2/2')).systems[0].beams[0];
+  assert.ok(rise.up && rise.end2 > rise.end1 && rise.end2 - rise.end1 <= 2);
+  const steep = layout(song([n('c1', 8), n('c2', 8)], '2/4')).systems[0].beams[0];
+  assert.equal(steep.end2 - steep.end1, 2);
+  // Gleich hohe Enden, tieferer Innenkopf, Hälse nach oben
+  const flat = layout(song([n('g1', 8), n('c1', 8), n('g1', 8)], '6/8')).systems[0].beams[0];
+  assert.ok(flat.up);
+  assert.equal(flat.end1, flat.end2);
+  // Innenkopf höher als beide Enden bei Hälsen nach oben
+  const inner = layout(song([n('c1', 8), n('a1', 8), n('e1', 8)], '6/8')).systems[0].beams[0];
+  assert.ok(inner.up);
+  assert.equal(inner.end1, inner.end2);
+});
+
+test('Balken: jeder Hals ist mindestens 7 Plätze lang und endet auf der Linie', () => {
+  const s = song([n('c1', 8), n('a1', 16), n('e1', 16), n('h1', 8), n('d2', 8), n('a1', 16), n('f2', 16), n('e2', 8), n('a0', 8), n('c2', 8)]);
+  const { systems, at } = layout(s);
+  groups(s).forEach((idx, k) => {
+    const b = systems[0].beams[k];
+    idx.forEach((i) => {
+      const st = at[i].stem, t = (st.x - b.x1) / (b.x2 - b.x1);
+      assert.ok(Math.abs(st.end - at[i].pos) >= G.stem - 1e-9);
+      assert.ok(Math.abs(st.end - (b.end1 + t * (b.end2 - b.end1))) < 1e-9);
+    });
+  });
 });
 
 test('Taktstriche: automatisch nach der Taktart', () => {

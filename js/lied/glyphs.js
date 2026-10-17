@@ -38,9 +38,12 @@ export function flags(x, y, n, up) {
   }
   return out;
 }
-// Balken von x1 bis x2 am Halsende y; up: Hälse nach oben, der Balken wächst also nach unten
-export function beam(x1, x2, y, up) {
-  return '<rect x="' + f(x1 - 0.06) + '" y="' + f(up ? y : y - 0.5) + '" width="' + f(x2 - x1 + 0.12) + '" height="0.5"/>';
+// Balken von (x1, y1) nach (x2, y2) an den Halsenden, auch geneigt; up: Hälse nach oben, der Balken wächst also nach unten
+export function beam(x1, y1, x2, y2, up) {
+  const k = (y2 - y1) / (x2 - x1), h = up ? 0.5 : -0.5;
+  const xa = x1 - 0.06, ya = y1 - 0.06 * k, xb = x2 + 0.06, yb = y2 + 0.06 * k;
+  return '<path d="M' + f(xa) + ' ' + f(ya) + 'L' + f(xb) + ' ' + f(yb) + 'L' + f(xb) + ' ' + f(yb + h) +
+    'L' + f(xa) + ' ' + f(ya + h) + 'Z"/>';
 }
 
 /* ---------- Vorzeichen (x: Mitte, y: Höhe des Kopfs) ---------- */

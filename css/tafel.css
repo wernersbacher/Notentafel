@@ -72,13 +72,14 @@
 }
 /* Rhythmussprache unter eigenständigen Notenzeichen (ta, ti-ti, taja …) */
 .len .syl { align-self: center; white-space: nowrap; font: 700 calc(var(--d) * .3)/1 var(--font-display); color: var(--fg); }
-/* Bogen unter Silben, die zusammen gesprochen werden: von der Mitte des Zeichens bis --w Platzbreiten weiter */
-.len .sarc {
-  position: absolute; top: calc(50% + var(--d) * .17); left: calc(50% - var(--d) * .14);
-  width: calc(100cqw * var(--w) + var(--d) * .28); height: calc(var(--d) * .13);
-  border: calc(var(--d) * .028) solid var(--fg); border-top: 0; border-radius: 0 0 50% 50% / 0 0 100% 100%;
-  opacity: .75; box-sizing: border-box;
+/* Farbfeld hinter Silben, die zusammen gesprochen werden: von der Mitte des Zeichens bis --w Platzbreiten weiter,
+   benachbarte Gruppen abwechselnd gelb und blau (durchscheinend, damit es auf heller und dunkler Tafel passt) */
+.len .sgrp {
+  position: absolute; z-index: -1; top: calc(50% - var(--d) * .21); left: calc(50% - var(--d) * .3);
+  width: calc(100cqw * var(--w) + var(--d) * .6); height: calc(var(--d) * .42);
+  border-radius: calc(var(--d) * .21); background: rgba(247, 209, 30, .38);
 }
+.len .sgrp.alt { background: rgba(90, 160, 240, .3); }
 /* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
 .len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */

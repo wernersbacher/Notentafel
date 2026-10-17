@@ -18,9 +18,12 @@ let play = null; // { out, timers, cur, mark } während des Abspielens
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
 
+// Der Abspielen-Knopf unten und weitere in den Leisten (data-playbtn) zeigen denselben Stand
 function showButton(playing) {
-  el.btnPlay.innerHTML = playing ? ICONS.stop + 'Stopp' : ICONS.play + 'Abspielen';
-  el.btnPlay.classList.toggle('on', playing);
+  [el.btnPlay, ...document.querySelectorAll('[data-playbtn]')].forEach((b) => {
+    b.innerHTML = playing ? ICONS.stop + 'Stopp' : ICONS.play + 'Abspielen';
+    b.classList.toggle('on', playing);
+  });
 }
 
 function startPlay(plan, mark) {
@@ -83,6 +86,8 @@ export function initPlayer() {
   showButton(false);
   renderPlayOpts();
   document.addEventListener('click', (e) => {
+    // Ein weiterer Abspielen-Knopf in einer Leiste wirkt wie der unten
+    if (e.target.closest && e.target.closest('[data-playbtn]')) { el.btnPlay.click(); return; }
     const b = e.target.closest && e.target.closest('[data-play]');
     if (!b) return;
     settings[b.dataset.play] = !settings[b.dataset.play];

@@ -195,26 +195,34 @@
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
       <section class="group">
+        <h2 class="glabel">Anzeige</h2>
+        <div class="tools shows">
+          <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Notennamen</button>
+          <button type="button" class="btn" id="liedShowColors" aria-pressed="false" title="Notenköpfe in den Farben der Töne"><span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Farben</button>
+          <button type="button" class="btn" id="liedShowCounts" aria-pressed="false" title="Zählzeiten nach der Taktart unter den Noten">Zählzeiten</button>
+        </div>
+      </section>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">1</span>Lied einrichten <span>einmal am Anfang</span></h2>
         <h2 class="glabel">Taktart</h2>
         <div class="meterrow" id="liedMeters"></div>
-        <h2 class="glabel sub">Auftakt</h2>
+        <h2 class="glabel">Auftakt</h2>
         <div class="meterrow" id="liedPickups"></div>
-        <h2 class="glabel sub">Tonart <span>Vorzeichen vorn im System</span></h2>
+        <h2 class="glabel">Tonart</h2>
         <div class="keyrow">
           <button type="button" class="btn" id="liedKeyDown" title="Ein ♭ mehr bzw. ein ♯ weniger"><span class="acc">♭</span> ◀</button>
           <span class="keyname" id="liedKeyName" aria-live="polite"></span>
           <button type="button" class="btn" id="liedKeyUp" title="Ein ♯ mehr bzw. ein ♭ weniger">▶ <span class="acc">♯</span></button>
         </div>
       </section>
-      <section class="group">
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">2</span>Noten schreiben</h2>
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Pausen <span>antippen setzt sie</span></h2>
+        <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
         <div class="values v6" id="liedRests"></div>
-      </section>
-      <section class="group">
         <h2 class="glabel">Töne</h2>
         <div class="steps" id="liedSteps"></div>
         <button type="button" class="btn more" id="liedMore" aria-expanded="false" aria-controls="liedSteps"></button>
@@ -223,23 +231,8 @@
           <button type="button" class="btn" id="liedFlat" aria-pressed="false" aria-label="Be" title="Be: einen Halbton tiefer"><span class="big acc">♭</span></button>
           <button type="button" class="btn" id="liedNat" aria-pressed="false" title="Auflösungszeichen"><span class="big acc">♮</span><span class="small">Auflöser</span></button>
         </div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Liedtext <span>Note antippen, Silbe schreiben</span></h2>
-        <div class="lyrow">
-          <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
-          <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
-        </div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Anzeige</h2>
-        <div class="tools shows">
-          <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Notennamen</button>
-          <button type="button" class="btn" id="liedShowColors" aria-pressed="false" title="Notenköpfe in den Farben der Töne"><span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Farben</button>
-          <button type="button" class="btn" id="liedShowCounts" aria-pressed="false" title="Zählzeiten nach der Taktart unter den Noten">Zählzeiten</button>
-        </div>
-      </section>
-      <div class="tools three">
+        <h2 class="glabel">Bögen und Striche <span>vor der Markierung</span></h2>
+        <div class="tools three">
         <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
           <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10c4 6 14 6 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span class="small">Bogen</span>
         </button>
@@ -259,13 +252,25 @@
           <span class="big volta">1.|2.</span><span class="small">Klammer</span>
         </button>
       </div>
-      <section class="group">
-        <h2 class="glabel">Abspielen <span>gilt für alle Bereiche</span></h2>
-        <div class="autos">
-          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen">Einzählen</button>
-          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken">Metronom</button>
+      </section>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">3</span>Liedtext <span>Note antippen, Silbe schreiben</span></h2>
+        <div class="lyrow">
+          <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
+          <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
         </div>
       </section>
+
+      <section class="group block">
+        <h2 class="btitle"><span class="num">4</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>Abspielen <span>gilt für alle Bereiche</span></h2>
+        <button type="button" class="btn bigplay" data-playbtn title="Lied abspielen (ab der Markierung)"></button>
+        <div class="autos playopts">
+          <button type="button" class="btn" data-play="countIn" aria-pressed="false" title="Vor dem Abspielen einen Takt einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span><span class="small">Einzählen</span></button>
+          <button type="button" class="btn" data-play="metro" aria-pressed="false" title="Beim Abspielen jeden Schlag mitklicken"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="small">Metronom</span></button>
+        </div>
+      </section>
+
       <button type="button" class="btn wide tomel" id="btnToMelody" title="Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach im Menü unter „Zuletzt ersetzt“.">
         <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Als Melodie übernehmen
       </button>

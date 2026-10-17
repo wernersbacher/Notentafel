@@ -28,8 +28,7 @@ function renderThemes() {
   }).join('');
 }
 const TOGGLES = [
-  { key: 'lens', btn: el.btnLensToggle, state: el.lensToggleState, get obj() { return settings; } },
-  { key: 'prop', btn: el.btnPropToggle, state: el.propToggleState, get obj() { return settings; } }
+  { key: 'lens', btn: el.btnLensToggle, state: el.lensToggleState, get obj() { return settings; } }
 ];
 
 // Blendet die Abschnitte der Tafel ein; die bekannten Lieder sind Melodien, und Farben haben nur Töne
@@ -39,8 +38,6 @@ export function openTafelMenu() {
   renderMelodies();
   renderThemes();
   TOGGLES.forEach(renderToggle);
-  // Rhythmus hat immer ein Feld pro Schlag
-  el.btnPropToggle.hidden = S.variant === 'rhy';
 }
 
 export function initTafelMenu() {

@@ -2,36 +2,23 @@
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
 import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt } from './theory.js';
-import { S, settings, wraps, propOn } from './state.js';
+import { S, settings, wraps } from './state.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
 const NO_MARKS = { b: {}, z: [] };
 
 
-// Alle Zeilen haben so viele Plätze wie die längste Zeile plus einen freien Platz.
-// Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
-// Höchstens S.cap Plätze (mehr nur, wenn eine ältere Zeile länger ist); bei Rhythmus immer so viele, damit die Plätze
-// ihre feste Größe behalten.
-function colCount() {
-  let n = S.sel.c + 1;
-  if (wraps()) {
-    if (S.variant === 'rhy') n = Math.max(n, S.cap);
-    S.rows.forEach((row) => { n = Math.max(n, row.length > S.cap ? row.length + 1 : Math.min(row.length + 1, S.cap)); });
-    return Math.min(n, MAX_LEN);
-  }
-  S.rows.forEach((row) => { n = Math.max(n, row.length + 1); });
-  return Math.min(n, MAX_LEN);
-}
-
 /* ---------- Breite nach Notenlänge ---------- */
-// Ein Platz belegt so viele Achtel-Spalten, wie er dauert (leer = ein Schlag).
+// Jeder Schlag hat ein Feld: Ein Platz belegt so viele Achtel-Spalten, wie er dauert (leer = ein Schlag); eine Halbe
+// hält also das nächste Feld frei. Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
 const spanOf = (x) => Math.round(dur(x) * 2);
 const rowUnits = (row) => row.reduce((u, x) => u + spanOf(x), 0);
-// Gezählt wird in Spalten: die längste Zeile plus ein freier Schlag, mindestens bis zur Markierung,
+// Gezählt wird in Spalten. Rhythmus: immer S.cap Schläge (mehr nur, wenn eine ältere Zeile länger ist). Melodie: die
+// längste Zeile plus ein freier Schlag, mindestens bis zur Markierung, höchstens S.cap Schläge (außer ältere Zeilen),
 // aufgerundet auf ganze Schläge.
 function unitCount() {
-  if (wraps() && S.variant === 'rhy') {
+  if (S.variant === 'rhy') {
     let n = 2 * S.cap;
     S.rows.forEach((row) => { if (rowUnits(row) > n) n = rowUnits(row) + 2; });
     return n + n % 2;
@@ -39,7 +26,8 @@ function unitCount() {
   let n = 0;
   S.rows.forEach((row, r) => {
     const extra = r === S.sel.r && S.sel.c >= row.length ? (S.sel.c - row.length + 1) * 2 : 2;
-    n = Math.max(n, rowUnits(row) + extra);
+    const u = rowUnits(row);
+    n = Math.max(n, u > 2 * S.cap ? u + 2 : Math.min(u + extra, 2 * S.cap));
   });
   return n + n % 2;
 }
@@ -123,38 +111,35 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
 }
 
 /* ---------- Eine Zeile ---------- */
-// P: Spaltenbreiten (nur bei Breite nach Notenlänge), cols: Plätze bzw. Achtel-Spalten der Tafel
+// P: aufsummierte Spaltenbreiten, cols: Achtel-Spalten der Tafel
 function rowHTML(row, r, cols, P, marks) {
   // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
   const full = row.line && S.variant === 'rhy';
-  const prop = !!P, b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
+  const b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
   let cells = '';
-  // u: belegte Achtel-Spalten (nur bei Breite nach Notenlänge); leere Plätze hinter dem Zeilenende sind
-  // einen Schlag breit, nach einer einzelnen Achtel erst eine halbe, damit sie wieder auf den Schlägen stehen
-  for (let c = 0, u = 0; prop ? u < cols && c < MAX_LEN : c < cols; c++) {
+  // u: belegte Achtel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen Achtel
+  // erst eine halbe, damit sie wieder auf den Schlägen stehen
+  for (let c = 0, u = 0; u < cols && c < MAX_LEN; c++) {
     const beyond = c >= row.length;
-    let geo = null;
-    if (prop) {
-      geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P };
-      u += geo.k;
-    }
+    const geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P };
+    u += geo.k;
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
     const line = c > last ? '' : full ? (c === 0 && row.meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
     cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? row.meter : '', marks, geo });
   }
-  const tpl = prop ? ' style="--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"' : '';
+  const tpl = ' style="--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
   return '<div class="row"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
 }
 
 export function renderBoard() {
   S.cap = S.variant === 'rhy' ? RHY_PER_ROW : MAX_PER_ROW;
-  const grid = el.grid, prop = propOn(), cols = prop ? unitCount() : colCount();
-  grid.classList.toggle('prop', prop);
+  const grid = el.grid, cols = unitCount();
+  grid.classList.add('prop');
   grid.classList.toggle('rhy', S.variant === 'rhy');
-  const Ps = prop ? S.rows.map((row) => colFrs(cols, row)) : null;
-  if (prop) grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
+  const Ps = S.rows.map((row) => colFrs(cols, row));
+  grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
   grid.style.setProperty('--rows', S.rows.length);
   grid.style.setProperty('--cols', cols);
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
@@ -165,7 +150,7 @@ export function renderBoard() {
   const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));
-  grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps && Ps[r], auto.rows[r])).join('');
+  grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('');
   // Passt die Tafel nicht mehr in die Breite, darf man sie seitlich wischen
   grid.classList.toggle('wide', el.board.scrollWidth > el.board.clientWidth + 1);
 }

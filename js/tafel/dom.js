@@ -6,7 +6,7 @@ const ids = [
   'btnR', 'btnL', 'btnBar', 'btnEnd', 'btnLine', 'rhyMeters',
   'panelMel', 'panelRhy', 'btnAutoBar', 'btnAutoZ', 'btnSyl', 'btnToLied',
   'melodiesSec', 'melodies', 'themesSec', 'themes',
-  'btnLensToggle', 'lensToggleState', 'btnPropToggle', 'propToggleState'
+  'btnLensToggle', 'lensToggleState'
 ];
 export const el = Object.assign(Object.create(core), Object.fromEntries(ids.map((id) => [id, document.getElementById(id)])));
 // Der Rahmen um die Tafel, der seitlich wischen lässt

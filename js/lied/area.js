@@ -1,9 +1,10 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
-import { renderToggle, toggleSetting } from '../core/menu.js';
-import { confirmTap, popover, delegate } from '../core/ui.js';
+import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
+import { confirmTap, popover, delegate, esc } from '../core/ui.js';
 import { playPlan } from './model.js';
 import { store } from './storage.js';
+import { SONGS, songOf } from './songs.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
 import { buildPanel, fillTaktPop } from './sidebar.js';
@@ -45,6 +46,14 @@ function initControls() {
 const NAMES = { key: 'names', btn: el.btnNamesToggle, state: el.namesToggleState, obj: opts, save: persistOpts };
 const CHECK = { key: 'check', btn: el.btnCheckToggle, state: el.checkToggleState, obj: opts, save: persistOpts };
 
+// Bekannte Lieder im Menü; das gerade geladene ist hervorgehoben
+function renderKnown() {
+  el.liedSongs.innerHTML = SONGS.map((s, i) =>
+    '<li class="song one' + (s.name === L.name ? ' current' : '') + '"><span class="name">' + esc(s.name) + '</span>' +
+    '<button type="button" class="btn" data-known="' + i + '">Laden</button></li>'
+  ).join('');
+}
+
 // Notengröße: drei Knöpfe, der gewählte ist hervorgehoben
 function renderSizes() {
   el.liedSizes.querySelectorAll('[data-size]').forEach((b) => {
@@ -59,6 +68,12 @@ export function registerLied() {
   initControls();
   toggleSetting(NAMES, render);
   toggleSetting(CHECK, render);
+  delegate(el.liedSongs, '[data-known]', (b) => {
+    const s = SONGS[+b.dataset.known];
+    if (!s) return;
+    closeMenu();
+    act.loadSong(songOf(s));
+  });
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,
@@ -88,6 +103,7 @@ export function registerLied() {
         renderToggle(NAMES);
         renderToggle(CHECK);
         renderSizes();
+        renderKnown();
       }
     }
   });

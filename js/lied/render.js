@@ -8,8 +8,9 @@ import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 
 // Größe eines Linienabstands in Pixeln je nach Notengröße (normal, groß, sehr groß): so groß wie möglich, bis die
-// längste Zeile die Breite füllt. Passt sie auch bei der kleinsten Größe nicht, lässt sich das Notenblatt seitlich wischen.
-const SP = { 1: [8, 20], 2: [11, 26], 3: [14, 34] };
+// längste Zeile die Breite füllt, aber nie kleiner als das Minimum der Stufe. Passt eine Zeile dann nicht, lässt sich
+// das Notenblatt seitlich wischen (für große Noten vor der Klasse lieber kürzere Zeilen umbrechen).
+const SP = { 1: [8, 20], 2: [16, 28], 3: [22, 36] };
 // Aktuelle Größe eines Linienabstands in Pixeln (zum Umrechnen beim Ziehen)
 export let spPx = 16;
 

@@ -206,13 +206,20 @@ Umsetzung im Detail:
 - **Haltebogen:** Er lässt sich an jede Note setzen und wird zur nächsten Note gezeichnet. Zusammengezogen (ein langer Ton, zweite Zählzeit blass) wird nur bei gleicher Tonhöhe samt Vorzeichen. Hat die letzte Note einen Bogen, erscheint er als kurzer Ansatz.
 - **Auftakt:** Achtel, Viertel, punktierte Viertel, Halbe, punktierte Halbe, jeweils nur wenn kürzer als ein Takt. Ändert man die Taktart und der Auftakt passt nicht mehr, fällt er weg.
 
-## Phase 3: Feinschliff
+## Phase 3: Feinschliff – erledigt
 
-- [ ] **Bekannte Lieder** im Lied-Format (`lied/songs.js`, eigene kurze Schreibweise, z. B. `c1:4 d1 e1 f1 g1:2 g1 | …`, der Wert gilt weiter bis zum nächsten). Darin auch die Ode an die Freude endlich mit punktierter Viertel.
-- [ ] **Takt-Prüfung** (Vorschlag): Takte, die zu voll oder nicht voll sind, werden markiert (außer Auftakt und letzter Takt).
-- [ ] Notengröße im Menü (fürs Zeigen vor der Klasse)
-- [ ] Note **nach oben/unten ziehen** ändert die Tonhöhe, zur Seite ziehen verschiebt
-- [ ] Vorzeichen-Regel im Takt (ein ♯ gilt bis zum Taktstrich, danach ♮ wenn nötig)
+- [x] **Bekannte Lieder** im Lied-Format (`lied/songs.js`, eigene kurze Schreibweise, z. B. `c1:4 d1 e1 f1 g1:2 g1 | …`, der Wert gilt weiter bis zum nächsten). Darin auch die Ode an die Freude endlich mit punktierter Viertel.
+- [x] **Takt-Prüfung** (Vorschlag): Takte, die zu voll oder nicht voll sind, werden markiert (außer Auftakt und letzter Takt).
+- [x] Notengröße im Menü (fürs Zeigen vor der Klasse)
+- [x] Note **nach oben/unten ziehen** ändert die Tonhöhe, zur Seite ziehen verschiebt
+- [x] Vorzeichen-Regel im Takt (ein ♯ gilt bis zum Taktstrich, danach ♮ wenn nötig)
+
+Umsetzung im Detail:
+- **Ziehen:** Nur die markierte Note lässt sich ziehen, damit das Notenblatt überall sonst mit dem Finger scrollt. Über ihr liegt ein unsichtbares HTML-Feld mit `touch-action: none` (SVG-Elemente beachten das nicht in allen Browsern). Senkrecht ändert sich die Tonhöhe stufenweise (mit Vorhör-Ton), waagerecht wird wie auf der Tafel getauscht statt verschoben; die Striche und Umbrüche bleiben an ihrer Stelle.
+- **Vorzeichen-Regel:** Im Modell steht das klingende Vorzeichen. Gezeichnet wird nach der Regel im Takt (`shownAccidentals`); ein ausdrückliches ♮ bleibt sichtbar, eine Note hinter einem Haltebogen zeigt keins.
+- **Takt-Prüfung** (`badMeasures`): Abschnitte zwischen gezeichneten Strichen; der erste wird am Auftakt gemessen, der letzte nie. Schalter im Menü, Standard an.
+- **Notengröße:** normal, groß, sehr groß setzen die kleinste Größe eines Linienabstands auf 8, 16 bzw. 22 Pixel; passt eine Zeile nicht, wird seitlich gewischt.
+- **Bekannte Lieder:** die sechs der Tafel plus „Zum Geburtstag viel Glück“ (3/4 mit Auftakt).
 
 ## Später / bewusst nicht jetzt
 

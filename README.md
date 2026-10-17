@@ -49,6 +49,8 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 | `js/lied/state.js`, `js/lied/storage.js` | Laufender Zustand, Speicherschlüssel und Einstellungen des Lieds |
 | `js/lied/actions.js` | Alles, was das Lied verändert |
 | `js/lied/render.js`, `js/lied/sidebar.js`, `js/lied/dom.js` | Neu zeichnen, Leiste, Element-Verweise |
+| `js/lied/input.js` | Antippen und Ziehen auf dem Notenblatt |
+| `js/lied/songs.js` | Die bekannten Lieder in kurzer Schreibweise (`SONGS`, `songOf`) |
 | `package.json` | Die Versionsnummer (`version`) und die npm-Befehle |
 | `tools/serve.js` | Für `npm start`: kleiner lokaler Server |
 | `tools/version.js` | Für `npm run version:set`: Version setzen und in `index.html` eintragen |
@@ -100,6 +102,7 @@ Fünf Notenlinien mit Violinschlüssel, ohne Farben. Wiederholungszeichen und Li
 - **Pause:** setzt eine Pause mit dem vorgewählten Wert.
 - **Bogen:** Haltebogen vom zuletzt gesetzten (oder markierten) Ton zur nächsten Note, nochmal tippen nimmt ihn weg. Zwei gleiche Töne mit Bogen klingen als ein langer Ton, der zweite wird nicht neu angeschlagen. Tippt man nach dem Bogen denselben Ton, übernimmt er das Vorzeichen. Steht die nächste Note in der nächsten Zeile, läuft der Bogen bis zum Zeilenende und beginnt dort neu.
 - **Markieren:** Eine Note antippen. Der Stift übernimmt ihren Wert. Ein Tonname tauscht dann nur die Tonhöhe (der Wert bleibt), ein Notenwert oder Punkt ändert den Wert der markierten Note. Tippt man neben die Noten, kommt die Markierung ans Zeilenende.
+- **Ziehen:** Die markierte Note mit dem Finger nach oben oder unten ziehen ändert die Tonhöhe Stufe für Stufe, man hört dabei den neuen Ton (ein Vorzeichen fällt weg). Zur Seite auf ein anderes Zeichen ziehen tauscht beide, Takt-, Schlussstrich und Umbruch bleiben an ihrer Stelle. Nur die markierte Note lässt sich ziehen; überall sonst scrollt der Finger das Notenblatt wie gewohnt.
 - **einfügen:** Töne und Pausen kommen an der Markierung dazu, statt zu ersetzen; Notenwerte ändern dann nur den Stift.
 - **entfernen:** Eine Note wird zur Pause gleicher Länge, damit die Takte stimmen. Eine Pause oder das letzte Zeichen verschwinden ganz. Im Einfügen-Modus (*Lücke zu*) verschwindet das Zeichen immer.
 - **Umbruch:** Ab der Markierung geht es in einer neuen Zeile weiter; nochmal tippen holt die Zeile wieder hoch. Zeilen bricht man (erst einmal) nur von Hand um.
@@ -107,15 +110,20 @@ Fünf Notenlinien mit Violinschlüssel, ohne Farben. Wiederholungszeichen und Li
 - **Zählzeiten** stehen wie auf der Tafel unter dem System: die Zahl auf der Zählzeit, „+“ genau dazwischen, gehaltene Zählzeiten blasser an ihrer Stelle. Im 6/8-Takt wird in Achteln gezählt, im 2/2 in Halben. Eine Note hinter einem Haltebogen zählt blass, weil sie nicht neu angeschlagen wird.
 - **Balken:** Achtel und Sechzehntel innerhalb eines Schlags bekommen von selbst einen Balken (im 6/8-Takt drei Achtel, im 2/2 eine Halbe). Im 4/4-Takt bekommen vier einfache Achtel in einer Takthälfte einen gemeinsamen Balken. Pausen, Taktstriche und Umbrüche unterbrechen ihn. Der Balken folgt leicht der Melodie (höchstens einen Linienabstand).
 - **Abspielen** klingt wie ein Klavier.
+- **Vorzeichen** werden wie in echten Noten gezeichnet: Ein ♯ oder ♭ gilt bis zum Taktstrich und wird im selben Takt nicht wiederholt; steht danach derselbe Ton ohne Vorzeichen, bekommt er von selbst ein ♮. Gespielt wird immer der Ton, den man eingegeben hat. Ein ausdrücklich gesetztes ♮ (*Auflöser*) bleibt immer sichtbar.
 - Das Notenblatt wird so groß, dass die längste Zeile die Breite füllt; ist sie zu lang, lässt es sich seitlich wischen.
-- Im Menü lassen sich die **Notennamen** unter den Noten einblenden (C, Fis, B, Es …).
+- Im Menü:
+  - **Bekannte Lieder:** Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude (jetzt mit punktierter Viertel) und Zum Geburtstag viel Glück (mit Auftakt). Neue trägt man in `js/lied/songs.js` ein, die Schreibweise steht oben in der Datei.
+  - **Notennamen** unter den Noten (C, Fis, B, Es …).
+  - **Notengröße** *normal*, *groß*, *sehr groß* zum Zeigen vor der Klasse. Bei großen Noten lieber kürzere Zeilen umbrechen, sonst muss man seitlich wischen.
+  - **Takte prüfen** (Standard: an): Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt (mit seiner eigenen Länge) und Schlusstakt sind ausgenommen.
 
 ### Menü
 
 - Das Menü gehört immer zum offenen Bereich (Titel „Menü · Melodie“, „Menü · Rhythmus“ usw.). Melodien und Rhythmen werden in **getrennten Listen** gespeichert und in die Tafel des offenen Bereichs geladen.
 - **Lied speichern / laden / löschen.** Gleicher Name heißt ersetzen (mit Rückfrage).
 - **Zuletzt ersetzt:** Die aktuelle Tafel wird ohnehin laufend gesichert. Lädt man ein anderes Lied oder tippt „Alles löschen“, wandert die bisherige Tafel in den Autosave-Platz ihres Bereichs (einer pro Bereich) und lässt sich von dort wieder laden (auch nach dem Schließen). Beim Laden tauschen Tafel und Autosave die Plätze.
-- **Bekannte Lieder** (nur im Bereich Melodie): Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `js/tafel/melodies.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
+- **Bekannte Lieder** (im Bereich Melodie; die des Bereichs Lied stehen oben): Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `js/tafel/melodies.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
 - **Farben:** Zur Wahl stehen *Oktavfarben* (Standard, hohe Töne in der Farbe ihres Grundtons) und *Original*.
 - **Notenzeichen** unter den bunten Punkten ein- und ausschalten. Ausgeschaltet werden die Kreise größer. Die Werte gelten beim Abspielen trotzdem, eigenständige Notenzeichen und Pausen bleiben sichtbar.
 - **Breite nach Notenlänge:** Jedes Zeichen bekommt so viel Platz, wie es dauert. Ein Schlag ist einen Kreis breit, also eine Viertel (und ein bunter Punkt ohne Notenwert) so breit wie sonst ein Platz, eine Halbe doppelt, eine Ganze viermal. Steht auf einem Schlag eine Achtel, wird dieser Schlag in dieser Zeile zwei Kreise breit, damit die Achtel genauso groß bleiben wie alle anderen Zeichen. Jede Zeile wird für sich eingeteilt, die Taktstriche stehen also nicht unbedingt untereinander. Alle Kreise sind in allen Zeilen gleich groß; erst wenn die längste Zeile nicht mehr passt, schrumpft alles. Das Zeichen steht vorn in seinem Platz, gehaltene Zählzeiten stehen darunter an ihrer Stelle.
@@ -133,7 +141,7 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 | `notentafel.autosave.v1` / `notentafel.rhy.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz pro Bereich) |
 | `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich, die Automatik-Schalter, Breite nach Notenlänge und Bildschirm anlassen |
 | `notentafel.lied.v1`, `notentafel.lied.songs.v1`, `notentafel.lied.autosave.v1` | Das aktuelle Lied, gespeicherte Lieder und das zuletzt ersetzte Lied |
-| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche und Zählzeiten automatisch, Notennamen |
+| `notentafel.lied.settings.v1` | Einstellungen nur für Lied: Taktstriche und Zählzeiten automatisch, Notennamen, Takte prüfen, Notengröße |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.
 

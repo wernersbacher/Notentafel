@@ -28,20 +28,10 @@
 .zbtns { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
 .zbtns .btn { padding: 0; font: 700 1.35rem/1 var(--font-display); }
 .autos { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: 6px; }
+.autos.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.autos.three .btn { min-height: 48px; padding: .2rem .25rem; font-size: .82rem; line-height: 1.1; hyphens: manual; }
 .tools .btn { flex-direction: column; gap: .15rem; min-height: 58px; padding: .3rem .15rem; }
 .tools .btn .small { font-size: .72rem; }
-#meterShow .mtr { font-size: .85rem; }
-#meterShow .mtr.off { opacity: .45; }
-/* Auswahl der Taktart, schwebt unter den Werkzeugen */
-.meterpop {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
-  padding: 8px; background: var(--panel);
-  border: 2px solid var(--btn-line); border-radius: 14px;
-  box-shadow: 0 10px 24px var(--shadow);
-}
-.meterpop .btn { min-height: 54px; padding: 0; }
-.meterpop .mtr { font-size: 1.05rem; }
 
 .palette { display: flex; flex-direction: column; gap: 10px; }
 .pal { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }

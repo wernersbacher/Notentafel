@@ -120,11 +120,20 @@
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
       <section class="group">
+        <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
+        <div class="meterrow" id="rhyMeters"></div>
+      </section>
+      <section class="group">
+        <h2 class="glabel">Automatisch <span>nach der Taktart</span></h2>
+        <div class="autos three">
+          <button type="button" class="btn" id="btnAutoBar" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Takt&shy;striche</button>
+          <button type="button" class="btn" id="btnAutoZ" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zähl&shy;zeiten</button>
+          <button type="button" class="btn" id="btnSyl" aria-pressed="false" title="Rhythmussprache: ta, ti ti, taja, tajajaja">Rhythmus&shy;sprache</button>
+        </div>
+      </section>
+      <section class="group">
         <h2 class="glabel">Takt</h2>
-        <div class="tools">
-          <button type="button" class="btn" id="btnMeter" aria-haspopup="true" aria-expanded="false" aria-controls="meterPop" title="Taktart der markierten Zeile">
-            <span id="meterShow"></span><span class="small">Taktart</span>
-          </button>
+        <div class="tools three">
           <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
             <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
           </button>
@@ -134,7 +143,6 @@
           <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
             <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
           </button>
-          <div class="meterpop" id="meterPop" role="group" aria-label="Taktart wählen" hidden></div>
         </div>
       </section>
       <section class="group">
@@ -148,14 +156,6 @@
       <section class="group">
         <h2 class="glabel">Zählzeiten <span>unter Noten und Pausen</span></h2>
         <div class="zbtns" id="counts"></div>
-      </section>
-      <section class="group">
-        <h2 class="glabel">Automatisch <span>nach der Taktart</span></h2>
-        <div class="autos">
-          <button type="button" class="btn" id="btnAutoBar" aria-pressed="false" title="Taktstriche nach der Taktart setzen">Taktstriche</button>
-          <button type="button" class="btn" id="btnAutoZ" aria-pressed="false" title="Zählzeiten nach der Taktart anzeigen">Zählzeiten</button>
-          <button type="button" class="btn" id="btnSyl" aria-pressed="false" title="Rhythmussprache: ta, ti-ti, taja, tajajaja">Rhythmussprache</button>
-        </div>
       </section>
     </div>
 

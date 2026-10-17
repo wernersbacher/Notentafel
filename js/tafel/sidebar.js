@@ -2,7 +2,7 @@
 import { MAX_ROWS, NOTE_BY, GROUPS, DURS, COUNTS } from './config.js';
 import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap } from './model.js';
 import { S, settings, curCell, curRow } from './state.js';
-import { colorStyle, noteLabel, noteSym, restSym, meterHTML, ICONS } from './symbols.js';
+import { colorStyle, noteLabel, noteSym, restSym, ICONS } from './symbols.js';
 import { el } from './dom.js';
 
 const pressed = (btn, on) => {
@@ -57,8 +57,7 @@ export function renderSidebar() {
   el.btnBar.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
   pressed(el.btnEnd, hasEnd);
   pressed(el.btnLine, !!row.line);
-  el.meterShow.innerHTML = row.meter ? meterHTML(row.meter) : '<span class="mtr off"><span>?</span><span>?</span></span>';
-  el.btnMeter.classList.toggle('on', !!row.meter);
+  el.rhyMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === (row.meter || '')));
 
   pressed(el.btnAutoBar, settings.autoBar);
   pressed(el.btnAutoZ, settings.autoZ);

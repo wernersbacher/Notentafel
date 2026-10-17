@@ -3,7 +3,7 @@ import { el as core } from '../core/dom.js';
 
 const ids = [
   'grid', 'palette', 'values', 'rests', 'valuesMel', 'counts',
-  'btnR', 'btnL', 'btnBar', 'btnEnd', 'btnLine', 'btnMeter', 'meterShow', 'meterPop',
+  'btnR', 'btnL', 'btnBar', 'btnEnd', 'btnLine', 'rhyMeters',
   'panelMel', 'panelRhy', 'btnAutoBar', 'btnAutoZ', 'btnSyl', 'btnToLied',
   'melodiesSec', 'melodies', 'themesSec', 'themes',
   'btnLensToggle', 'lensToggleState', 'btnPropToggle', 'propToggleState'

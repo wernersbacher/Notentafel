@@ -9,7 +9,7 @@ import { loadBoard, stores } from './storage.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
 import { renderPalette, buildCounts } from './sidebar.js';
-import { initControls, closeMeterPop } from './controls.js';
+import { initControls } from './controls.js';
 import { initBoardInput } from './input.js';
 import { initTafelMenu, openTafelMenu } from './menu.js';
 import * as act from './actions.js';
@@ -66,7 +66,6 @@ function area(id, label, panel, texts) {
   return {
     id, label, panel, board: el.grid, tools,
     enter: () => enter(id),
-    leave: closeMeterPop,
     plan,
     mark: markPlaying,
     songs: {

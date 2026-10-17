@@ -1,5 +1,5 @@
 // HTML-Bausteine für Töne, Noten- und Pausenzeichen und Taktarten
-import { QUARTER_REST } from '../core/shapes.js';
+import { head, stem, flags, dot, rest, line } from '../core/glyphs.js';
 import { THEME_BY } from './config.js';
 import { settings } from './state.js';
 
@@ -14,36 +14,31 @@ export function noteLabel(n) {
   return arrow + '<span class="ltr">' + n.l + (n.sharp ? '<span class="sharp">♯</span>' : '') + '</span>';
 }
 
-// Noten- und Pausenzeichen, alle im selben Rahmen (22 × 30), damit Hals und Balken sauber anschließen.
+// Noten- und Pausenzeichen der Tafel: dieselben Formen wie im Lied (core/glyphs.js), gesetzt in einen festen Rahmen
+// (22 × 30), damit das CSS Balken und Notenlinie ansetzen kann. Ein Linienabstand des Lieds sind K Einheiten: Der Kopf
+// sitzt bei y = 24.6, der Hals (rechts vom Kopf bei x = 14) reicht bis y = 2.55; die Notenlinie der Zeile liegt bei y = 15.
 // beam: Achtel ohne Fähnchen, der Balken zur nächsten Achtel kommt aus dem CSS.
-const HEAD = 'cx="9.4" cy="24.6" transform="rotate(-22 9.4 24.6)"';
-const sym = (s) => '<svg class="sym" viewBox="0 0 22 30" stroke="currentColor" stroke-linecap="round" aria-hidden="true">' + s + '</svg>';
-// thin: feinere Striche (Rhythmus-Tafel, wo die Zeichen groß und ohne Kreis stehen)
-export function noteSym(d, beam, thin) {
-  const w = thin ? { stem: 1.5, ring: 1.8, whole: 2, flag: 1.6, rx: 5, ry: 3.5 } : { stem: 2.4, ring: 2.4, whole: 2.6, flag: 2.2, rx: 5.3, ry: 3.8 };
-  let s;
-  if (d === 4) s = '<ellipse cx="11" cy="24.6" rx="6.4" ry="4.3" fill="none" stroke-width="' + w.whole + '"/>';
-  else {
-    s = '<path d="M14 24V2.5" stroke-width="' + w.stem + '"/>' + (d >= 2
-      ? '<ellipse ' + HEAD + ' rx="4.5" ry="3.1" fill="none" stroke-width="' + w.ring + '"/>'
-      : '<ellipse ' + HEAD + ' rx="' + w.rx + '" ry="' + w.ry + '" fill="currentColor" stroke="none"/>');
-    if (d === 0.5 && !beam) s += '<path d="M14 2.5c.5 5 7 6.5 5.2 14" fill="none" stroke-width="' + w.flag + '"/>';
-    if (d === 3 || d === 1.5) s += '<circle cx="19.8" cy="25" r="1.9" fill="currentColor" stroke="none"/>';
-  }
-  return sym(s);
+const K = 6.3;
+const sym = (s) => '<svg class="sym" viewBox="0 0 22 30" fill="currentColor" aria-hidden="true">' + s + '</svg>';
+// Länge in Schlägen → Notenwert des Lieds (1 Ganze … 8 Achtel)
+const V = { 0.5: 8, 1: 4, 1.5: 4, 2: 2, 3: 2, 4: 1 };
+export function noteSym(d, beam) {
+  const v = V[d], hx = v === 1 ? 11 : 14 - 0.6 * K;
+  let s = head(0, 0, v);
+  if (v > 1) s += stem(0.6, -0.1, -3.5);
+  if (v === 8 && !beam) s += flags(0.6, -3.5, 1, true);
+  if (d === 1.5 || d === 3) s += dot(1.45, -0.3);
+  return sym('<g transform="translate(' + hx + ' 24.6) scale(' + K + ')">' + s + '</g>');
 }
-const RESTS = {
-  0.5: '<circle cx="8.5" cy="11" r="2.6" fill="currentColor" stroke="none"/><path d="M8 13.2c3 .8 5.5-.3 7.5-3L10 25" fill="none" stroke-width="2"/>',
-  // Viertelpause: Fläche aus core/shapes.js (Rahmen 64 × 64), so hoch wie zuvor und in der Mitte des Rahmens
-  1: '<path transform="translate(0.15 3.2) scale(0.35)" d="' + QUARTER_REST + '" fill="currentColor" stroke="none"/>',
-  1.5: '<path transform="translate(0.15 3.2) scale(0.35)" d="' + QUARTER_REST + '" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor" stroke="none"/>',
-  2: '<path d="M3 18.5h16" stroke-width="1.8"/><rect x="6" y="13" width="10" height="5.5" fill="currentColor" stroke="none"/>',
-  3: '<path d="M2 18.5h14" stroke-width="1.8"/><rect x="4.5" y="13" width="9" height="5.5" fill="currentColor" stroke="none"/><circle cx="19" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
-  4: '<path d="M3 11.5h16" stroke-width="1.8"/><rect x="6" y="11.5" width="10" height="5.5" fill="currentColor" stroke="none"/>'
-};
-// onLine: Die Pause steht auf der Notenlinie der Zeile; dann fällt ihr eigenes kurzes Linienstück weg (sonst wäre die
-// Linie dort doppelt so dick), es bleibt nur das Rechteck
-export const restSym = (d, onLine) => sym(onLine ? RESTS[d].replace(/<path d="M\d+ [\d.]+h\d+" stroke-width="1.8"\/>/, '') : RESTS[d]);
+// Pausen wie im Lied; die Linie, an der sie stehen (die Mittellinie, bei der Ganzen die Linie darüber), kommt auf y = 15.
+// onLine: Die Zeile hat eine Notenlinie; sonst bekommen Ganze und Halbe ein kurzes Linienstück, an dem sie hängen bzw. liegen.
+export function restSym(d, onLine) {
+  const v = V[d], lineY = v === 1 ? 1 : 2;
+  let s = rest(0, v);
+  if (!onLine && v <= 2) s += line(-1, lineY, 1, lineY, 0.14);
+  if (d === 1.5 || d === 3) s += dot(v === 2 ? 1 : 0.9, lineY - 0.5);
+  return sym('<g transform="translate(11 ' + (15 - lineY * K) + ') scale(' + K + ')">' + s + '</g>');
+}
 
 // Taktart als zwei Zahlen übereinander
 export function meterHTML(m) {

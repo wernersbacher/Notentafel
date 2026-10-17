@@ -62,10 +62,7 @@
 .grid.prop .cell.half { justify-items: center; }
 /* ein leerer halber Platz (nach einer einzelnen Achtel) bekommt einen kleineren Kreis, damit er den nächsten nicht überdeckt */
 .grid.prop .cell.half .dot.ghost { transform: scale(.5); }
-.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .04); }
-/* Rhythmus: feinere Zeichen (Hals 1,5 statt 2,4 im Rahmen 22 × 30, also .04 × Kreis breit); der Balken entsprechend dünner */
-.grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .06); top: calc(var(--d) * -.108); height: calc(var(--d) * .085); }
-.grid.rhy:not(.prop) .stack.bbeam::after { width: calc(100% + var(--g) + var(--d) * .04); }
+.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .02); }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);
@@ -162,18 +159,20 @@
 }
 .cell.sel .dot.beat { box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
 .grid.clean .cell.sel .dot.beat { box-shadow: none; }
-/* Balken zweier eigenständiger Achtel: Hals .08 × Kreis rechts der Mitte, .064 breit, Halsspitze (mit runder Kappe) .1213 über dem Kreis */
+/* Balken zweier eigenständiger Achtel (Zeichen wie im Lied): Halsmitte .08 × Kreis rechts der Mitte, Hals .02 breit,
+   Halsende .088 über dem Kreis; der Balken ist .084 dick (ein halber Linienabstand des Lieds) */
 .stack.bbeam::after {
   content: ""; position: absolute;
-  left: calc(50% + var(--d) * .048); top: calc(var(--d) * -.1213);
-  width: calc(100% + var(--g) + var(--d) * .064); height: calc(var(--d) * .12);
+  left: calc(50% + var(--d) * .07); top: calc(var(--d) * -.088);
+  width: calc(100% + var(--g) + var(--d) * .02); height: calc(var(--d) * .084);
   background: var(--fg);
 }
-/* Balken von Hals zu Hals zweier Achtel: Hals liegt .05 × Kreis rechts der Mitte, ist .04 × Kreis breit und endet (mit runder Kappe) .0217 × Kreis unter der Oberkante; Platzabstand 6px */
+/* Balken von Hals zu Hals zweier Achtel unter bunten Punkten (Zeichen .5 × Kreis hoch): Halsmitte .05 × Kreis rechts der
+   Mitte, Hals .0126 breit, Halsende .0425 unter der Oberkante; Balken .0525 dick */
 .len.beam::after {
   content: ""; position: absolute;
-  left: calc(50% + var(--d) * .03); top: calc(var(--d) * .0217);
-  width: calc(100% + var(--g) + var(--d) * .04); height: calc(var(--d) * .075);
+  left: calc(50% + var(--d) * .0437); top: calc(var(--d) * .0425);
+  width: calc(100% + var(--g) + var(--d) * .0126); height: calc(var(--d) * .0525);
   background: currentColor;
 }
 .dot {
@@ -189,15 +188,12 @@
   background: transparent; border: 3px dashed var(--line); box-shadow: none;
 }
 /* Pausen ohne Kreis direkt auf der Notenlinie (Höhe der Kreismitte). Das Zeichen ist --rh hoch, sein Rahmen
-   30 Einheiten: Viertel und Achtel stehen mit der Mitte (15) auf der Linie, die Halbe mit ihrer Unterkante (18.5),
-   die Ganze hängt mit ihrer Oberkante (11.5) daran. */
+   30 Einheiten; die Linie, an der die Pause steht, liegt im Rahmen bei 15 (siehe symbols.js). */
 .dot.rest { --rh: calc(var(--d) * .8); position: relative; background: none; box-shadow: none; color: var(--fg); }
 .dot.rest .sym {
   position: absolute; left: 50%; transform: translateX(-50%);
   height: var(--rh); top: calc(50% - var(--rh) * 15 / 30);
 }
-.dot.rest.sit .sym { top: calc(50% - var(--rh) * 18.5 / 30); }
-.dot.rest.hang .sym { top: calc(50% - var(--rh) * 11.5 / 30); }
 .cell.sel .dot.rest { box-shadow: 0 0 0 3px var(--board), 0 0 0 6px var(--ring); }
 .grid.clean .cell.sel .dot.rest { box-shadow: none; }
 /* Plätze hinter dem Zeilenende nur blass, damit man sieht, wo die Zeile aufhört */

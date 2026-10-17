@@ -73,7 +73,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
     label = where + ': ' + n.n + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
     if (cell.d) len = noteSym(cell.d, beam);
   } else if (isBeat(cell)) {
-    dot = '<div class="dot beat">' + noteSym(cell.d, beam, S.variant === 'rhy') + '</div>';
+    dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
     if (beam === 1) stackCls = ' bbeam';
     // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);
@@ -88,8 +88,8 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
       if (parts.length && beam !== 2) len += '<span class="sgrp d' + String(cell.d).replace('.', '') + '" style="--w:' + reach.toFixed(4) + '"></span>';
     }
   } else if (isRest(cell)) {
-    // Halbe (auch punktiert) liegen auf der Linie, die Ganze hängt darunter
-    dot = '<div class="dot rest' + (cell.d === 4 ? ' hang' : cell.d >= 2 ? ' sit' : '') + '">' + restSym(cell.d, !!line) + '</div>';
+    // Halbe liegen auf der Linie, die Ganze hängt darunter (das stellt das Zeichen selbst ein)
+    dot = '<div class="dot rest">' + restSym(cell.d, !!line) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].p;
   } else {
     dot = '<div class="dot ghost"></div>';

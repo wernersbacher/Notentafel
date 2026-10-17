@@ -60,10 +60,10 @@ export function renderSidebar() {
   [el.btnRepStart, el.btnRepStartMel].forEach((b) => pressed(b, rb === 4 || rb === 5));
   [el.btnRepEnd, el.btnRepEndMel].forEach((b) => pressed(b, rb === 3 || rb === 5));
   pressed(el.btnLine, !!row.line);
-  el.rhyMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === (row.meter || '')));
+  [el.rhyMeters, el.melMeters].forEach((box) => box.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === (row.meter || ''))));
 
-  pressed(el.btnAutoBar, settings.autoBar);
-  pressed(el.btnAutoZ, settings.autoZ);
+  [el.btnAutoBar, el.btnAutoBarMel].forEach((b) => pressed(b, settings.autoBar));
+  [el.btnAutoZ, el.btnAutoZMel].forEach((b) => pressed(b, settings.autoZ));
   pressed(el.btnSyl, settings.syl);
   renderCounts(cur);
 

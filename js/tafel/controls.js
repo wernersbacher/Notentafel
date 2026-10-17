@@ -10,12 +10,13 @@ import { toast, delegate } from '../core/ui.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
 
-// Alle Taktarten nebeneinander (für die markierte Zeile); welche gilt, zeigt die Leiste beim Zeichnen
+// Alle Taktarten nebeneinander (für die markierte Zeile), bei Melodie und Rhythmus; welche gilt, zeigt die Leiste beim Zeichnen
 function buildMeters() {
-  el.rhyMeters.innerHTML = [''].concat(METERS).map((m) =>
+  const html = [''].concat(METERS).map((m) =>
     '<button type="button" class="btn" data-m="' + m + '" aria-pressed="false" aria-label="' + (m ? 'Taktart ' + m : 'ohne Taktart') + '">' +
     (m ? meterHTML(m) : '<span class="small">ohne</span>') + '</button>'
   ).join('');
+  el.rhyMeters.innerHTML = el.melMeters.innerHTML = html;
 }
 function toggleAuto(key) {
   settings[key] = !settings[key];
@@ -25,15 +26,16 @@ function toggleAuto(key) {
 }
 export function initControls() {
   buildMeters();
-  delegate(el.rhyMeters, '[data-m]', (b) => act.setMeter(b.dataset.m));
+  [el.rhyMeters, el.melMeters].forEach((box) => delegate(box, '[data-m]', (b) => act.setMeter(b.dataset.m)));
 
   delegate(el.palette, '.note', (b) => act.placeNote(b.dataset.id));
   [el.valuesMel, el.values].forEach((box) => delegate(box, '[data-d]', (b) => act.placeValue(+b.dataset.d)));
   delegate(el.rests, '[data-d]', (b) => act.placeRest(+b.dataset.d));
   delegate(el.counts, 'button', (b) => { if (b.dataset.z) act.placeCount(b.dataset.z); else act.clearCount(); });
 
-  el.btnAutoBar.addEventListener('click', () => toggleAuto('autoBar'));
-  el.btnAutoZ.addEventListener('click', () => toggleAuto('autoZ'));
+  // Die Automatik gilt jeweils für die offene Tafel (Melodie und Rhythmus haben eigene Einstellungen)
+  [el.btnAutoBar, el.btnAutoBarMel].forEach((b) => b.addEventListener('click', () => toggleAuto('autoBar')));
+  [el.btnAutoZ, el.btnAutoZMel].forEach((b) => b.addEventListener('click', () => toggleAuto('autoZ')));
   el.btnSyl.addEventListener('click', () => { settings.syl = !settings.syl; persistSettings(); render(); });
   el.btnBar.addEventListener('click', () => act.toggleBar(1));
   el.btnEnd.addEventListener('click', () => act.toggleBar(2));

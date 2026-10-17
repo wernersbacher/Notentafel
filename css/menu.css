@@ -41,6 +41,8 @@
 .temporow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
 .temporow input { width: 100%; min-height: 44px; accent-color: var(--fg); }
 .temporow output { font-weight: 800; min-width: 6.5em; text-align: right; }
+/* Ganz unten im Menü, auch wenn es kurz ist */
+.drawer .version { margin: auto 0 0; font-size: .75rem; font-weight: 700; color: var(--muted); text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
   .drawer, .drawer.open { transition: none; }

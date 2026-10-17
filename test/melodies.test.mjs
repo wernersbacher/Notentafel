@@ -1,0 +1,24 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { MELODIES, melodyRows } from '../js/melodies.js';
+import { cleanRows, packLines, dur } from '../js/model.js';
+import { meterInfo } from '../js/theory.js';
+
+for (const m of MELODIES) {
+  test(`${m.name}: übersteht cleanRows unverändert`, () => {
+    const rs = melodyRows(m);
+    const clean = cleanRows(JSON.parse(JSON.stringify(rs)), packLines(rs));
+    assert.ok(clean, 'cleanRows lehnt die Zeilen ab');
+    assert.deepEqual(clean.map((row) => [...row]), rs.map((row) => [...row]));
+    assert.equal(clean[0].meter, m.meter);
+    assert.ok(clean.slice(1).every((row) => row.meter === ''));
+  });
+
+  test(`${m.name}: jede Zeile füllt ganze Takte`, () => {
+    const { len } = meterInfo(m.meter);
+    melodyRows(m).forEach((row, r) => {
+      const sum = row.reduce((s, c) => s + dur(c), 0);
+      assert.equal(sum % len, 0, `Zeile ${r + 1}: ${sum} Schläge`);
+    });
+  });
+}

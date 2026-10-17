@@ -1,4 +1,4 @@
-// Menü (Slide-in): Lieder speichern und laden, Farben, Notenzeichen, Breite nach Notenlänge, Tempo
+// Menü (Slide-in): Lieder speichern und laden, Farben, Notenzeichen, Breite nach Notenlänge, Tempo, Bildschirm anlassen
 import { THEMES, NOTE_BY, SWATCHES } from './config.js';
 import { MELODIES, melodyRows } from './melodies.js';
 import { S, settings, persistSettings } from './state.js';
@@ -10,6 +10,7 @@ import { closeSavePop } from './controls.js';
 import { loadSong, saveAs } from './actions.js';
 import { esc, confirmTap, disarm, isArmed, delegate, onEnter } from './ui.js';
 import { el } from './dom.js';
+import { updateWake } from './wake.js';
 
 function hint(text, warn) {
   el.saveHint.textContent = text;
@@ -58,10 +59,11 @@ function renderThemes() {
       '<span class="desc">' + t.desc + '</span><span class="swatches">' + sw + '</span></button>';
   }).join('');
 }
-// An/Aus-Schalter im Menü für eine Einstellung
+// An/Aus-Schalter im Menü für eine Einstellung; apply setzt sie um (sonst neu zeichnen)
 const TOGGLES = [
   { key: 'lens', btn: el.btnLensToggle, state: el.lensToggleState },
-  { key: 'prop', btn: el.btnPropToggle, state: el.propToggleState }
+  { key: 'prop', btn: el.btnPropToggle, state: el.propToggleState },
+  { key: 'wake', btn: el.btnWakeToggle, state: el.wakeToggleState, apply: updateWake }
 ];
 function renderToggle(t) {
   const on = settings[t.key];
@@ -149,7 +151,7 @@ export function initMenu() {
     settings[t.key] = !settings[t.key];
     persistSettings();
     renderToggle(t);
-    render();
+    (t.apply || render)();
   }));
   el.tempo.addEventListener('input', () => {
     settings.tempo = +el.tempo.value;

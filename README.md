@@ -28,13 +28,19 @@ Reines HTML, CSS und JavaScript ohne Build-Schritt und ohne Abhängigkeiten. Das
 | `js/controls.js` | Bedienung der Leiste |
 | `js/input.js` | Antippen und Ziehen auf der Tafel |
 | `js/menu.js` | Das Menü |
+| `js/wake.js` | Bildschirm anlassen (Screen Wake Lock) |
 | `js/player.js`, `js/audio.js` | Abspielen und Klangerzeugung |
 | `js/ui.js`, `js/dom.js` | Einblendung, Nochmal-tippen-Bestätigung, Popups, Element-Verweise |
-| `package.json`, `tools/serve.js` | Nur für `npm start`: kleiner lokaler Server |
+| `package.json` | Die Versionsnummer (`version`) und die npm-Befehle |
+| `tools/serve.js` | Für `npm start`: kleiner lokaler Server |
+| `tools/version.js` | Für `npm run version:set`: Version setzen und in `index.html` eintragen |
+| `test/` | Tests für Datenmodell, Zählzeiten, Speicher und bekannte Lieder (`npm test`) |
 
-**Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository. Pushen reicht, es gibt nichts zu bauen.
+**Veröffentlichen:** Die Seite läuft über GitHub Pages direkt aus dem Repository, es gibt nichts zu bauen. Vor dem Push die Version hochsetzen: `npm run version:set 1.0.1` (ohne Nummer wird nur `index.html` auf den Stand von `package.json` gebracht, z. B. nach einem neuen Modul). Das Skript schreibt die Nummer in `package.json`, hängt in `index.html` `?v=1.0.1` an Stylesheets und Einstiegs-Script und erneuert die Import Map, die jedes Modul unter `js/` auf `js/…?v=1.0.1` umleitet; auch neue Module kommen so automatisch dazu. Damit lädt der Browser nach einem Update alle Dateien neu, statt alte und neue Module zu mischen. Die Version steht ganz unten im Menü.
 
 **Lokal starten:** `npm start` und dann http://localhost:8000/ öffnen (anderer Port: `PORT=8080 npm start`). Der Server in `tools/serve.js` braucht nur Node, keine Pakete. Direkt über `file://` geht es nicht, weil Browser dort keine Module laden. Die Schriften kommen von Google Fonts (Playwrite DE Grund, die Deutschland-Grundschrift, für alles auf der Tafel, Nunito für die Knöpfe); ohne Internet springen Systemschriften ein.
+
+**Tests:** `npm test` (eingebauter Testrunner von Node, keine Pakete).
 
 ## Bedienung
 
@@ -73,10 +79,11 @@ Reines HTML, CSS und JavaScript ohne Build-Schritt und ohne Abhängigkeiten. Das
 - **Lied speichern / laden / löschen.** Gleicher Name heißt ersetzen (mit Rückfrage).
 - **Zuletzt ersetzt:** Die aktuelle Tafel wird ohnehin laufend gesichert. Lädt man ein anderes Lied oder tippt „Alles löschen“, wandert die bisherige Tafel in den Autosave-Platz ihres Bereichs (einer pro Bereich) und lässt sich von dort wieder laden (auch nach dem Schließen). Beim Laden tauschen Tafel und Autosave die Plätze.
 - **Bekannte Lieder** (nur im Bereich Melodie): Fest eingebaute Melodien (Alle meine Entchen, Hänschen klein, Kuckuck, Bruder Jakob, Morgen kommt der Weihnachtsmann, Ode an die Freude). Sie belegen keinen Speicherplatz und lassen sich nicht löschen. Neue trägt man in `js/melodies.js` in die Liste `MELODIES` ein: `|` trennt Zeilen, `-` ist eine Pause, `:2` hängt die Länge in Schlägen an (z. B. `G:2`, `C+:.5`, `-:2`), `meter` ist die Taktart der ersten Zeile. Eine punktierte Viertel gibt es nicht, darum stehen in der Ode an die Freude dort zwei Viertel.
-- **Farben:** Zur Wahl stehen *Original* und *Oktavfarben* (hohe Töne in der Farbe ihres Grundtons).
+- **Farben:** Zur Wahl stehen *Oktavfarben* (Standard, hohe Töne in der Farbe ihres Grundtons) und *Original*.
 - **Notenzeichen** unter den bunten Punkten ein- und ausschalten. Ausgeschaltet werden die Kreise größer. Die Werte gelten beim Abspielen trotzdem, eigenständige Notenzeichen und Pausen bleiben sichtbar.
 - **Breite nach Notenlänge:** Jedes Zeichen bekommt so viel Platz, wie es dauert. Ein Schlag ist einen Kreis breit, also eine Viertel (und ein bunter Punkt ohne Notenwert) so breit wie sonst ein Platz, eine Halbe doppelt, eine Ganze viermal. Steht auf einem Schlag eine Achtel, wird dieser Schlag in dieser Zeile zwei Kreise breit, damit die Achtel genauso groß bleiben wie alle anderen Zeichen. Jede Zeile wird für sich eingeteilt, die Taktstriche stehen also nicht unbedingt untereinander. Alle Kreise sind in allen Zeilen gleich groß; erst wenn die längste Zeile nicht mehr passt, schrumpft alles. Das Zeichen steht vorn in seinem Platz, gehaltene Zählzeiten stehen darunter an ihrer Stelle.
 - **Tempo** beim Abspielen (50–160 pro Minute).
+- **Bildschirm anlassen** (Standard: an): Solange die App offen ist, geht der Bildschirm nicht aus. Manche Browser erlauben das erst nach der ersten Berührung. Kann der Browser es nicht, fehlt der Schalter.
 
 ## Speicherung
 
@@ -87,7 +94,7 @@ Alles liegt im `localStorage` des Browsers, also nur auf diesem Gerät und in di
 | `notentafel.v1` / `notentafel.rhy.v1` | Die aktuelle Tafel (Melodie / Rhythmus) |
 | `notentafel.songs.v1` / `notentafel.rhy.songs.v1` | Gespeicherte Melodien / Rhythmen |
 | `notentafel.autosave.v1` / `notentafel.rhy.autosave.v1` | Die zuletzt ersetzte Tafel (ein Platz pro Bereich) |
-| `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich (Melodie/Rhythmus), die Automatik-Schalter und Breite nach Notenlänge |
+| `notentafel.settings.v1` | Farbthema, Tempo, ob Notenzeichen angezeigt werden, offener Bereich (Melodie/Rhythmus), die Automatik-Schalter, Breite nach Notenlänge und Bildschirm anlassen |
 
 Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet, ist alles weg.
 
@@ -95,7 +102,7 @@ Wenn man die Website-Daten des Browsers löscht oder im privaten Modus arbeitet,
 
 - **Halbtöne:** Absichtlich gibt es nur **Fis** und **B**, weil das für das verwendete Liedgut reicht. Weitere (Cis, Es, Gis …) lassen sich in `js/config.js` über die Liste `NOTES` und die Gruppen in `GROUPS` ergänzen.
 - **Schrift auf den Tönen immer schwarz:** Darum muss jede Tonfarbe hell genug sein (Kontrast ≥ 4,5). Das A ist deshalb ein helleres Lila. Neue Farben in `NOTES` bitte auch daraufhin prüfen.
-- **Hohe Töne im Original-Thema alle rot:** Das ist gewollt. Wer die Oktave farblich zuordnen will, nimmt das Thema *Oktavfarben*.
+- **Oktavfarben als Standard:** Hohe Töne haben die Farbe ihres Grundtons. Im Thema *Original* sind sie alle rot, das ist gewollt.
 - **Keine Tastaturbedienung als Hauptweg:** Die App ist für Touch gedacht.
 
 ## Hinweis für iPad/iPhone

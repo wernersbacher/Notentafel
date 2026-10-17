@@ -7,11 +7,35 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+DE+Grund:wght@100..400&family=Nunito:wght@600;700;800&display=swap">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/board.css">
-<link rel="stylesheet" href="css/side.css">
-<link rel="stylesheet" href="css/menu.css">
-<script type="module" src="js/main.js"></script>
+<link rel="stylesheet" href="css/base.css?v=1.0.0">
+<link rel="stylesheet" href="css/board.css?v=1.0.0">
+<link rel="stylesheet" href="css/side.css?v=1.0.0">
+<link rel="stylesheet" href="css/menu.css?v=1.0.0">
+<script type="importmap">
+{ "imports": {
+  "./js/actions.js": "./js/actions.js?v=1.0.0",
+  "./js/audio.js": "./js/audio.js?v=1.0.0",
+  "./js/board.js": "./js/board.js?v=1.0.0",
+  "./js/config.js": "./js/config.js?v=1.0.0",
+  "./js/controls.js": "./js/controls.js?v=1.0.0",
+  "./js/dom.js": "./js/dom.js?v=1.0.0",
+  "./js/input.js": "./js/input.js?v=1.0.0",
+  "./js/main.js": "./js/main.js?v=1.0.0",
+  "./js/melodies.js": "./js/melodies.js?v=1.0.0",
+  "./js/menu.js": "./js/menu.js?v=1.0.0",
+  "./js/model.js": "./js/model.js?v=1.0.0",
+  "./js/player.js": "./js/player.js?v=1.0.0",
+  "./js/render.js": "./js/render.js?v=1.0.0",
+  "./js/sidebar.js": "./js/sidebar.js?v=1.0.0",
+  "./js/state.js": "./js/state.js?v=1.0.0",
+  "./js/storage.js": "./js/storage.js?v=1.0.0",
+  "./js/symbols.js": "./js/symbols.js?v=1.0.0",
+  "./js/theory.js": "./js/theory.js?v=1.0.0",
+  "./js/ui.js": "./js/ui.js?v=1.0.0",
+  "./js/wake.js": "./js/wake.js?v=1.0.0"
+} }
+</script>
+<script type="module" src="js/main.js?v=1.0.0"></script>
 </head>
 <body>
 
@@ -183,6 +207,14 @@
     </button>
   </section>
 
+  <section id="wakeSec">
+    <h3>Bildschirm</h3>
+    <button type="button" class="btn theme" id="btnWakeToggle" aria-pressed="true">
+      <span>Bildschirm anlassen: <span id="wakeToggleState">an</span></span>
+      <span class="desc">Das Tablet schaltet den Bildschirm nicht ab, solange die Notentafel offen ist.</span>
+    </button>
+  </section>
+
   <section>
     <h3>Tempo beim Abspielen</h3>
     <div class="temporow">
@@ -190,6 +222,8 @@
       <output id="tempoOut" for="tempo"></output>
     </div>
   </section>
+
+  <p class="version">Version 1.0.0</p>
 </aside>
 
 </body>

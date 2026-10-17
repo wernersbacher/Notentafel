@@ -58,13 +58,14 @@ export const saveAuto = (mode, rows, name) => writeJSON(KEYS[mode].auto, pack(ro
 export function loadSettings() {
   const s = readJSON(SETTINGS_KEY) || {};
   return {
-    theme: THEME_BY[s.theme] ? s.theme : 'original',
+    theme: THEME_BY[s.theme] ? s.theme : 'oktave',
     tempo: (s.tempo >= TEMPO.min && s.tempo <= TEMPO.max) ? s.tempo : TEMPO.start,
     lens: s.lens !== false, // Notenzeichen unter den Tönen anzeigen
     mode: s.mode === 'rhy' ? 'rhy' : 'mel', // Bereich der Leiste: Melodie oder Rhythmus
     autoBar: !!s.autoBar, // Taktstriche nach der Taktart
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
-    prop: !!s.prop // Breite nach Notenlänge
+    prop: !!s.prop, // Breite nach Notenlänge
+    wake: s.wake !== false // Bildschirm anlassen
   };
 }
 export const saveSettings = (settings) => writeJSON(SETTINGS_KEY, settings);

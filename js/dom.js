@@ -7,7 +7,8 @@ const ids = [
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsTitle', 'songs', 'melodiesSec', 'melodies', 'themes',
-  'btnLensToggle', 'lensToggleState', 'btnPropToggle', 'propToggleState', 'tempo', 'tempoOut'
+  'btnLensToggle', 'lensToggleState', 'btnPropToggle', 'propToggleState',
+  'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut'
 ];
 export const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
 // Der Rahmen um die Tafel, der seitlich wischen lässt

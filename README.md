@@ -52,6 +52,7 @@ Der Code ist in drei Teile getrennt, die nicht voneinander abhängen: **`js/core
 | `js/lied/render.js`, `js/lied/sidebar.js`, `js/lied/dom.js` | Neu zeichnen, Leiste, Element-Verweise |
 | `js/lied/input.js` | Antippen und Ziehen auf dem Notenblatt |
 | `js/lied/songs.js` | Die bekannten Lieder in kurzer Schreibweise (`SONGS`, `songOf`) |
+| `js/lied/musicxml.js` | Export als MusicXML 4.0 (`songToMusicXML`, reine Funktion) |
 | `package.json` | Die Versionsnummer (`version`) und die npm-Befehle |
 | `tools/serve.js` | Für `npm start`: kleiner lokaler Server |
 | `tools/version.js` | Für `npm run version:set`: Version setzen und in `index.html` eintragen |
@@ -118,6 +119,7 @@ Fünf Notenlinien mit Violinschlüssel, ohne Farben. Wiederholungszeichen und Li
   - **Notennamen** unter den Noten (C, Fis, B, Es …).
   - **Notengröße** *normal*, *groß*, *sehr groß* zum Zeigen vor der Klasse (14, 20 bzw. 28 Pixel pro Linienabstand, mit automatischem Umbruch).
   - **Takte prüfen** (Standard: an): Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt (mit seiner eigenen Länge) und Schlusstakt sind ausgenommen.
+  - **Exportieren:** *Als MusicXML speichern* lädt das Lied als `.musicxml`-Datei herunter (Dateiname = Liedname). MusicXML ist das Austauschformat der Notenprogramme; in MuseScore, Sibelius, Dorico usw. lässt sich das Lied öffnen, weiter bearbeiten und als PDF drucken. Mit dabei: Titel, Taktart, Auftakt, Takte (wie gerade angezeigt), Vorzeichen, Haltebögen, Balken, Umbrüche, Schlussstrich und das Tempo.
 
 ### Menü
 

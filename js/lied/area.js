@@ -1,10 +1,12 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
-import { confirmTap, popover, delegate, esc } from '../core/ui.js';
+import { confirmTap, popover, delegate, esc, toast, downloadFile } from '../core/ui.js';
+import { settings } from '../core/settings.js';
 import { playPlan } from './model.js';
 import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
+import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { L, opts, persistOpts } from './state.js';
 import { render, renderSheet, markPlaying } from './render.js';
 import { buildPanel, fillTaktPop } from './sidebar.js';
@@ -64,6 +66,15 @@ function renderSizes() {
   });
 }
 
+// Lädt das Lied als MusicXML-Datei herunter
+function exportMusicXML() {
+  if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
+  const xml = songToMusicXML(L.song, { name: L.name, autoBar: opts.autoBar, tempo: settings.tempo });
+  downloadFile(fileNameOf(L.name), xml, 'application/vnd.recordare.musicxml+xml');
+  closeMenu();
+  toast('Als MusicXML gespeichert.');
+}
+
 export function registerLied() {
   buildPanel();
   initControls();
@@ -76,6 +87,7 @@ export function registerLied() {
     closeMenu();
     act.loadSong(songOf(s));
   });
+  el.btnLiedExport.addEventListener('click', exportMusicXML);
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,

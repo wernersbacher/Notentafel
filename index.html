@@ -31,6 +31,7 @@
   "./js/lied/input.js": "./js/lied/input.js?v=1.0.0",
   "./js/lied/layout.js": "./js/lied/layout.js?v=1.0.0",
   "./js/lied/model.js": "./js/lied/model.js?v=1.0.0",
+  "./js/lied/musicxml.js": "./js/lied/musicxml.js?v=1.0.0",
   "./js/lied/render.js": "./js/lied/render.js?v=1.0.0",
   "./js/lied/sheet.js": "./js/lied/sheet.js?v=1.0.0",
   "./js/lied/sidebar.js": "./js/lied/sidebar.js?v=1.0.0",
@@ -296,6 +297,14 @@
     <button type="button" class="btn theme" id="btnCheckToggle" aria-pressed="true">
       <span>Falsche Takte markieren: <span id="checkToggleState">an</span></span>
       <span class="desc">Ein Takt, der zu voll oder nicht voll ist, wird rot hinterlegt. Auftakt und Schlusstakt sind ausgenommen.</span>
+    </button>
+  </section>
+
+  <section data-area="lied">
+    <h3>Exportieren</h3>
+    <button type="button" class="btn theme" id="btnLiedExport">
+      <span>Als MusicXML speichern</span>
+      <span class="desc">Lädt das Lied als Datei herunter. MusicXML können alle Notenprogramme öffnen, z. B. MuseScore. Dort lässt es sich weiter bearbeiten und als PDF drucken.</span>
     </button>
   </section>
 

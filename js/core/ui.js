@@ -68,3 +68,14 @@ export function delegate(container, selector, run) {
 export function onEnter(input, run) {
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); run(); } });
 }
+
+// Bietet einen Text als Datei zum Herunterladen an
+export function downloadFile(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type })), a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

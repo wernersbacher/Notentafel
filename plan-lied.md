@@ -232,7 +232,15 @@ Damit das Notenblatt nicht mehr seitlich gewischt werden muss. Mit dem Schalter 
 - Tonart-Vorzeichen am Zeilenanfang (z. B. F-Dur mit einem ♭)
 - Triolen, Bassschlüssel, mehrere Stimmen
 - Automatisches Teilen einer Note am Taktstrich mit Haltebogen
-- Export/Import von Liedern (passt zum Eintrag in `todo.md`)
+- Import von Liedern (MusicXML), Export als PDF über eine Druckansicht
+
+---
+
+## Nachtrag: Export als MusicXML – erledigt
+
+Im Menü *Exportieren → Als MusicXML speichern*. `lied/musicxml.js` macht aus dem Lied MusicXML 4.0 (partwise, `divisions` = 8 Ticks pro Viertel, also `duration` = `ticks()`). Takte entstehen an den gezeichneten Strichen (`barsAfter` mit der Einstellung *Taktstriche automatisch*), der Auftakt ist Takt 0 (`implicit`). Ein Umbruch wird zu `<print new-system>`; steht er mitten im Takt, endet dort ein Takt mit unsichtbarem Strich, weil MusicXML nur zwischen Takten umbricht. `alter` ist das klingende Vorzeichen, `accidental` das gezeichnete (`shownAccidentals`). Haltebögen nur bei gleicher Tonhöhe (`tiedFrom`), Balken aus `beamGroups`. Alle bekannten Lieder sind gegen das offizielle Schema geprüft.
+
+Fehlt für vollen Support (kommt mit den Funktionen selbst): Tonart, Liedtext, Wiederholungen, Taktwechsel, Triolen.
 
 ---
 

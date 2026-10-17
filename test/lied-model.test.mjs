@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ticks, staffPos, freq, noteName, nearestPitch, shiftOct, measureTicks, barsAfter, cleanSong, parsePitch
+  ticks, staffPos, freq, noteName, nearestPitch, shiftOct, measureTicks, barsAfter, cleanSong, parsePitch,
+  pickupsFor, gridOffset, gridStarts
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -79,7 +80,23 @@ test('cleanSong: prüft und säubert', () => {
     { v: 16 },
     { p: 'a0', v: 1 }
   ]);
-  assert.deepEqual(cleanSong({ meter: '6/8', ev: [] }), { meter: '6/8', ev: [] });
+  assert.deepEqual(cleanSong({ meter: '6/8', ev: [] }), { meter: '6/8', pickup: 0, ev: [] });
+  // Auftakt nur, wenn er kürzer als ein Takt ist; Haltebogen nur an Noten
+  assert.equal(cleanSong({ meter: '3/4', pickup: 8, ev: [] }).pickup, 8);
+  assert.equal(cleanSong({ meter: '3/4', pickup: 24, ev: [] }).pickup, 0);
+  assert.equal(cleanSong({ meter: '', pickup: 8, ev: [] }).pickup, 0);
+  assert.deepEqual(cleanSong({ ev: [n('c1', 4, { tie: 1 }), r(4, { tie: 1 })] }).ev, [{ p: 'c1', v: 4, tie: 1 }, { v: 4 }]);
   assert.deepEqual(parsePitch('h3'), { step: 6, oct: 3 });
   assert.equal(parsePitch('c4'), null);
+});
+
+test('Auftakt: Taktraster und automatische Taktstriche zählen nach dem Auftakt', () => {
+  assert.deepEqual(pickupsFor('4/4'), [4, 8, 12, 16, 24]);
+  assert.deepEqual(pickupsFor('2/4'), [4, 8, 12]);
+  assert.deepEqual(pickupsFor(''), []);
+  const s = { meter: '4/4', pickup: 8, ev: [n('g0'), n('c1'), n('c1'), n('d1'), n('e1'), n('f1')] };
+  assert.equal(gridOffset(s), 24);
+  assert.deepEqual(gridStarts(s), [24, 32, 40, 48, 56, 64]);
+  assert.deepEqual(barsAfter(s, true), [1, 0, 0, 0, 1, 0]);
+  assert.equal(gridOffset({ ...s, meter: '' }), 0);
 });

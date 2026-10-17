@@ -5,9 +5,9 @@ import { cleanSong } from './model.js';
 const KEYS = { board: 'notentafel.lied.v1', songs: 'notentafel.lied.songs.v1', auto: 'notentafel.lied.autosave.v1' };
 const SETTINGS_KEY = 'notentafel.lied.settings.v1';
 
-// Ein gespeicherter Stand: Taktart, Ereignisse und Name
+// Ein gespeicherter Stand: Taktart, Auftakt, Ereignisse und Name
 function pack(song, name, savedAt) {
-  const o = { meter: song.meter, ev: song.ev, name };
+  const o = { meter: song.meter, pickup: song.pickup, ev: song.ev, name };
   if (savedAt) o.savedAt = savedAt;
   return o;
 }

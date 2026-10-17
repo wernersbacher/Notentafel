@@ -162,11 +162,11 @@ export function lineBreak() {
 export function undo() {
   if (restore()) commit();
 }
-// Neues, leeres Lied; die Taktart bleibt
+// Neues, leeres Lied; Taktart und Auftakt bleiben
 export function clearAll() {
   snap();
   stashSong();
-  L.song = { meter: L.song.meter, ev: [] };
+  L.song = { meter: L.song.meter, pickup: L.song.pickup, ev: [] };
   L.name = '';
   L.sel = 0;
   L.last = null;

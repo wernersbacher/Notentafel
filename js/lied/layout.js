@@ -1,7 +1,6 @@
 // Notensatz: berechnet aus dem Lied die Lage aller Zeichen, ohne DOM. Gezeichnet wird in sheet.js.
 // Waagerecht zählt alles in Linienabständen (sp), senkrecht in Plätzen (pos, halbe Linienabstände, unterste Linie = 0).
-import { isNote, ticks, staffPos, measureTicks, barsAfter } from './model.js';
-import { countsOf } from './model.js';
+import { isNote, ticks, staffPos, barsAfter, gridStarts, countsOf } from './model.js';
 
 export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
@@ -19,22 +18,47 @@ export const G = {
 // (mindestens Kopf, Punkt und etwas Luft, siehe layout)
 export const spacing = (t) => 1.6 + 0.9 * Math.log2(t / 2);
 
-// Achtel und Sechzehntel innerhalb eines Schlags bekommen einen gemeinsamen Balken (Schlag: Viertel, im x/8-Takt punktierte Viertel).
+// Achtel und Sechzehntel innerhalb eines Schlags bekommen einen gemeinsamen Balken. Schlag: Viertel, im 2/2-Takt Halbe,
+// im 6/8-Takt punktierte Viertel. Im 4/4-Takt teilen sich zwei volle Schläge einfacher Achtel in derselben Takthälfte
+// einen Balken. Im 2/2-Takt werden Gruppen mit Sechzehnteln wieder pro Viertel getrennt (nach dem Beginn jeder Note).
 // Pausen, Taktstriche und Zeilenumbrüche unterbrechen den Balken. Liefert Gruppen von Indizes (mindestens zwei).
 export function beamGroups(song, bars) {
-  const m = song.meter, len = m ? measureTicks(m) : 0, beat = m && m.endsWith('/8') ? 12 : 8;
-  const key = (p) => (len ? Math.floor(p / len) * 1000 + Math.floor((p % len) / beat) : Math.floor(p / beat));
-  const groups = [];
-  let cur = null, pos = 0;
-  song.ev.forEach((e, i) => {
-    const t = ticks(e), k = key(pos);
-    const ok = isNote(e) && e.v >= 8 && key(pos + t - 1) === k;
-    const prev = song.ev[i - 1];
-    if (ok && cur && cur.k === k && cur.end === i - 1 && !bars[i - 1] && !prev.brk) { cur.idx.push(i); cur.end = i; }
+  const m = song.meter, ev = song.ev, starts = gridStarts(song);
+  const beat = m === '2/2' ? 16 : m === '6/8' ? 12 : 8;
+  // Die Taktlänge ist ein Vielfaches des Schlags, die Schläge zählen also einfach vom Anfang des Rasters
+  const key = (p) => Math.floor(p / beat);
+  const linked = (i) => !bars[i - 1] && !ev[i - 1].brk;
+  let groups = [], cur = null;
+  ev.forEach((e, i) => {
+    const p = starts[i], k = key(p);
+    const ok = isNote(e) && e.v >= 8 && key(p + ticks(e) - 1) === k;
+    if (ok && cur && cur.k === k && cur.end === i - 1 && linked(i)) { cur.idx.push(i); cur.end = i; }
     else if (ok) { cur = { k, idx: [i], end: i }; groups.push(cur); }
     else cur = null;
-    pos += t;
   });
+  if (m === '2/2') {
+    groups = groups.flatMap((g) => {
+      if (!g.idx.some((i) => ev[i].v === 16)) return [g];
+      const out = [];
+      g.idx.forEach((i) => {
+        const q = Math.floor(starts[i] / 8), last = out[out.length - 1];
+        if (last && last.q === q) last.idx.push(i);
+        else out.push({ q, idx: [i] });
+      });
+      return out;
+    });
+  }
+  if (m === '4/4') {
+    // Ein voller Schlag aus zwei einfachen Achteln
+    const plain = (g) => g.idx.length === 2 && g.idx.every((i) => ev[i].v === 8 && !ev[i].dot);
+    groups = groups.reduce((out, g) => {
+      const a = out[out.length - 1];
+      if (a && plain(a) && plain(g) && a.k % 2 === 0 && g.k === a.k + 1 && g.idx[0] === a.end + 1 && linked(g.idx[0])) {
+        out[out.length - 1] = { k: g.k, idx: [...a.idx, ...g.idx], end: g.end };
+      } else out.push(g);
+      return out;
+    }, []);
+  }
   return groups.map((g) => g.idx).filter((g) => g.length > 1);
 }
 
@@ -60,7 +84,8 @@ function noteShape(it, e) {
 //   items           pro Ereignis: i, x (Mitte des Kopfs), l/r (Spalte zum Antippen), pos, ledger, stem { up, end, x },
 //                   flags, dot (Platz des Punkts), accX, rest
 //   bars            { x, k } Takt- (1) und Schlussstriche (2)
-//   beams           { up, end, x1, x2, sub: [[x1, x2]] } Balken; sub sind die zweiten Balken der Sechzehntel
+//   beams           { up, x1, x2, end1, end2, sub: [[x1, x2]] } Balken von (x1, end1) nach (x2, end2); sub sind die
+//                   zweiten Balken der Sechzehntel
 //   ghost           der leere Platz am Ende (nur in der letzten Zeile)
 //   ties            Haltebögen { x1, x2, pos, down }; über einen Umbruch hinweg in zwei Stücken
 //   width, top, bottom   Breite und Platz über bzw. unter dem System in sp
@@ -104,10 +129,17 @@ export function layout(song, { autoBar = false, counts = false } = {}) {
     const its = idx.map((i) => at[i]);
     // Die Note, die am weitesten von der Mittellinie entfernt ist, bestimmt die Richtung aller Hälse
     const far = its.reduce((a, b) => (Math.abs(b.pos - 4) > Math.abs(a.pos - 4) ? b : a));
-    const up = far.pos < 4;
-    const end = up ? Math.max(...its.map((it) => it.pos + G.stem)) : Math.min(...its.map((it) => it.pos - G.stem));
-    its.forEach((it) => { it.stem = { up, end }; delete it.flags; });
+    const up = far.pos < 4, dir = up ? 1 : -1;
     const sx = (it) => it.x + (up ? G.stemX : -G.stemX);
+    const a = its[0], z = its[its.length - 1], x1 = sx(a), x2 = sx(z);
+    // Neigung nach erstem und letztem Kopf, höchstens ein Linienabstand; waagerecht, wenn ein innerer Kopf weiter außen liegt
+    const inner = its.slice(1, -1).some((it) => dir * it.pos > Math.max(dir * a.pos, dir * z.pos));
+    const slope = inner ? 0 : Math.max(-2, Math.min(2, (z.pos - a.pos) / 2));
+    const at0 = (it) => slope * (sx(it) - x1) / (x2 - x1);
+    // Dann die Linie so legen, dass jeder Hals lang genug ist und weit außen bis zur Mittellinie reicht
+    const need = (it) => (up ? Math.max(it.pos + G.stem, 4) : Math.min(it.pos - G.stem, 4)) - at0(it);
+    const end1 = up ? Math.max(...its.map(need)) : Math.min(...its.map(need)), end2 = end1 + slope;
+    its.forEach((it) => { it.stem = { up, end: end1 + at0(it) }; delete it.flags; });
     // Zweiter Balken über aufeinanderfolgenden Sechzehnteln; eine einzelne bekommt einen kurzen Ansatz
     const sub = [];
     for (let j = 0; j < its.length; j++) {
@@ -119,7 +151,7 @@ export function layout(song, { autoBar = false, counts = false } = {}) {
       else sub.push([sx(its[j]), sx(its[j]) + 1]);
       j = k;
     }
-    systems.find((s) => idx[0] < s.end).beams.push({ up, end, x1: sx(its[0]), x2: sx(its[its.length - 1]), sub });
+    systems.find((s) => idx[0] < s.end).beams.push({ up, x1, x2, end1, end2, sub });
   });
 
   systems.forEach((s) => {

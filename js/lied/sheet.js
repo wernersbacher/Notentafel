@@ -58,9 +58,11 @@ export function sheetSVG(song, lay, o) {
       g += '</g>';
     });
     s.beams.forEach((b) => {
-      const by = yOf(b.end);
-      g += beam(b.x1, b.x2, by, b.up);
-      b.sub.forEach(([x1, x2]) => { g += beam(x1, x2, by + (b.up ? 0.75 : -0.75), b.up); });
+      // Höhe auf der Linie des Balkens; die zweiten Balken liegen parallel dazu, zum Kopf hin versetzt
+      const y1 = yOf(b.end1), y2 = yOf(b.end2), d = b.up ? 0.75 : -0.75;
+      const by = (x) => y1 + (y2 - y1) * (x - b.x1) / (b.x2 - b.x1) + d;
+      g += beam(b.x1, y1, b.x2, y2, b.up);
+      b.sub.forEach(([x1, x2]) => { g += beam(x1, by(x1), x2, by(x2), b.up); });
     });
     s.bars.forEach((b) => { g += barline(b.x, b.k); });
     if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';

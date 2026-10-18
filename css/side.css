@@ -6,10 +6,10 @@
   display: flex; flex-direction: column; gap: 10px;
   overflow-y: auto; min-height: 0; min-width: 0;
 }
-.headbtns { display: flex; gap: 6px; }
-.headbtns .btn { flex-direction: column; gap: .1rem; min-height: 50px; padding: .25rem .5rem; font: 800 .72rem var(--font-ui); }
+.headbtns { display: flex; gap: 5px; flex: none; }
+.headbtns .btn { flex-direction: column; gap: .1rem; min-height: 50px; padding: .25rem .32rem; font: 800 .66rem var(--font-ui); }
 .headbtns .ico { width: 1.35rem; height: 1.35rem; }
-.title { font: 800 1.15rem var(--font-ui); letter-spacing: .06em; text-transform: uppercase; margin: 0; } /* wie die Unterüberschriften der Leiste */
+.title { font: 800 1.5rem var(--font-ui); letter-spacing: .04em; white-space: nowrap; text-transform: uppercase; margin: 0; } /* wie die Unterüberschriften der Leiste */
 
 /* Umschalter zwischen den Bereichen (--n: Anzahl, setzt die Shell) */
 .tabs {
@@ -17,7 +17,7 @@
   padding: 4px; background: var(--bg); border-radius: 14px;
 }
 .tab {
-  font: 800 1rem var(--font-ui); color: var(--muted); background: none;
+  font: 800 1.08rem var(--font-ui); letter-spacing: .04em; color: var(--muted); background: none; /* Schrift wie der Titel, normale Schreibweise */
   border: 0; border-radius: 10px; min-height: 48px;
   cursor: pointer; touch-action: manipulation;
 }

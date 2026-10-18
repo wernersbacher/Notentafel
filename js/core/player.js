@@ -21,7 +21,7 @@ let play = null; // { out, timers, cur, mark } während des Abspielens; Schritt 
 
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
-// Schritt für Schritt mit „kommende Noten verdecken“ (settings.stepHide): die Bereiche blenden alles hinter der
+// Schritt für Schritt mit „Noten erst beim Weitertippen anzeigen“ (settings.stepHide): die Bereiche blenden alles hinter der
 // markierten Stelle aus
 export const stepHides = () => !!(play && play.steps && settings.stepHide);
 

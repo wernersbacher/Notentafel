@@ -52,9 +52,9 @@
    Jede Zeile bekommt ihre Spalten als --tpl aus dem Skript; --fr ist die Breite der längsten Zeile in --L.
    --L ist für alle Zeilen gleich, damit alle Kreise gleich groß sind: höchstens 3.5rem + 3px (ein Kreis also so breit
    wie sonst ein Platz mit Abstand), weniger, wenn die längste Zeile sonst nicht passt. Das Zeichen steht vorn in seinem Platz. */
-.grid.prop { --g: 0px; min-width: calc(1.5rem + var(--fr, 2) * 26px); }
+.grid.prop { --g: 0px; min-width: calc(1.5rem + var(--fr, 2) * 15px); }
 .grid.prop .row { --L: min(3.5rem + 3px, (100% - 1.5rem) / var(--fr, 2)); grid-template-columns: 1.5rem var(--tpl); }
-.grid.prop.meters { min-width: calc(4.2rem + var(--fr, 2) * 26px); }
+.grid.prop.meters { min-width: calc(4.2rem + var(--fr, 2) * 15px); }
 .grid.prop.meters .row { --L: min(3.5rem + 3px, (100% - 4.2rem) / var(--fr, 2)); grid-template-columns: 4.2rem var(--tpl); }
 .grid.prop .cell { justify-items: start; }
 /* Achtel im geteilten Feld (Rhythmus): das Zeichen ist so groß wie sonst und steht mittig über seiner halben Spalte;
@@ -238,7 +238,7 @@
   box-shadow: 0 14px 28px rgba(0, 0, 0, .35); transition: none;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 600px) { /* nur Handys; ein iPad (ab 768 px) behält die Leiste an der Seite */
   .boardwrap { height: min(62vh, 520px); min-height: 340px; }
 }
 @media (prefers-reduced-motion: reduce) {

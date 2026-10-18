@@ -38,9 +38,12 @@ export function initTafelMenu() {
     loadSong({ name: m.name, rows: melodyRows(m) });
   });
   TOGGLES.forEach((t) => toggleSetting(t, render));
-  el.btnToLied.addEventListener('click', () => {
+  // Ins Notenblatt übernehmen: im Menü und unten in der Leiste
+  const toLied = () => {
     if (!hasNotes(S.rows)) { toast('Auf der Tafel steht noch nichts.', true); return; }
     closeMenu();
     handOver('lied', { name: S.name, song: rowsToSong(S.rows), colors: S.variant === 'mel' });
-  });
+  };
+  el.btnToLied.addEventListener('click', toLied);
+  el.btnToLiedSide.addEventListener('click', toLied);
 }

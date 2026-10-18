@@ -5,6 +5,7 @@ import { countSlots, openMeasureAt } from './theory.js';
 import { S, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
 import { toast } from '../core/ui.js';
+import { stopPlay } from '../core/player.js';
 
 // Ist die Zeile mit dem Platz c voll? Gezählt werden Schläge (S.cap pro Zeile; ein Platz je Schlag).
 function fullAt(row, c) {
@@ -66,7 +67,9 @@ function replaceCur(v) {
 }
 
 /* ---------- Markierung ---------- */
+// Beendet Abspielen und Schritt für Schritt: weiter geht es ab der neuen Markierung (z. B. eine Stelle mehrmals üben)
 export function select(r, c) {
+  stopPlay();
   S.sel = { r, c };
   S.countAt = null;
   render();

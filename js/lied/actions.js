@@ -1,5 +1,6 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
+import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
 import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
@@ -27,8 +28,10 @@ function full() {
 }
 
 /* ---------- Markierung ---------- */
-// Tippen auf einen Platz: markiert ihn; steht dort ein Zeichen, übernimmt der Stift seinen Wert
+// Tippen auf einen Platz: markiert ihn; steht dort ein Zeichen, übernimmt der Stift seinen Wert.
+// Beendet Abspielen und Schritt für Schritt: weiter geht es ab der neuen Markierung (z. B. eine Stelle mehrmals üben)
 export function select(i) {
+  stopPlay();
   L.sel = Math.max(0, Math.min(i, ev().length));
   L.last = null;
   const e = cur();

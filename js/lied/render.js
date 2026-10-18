@@ -134,7 +134,7 @@ export function commit() {
 // Hebt beim Abspielen das klingende Zeichen hervor (i = null: keins)
 // Hebt beim Abspielen die klingende Note hervor: farbig und mit einem Balken dahinter (so groß wie ihre Tippfläche,
 // ganz hinten im System, damit er nichts verdeckt)
-// Schritt für Schritt mit „nur bis zur Note zeigen“: alles dahinter liegt unter einem schlichten Tuch
+// Schritt für Schritt mit „kommende Noten verdecken“: alles dahinter liegt unter einem schlichten Tuch
 export function markPlaying(i) {
   const old = el.sheet.querySelector('.ev.playing');
   if (old) old.classList.remove('playing');

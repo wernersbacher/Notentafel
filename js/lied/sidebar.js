@@ -3,6 +3,7 @@ import { STEPS, OCT_MIN, OCT_MAX, VALUES, METERS, isNote, canDot, pickupsFor, ma
 import { noteIcon, dotIcon, restIcon } from './glyphs.js';
 import { L, opts } from './state.js';
 import { el } from './dom.js';
+import { blockSum } from '../core/blocks.js';
 
 const VALUE_NAMES = { 1: 'Ganze', 2: 'Halbe', 4: 'Viertel', 8: 'Achtel', 16: 'Sechzehntel' };
 // Auftakte in Ticks als Notenwert (mit Punkt) für Symbol und Namen
@@ -29,7 +30,8 @@ export function buildSteps() {
     }
   }
   el.liedSteps.innerHTML = html;
-  el.liedMore.textContent = opts.allTones ? "▴ nur c' bis h''" : "▾ auch c bis h und c''' bis h'''";
+  el.liedMore.textContent = opts.allTones ? "▴ weniger" : "▾ alle Töne";
+  el.liedMore.title = opts.allTones ? "Nur c' bis h'' zeigen" : "Auch c bis h und c''' bis h''' zeigen";
   el.liedMore.setAttribute('aria-expanded', opts.allTones ? 'true' : 'false');
 }
 
@@ -95,6 +97,7 @@ export function renderSidebar() {
   el.liedKeyName.textContent = keyName(k) + (k ? ' · ' + Math.abs(k) + (k > 0 ? '♯' : '♭') : '');
   el.liedKeyDown.disabled = k <= KEY_MIN;
   el.liedKeyUp.disabled = k >= KEY_MAX;
+  blockSum('liedSetup', (L.song.meter || 'ohne Taktart') + ' · ' + keyName(k) + (L.song.pickup ? ' · Auftakt' : ''));
 
   // Gemeinsame Knöpfe
   pressed(el.btnIns, L.insertMode);

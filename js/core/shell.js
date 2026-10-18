@@ -37,6 +37,7 @@ function show(a) {
   el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk'].some((k) => tools[k]);
   el.btnPlay.hidden = !a.plan;
   el.btnSaveSide.hidden = !a.songs;
+  document.getElementById('side').dataset.area = a.id;
 }
 // Übergibt data an den Bereich id und wechselt dorthin (z. B. eine Melodie als Lied). Was data ist, vereinbaren die
 // beiden Bereiche; der Kern reicht es nur weiter. false, wenn es den Bereich nicht gibt oder er nichts annimmt.

@@ -90,8 +90,43 @@
   gap: 7px; padding: 10px 10px 12px; border-radius: 14px;
   background: color-mix(in srgb, var(--fg) 4%, transparent);
 }
-.panel .block > .glabel { margin-top: 3px; }
+.panel .block > .glabel { margin-top: 1px; }
 .btitle { margin: 0 0 2px; display: flex; align-items: center; gap: .45rem; font: 800 .82rem var(--font-ui); letter-spacing: .05em; text-transform: uppercase; color: var(--fg); }
 .btitle .num { flex: none; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--fg); color: var(--panel); font-size: .75rem; letter-spacing: 0; }
 .btitle > span:not(.num) { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .btitle .ico { width: 1rem; height: 1rem; }
+
+/* Aufklappbare Blöcke (alle Bereiche): die ganze Überschrift ist der Knopf, eingeklappt nur sie mit Kurzinfo */
+.bhead {
+  width: 100%; min-height: 40px; margin: -4px 0; padding: 0; display: flex; align-items: center; gap: .45rem;
+  border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.bhead .bname { flex: none; }
+.bhead .bhint, .bhead .bsum { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.bhead .bsum { font-weight: 800; color: var(--fg); }
+.bhead .chev { flex: none; margin-left: auto; width: 1.25rem; height: 1.25rem; color: var(--muted); transition: transform .18s ease; }
+.block.open .bhead .chev { transform: rotate(180deg); }
+.block.open .bhead .bsum, .block:not(.open) .bhead .bhint { display: none; }
+.panel .block:not(.open) { padding-bottom: 10px; }
+.panel .block:not(.open) > :not(.btitle) { display: none !important; }
+.panel .block:not(.open) > .btitle { margin-bottom: 0; }
+
+/* Tonart und Transponieren in einer Reihe */
+.keyrow { grid-template-columns: 1fr 1.3fr 1fr .85fr .85fr; gap: 4px; }
+.keyrow .btn { padding: 0 .15rem; }
+.keyrow .btn.trans { flex-direction: column; gap: 0; line-height: 1; }
+.keyrow .trans .big { font-size: .9rem; }
+.keyrow .trans .small { font-size: .62rem; }
+.keyname { font-size: .82rem; line-height: 1.15; text-align: center; }
+/* Vorzeichen und „alle Töne“ in einer Reihe */
+.tools.accs { grid-template-columns: 1fr 1fr 1fr 1.5fr; }
+.tools.accs .btn.more { width: auto; min-height: 44px; margin: 0; }
+/* Als Melodie übernehmen: unten neben Speichern, nur im Bereich Lied */
+.side:not([data-area="lied"]) #btnToMelody { display: none; }
+.actions > .btn.tomel { width: auto; min-height: 0; flex-direction: column; gap: .2rem; font: inherit; font-size: .88rem; }
+/* eingeklappte Blöcke flacher */
+.panel .block:not(.open) { padding-top: 6px; padding-bottom: 6px; }
+/* Im Bereich Lied vier Knöpfe unten: Symbol über der Schrift, etwas kleinere Schrift */
+.side[data-area="lied"] .actions { gap: 6px; }
+.side[data-area="lied"] .actions > .btn { flex-direction: column; gap: .15rem; padding: .2rem .15rem; font-size: .78rem; hyphens: manual; }

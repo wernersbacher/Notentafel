@@ -6,6 +6,7 @@ import { S, settings, curCell, curRow } from './state.js';
 import { colorStyle, noteLabel, ICONS } from './symbols.js';
 import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
 import { el } from './dom.js';
+import { blockSum } from '../core/blocks.js';
 
 const pressed = (btn, on) => {
   btn.classList.toggle('on', on);
@@ -72,6 +73,9 @@ export function renderSidebar() {
 
   [el.btnAutoBar, el.btnAutoBarMel].forEach((b) => pressed(b, settings.autoBar));
   [el.btnAutoZ, el.btnAutoZMel].forEach((b) => pressed(b, settings.autoZ));
+  const sum = meterOf(S.rows, S.sel.r) || 'ohne Taktart';
+  blockSum('melSetup', sum);
+  blockSum('rhySetup', sum);
   pressed(el.btnSyl, settings.syl);
   renderCounts(cur);
 

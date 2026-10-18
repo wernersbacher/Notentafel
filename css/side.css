@@ -41,8 +41,9 @@
 .tools .btn { flex-direction: column; gap: .15rem; min-height: 58px; padding: .3rem .15rem; }
 .tools .btn .small { font-size: .72rem; }
 
-.palette { display: flex; flex-direction: column; gap: 10px; }
-.pal { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+/* Töne in zwei Reihen à 7: Stammtöne, darunter die hohen Töne mit Fis und B */
+.palette { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.pal { display: contents; }
 .note {
   aspect-ratio: 1; border: 0; border-radius: 50%;
   background: var(--c); color: #000;
@@ -62,7 +63,7 @@
 .values.v6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .values .vgap { display: block; }
 .values .btn .small { font-size: .8rem; }
-.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: auto; position: relative; }
+.actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin-top: auto; position: relative; }
 .actions > .btn { padding: 0 .3rem; gap: .3rem; font-size: .88rem; line-height: 1.1; text-align: center; }
 /* Namensfeld zum Speichern, schwebt über den Knöpfen */
 .savepop {

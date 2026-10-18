@@ -18,6 +18,9 @@ const WRAP = { 1: 14, 2: 20, 3: 28 };
 const SP = { 1: [8, 20], 2: [16, 28], 3: [22, 36] };
 // Aktuelle Größe eines Linienabstands in Pixeln (zum Umrechnen beim Ziehen)
 export let spPx = 16;
+// Erstes Ereignis der letzten Zeile, so wie das Notenblatt gerade umbrochen ist (für „− Zeile“)
+let lastFirst = 0;
+export const lastLineStart = () => lastFirst;
 
 export function renderSheet() {
   const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check };
@@ -32,6 +35,7 @@ export function renderSheet() {
   }
   const W = Math.max(...lay.systems.map((s) => s.width), avail / sp - 0.1);
   spPx = sp;
+  lastFirst = lay.systems[lay.systems.length - 1].first;
   // Eingeklappte Leiste: Bearbeiten beendet, ohne Markierung und leeren Platz
   const clean = sideCollapsed();
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;

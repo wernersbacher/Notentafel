@@ -138,6 +138,9 @@ export function registerLied() {
       del: act.deleteEv,
       brk: act.lineBreak,
       undo: act.undo,
+      addRow: act.addLine,
+      // − Zeile (wenn in der Zeile Noten stehen) und Alles löschen muss man zweimal antippen
+      delRow: (btn) => { if (act.lastLineHasNotes()) confirmTap(btn, 'Sicher? Nochmal', act.delLine); else act.delLine(); },
       clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
     },
     // Ab der Markierung (steht sie hinter der letzten Note, von vorn), mit Zählschlag und Auftakt für den Player

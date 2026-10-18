@@ -4,7 +4,7 @@ import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
 import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
-import { render, renderSheet, commit, lineStartAfter, scrollTop } from './render.js';
+import { render, renderSheet, commit, lineStartAfter, scrollTop, lastLineStart } from './render.js';
 
 const ev = () => L.song.ev;
 const cur = () => L.song.ev[L.sel];
@@ -292,6 +292,36 @@ export function lineBreak() {
   if (!e) return;
   snap();
   if (e.brk) delete e.brk; else e.brk = 1;
+  commit();
+}
+
+/* ---------- Zeilen ---------- */
+// + Zeile: hinter dem letzten Zeichen beginnt eine neue, leere Zeile, dort geht es weiter (wie auf der Tafel)
+export function addLine() {
+  const last = ev()[ev().length - 1];
+  if (!last) { toast('Das Lied ist noch leer.', true); return; }
+  if (last.brk) { L.sel = ev().length; L.last = null; render(); return; } // eine leere Zeile gibt es schon
+  snap();
+  last.brk = 1;
+  L.sel = ev().length;
+  L.last = null;
+  commit();
+}
+// Stehen in der letzten Zeile Noten? (Dann fragt „− Zeile“ nach.)
+export const lastLineHasNotes = () => ev().length > 0 && !ev()[ev().length - 1].brk;
+// − Zeile: die letzte Zeile entfernen; eine leere verschwindet mit ihrem Umbruch
+export function delLine() {
+  const n = ev().length;
+  if (!n) return;
+  snap();
+  if (ev()[n - 1].brk) delete ev()[n - 1].brk;
+  else {
+    const k = lastLineStart();
+    ev().splice(k);
+    if (k > 0 && ev()[k - 1].brk) delete ev()[k - 1].brk; // sonst bliebe eine leere Zeile stehen
+  }
+  L.sel = Math.min(L.sel, ev().length);
+  L.last = null;
   commit();
 }
 

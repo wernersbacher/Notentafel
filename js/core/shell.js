@@ -131,6 +131,16 @@ export function startShell() {
   }
   el.btnPlay.addEventListener('click', () => togglePlay(cur.plan, cur.mark));
   el.btnSide.addEventListener('click', () => setCollapsed(!collapsed));
+  // Leiste oben mit den Tafeln ein- und ausklappen (bleibt gemerkt)
+  const setTop = (hide) => {
+    document.querySelector('.app').classList.toggle('notop', hide);
+    el.btnTopShow.hidden = !hide;
+    settings.topHidden = hide;
+    persistSettings();
+  };
+  el.btnTopHide.addEventListener('click', () => setTop(true));
+  el.btnTopShow.addEventListener('click', () => setTop(false));
+  if (settings.topHidden) setTop(true);
 
   savePop = popover(el.savePop, el.btnSaveSide, { onOpen: prepareSavePop, onClose: leaveSavePop });
   el.btnSaveOk.addEventListener('click', saveFromSide);

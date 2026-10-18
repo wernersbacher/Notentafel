@@ -63,6 +63,12 @@
 <body>
 
 <div class="app">
+  <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
+  <header class="topbar" id="topbar">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
+    <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </header>
+  <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Melodie · Rhythmus · Lied</span></button>
   <div class="boardwrap">
     <div class="board">
       <div class="grid" id="grid" aria-label="Musiktafel"></div>
@@ -95,7 +101,6 @@
       </div>
     </div>
 
-    <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
 
     <div class="tools">
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">

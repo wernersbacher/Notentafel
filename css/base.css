@@ -55,9 +55,25 @@ body {
   height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(300px, 33vw, 350px);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
 }
+/* Leiste oben über die ganze Breite: die drei Tafeln in der Mitte, rechts der Knopf zum Einklappen */
+.topbar { grid-column: 1 / -1; position: relative; display: flex; justify-content: center; align-items: center; }
+.topbar .tabs { width: min(560px, 100%); background: var(--panel); }
+.fab.topfold { position: absolute; right: 0; width: 40px; height: 40px; box-shadow: none; }
+.fab.topfold .ico { width: 1.2rem; height: 1.2rem; }
+.app.notop { grid-template-rows: minmax(0, 1fr); }
+.app.notop > .topbar { display: none; }
+/* eingeklappt: ein kleiner Griff oben in der Mitte holt sie zurück */
+.topshow {
+  position: fixed; top: 0; left: 50%; z-index: 25; transform: translateX(-50%);
+  display: flex; align-items: center; gap: .35rem; padding: 2px 14px 4px;
+  border: 2px solid var(--btn-line); border-top: 0; border-radius: 0 0 12px 12px;
+  background: var(--btn); color: var(--muted); font: 800 .72rem var(--font-ui); cursor: pointer;
+}
+.topshow[hidden] { display: none; }
+.topshow .ico { width: 1rem; height: 1rem; }
 /* Leiste eingeklappt: die Tafel nimmt die ganze Breite */
 .app.collapsed { grid-template-columns: minmax(0, 1fr); }
 .app.collapsed > .side { display: none; }
@@ -147,7 +163,7 @@ body {
 
 @media (max-width: 600px) { /* nur Handys; ein iPad (ab 768 px) behält die Leiste an der Seite */
   html, body { height: auto; }
-  .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) { transform: none; }

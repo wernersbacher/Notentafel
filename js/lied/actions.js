@@ -384,6 +384,17 @@ export function toggleNameCard() {
   if (!opts.names) { opts.names = true; persistOpts(); toast('Notennamen eingeschaltet, damit es etwas abzudecken gibt.'); }
   commit();
 }
+// Alle Notennamen verdecken; liegen schon auf allen Namen verdeckte Karten, kommen sie alle wieder weg
+export function toggleAllNames() {
+  const notes = ev().filter(isNote);
+  if (!notes.length) { toast('Im Lied stehen noch keine Noten.', true); return; }
+  snap();
+  const all = notes.every((e) => e.qn === 1);
+  notes.forEach((e) => { if (all) delete e.qn; else e.qn = 1; });
+  if (!all && !opts.names) { opts.names = true; persistOpts(); }
+  commit();
+  toast(all ? 'Alle Notennamen wieder offen.' : 'Alle Notennamen verdeckt. Antippen deckt einen auf.');
+}
 // Tipp auf eine Note: eine verdeckte Karte wird aufgedeckt (name: die über dem Notennamen) und die Note markiert,
 // sonst wird nur markiert
 export function tapEv(i, name) {

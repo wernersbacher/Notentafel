@@ -150,7 +150,7 @@ export function registerLied() {
       return startAt(p, p.items.findIndex((s) => s.pos >= L.sel));
     },
     mark: markPlaying,
-    cover: { from: act.coverFrom, card: act.toggleCard, name: act.toggleNameCard, reset: act.resetCover, clear: act.clearCover },
+    cover: { from: act.coverFrom, card: act.toggleCard, name: act.toggleNameCard, names: act.toggleAllNames, reset: act.resetCover, clear: act.clearCover },
     songs: {
       store,
       texts: { save: 'Lied speichern', songs: 'Gespeicherte Lieder' },

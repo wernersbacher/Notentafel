@@ -79,3 +79,14 @@ export function downloadFile(name, text, type) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// Liste mit Zwischenüberschriften: Einträge mit group bekommen eine Überschrift, wenn die Gruppe wechselt
+export function groupedHTML(items, itemHTML) {
+  let last = null;
+  return items.map((it, i) => {
+    const head = it.group && it.group !== last ? '<li class="sgroup">' + esc(it.group) + '</li>' : '';
+    last = it.group;
+    return head + itemHTML(it, i);
+  }).join('');
+}
+

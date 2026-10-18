@@ -1,7 +1,7 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
-import { confirmTap, delegate, esc, toast, downloadFile, onEnter } from '../core/ui.js';
+import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
 import { settings } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
 import { beatsOf, startAt } from '../core/plan.js';
@@ -77,10 +77,10 @@ const WRAP = { key: 'wrap', btn: el.btnWrapToggle, state: el.wrapToggleState, ob
 
 // Bekannte Lieder im Menü; das gerade geladene ist hervorgehoben
 function renderKnown() {
-  el.liedSongs.innerHTML = SONGS.map((s, i) =>
+  el.liedSongs.innerHTML = groupedHTML(SONGS, (s, i) =>
     '<li class="song one' + (s.name === L.name ? ' current' : '') + '"><span class="name">' + esc(s.name) + '</span>' +
     '<button type="button" class="btn" data-known="' + i + '">Laden</button></li>'
-  ).join('');
+  );
 }
 
 // Notengröße: drei Knöpfe, der gewählte ist hervorgehoben

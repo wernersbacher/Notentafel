@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { songToMusicXML, fileNameOf } from '../js/lied/musicxml.js';
+import { measureTicks } from '../js/lied/model.js';
 import { SONGS, songOf } from '../js/lied/songs.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -115,7 +116,7 @@ test('alle bekannten Lieder ergeben gültiges XML mit vollständigen Takten', ()
   for (const s of SONGS) {
     const { song: sg } = songOf(s), xml = songToMusicXML(sg, { name: s.name });
     wellFormed(xml);
-    const len = { '3/4': 24, '4/4': 32 }[sg.meter];
+    const len = measureTicks(sg.meter);
     measures(xml).forEach((m, k, all) => {
       const sum = [...m.body.matchAll(/<duration>(\d+)/g)].reduce((a, x) => a + +x[1], 0);
       if (k === 0 && sg.pickup) assert.equal(sum, sg.pickup, s.name + ': Auftakt');

@@ -5,7 +5,7 @@ import { MELODIES, melodyRows } from './melodies.js';
 import { S, settings } from './state.js';
 import { persistSettings } from '../core/settings.js';
 import { closeMenu, renderToggle, toggleSetting } from '../core/menu.js';
-import { esc, delegate, toast } from '../core/ui.js';
+import { esc, delegate, toast, groupedHTML } from '../core/ui.js';
 import { handOver } from '../core/shell.js';
 import { hasNotes, rowsToSong } from './model.js';
 import { render } from './render.js';
@@ -14,10 +14,10 @@ import { loadSong } from './actions.js';
 import { el } from './dom.js';
 
 function renderMelodies() {
-  el.melodies.innerHTML = MELODIES.map((m, i) =>
+  el.melodies.innerHTML = groupedHTML(MELODIES, (m, i) =>
     '<li class="song one' + (m.name === S.name ? ' current' : '') + '"><span class="name">' + esc(m.name) + '</span>' +
     '<button type="button" class="btn" data-melody="' + i + '">Laden</button></li>'
-  ).join('');
+  );
 }
 function renderThemes() {
   el.themes.innerHTML = THEMES.map((t) => {

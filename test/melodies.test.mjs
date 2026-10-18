@@ -22,3 +22,8 @@ for (const m of MELODIES) {
     });
   });
 }
+
+test('Farbnoten und Notenblatt bieten dieselben Lieder in derselben Reihenfolge', async () => {
+  const { SONGS } = await import('../js/lied/songs.js');
+  assert.deepEqual(MELODIES.map((m) => [m.name, m.group]), SONGS.map((s) => [s.name, s.group]));
+});

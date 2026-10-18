@@ -69,6 +69,9 @@
 /* Rhythmus: Notenzeichen größer (Rahmen 1,2 × Kreis statt .8; der Kopf bei 24.6/30 bleibt auf der Linie), Pausen
    ebenso; die Balken entsprechend: Halsmitte .12 rechts, Hals .03 breit, Halsende .382 über dem Kreis, Balken .126 dick */
 .grid.rhy .dot.beat .sym { height: calc(var(--d) * 1.2); top: calc(var(--d) * -.484); }
+/* Die Hälse ragen bis .48 Kreise über den Kreis hinaus: so viel Platz bekommt jedes Zeichen oben dazu (und der Kreis
+   wird so viel kleiner, dass es trotzdem in die Zeile passt). Sonst stießen sie in der ersten Zeile an den Rand der Tafel. */
+.grid.rhy .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 2))); margin-top: calc(var(--d) * .5); }
 .grid.rhy .dot.rest { --rh: calc(var(--d) * 1.05); }
 .grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .105); top: calc(var(--d) * -.382); width: calc(100% + var(--g) + var(--d) * .03); height: calc(var(--d) * .126); }
 .grid.rhy.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .03); }

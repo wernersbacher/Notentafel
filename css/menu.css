@@ -62,8 +62,6 @@
   padding: 10px 12px; font-weight: 700;
 }
 .theme .desc { font-size: .78rem; font-weight: 700; opacity: .8; }
-.swatches { display: flex; gap: 5px; }
-.swatches span { width: 22px; height: 22px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--board); }
 /* An/Aus-Schalter: links, was geschaltet wird, rechts der Zustand */
 .switches { display: flex; flex-direction: column; gap: 8px; }
 .switch {

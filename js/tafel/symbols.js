@@ -1,10 +1,8 @@
 // HTML-Bausteine für Töne, Noten- und Pausenzeichen und Taktarten
 import { head, stem, flags, dot, rest, line } from '../core/glyphs.js';
-import { THEME_BY } from './config.js';
-import { settings } from './state.js';
 
-// Farbe eines Tons im gewählten Thema, als CSS-Variable für style="…"
-export const colorStyle = (n) => '--c:' + (THEME_BY[settings.theme].colors[n.id] || n.bg);
+// Farbe eines Tons als CSS-Variable für style="…"
+export const colorStyle = (n) => '--c:' + n.bg;
 
 // Buchstabe des Tons, bei hohen Tönen mit Pfeil nach oben, bei Fis mit Kreuz
 export function noteLabel(n) {

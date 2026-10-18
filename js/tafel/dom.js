@@ -5,7 +5,7 @@ const ids = [
   'grid', 'palette', 'values', 'rests', 'valuesMel', 'counts',
   'btnR', 'btnL', 'btnBar', 'btnEnd', 'btnRepStart', 'btnRepEnd', 'btnRepStartMel', 'btnRepEndMel', 'btnLine', 'rhyMeters', 'melMeters', 'restsMel', 'btnAutoBarMel', 'btnAutoZMel',
   'panelMel', 'panelRhy', 'btnAutoBar', 'btnAutoZ', 'btnSyl', 'btnToLied',
-  'melodiesSec', 'melodies', 'themesSec', 'themes',
+  'melodiesSec', 'melodies',
   'btnLensToggle', 'lensToggleState'
 ];
 export const el = Object.assign(Object.create(core), Object.fromEntries(ids.map((id) => [id, document.getElementById(id)])));

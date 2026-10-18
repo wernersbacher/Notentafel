@@ -9,7 +9,7 @@ const all = useSettings(cleanTafelSettings);
 
 // Welche Tafel gerade offen ist: 'mel' (Melodie) oder 'rhy' (Rhythmus)
 const variant = all.mode === 'rhy' ? 'rhy' : 'mel';
-// Einstellungen der offenen Tafel (theme, lens, autoBar, autoZ, syl); wechselt mit useVariant.
+// Einstellungen der offenen Tafel (lens, autoBar, autoZ, syl); wechselt mit useVariant.
 // Gespeichert wird mit persistSettings aus dem Kern, denn das Set hängt im gemeinsamen Objekt.
 export let settings = all[variant];
 const saved = loadBoard(variant);

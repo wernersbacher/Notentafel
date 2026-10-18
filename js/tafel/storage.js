@@ -2,7 +2,6 @@
 // Jede Funktion bekommt den Bereich ('mel' oder 'rhy') mitgegeben. Die Melodie behält die alten Schlüssel,
 // damit bisherige Stände dort weiterleben.
 import { makeStore } from '../core/store.js';
-import { THEME_BY } from './config.js';
 import { cleanRows, packLines } from './model.js';
 
 const KEYS = {
@@ -45,7 +44,6 @@ export function cleanTafelSettings(s) {
 }
 function cleanVariant(s) {
   return {
-    theme: THEME_BY[s.theme] ? s.theme : 'oktave',
     lens: s.lens !== false, // Notenzeichen unter den Tönen anzeigen
     autoBar: !!s.autoBar, // Taktstriche nach der Taktart
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart

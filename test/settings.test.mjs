@@ -13,7 +13,7 @@ const { settings, useSettings, persistSettings, cleanCoreSettings } = await impo
 const { cleanTafelSettings } = await import('../js/tafel/storage.js');
 
 // Die Einstellungen der Tafel aus dem alten Stand; sie galten für Melodie und Rhythmus zusammen
-const TAFEL = { theme: 'original', lens: false, autoBar: true, autoZ: true, syl: false };
+const TAFEL = { lens: false, autoBar: true, autoZ: true, syl: false };
 
 test('Einstellungen: ein bisheriger Stand wird gelesen, Melodie und Rhythmus übernehmen beide die alten Tafel-Einstellungen', () => {
   assert.equal(useSettings(cleanTafelSettings), settings);
@@ -28,15 +28,15 @@ test('Einstellungen: ein bisheriger Stand wird gelesen, Melodie und Rhythmus üb
 
 test('Einstellungen: Melodie und Rhythmus behalten getrennt gespeicherte Werte', () => {
   const t = cleanTafelSettings({ theme: 'original', mel: { theme: 'oktave', prop: true }, rhy: { lens: false } });
-  assert.deepEqual(t.mel, { theme: 'oktave', lens: true, autoBar: false, autoZ: false, syl: false });
-  assert.deepEqual(t.rhy, { theme: 'oktave', lens: false, autoBar: false, autoZ: false, syl: false });
+  assert.deepEqual(t.mel, { lens: true, autoBar: false, autoZ: false, syl: false });
+  assert.deepEqual(t.rhy, { lens: false, autoBar: false, autoZ: false, syl: false });
 });
 
 test('Einstellungen: Standardwerte bei fehlenden oder defekten Daten', () => {
   for (const raw of [{}, { theme: 'gibtsnicht', tempo: 999, mode: 5 }]) {
     const c = cleanCoreSettings(raw), t = cleanTafelSettings(raw);
     assert.deepEqual(c, { tempo: 90, mode: '', wake: true, countIn: false, metro: false, songSort: 'group', step: false, stepHide: false, topHidden: false, ui: 1, open: ['mel2', 'rhy2', 'lied2'] });
-    const d = { theme: 'oktave', lens: true, autoBar: false, autoZ: false, syl: false };
+    const d = { lens: true, autoBar: false, autoZ: false, syl: false };
     assert.deepEqual(t, { mel: d, rhy: d });
   }
 });

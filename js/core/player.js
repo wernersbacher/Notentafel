@@ -4,7 +4,7 @@
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
 // Schritt für Schritt (settings.step): statt im Tempo rückt die Markierung bei jedem Tipp auf den großen Knopf eine Note
-// weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Nach der letzten Note ist Schluss.
+// oder Pause weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Nach der letzten Note ist Schluss.
 import { audioCtx, bell, clave, piano, tick } from './audio.js';
 import { settings, persistSettings } from './settings.js';
 import { toast } from './ui.js';
@@ -81,11 +81,11 @@ export function stopPlay() {
 }
 
 // Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.
-// Pausen und die Fortsetzung übergebundener Töne werden übersprungen; Wiederholungen laufen mit wie beim Abspielen.
+// Jede Note und jede Pause ist ein Schritt, auch die zweite Note eines Haltebogens; Wiederholungen laufen mit.
 function stepNext(getPlan, mark) {
   if (!play) {
-    const plan = getPlan(), steps = plan ? plan.items.filter((s) => s.sound) : [];
-    if (!steps.length) { toast('Noch keine Töne auf der Tafel.', true); return; }
+    const plan = getPlan(), steps = plan ? plan.items : [];
+    if (!steps.some((s) => s.sound)) { toast('Noch keine Töne auf der Tafel.', true); return; }
     play = { out: null, timers: [], cur: null, mark, steps, i: -1 };
     showButton(true);
   }

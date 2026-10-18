@@ -27,3 +27,13 @@ test('Farbnoten und Notenblatt bieten dieselben Lieder in derselben Reihenfolge'
   const { SONGS } = await import('../js/lied/songs.js');
   assert.deepEqual(MELODIES.map((m) => [m.name, m.group]), SONGS.map((s) => [s.name, s.group]));
 });
+
+test('Jedes bekannte Lied bringt ein Tempo mit, das der Regler einstellen kann', async () => {
+  const { SONGS } = await import('../js/lied/songs.js');
+  const { TEMPO } = await import('../js/core/settings.js');
+  for (const s of [...MELODIES, ...SONGS]) {
+    assert.ok(s.tempo >= TEMPO.min && s.tempo <= TEMPO.max && s.tempo % 5 === 0, `${s.name}: ${s.tempo}`);
+  }
+  const t = (name) => SONGS.find((s) => s.name === name).tempo;
+  assert.ok(t('Stille Nacht') < t('Summ, summ, summ'));
+});

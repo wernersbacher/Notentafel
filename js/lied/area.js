@@ -1,8 +1,8 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register } from '../core/shell.js';
-import { renderToggle, toggleSetting, closeMenu } from '../core/menu.js';
+import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js';
 import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
-import { settings } from '../core/settings.js';
+import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
 import { beatsOf, startAt } from '../core/plan.js';
 import { store } from './storage.js';
@@ -79,7 +79,7 @@ const WRAP = { key: 'wrap', btn: el.btnWrapToggle, state: el.wrapToggleState, ob
 function renderKnown() {
   el.liedSongs.innerHTML = groupedHTML(SONGS, (s, i) =>
     '<li class="song one' + (s.name === L.name ? ' current' : '') + '"><span class="name">' + esc(s.name) + '</span>' +
-    '<button type="button" class="btn" data-known="' + i + '">Laden</button></li>'
+    '<button type="button" class="btn" data-known="' + i + '">Laden</button></li>', sortAbc()
   );
 }
 
@@ -123,6 +123,7 @@ export function registerLied() {
     const s = SONGS[+b.dataset.known];
     if (!s) return;
     closeMenu();
+    setTempo(s.tempo);
     act.loadSong(songOf(s));
   });
   el.btnLiedExport.addEventListener('click', exportMusicXML);

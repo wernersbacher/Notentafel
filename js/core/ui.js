@@ -80,8 +80,13 @@ export function downloadFile(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Liste mit Zwischenüberschriften: Einträge mit group bekommen eine Überschrift, wenn die Gruppe wechselt
-export function groupedHTML(items, itemHTML) {
+// Liste mit Zwischenüberschriften: Einträge mit group bekommen eine Überschrift, wenn die Gruppe wechselt.
+// abc: stattdessen alphabetisch nach name, ohne Überschriften. itemHTML bekommt immer die Stelle in items.
+export function groupedHTML(items, itemHTML, abc) {
+  if (abc) {
+    return items.map((it, i) => [it, i]).sort((a, b) => a[0].name.localeCompare(b[0].name, 'de'))
+      .map(([it, i]) => itemHTML(it, i)).join('');
+  }
   let last = null;
   return items.map((it, i) => {
     const head = it.group && it.group !== last ? '<li class="sgroup">' + esc(it.group) + '</li>' : '';

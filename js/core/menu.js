@@ -80,6 +80,15 @@ export function applyUiScale() {
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 }
+// Bekannte Lieder nach Thema oder alphabetisch: die Knöpfe mit data-sort stehen über den Listen der Bereiche
+export const sortAbc = () => settings.songSort === 'abc';
+function renderSort() {
+  el.drawer.querySelectorAll('[data-sort]').forEach((b) => {
+    const on = b.dataset.sort === settings.songSort;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
 function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
 
 /* ---------- Öffnen und schließen ---------- */
@@ -106,6 +115,7 @@ function openMenu(mode) {
   }
   el.drawer.querySelectorAll('[data-area]').forEach((sec) => { sec.hidden = true; });
   if (a.menu) a.menu.open();
+  renderSort();
   renderToggle(WAKE);
   el.tempo.value = settings.tempo;
   renderTempo();
@@ -155,6 +165,13 @@ export function initMenu() {
     if (a) loadFromMenu(a);
   });
 
+  // Sortierung umschalten: der Bereich zeichnet seine Abschnitte im Menü neu
+  delegate(el.drawer, '[data-sort]', (b) => {
+    settings.songSort = b.dataset.sort;
+    persistSettings();
+    renderSort();
+    if (current().menu) current().menu.open();
+  });
   toggleSetting(WAKE, updateWake);
   // Größe der Oberfläche: skaliert die ganze Seite (CSS zoom), Tippen und Ziehen bleiben dabei genau
   delegate(el.uiScale, '[data-ui]', (b) => setUi(+b.dataset.ui));

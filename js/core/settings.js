@@ -21,6 +21,8 @@ export function cleanCoreSettings(s) {
     wake: s.wake !== false, // Bildschirm anlassen
     countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
+    songSort: s.songSort === 'abc' ? 'abc' : 'group', // bekannte Lieder nach Thema oder alphabetisch
+    step: !!s.step, // Schritt für Schritt: jeder Tipp auf den großen Knopf eine Note weiter
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
     open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+d$/.test(k)) : OPEN_START.slice()
@@ -36,3 +38,9 @@ export function useSettings(clean) {
   return settings;
 }
 export const persistSettings = () => writeJSON(KEY, settings);
+
+// Tempo setzen, begrenzt und in Fünferschritten wie der Regler (z. B. das eigene Tempo eines bekannten Lieds)
+export function setTempo(v) {
+  settings.tempo = Math.min(TEMPO.max, Math.max(TEMPO.min, Math.round(v / 5) * 5));
+  persistSettings();
+}

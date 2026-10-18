@@ -3,6 +3,8 @@
 // 'bell', 'piano', 'clave' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
+// Schritt für Schritt (settings.step): statt im Tempo rückt die Markierung bei jedem Tipp auf den großen Knopf eine Note
+// weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Nach der letzten Note ist Schluss.
 import { audioCtx, bell, clave, piano, tick } from './audio.js';
 import { settings, persistSettings } from './settings.js';
 import { toast } from './ui.js';
@@ -10,20 +12,28 @@ import { el } from './dom.js';
 
 export const ICONS = {
   play: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>',
-  stop: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>'
+  stop: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
+  next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15l11-7.5z" fill="currentColor"/><rect x="16.5" y="4.5" width="3.2" height="15" rx="1" fill="currentColor"/></svg>'
 };
 
-let play = null; // { out, timers, cur, mark } während des Abspielens
+let play = null; // { out, timers, cur, mark } während des Abspielens; Schritt für Schritt dazu steps und i
 
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
 
-// Der runde Abspielen-Knopf unten rechts auf der Tafel: ▶ oder ■
+// Der runde Abspielen-Knopf unten rechts auf der Tafel: ▶ oder ■, Schritt für Schritt ▶| (nächste Note)
 function showButton(playing) {
-  const b = el.btnPlay, t = playing ? 'Stopp' : 'Abspielen (ab der Markierung)';
+  const b = el.btnPlay;
+  if (settings.step) {
+    b.innerHTML = ICONS.next;
+    b.classList.remove('on');
+    b.title = playing ? 'Nächste Note' : 'Schritt für Schritt (ab der Markierung)';
+    b.setAttribute('aria-label', 'Nächste Note');
+    return;
+  }
   b.innerHTML = playing ? ICONS.stop : ICONS.play;
   b.classList.toggle('on', playing);
-  b.title = t;
+  b.title = playing ? 'Stopp' : 'Abspielen (ab der Markierung)';
   b.setAttribute('aria-label', playing ? 'Stopp' : 'Abspielen');
 }
 
@@ -64,15 +74,30 @@ export function stopPlay() {
   if (!play) return;
   const { timers, out, mark } = play;
   timers.forEach(clearTimeout);
-  try { out.disconnect(); } catch (e) { /* schon getrennt */ }
+  if (out) { try { out.disconnect(); } catch (e) { /* schon getrennt */ } }
   play = null;
   mark(null);
   showButton(false);
 }
 
+// Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.
+// Pausen und die Fortsetzung übergebundener Töne werden übersprungen; Wiederholungen laufen mit wie beim Abspielen.
+function stepNext(getPlan, mark) {
+  if (!play) {
+    const plan = getPlan(), steps = plan ? plan.items.filter((s) => s.sound) : [];
+    if (!steps.length) { toast('Noch keine Töne auf der Tafel.', true); return; }
+    play = { out: null, timers: [], cur: null, mark, steps, i: -1 };
+    showButton(true);
+  }
+  if (++play.i >= play.steps.length) { stopPlay(); return; }
+  play.cur = play.steps[play.i].pos;
+  mark(play.cur);
+}
+
 // getPlan() liefert den Ablaufplan erst beim Start; mark(pos) hebt die klingende Stelle hervor (null: keine)
 export function togglePlay(getPlan, mark) {
-  if (play) stopPlay();
+  if (settings.step) stepNext(getPlan, mark);
+  else if (play) stopPlay();
   else startPlay(getPlan(), mark);
 }
 // Einzählen und Metronom: die Knöpfe mit data-play (unten rechts auf der Tafel) schalten die gemeinsame Einstellung um
@@ -89,9 +114,12 @@ export function initPlayer() {
   document.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('[data-play]');
     if (!b) return;
+    // Wechsel zwischen Abspielen und Schritt für Schritt: was gerade läuft, endet
+    if (b.dataset.play === 'step') stopPlay();
     settings[b.dataset.play] = !settings[b.dataset.play];
     persistSettings();
     renderPlayOpts();
+    showButton(!!play);
   });
 }
 

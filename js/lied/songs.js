@@ -6,61 +6,62 @@ import { byGroup } from '../core/groups.js';
 // mit „.“ punktiert). Der Wert gilt weiter bis zum nächsten, am Anfang Viertel. „r“ ist eine Pause, „~“ am Ton ein
 // Haltebogen zur nächsten Note, „/“ ein Zeilenumbruch. „|“ dient nur dem Lesen, die Taktstriche kommen automatisch.
 // Bruder Jakob und Ode an die Freude stehen in F-Dur wie in der Tafel.
+// tempo: eigenes Tempo des Lieds in Vierteln pro Minute, wird beim Laden eingestellt.
 export const SONGS = byGroup([
   {
-    name: 'Alle meine Entchen', group: 'Kinderlieder', meter: '4/4',
+    name: 'Alle meine Entchen', group: 'Kinderlieder', meter: '4/4', tempo: 110,
     notes: 'c1 d1 e1 f1 | g1:2 g1 / a1:4 a1 a1 a1 | g1:1 / a1:4 a1 a1 a1 | g1:1 / f1:4 f1 f1 f1 | e1:2 e1 / d1:4 d1 d1 d1 | c1:1'
   },
   {
-    name: 'Hänschen klein', group: 'Kinderlieder', meter: '4/4',
+    name: 'Hänschen klein', group: 'Kinderlieder', meter: '4/4', tempo: 110,
     notes: 'g1 e1 e1:2 | f1:4 d1 d1:2 / c1:4 d1 e1 f1 | g1 g1 g1:2 / g1:4 e1 e1:2 | f1:4 d1 d1:2 / c1:4 e1 g1 g1 | c1:1 / ' +
       'd1:4 d1 d1 d1 | d1 e1 f1:2 / e1:4 e1 e1 e1 | e1 f1 g1:2 / g1:4 e1 e1:2 | f1:4 d1 d1:2 / c1:4 e1 g1 g1 | c1:1'
   },
   {
-    name: 'Kuckuck, Kuckuck', group: 'Frühling', meter: '3/4',
+    name: 'Kuckuck, Kuckuck', group: 'Frühling', meter: '3/4', tempo: 120,
     notes: 'g1:2 e1:4 | g1:2 e1:4 | f1 e1 d1 | c1:2. / d1:4 d1 e1 | f1:2 d1:4 | e1 e1 f1 | g1:2 e1:4 / ' +
       'g1:2 e1:4 | g1:2 e1:4 | f1 e1 d1 | c1:2.'
   },
   {
-    name: 'Bruder Jakob', group: 'Kinderlieder', meter: '4/4',
+    name: 'Bruder Jakob', group: 'Kinderlieder', meter: '4/4', tempo: 100,
     notes: 'f1 g1 a1 f1 | f1 g1 a1 f1 / a1 b1 c2:2 | a1:4 b1 c2:2 / ' +
       'c2:8 d2 c2 b1 a1:4 f1 | c2:8 d2 c2 b1 a1:4 f1 / f1 c1 f1:2 | f1:4 c1 f1:2'
   },
   {
-    name: 'Morgen kommt der Weihnachtsmann', group: 'Weihnachten', meter: '4/4',
+    name: 'Morgen kommt der Weihnachtsmann', group: 'Weihnachten', meter: '4/4', tempo: 110,
     notes: 'c1 c1 g1 g1 | a1 a1 g1:2 / f1:4 f1 e1 e1 | d1 d1 c1:2 / g1:4 g1 f1 f1 | e1 e1 d1:2 / ' +
       'g1:4 g1 f1 f1 | e1 e1 d1:2 / c1:4 c1 g1 g1 | a1 a1 g1:2 / f1:4 f1 e1 e1 | d1 d1 c1:2'
   },
   {
-    name: 'Ode an die Freude', group: 'Feste und mehr', meter: '4/4',
+    name: 'Ode an die Freude', group: 'Feste und mehr', meter: '4/4', tempo: 100,
     notes: 'a1 a1 b1 c2 | c2 b1 a1 g1 / f1 f1 g1 a1 | a1:4. g1:8 g1:2 / a1:4 a1 b1 c2 | c2 b1 a1 g1 / f1 f1 g1 a1 | g1:4. f1:8 f1:2 / ' +
       'g1:4 g1 a1 f1 | g1 a1:8 b1 a1:4 f1 / g1 a1:8 b1 a1:4 g1 | f1 g1 c1:2 / ' +
       'a1:4 a1 b1 c2 | c2 b1 a1 g1 / f1 f1 g1 a1 | g1:4. f1:8 f1:2'
   },
   {
-    name: 'Zum Geburtstag viel Glück', group: 'Feste und mehr', meter: '3/4', pickup: 8,
+    name: 'Zum Geburtstag viel Glück', group: 'Feste und mehr', meter: '3/4', tempo: 100, pickup: 8,
     notes: 'g1:8. g1:16 | a1:4 g1 c2 | h1:2 g1:8. g1:16 | a1:4 g1 d2 | c2:2 g1:8. g1:16 / ' +
       'g2:4 e2 c2 | h1 a1 f2:8. f2:16 | e2:4 c2 d2 | c2:2'
   },
   // Quellen: de.wikipedia.org (Noten im Artikel) und volksliederarchiv.de; Tonarten so, dass alles in c'–f'' liegt
-  { name: 'Alle Vögel sind schon da', group: 'Frühling', meter: '4/4', notes: 'c1:4. e1:8 g1:4 c2 | a1 c2:8 a1 g1:2 | f1:4. g1:8 e1:4 c1 | d1:2 c1:4 r / g1 g1 f1 f1 | e1 g1:8 e1 d1:2 | g1:4 g1 f1 f1 | e1 g1:8 e1 d1:2 / c1:4. e1:8 g1:4 c2 | a1 c2:8 a1 g1:2 | f1:4. g1:8 e1:4 c1 | d1:2 c1:4 r' },
-  { name: 'Summ, summ, summ', group: 'Kinderlieder', meter: '2/4', key: 1, notes: 'd2:4 c2 | h1 r | a1:8 h1 c2 a1 | g1:4 r / h1:8 c2 d2 h1 | a1 h1 c2 a1 | h1 c2 d2 h1 | a1 h1 c2 a1 / d2:4 c2 | h1 r | a1:8 h1 c2 a1 | g1:4 r' },
-  { name: 'Fuchs, du hast die Gans gestohlen', group: 'Kinderlieder', meter: '4/4', notes: 'c1 d1 e1 f1 | g1 g1 g1 g1 | a1 f1 c2 a1 | g1:1 / a1:4 f1 c2 a1 | g1:1 / g1:4 f1 f1 f1 | f1 e1 e1 e1 | e1 d1 e1 d1 | c1 e1 g1:2 / g1:4 f1 f1 f1 | f1 e1 e1 e1 | e1 d1 e1 d1 | c1:1' },
-  { name: 'Ein Vogel wollte Hochzeit machen', group: 'Kinderlieder', meter: '2/4', pickup: 4, key: 1, notes: 'h1:8 | d2 h1 d2 h1 | c2 a1 c2 a1 | h1 g1 d2 h1 | a1 d2 d2 d2:16 h1 / g1:8 g1 g1 d2:16 h1 | a1:8 a1 a1 d2:16 c2 | h1:8 g1 a1 fis1 | g1:4 r:8' },
-  { name: 'Kommt ein Vogel geflogen', group: 'Kinderlieder', meter: '3/4', pickup: 8, key: -1, notes: 'a1:8 b1 | c2:4 a1 a1 | a1 g1 g1:8 a1 | b1:4 g1 g1:8 d2 | c2:4 r a1:8 b1 / c2:4 a1 a1 | a1 g1 g1:8 a1 | b1:4 e1 e1 | f1 r' },
-  { name: 'Winter ade', group: 'Frühling', meter: '3/4', key: 1, notes: 'h1:4 h1 a1 | g1:2. | h1:4 h1 a1 | g1:2. / h1:4 c2 d2 | d2 c2:8 h1 c2:4 | a1 h1 c2 | c2 h1:8 a1 h1:4 / h1 h1 c2 | d2:2. | h1:4 h1 a1 | g1:2.' },
-  { name: 'Hejo, spann den Wagen an', group: 'Herbst und Sankt Martin', meter: '4/4', notes: 'a1:2 g1 | a1:8 a1 a1 a1 e1:2 / a1:4 a1 h1 h1 | c2:8 c2 c2 c2 h1:2 / e2:8 e2 e2 e2 e2:4 e2 | e2:8 e2 e2 e2 e2 d2 c2 h1' },
-  { name: 'Backe, backe Kuchen', group: 'Kinderlieder', meter: '2/2', notes: 'g1 g1 a1 a1 | g1:2 e1:4 c1 | g1 g1 a1 a1 | g1:2 e1 / g1:4 g1 a1 a1 | g1 g1 e1 c1 | g1 g1 a1 a1 | g1 g1 e1 e1 / g1:8 g1 g1:4 e1:2 | g1:8 g1 g1:4 e1:2 | g1:4 g1 e1:2 / g1:4 g1 a1 a1 | g1 g1 e1:2 | c2 g1:4 f1 | e1 d1 c1:2' },
+  { name: 'Alle Vögel sind schon da', group: 'Frühling', meter: '4/4', tempo: 100, notes: 'c1:4. e1:8 g1:4 c2 | a1 c2:8 a1 g1:2 | f1:4. g1:8 e1:4 c1 | d1:2 c1:4 r / g1 g1 f1 f1 | e1 g1:8 e1 d1:2 | g1:4 g1 f1 f1 | e1 g1:8 e1 d1:2 / c1:4. e1:8 g1:4 c2 | a1 c2:8 a1 g1:2 | f1:4. g1:8 e1:4 c1 | d1:2 c1:4 r' },
+  { name: 'Summ, summ, summ', group: 'Kinderlieder', meter: '2/4', tempo: 110, key: 1, notes: 'd2:4 c2 | h1 r | a1:8 h1 c2 a1 | g1:4 r / h1:8 c2 d2 h1 | a1 h1 c2 a1 | h1 c2 d2 h1 | a1 h1 c2 a1 / d2:4 c2 | h1 r | a1:8 h1 c2 a1 | g1:4 r' },
+  { name: 'Fuchs, du hast die Gans gestohlen', group: 'Kinderlieder', meter: '4/4', tempo: 120, notes: 'c1 d1 e1 f1 | g1 g1 g1 g1 | a1 f1 c2 a1 | g1:1 / a1:4 f1 c2 a1 | g1:1 / g1:4 f1 f1 f1 | f1 e1 e1 e1 | e1 d1 e1 d1 | c1 e1 g1:2 / g1:4 f1 f1 f1 | f1 e1 e1 e1 | e1 d1 e1 d1 | c1:1' },
+  { name: 'Ein Vogel wollte Hochzeit machen', group: 'Kinderlieder', meter: '2/4', tempo: 80, pickup: 4, key: 1, notes: 'h1:8 | d2 h1 d2 h1 | c2 a1 c2 a1 | h1 g1 d2 h1 | a1 d2 d2 d2:16 h1 / g1:8 g1 g1 d2:16 h1 | a1:8 a1 a1 d2:16 c2 | h1:8 g1 a1 fis1 | g1:4 r:8' },
+  { name: 'Kommt ein Vogel geflogen', group: 'Kinderlieder', meter: '3/4', tempo: 100, pickup: 8, key: -1, notes: 'a1:8 b1 | c2:4 a1 a1 | a1 g1 g1:8 a1 | b1:4 g1 g1:8 d2 | c2:4 r a1:8 b1 / c2:4 a1 a1 | a1 g1 g1:8 a1 | b1:4 e1 e1 | f1 r' },
+  { name: 'Winter ade', group: 'Frühling', meter: '3/4', tempo: 110, key: 1, notes: 'h1:4 h1 a1 | g1:2. | h1:4 h1 a1 | g1:2. / h1:4 c2 d2 | d2 c2:8 h1 c2:4 | a1 h1 c2 | c2 h1:8 a1 h1:4 / h1 h1 c2 | d2:2. | h1:4 h1 a1 | g1:2.' },
+  { name: 'Hejo, spann den Wagen an', group: 'Herbst und Sankt Martin', meter: '4/4', tempo: 120, notes: 'a1:2 g1 | a1:8 a1 a1 a1 e1:2 / a1:4 a1 h1 h1 | c2:8 c2 c2 c2 h1:2 / e2:8 e2 e2 e2 e2:4 e2 | e2:8 e2 e2 e2 e2 d2 c2 h1' },
+  { name: 'Backe, backe Kuchen', group: 'Kinderlieder', meter: '2/2', tempo: 120, notes: 'g1 g1 a1 a1 | g1:2 e1:4 c1 | g1 g1 a1 a1 | g1:2 e1 / g1:4 g1 a1 a1 | g1 g1 e1 c1 | g1 g1 a1 a1 | g1 g1 e1 e1 / g1:8 g1 g1:4 e1:2 | g1:8 g1 g1:4 e1:2 | g1:4 g1 e1:2 / g1:4 g1 a1 a1 | g1 g1 e1:2 | c2 g1:4 f1 | e1 d1 c1:2' },
   // Quellen: ingeb.org (Melodie-MIDIs), de.wikipedia.org, abcnotation.com, flutetunes.com
-  { name: 'O Tannenbaum', group: 'Weihnachten', meter: '3/4', pickup: 4, key: 1, notes: 'd1:8 | g1:8. g1:16 g1:4 a1 | h1:8. h1:16 h1:4. h1:8 | a1:8 h1 c2:4 fis1 | a1:4 g1 r:8 d2:8 / d2:8 h1 e2:4. d2:8 | d2:8 c2 c2:4. c2:8 | c2:8 a1 d2:4. c2:8 | c2:8 h1 h1:4 r:8 d1:8 / g1:8. g1:16 g1:4 a1 | h1:8. h1:16 h1:4. h1:8 | a1:8 h1 c2:4 fis1 | a1:4 g1 r:8' },
-  { name: 'Kling, Glöckchen', group: 'Weihnachten', meter: '2/4', key: -1, notes: 'c2:4 a1:8 b1 | c2:16 d2 c2 d2 c2:4 | b1:4 g1:8 c2 | a1:2 / g1:8 g1 a1 f1 | a1:4 g1 | b1:8 b1 c2 g1 | b1:4 a1 / g1:8 g1 a1 h1 | c2:4 g1 | a1:8 d2 c2 h1 | d2:4 c2 / c2:4 a1:8 b1 | c2:16 d2 c2 d2 c2:4 | b1:4 g1:8 c2 | a1:2' },
-  { name: 'Leise rieselt der Schnee', group: 'Weihnachten', meter: '6/8', key: 1, notes: 'h1:4 h1:8 a1 h1 a1 | g1:4.~ g1:4 r:8 / g1:4 e1:8 g1 fis1 e1 | d1:4.~ d1:4 r:8 / a1:8 gis1 a1 c2 h1 a1 | g1:4.~ g1:4 r:8 / a1:8. e1:16 e1:8 fis1 e1 fis1 | g1:4.~ g1:4 r:8' },
-  { name: 'Stille Nacht', group: 'Weihnachten', meter: '6/8', notes: 'g1:8. a1:16 g1:8 e1:4. | g1:8. a1:16 g1:8 e1:4. / d2:4 d2:8 h1:4. | c2:4 c2:8 g1:4. / a1:4 a1:8 c2:8. h1:16 a1:8 | g1:8. a1:16 g1:8 e1:4. / a1:4 a1:8 c2:8. h1:16 a1:8 | g1:8. a1:16 g1:8 e1:4. / d2:4 d2:8 f2:8. d2:16 h1:8 | c2:4. e2:4. / c2:8 g1 e1 g1:8. f1:16 d1:8 | c1:2.' },
-  { name: 'Bunt sind schon die Wälder', group: 'Herbst und Sankt Martin', meter: '6/8', key: 1, notes: 'g1:4 g1:8 g1 fis1 g1 | a1:4. g1 / h1:4 h1:8 h1 a1 h1 | c2:4. h1 / a1:4 a1:8 g1 h1 cis1 | d1:4. r / h1:4 a1:8 g1:4 fis1:8 | e1:4. e1 / c2:4 h1:8 a1 h1 g1 | fis1:4. fis1 / g1:8 h1 d2 d1 e1 fis1 | g1:4. r' },
-  { name: 'Ein Männlein steht im Walde', group: 'Herbst und Sankt Martin', meter: '4/4', pickup: 8, key: 1, notes: 'd1 | g1 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:2. d1:4 / g1:4 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:1 / d2:4. c2:8 h1:4 d2 | c2 h1 a1:2 | d2:4. c2:8 h1:4 d2 | c2 h1 a1:2 / g1:4 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:2.' },
-  { name: 'Laterne, Laterne', group: 'Herbst und Sankt Martin', meter: '2/4', pickup: 4, key: -1, notes: 'd2:8 | c2:4 a1:8 d2 | c2:4 a1 | c2:8 c2 d2 d2 | c2:4 a1:8 f1:16 a1 / c2:8 c2 a1 f1:16 a1 | c2:8 c2 a1 f1:16 a1 | c2:8 c2:16 c2 d2 d2 d2:8 | c2 c2 a1' },
-  { name: 'Ich geh mit meiner Laterne', group: 'Herbst und Sankt Martin', meter: '6/8', pickup: 4, key: 1, notes: 'd1:8 | g1:4 g1:8 h1 g1 h1 | d2:4. h1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4 d1:8 / g1:4 g1:8 h1 g1 h1 | d2:4. h1:4 g1:8 | a1:4 a1:8 a1 h1 a1 | g1:4. r:4 h1:8 / d2:4 h1:8 g1:4 h1:8 | d2:4 h1:8 g1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4 h1:8 / d2:4 h1:8 g1:4 h1:8 | d2:4 h1:8 g1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4' },
-  { name: 'Sankt Martin', group: 'Herbst und Sankt Martin', meter: '4/4', pickup: 8, key: 1, notes: 'd1 | g1:2 d1:4 g1:8 a1 | h1:2 g1:4 h1:8 c2 / d2:4 h1 c2 e2 | d2 d2:8 c2 h1:4 d2 | c2 a1 a1 d2 | h1 h1:8 a1 g1:4 d1 / g1 h1 h1 a1:8 g1 | a1:4 c2 c2 h1:8 a1 | h1:4 d2 h1 g1 | h1:8 a1 a1 fis1 g1:2' }
+  { name: 'O Tannenbaum', group: 'Weihnachten', meter: '3/4', tempo: 90, pickup: 4, key: 1, notes: 'd1:8 | g1:8. g1:16 g1:4 a1 | h1:8. h1:16 h1:4. h1:8 | a1:8 h1 c2:4 fis1 | a1:4 g1 r:8 d2:8 / d2:8 h1 e2:4. d2:8 | d2:8 c2 c2:4. c2:8 | c2:8 a1 d2:4. c2:8 | c2:8 h1 h1:4 r:8 d1:8 / g1:8. g1:16 g1:4 a1 | h1:8. h1:16 h1:4. h1:8 | a1:8 h1 c2:4 fis1 | a1:4 g1 r:8' },
+  { name: 'Kling, Glöckchen', group: 'Weihnachten', meter: '2/4', tempo: 80, key: -1, notes: 'c2:4 a1:8 b1 | c2:16 d2 c2 d2 c2:4 | b1:4 g1:8 c2 | a1:2 / g1:8 g1 a1 f1 | a1:4 g1 | b1:8 b1 c2 g1 | b1:4 a1 / g1:8 g1 a1 h1 | c2:4 g1 | a1:8 d2 c2 h1 | d2:4 c2 / c2:4 a1:8 b1 | c2:16 d2 c2 d2 c2:4 | b1:4 g1:8 c2 | a1:2' },
+  { name: 'Leise rieselt der Schnee', group: 'Weihnachten', meter: '6/8', tempo: 70, key: 1, notes: 'h1:4 h1:8 a1 h1 a1 | g1:4.~ g1:4 r:8 / g1:4 e1:8 g1 fis1 e1 | d1:4.~ d1:4 r:8 / a1:8 gis1 a1 c2 h1 a1 | g1:4.~ g1:4 r:8 / a1:8. e1:16 e1:8 fis1 e1 fis1 | g1:4.~ g1:4 r:8' },
+  { name: 'Stille Nacht', group: 'Weihnachten', meter: '6/8', tempo: 60, notes: 'g1:8. a1:16 g1:8 e1:4. | g1:8. a1:16 g1:8 e1:4. / d2:4 d2:8 h1:4. | c2:4 c2:8 g1:4. / a1:4 a1:8 c2:8. h1:16 a1:8 | g1:8. a1:16 g1:8 e1:4. / a1:4 a1:8 c2:8. h1:16 a1:8 | g1:8. a1:16 g1:8 e1:4. / d2:4 d2:8 f2:8. d2:16 h1:8 | c2:4. e2:4. / c2:8 g1 e1 g1:8. f1:16 d1:8 | c1:2.' },
+  { name: 'Bunt sind schon die Wälder', group: 'Herbst und Sankt Martin', meter: '6/8', tempo: 90, key: 1, notes: 'g1:4 g1:8 g1 fis1 g1 | a1:4. g1 / h1:4 h1:8 h1 a1 h1 | c2:4. h1 / a1:4 a1:8 g1 h1 cis1 | d1:4. r / h1:4 a1:8 g1:4 fis1:8 | e1:4. e1 / c2:4 h1:8 a1 h1 g1 | fis1:4. fis1 / g1:8 h1 d2 d1 e1 fis1 | g1:4. r' },
+  { name: 'Ein Männlein steht im Walde', group: 'Herbst und Sankt Martin', meter: '4/4', tempo: 110, pickup: 8, key: 1, notes: 'd1 | g1 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:2. d1:4 / g1:4 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:1 / d2:4. c2:8 h1:4 d2 | c2 h1 a1:2 | d2:4. c2:8 h1:4 d2 | c2 h1 a1:2 / g1:4 a1 h1 c2 | d2:2 e2:4 c2 | h1:2 a1 | g1:2.' },
+  { name: 'Laterne, Laterne', group: 'Herbst und Sankt Martin', meter: '2/4', tempo: 80, pickup: 4, key: -1, notes: 'd2:8 | c2:4 a1:8 d2 | c2:4 a1 | c2:8 c2 d2 d2 | c2:4 a1:8 f1:16 a1 / c2:8 c2 a1 f1:16 a1 | c2:8 c2 a1 f1:16 a1 | c2:8 c2:16 c2 d2 d2 d2:8 | c2 c2 a1' },
+  { name: 'Ich geh mit meiner Laterne', group: 'Herbst und Sankt Martin', meter: '6/8', tempo: 90, pickup: 4, key: 1, notes: 'd1:8 | g1:4 g1:8 h1 g1 h1 | d2:4. h1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4 d1:8 / g1:4 g1:8 h1 g1 h1 | d2:4. h1:4 g1:8 | a1:4 a1:8 a1 h1 a1 | g1:4. r:4 h1:8 / d2:4 h1:8 g1:4 h1:8 | d2:4 h1:8 g1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4 h1:8 / d2:4 h1:8 g1:4 h1:8 | d2:4 h1:8 g1:4 g1:8 | a1:8 a1 a1 a1 h1 a1 | g1:4. r:4' },
+  { name: 'Sankt Martin', group: 'Herbst und Sankt Martin', meter: '4/4', tempo: 100, pickup: 8, key: 1, notes: 'd1 | g1:2 d1:4 g1:8 a1 | h1:2 g1:4 h1:8 c2 / d2:4 h1 c2 e2 | d2 d2:8 c2 h1:4 d2 | c2 a1 a1 d2 | h1 h1:8 a1 g1:4 d1 / g1 h1 h1 a1:8 g1 | a1:4 c2 c2 h1:8 a1 | h1:4 d2 h1 g1 | h1:8 a1 a1 fis1 g1:2' }
 
 ])
 

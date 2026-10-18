@@ -2,7 +2,7 @@
 const ids = [
   'toast', 'tabs', 'btnSongs', 'btnSettings', 'drawerTitle',
   'btnIns', 'btnGap', 'btnDel', 'btnBreak', 'btnSide', 'btnTopHide', 'btnTopShow',
-  'btnPlay', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
+  'btnPlay', 'btnPresent', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs',

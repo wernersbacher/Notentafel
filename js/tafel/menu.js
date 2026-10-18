@@ -3,8 +3,8 @@
 import { THEMES, NOTE_BY, SWATCHES } from './config.js';
 import { MELODIES, melodyRows } from './melodies.js';
 import { S, settings } from './state.js';
-import { persistSettings } from '../core/settings.js';
-import { closeMenu, renderToggle, toggleSetting } from '../core/menu.js';
+import { persistSettings, setTempo } from '../core/settings.js';
+import { closeMenu, renderToggle, toggleSetting, sortAbc } from '../core/menu.js';
 import { esc, delegate, toast, groupedHTML } from '../core/ui.js';
 import { handOver } from '../core/shell.js';
 import { hasNotes, rowsToSong } from './model.js';
@@ -16,7 +16,7 @@ import { el } from './dom.js';
 function renderMelodies() {
   el.melodies.innerHTML = groupedHTML(MELODIES, (m, i) =>
     '<li class="song one' + (m.name === S.name ? ' current' : '') + '"><span class="name">' + esc(m.name) + '</span>' +
-    '<button type="button" class="btn" data-melody="' + i + '">Laden</button></li>'
+    '<button type="button" class="btn" data-melody="' + i + '">Laden</button></li>', sortAbc()
   );
 }
 function renderThemes() {
@@ -45,6 +45,7 @@ export function initTafelMenu() {
     const m = MELODIES[+b.dataset.melody];
     if (!m) return;
     closeMenu();
+    setTempo(m.tempo);
     loadSong({ name: m.name, rows: melodyRows(m) });
   });
   delegate(el.themes, '.theme', (b) => {

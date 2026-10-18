@@ -80,6 +80,10 @@ body {
 /* Leiste eingeklappt: die Tafel nimmt die ganze Breite */
 .app.collapsed { grid-template-columns: minmax(0, 1fr); }
 .app.collapsed > .side { display: none; }
+/* Vorführen: nur die Tafel mit den runden Knöpfen, ohne Leisten und mit schmalem Rand */
+body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4px, env(safe-area-inset-left, 0px)); }
+.present .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.present .app > .topbar, .present .app > .side, .present .topshow, .present .fab.sidetoggle { display: none; }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
 /* ---------- Knöpfe ---------- */

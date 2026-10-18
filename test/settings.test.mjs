@@ -40,3 +40,12 @@ test('Einstellungen: Standardwerte bei fehlenden oder defekten Daten', () => {
     assert.deepEqual(t, { mel: d, rhy: d });
   }
 });
+
+test('Größe der Oberfläche: frei wählbar, gerundet und begrenzt', async () => {
+  const { clampUi } = await import('../js/core/settings.js');
+  assert.equal(clampUi(1.234), 1.23);
+  assert.equal(clampUi(0.1), 0.5);
+  assert.equal(clampUi(5), 2);
+  assert.equal(clampUi('x'), 1);
+  assert.equal(clampUi(1.1 - 0.05), 1.05);
+});

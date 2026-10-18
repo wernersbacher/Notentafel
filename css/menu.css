@@ -17,7 +17,13 @@
 .drawer.open { transform: none; visibility: visible; transition: transform .22s ease; }
 /* Die Seitenleiste zeigt entweder die Liedersammlung oder die Einstellungen */
 .drawer[data-mode="songs"] [data-part="settings"], .drawer[data-mode="settings"] [data-part="songs"] { display: none !important; }
-.sizes.uiscale { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sizes.uiscale { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 8px; }
+/* Größe: − Regler + und Feld für die Prozentzahl */
+.uirow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px auto; gap: 8px; align-items: center; }
+.uirow > .btn { min-height: 44px; padding: 0; font-size: 1.3rem; }
+.uirow input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--fg); }
+.uinum { display: flex; align-items: center; gap: 3px; font-weight: 800; }
+.uinum input { width: 4.2em; min-height: 44px; padding: 0 6px; border: 2px solid var(--btn-line); border-radius: 10px; background: var(--btn); color: var(--fg); font: 800 1rem var(--font-ui); text-align: right; }
 .drawer h2 { font: 700 1.3rem var(--font-display); margin: 0; }
 .drawer h3 { font: 800 .8rem var(--font-ui); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 /* Zwei Gruppen: der offene Modus und darunter, abgesetzt, die Einstellungen für alle Modi */

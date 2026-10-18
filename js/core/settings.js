@@ -4,7 +4,13 @@ import { readJSON, writeJSON } from './store.js';
 
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
-export const UI_SCALES = [0.8, 0.9, 1, 1.15, 1.3, 1.5];
+export const UI_SCALE = { min: 0.5, max: 2 };
+// Größe der Oberfläche: auf ganze Prozent gerundet und begrenzt, Unbrauchbares wird 100 %
+export function clampUi(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return 1;
+  return Math.round(Math.min(UI_SCALE.max, Math.max(UI_SCALE.min, n)) * 100) / 100;
+}
 
 export function cleanCoreSettings(s) {
   return {
@@ -14,7 +20,7 @@ export function cleanCoreSettings(s) {
     countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
-    ui: UI_SCALES.includes(s.ui) ? s.ui : 1 // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
+    ui: s.ui === undefined ? 1 : clampUi(s.ui) // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
   };
 }
 

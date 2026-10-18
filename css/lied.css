@@ -95,10 +95,3 @@
 .btitle .num { flex: none; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--fg); color: var(--panel); font-size: .75rem; letter-spacing: 0; }
 .btitle > span:not(.num) { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .btitle .ico { width: 1rem; height: 1rem; }
-.btn.bigplay { width: 100%; min-height: 56px; gap: .55rem; font: 800 1.15rem var(--font-ui); }
-.btn.bigplay .ico { width: 1.5rem; height: 1.5rem; }
-.playopts .btn { flex-direction: column; gap: .15rem; min-height: 56px; }
-.playopts .big .ico { width: 1.5rem; height: 1.5rem; }
-.cnt4 { display: flex; gap: 3px; align-items: flex-end; height: 1.5rem; }
-.cnt4 i { font: 800 .8rem/1 var(--font-ui); font-style: normal; }
-.cnt4 i:first-child { font-size: 1.15rem; }

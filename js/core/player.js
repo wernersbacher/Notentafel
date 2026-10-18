@@ -18,12 +18,13 @@ let play = null; // { out, timers, cur, mark } während des Abspielens
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
 
-// Der Abspielen-Knopf unten und weitere in den Leisten (data-playbtn) zeigen denselben Stand
+// Der runde Abspielen-Knopf unten rechts auf der Tafel: ▶ oder ■
 function showButton(playing) {
-  [el.btnPlay, ...document.querySelectorAll('[data-playbtn]')].forEach((b) => {
-    b.innerHTML = playing ? ICONS.stop + 'Stopp' : ICONS.play + 'Abspielen';
-    b.classList.toggle('on', playing);
-  });
+  const b = el.btnPlay, t = playing ? 'Stopp' : 'Abspielen (ab der Markierung)';
+  b.innerHTML = playing ? ICONS.stop : ICONS.play;
+  b.classList.toggle('on', playing);
+  b.title = t;
+  b.setAttribute('aria-label', playing ? 'Stopp' : 'Abspielen');
 }
 
 function startPlay(plan, mark) {
@@ -74,7 +75,7 @@ export function togglePlay(getPlan, mark) {
   if (play) stopPlay();
   else startPlay(getPlan(), mark);
 }
-// Einzählen und Metronom: Knöpfe mit data-play in den Leisten aller Bereiche schalten dieselbe Einstellung um
+// Einzählen und Metronom: die Knöpfe mit data-play (unten rechts auf der Tafel) schalten die gemeinsame Einstellung um
 function renderPlayOpts() {
   document.querySelectorAll('[data-play]').forEach((b) => {
     const on = !!settings[b.dataset.play];
@@ -86,8 +87,6 @@ export function initPlayer() {
   showButton(false);
   renderPlayOpts();
   document.addEventListener('click', (e) => {
-    // Ein weiterer Abspielen-Knopf in einer Leiste wirkt wie der unten
-    if (e.target.closest && e.target.closest('[data-playbtn]')) { el.btnPlay.click(); return; }
     const b = e.target.closest && e.target.closest('[data-play]');
     if (!b) return;
     settings[b.dataset.play] = !settings[b.dataset.play];

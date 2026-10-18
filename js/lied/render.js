@@ -51,10 +51,6 @@ export function renderSheet() {
 /* ---------- Verdecken ---------- */
 // Tuch und ?-Karten liegen als HTML-Felder über dem Notenblatt (wie das Feld zum Ziehen)
 const hitOf = (i) => el.sheet.querySelector('.hit[data-i="' + i + '"]:not(:first-child)');
-function boxOf(node) {
-  const r = node.getBoundingClientRect(), b = el.sheet.getBoundingClientRect();
-  return { l: r.left - b.left + el.sheet.scrollLeft, t: r.top - b.top + el.sheet.scrollTop, w: r.width, h: r.height };
-}
 function addBox(cls, x, html = '', i = null) {
   const d = document.createElement('div');
   d.className = cls;
@@ -67,7 +63,8 @@ function addBox(cls, x, html = '', i = null) {
 function clothFrom(i, cls, tip = '') {
   const h = hitOf(i), score = el.sheet.querySelector('.score');
   if (!h || !score) return;
-  const r = boxOf(h), s = boxOf(score), l = Math.max(0, r.l - 2), below = r.t + r.h;
+  const r = boxOf(h), s = { ...scoreAt(), w: score.width.baseVal.value, h: score.height.baseVal.value };
+  const l = Math.max(0, r.l - 2), below = r.t + r.h;
   addBox(cls, { l, t: r.t, w: s.l + s.w - l, h: r.h }, tip);
   if (s.t + s.h > below + 1) addBox(cls + ' rest', { l: s.l, t: below, w: s.w, h: s.t + s.h - below });
 }
@@ -102,11 +99,23 @@ export function lineStartAfter(i) {
 function placeGrabber() {
   const g = el.sheet.querySelector('.hit.grab');
   if (!g) return;
-  const r = g.getBoundingClientRect(), b = el.sheet.getBoundingClientRect(), d = document.createElement('div');
+  const r = boxOf(g), d = document.createElement('div');
   d.className = 'grabber';
   d.dataset.i = g.dataset.i;
-  d.style.cssText = 'left:' + (r.left - b.left + el.sheet.scrollLeft) + 'px;top:' + (r.top - b.top + el.sheet.scrollTop) + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+  d.style.cssText = 'left:' + r.l + 'px;top:' + r.t + 'px;width:' + r.w + 'px;height:' + r.h + 'px';
   el.sheet.appendChild(d);
+}
+// Lage eines Elements des Notenblatts im Notenblatt (in CSS-Pixeln, wie left/top der Felder darüber). Gerechnet aus den
+// Koordinaten der Noten, nicht aus der Lage auf dem Bildschirm: Die enthält die Größe der Oberfläche (CSS zoom), und die
+// Felder säßen bei mehr als 100 % umso weiter daneben, je weiter unten sie liegen.
+// Das Notenblatt (svg) steht als Block oben links im Innenabstand der Fläche.
+function scoreAt() {
+  const cs = getComputedStyle(el.sheet);
+  return { l: parseFloat(cs.paddingLeft) || 0, t: parseFloat(cs.paddingTop) || 0 };
+}
+function boxOf(node) {
+  const o = scoreAt(), m = node.getCTM(), b = node.getBBox();
+  return { l: o.l + m.a * b.x + m.e, t: o.t + m.d * b.y + m.f, w: m.a * b.width, h: m.d * b.height };
 }
 // Holt die Markierung ins Bild, wenn sie außerhalb liegt (z. B. nach dem Schreiben am unteren Rand)
 function showMark() {

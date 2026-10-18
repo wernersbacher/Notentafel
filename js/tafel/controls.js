@@ -40,8 +40,8 @@ export function initControls() {
   [el.btnAutoBar, el.btnAutoBarMel].forEach((b) => b.addEventListener('click', () => toggleAuto('autoBar')));
   [el.btnAutoZ, el.btnAutoZMel].forEach((b) => b.addEventListener('click', () => toggleAuto('autoZ')));
   el.btnSyl.addEventListener('click', () => { settings.syl = !settings.syl; persistSettings(); render(); });
-  el.btnBar.addEventListener('click', () => act.toggleBar(1));
-  el.btnEnd.addEventListener('click', () => act.toggleBar(2));
+  [el.btnBar, el.btnBarMel].forEach((b) => b.addEventListener('click', () => act.toggleBar(1)));
+  [el.btnEnd, el.btnEndMel].forEach((b) => b.addEventListener('click', () => act.toggleBar(2)));
   [el.btnRepStart, el.btnRepStartMel].forEach((b) => b.addEventListener('click', () => act.toggleRepeat('start')));
   [el.btnRepEnd, el.btnRepEndMel].forEach((b) => b.addEventListener('click', () => act.toggleRepeat('end')));
   el.btnLine.addEventListener('click', act.toggleLine);

@@ -70,10 +70,12 @@ export function renderSidebar() {
   renderValues(cur);
 
   const hasBar = !!(cur && cur.bar === 1), hasEnd = !!(cur && cur.bar === 2);
-  el.btnBar.classList.toggle('on', hasBar && !settings.autoBar);
-  el.btnBar.disabled = settings.autoBar;
-  el.btnBar.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
-  pressed(el.btnEnd, hasEnd);
+  [el.btnBar, el.btnBarMel].forEach((b) => {
+    b.classList.toggle('on', hasBar && !settings.autoBar);
+    b.disabled = settings.autoBar;
+    b.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
+  });
+  [el.btnEnd, el.btnEndMel].forEach((b) => pressed(b, hasEnd));
   const rb = cur && cur.bar;
   [el.btnRepStart, el.btnRepStartMel].forEach((b) => pressed(b, rb === 4 || rb === 5));
   [el.btnRepEnd, el.btnRepEndMel].forEach((b) => pressed(b, rb === 3 || rb === 5));

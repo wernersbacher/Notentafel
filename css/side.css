@@ -95,3 +95,5 @@
   .headbtns > .btn, .savewrap > .btn { padding: .25rem .25rem; font-size: .6rem; }
   .tab { font-size: .95rem; letter-spacing: 0; }
 }
+/* Block „Striche“: die Wiederholungen beginnen eine eigene Reihe unter den Strichen */
+.tools.three > .row2 { grid-column-start: 1; }

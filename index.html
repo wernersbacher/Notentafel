@@ -184,10 +184,20 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Wiederholung</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
-        <div class="tools t2">
-          <button type="button" class="btn" id="btnRepStartMel" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span></button>
-          <button type="button" class="btn" id="btnRepEndMel" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span></button>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Striche</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <div class="tools three">
+          <button type="button" class="btn" id="btnBarMel" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
+          </button>
+          <button type="button" class="btn" id="btnEndMel" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+          </button>
+          <button type="button" class="btn row2" id="btnRepStartMel" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+          </button>
+          <button type="button" class="btn" id="btnRepEndMel" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+          </button>
         </div>
       </section>
 
@@ -234,19 +244,23 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Takt und Wiederholung</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
-        <div class="tools five">
-          <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
-          </button>
-          <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Takt</span>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Striche</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <div class="tools three">
+          <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
           </button>
           <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
             <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
           </button>
-          <button type="button" class="btn" id="btnRepStart" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span></button>
-          <button type="button" class="btn" id="btnRepEnd" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span></button>
+          <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
+          </button>
+          <button type="button" class="btn row2" id="btnRepStart" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+          </button>
+          <button type="button" class="btn" id="btnRepEnd" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+          </button>
         </div>
       </section>
 

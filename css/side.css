@@ -25,6 +25,11 @@
 .panel { display: flex; flex-direction: column; gap: 10px; }
 .tools { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .tools.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* Werkzeugreihe oben: alle sichtbaren Knöpfe in einer Zeile (bei Melodie und Rhythmus mit + Zeile / − Zeile), etwas kleiner */
+.tools.toprow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 5px; }
+.tools.toprow .btn { min-height: 50px; padding: .25rem .05rem; }
+.tools.toprow .small { font-size: .62rem; white-space: nowrap; }
+.tools.toprow .big .ico { width: 1.15rem; height: 1.15rem; }
 .tools.t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tools.t2 .btn { flex-direction: row; gap: .5rem; min-height: 48px; }
 /* Zählzeiten von Hand: 1–6, + und Löschen */

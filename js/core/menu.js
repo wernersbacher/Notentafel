@@ -62,6 +62,14 @@ export function toggleSetting(t, apply) {
   });
 }
 const WAKE = { key: 'wake', btn: el.btnWakeToggle, state: el.wakeToggleState };
+export function applyUiScale() {
+  document.body.style.zoom = settings.ui === 1 ? '' : String(settings.ui);
+  el.uiScale.querySelectorAll('[data-ui]').forEach((b) => {
+    const on = +b.dataset.ui === settings.ui;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
 function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
 
 /* ---------- Öffnen und schließen ---------- */
@@ -112,6 +120,7 @@ function saveSong() {
 }
 
 export function initMenu() {
+  applyUiScale();
   el.btnSongs.addEventListener('click', () => openMenu('songs'));
   el.btnSettings.addEventListener('click', () => openMenu('settings'));
   el.btnClose.addEventListener('click', closeMenu);
@@ -137,6 +146,8 @@ export function initMenu() {
   });
 
   toggleSetting(WAKE, updateWake);
+  // Größe der Oberfläche: skaliert die ganze Seite (CSS zoom), Tippen und Ziehen bleiben dabei genau
+  delegate(el.uiScale, '[data-ui]', (b) => { settings.ui = +b.dataset.ui; persistSettings(); applyUiScale(); });
   el.tempo.addEventListener('input', () => {
     settings.tempo = +el.tempo.value;
     renderTempo();

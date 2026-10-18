@@ -17,6 +17,7 @@
 .drawer.open { transform: none; visibility: visible; transition: transform .22s ease; }
 /* Die Seitenleiste zeigt entweder die Liedersammlung oder die Einstellungen */
 .drawer[data-mode="songs"] [data-part="settings"], .drawer[data-mode="settings"] [data-part="songs"] { display: none !important; }
+.sizes.uiscale { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .drawer h2 { font: 700 1.3rem var(--font-display); margin: 0; }
 .drawer h3 { font: 800 .8rem var(--font-ui); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 /* Zwei Gruppen: der offene Modus und darunter, abgesetzt, die Einstellungen für alle Modi */

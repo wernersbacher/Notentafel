@@ -4,6 +4,7 @@ import { readJSON, writeJSON } from './store.js';
 
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
+export const UI_SCALES = [0.8, 0.9, 1, 1.15, 1.3, 1.5];
 
 export function cleanCoreSettings(s) {
   return {
@@ -12,7 +13,8 @@ export function cleanCoreSettings(s) {
     wake: s.wake !== false, // Bildschirm anlassen
     countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
-    topHidden: !!s.topHidden // Leiste oben (die Tafeln) eingeklappt
+    topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
+    ui: UI_SCALES.includes(s.ui) ? s.ui : 1 // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
   };
 }
 

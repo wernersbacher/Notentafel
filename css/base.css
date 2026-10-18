@@ -206,11 +206,12 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
   background: var(--btn); border: 2px solid var(--btn-line); color: var(--muted);
   font: 800 .85rem var(--font-ui); white-space: nowrap; pointer-events: none;
 }
-/* ?-Karte über einem Zeichen */
+/* ?-Karte über einem Zeichen. Das „?“ in der Grundschrift (Playwrite DE Grund) in ihrer kräftigsten echten Stärke 400:
+   Fetter gibt es die Schrift nicht, ein nachgebautes Fett sähe nicht mehr nach Grundschrift aus. */
 .qcard {
   display: grid; place-items: center;
   border-radius: 12px; background: var(--fg); color: var(--board);
-  font: 700 1.6rem/1 var(--font-display); box-shadow: 0 3px 8px var(--shadow);
+  font: 400 1.6rem/1 var(--font-display); box-shadow: 0 3px 8px var(--shadow);
   cursor: pointer;
 }
 /* Leiste: Schalter fürs Mitspielen unter den Knöpfen */

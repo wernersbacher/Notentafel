@@ -16,7 +16,7 @@ const escText = (t) => String(t).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<':
 const rect = (cls, x1, y1, x2, y2, attrs = '') =>
   '<rect class="' + cls + '" x="' + f(x1) + '" y="' + f(y1) + '" width="' + f(x2 - x1) + '" height="' + f(y2 - y1) + '"' + attrs + '/>';
 
-// Farbe eines Tons wie bei den Farbnoten, nach dem klingenden Ton (mit Tonart und Vorzeichen; Fis mittelgrün, B violett)
+// Farbe eines Tons wie bei den Farbnoten, nach dem klingenden Ton (mit Tonart und Vorzeichen; Fis mittelgrün, B magenta)
 const colorOf = (e, key) => toneColor(parsePitch(e.p).step, accOf(e, key));
 
 // key: Tonart, wenn die Notenköpfe farbig sein sollen (sonst null)

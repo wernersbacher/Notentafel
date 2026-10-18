@@ -1,7 +1,7 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
 import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
-import { autoMarks, barAt } from './theory.js';
+import { autoMarks, barAt, meterOf } from './theory.js';
 import { S, settings, wraps } from './state.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
@@ -117,6 +117,9 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
 function rowHTML(row, r, cols, P, marks) {
   // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
   const full = row.line && S.variant === 'rhy';
+  // Taktart vorn: die eigene der Zeile, sonst die geltende (aus einer Zeile darüber), sobald in der Zeile etwas steht –
+  // so steht sie nach jedem Umbruch wieder am Zeilenanfang
+  const meter = row.meter || (row.some(Boolean) ? meterOf(S.rows, r) : '');
   const b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
@@ -128,8 +131,8 @@ function rowHTML(row, r, cols, P, marks) {
     const geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P };
     u += geo.k;
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
-    const line = c > last ? '' : full ? (c === 0 && row.meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
-    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? row.meter : '', marks, geo });
+    const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
+    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo });
   }
   const tpl = ' style="--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
   return '<div class="row"' + tpl + '><span class="rownum"></span>' + cells + '</div>';

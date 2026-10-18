@@ -1,6 +1,7 @@
 // Darstellung der Leiste: Töne, Werte, Zählzeiten und der Zustand aller Knöpfe
 import { MAX_ROWS, NOTE_BY, GROUPS, DUR_BY, VALUE_BTNS, COUNTS } from './config.js';
 import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap, dotTargetIn } from './model.js';
+import { meterOf } from './theory.js';
 import { S, settings, curCell, curRow } from './state.js';
 import { colorStyle, noteLabel, ICONS } from './symbols.js';
 import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
@@ -67,7 +68,7 @@ export function renderSidebar() {
   [el.btnRepStart, el.btnRepStartMel].forEach((b) => pressed(b, rb === 4 || rb === 5));
   [el.btnRepEnd, el.btnRepEndMel].forEach((b) => pressed(b, rb === 3 || rb === 5));
   pressed(el.btnLine, !!row.line);
-  [el.rhyMeters, el.melMeters].forEach((box) => box.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === (row.meter || ''))));
+  [el.rhyMeters, el.melMeters].forEach((box) => box.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === meterOf(S.rows, S.sel.r))));
 
   [el.btnAutoBar, el.btnAutoBarMel].forEach((b) => pressed(b, settings.autoBar));
   [el.btnAutoZ, el.btnAutoZMel].forEach((b) => pressed(b, settings.autoZ));

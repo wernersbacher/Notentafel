@@ -65,8 +65,19 @@
 <div class="app">
   <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
   <header class="topbar" id="topbar">
+    <h1 class="title">Musiktafel</h1>
     <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
-    <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="topright">
+      <div class="headbtns">
+        <button type="button" class="btn" id="btnSongs" aria-haspopup="dialog" aria-controls="drawer" title="Liedersammlung: speichern, laden, bekannte Lieder, exportieren">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>Lieder</span>
+        </button>
+        <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Einstellungen</span>
+        </button>
+      </div>
+      <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
   </header>
   <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Melodie · Rhythmus · Lied</span></button>
   <div class="boardwrap">
@@ -89,19 +100,6 @@
   </div>
 
   <aside class="side" id="side" aria-label="Werkzeuge">
-    <div class="head">
-      <h1 class="title">Musiktafel</h1>
-      <div class="headbtns">
-        <button type="button" class="btn" id="btnSongs" aria-haspopup="dialog" aria-controls="drawer" title="Liedersammlung: speichern, laden, bekannte Lieder, exportieren">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>Lieder</span>
-        </button>
-        <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Einstellungen</span>
-        </button>
-      </div>
-    </div>
-
-
     <div class="tools">
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>

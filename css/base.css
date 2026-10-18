@@ -58,10 +58,13 @@ body {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
 }
-/* Leiste oben über die ganze Breite: die drei Tafeln in der Mitte, rechts der Knopf zum Einklappen */
-.topbar { grid-column: 1 / -1; position: relative; display: flex; justify-content: center; align-items: center; }
-.topbar .tabs { width: min(560px, 100%); background: var(--panel); }
-.fab.topfold { position: absolute; right: 0; width: 40px; height: 40px; box-shadow: none; }
+/* Leiste oben über die ganze Breite: links der Titel, in der Mitte die drei Tafeln, rechts Liedersammlung,
+   Einstellungen und der Knopf zum Einklappen */
+.topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr minmax(0, 520px) 1fr; align-items: center; gap: 12px; }
+.topbar .title { justify-self: start; padding-left: 6px; }
+.topbar .tabs { background: var(--panel); }
+.topright { justify-self: end; display: flex; align-items: center; gap: 6px; }
+.fab.topfold { width: 40px; height: 40px; box-shadow: none; }
 .fab.topfold .ico { width: 1.2rem; height: 1.2rem; }
 .app.notop { grid-template-rows: minmax(0, 1fr); }
 .app.notop > .topbar { display: none; }

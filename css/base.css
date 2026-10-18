@@ -191,3 +191,27 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) { transform: none; }
 }
+
+/* ---------- Verdecken (alle Bereiche) ---------- */
+/* Tuch: deckt ab einer Zeile alles ab, mit einem Hinweis oben; ein Tipp darauf deckt die nächste Zeile auf */
+.cloth {
+  position: relative; z-index: 4;
+  display: flex; justify-content: center; align-items: flex-start;
+  border: 2px dashed var(--btn-line); border-radius: 14px;
+  background: repeating-linear-gradient(135deg, var(--panel) 0 16px, var(--board) 16px 32px);
+  cursor: pointer; touch-action: manipulation;
+}
+.clothtip {
+  margin-top: 10px; padding: 6px 14px; border-radius: 999px;
+  background: var(--btn); border: 2px solid var(--btn-line); color: var(--muted);
+  font: 800 .85rem var(--font-ui); white-space: nowrap; pointer-events: none;
+}
+/* ?-Karte über einem Zeichen */
+.qcard {
+  display: grid; place-items: center;
+  border-radius: 12px; background: var(--fg); color: var(--board);
+  font: 700 1.6rem/1 var(--font-display); box-shadow: 0 3px 8px var(--shadow);
+  cursor: pointer;
+}
+/* Leiste: Schalter fürs Mitspielen unter den Knöpfen */
+.btn.stephide { width: 100%; margin-top: 6px; min-height: 44px; font-size: .85rem; }

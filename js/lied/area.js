@@ -4,7 +4,7 @@ import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js
 import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
-import { beatsOf, startAt } from '../core/plan.js';
+import { beatsOf, startAt, cutAt } from '../core/plan.js';
 import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
@@ -143,10 +143,14 @@ export function registerLied() {
     // Ab der Markierung (steht sie hinter der letzten Note, von vorn), mit Zählschlag und Auftakt für den Player
     receive: act.receiveSong,
     plan: () => {
-      const p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
+      let p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
+      // Was unter dem Tuch liegt, klingt noch nicht
+      const k = act.coverIndex();
+      if (k >= 0) p = cutAt(p, (s) => s.pos >= k);
       return startAt(p, p.items.findIndex((s) => s.pos >= L.sel));
     },
     mark: markPlaying,
+    cover: { from: act.coverFrom, card: act.toggleCard, reset: act.resetCover, clear: act.clearCover },
     songs: {
       store,
       texts: { save: 'Lied speichern', songs: 'Gespeicherte Lieder' },

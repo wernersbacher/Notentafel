@@ -213,3 +213,8 @@ test('songToMelody: Noten werden Farbpunkte, Takte bleiben in einer Zeile', () =
   const long = { meter: '4/4', pickup: 0, key: 0, ev: Array.from({ length: 12 }, () => n('g1')) };
   assert.deepEqual(songToMelody(long, true).rows.map((r) => r.length), [8, 4]);
 });
+
+test('cleanSong: Tuch (cv, cf) und ?-Karten (q) bleiben erhalten, Unsinn fällt weg', () => {
+  const s = cleanSong({ meter: '4/4', pickup: 0, ev: [{ p: 'c1', v: 4, q: 1 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2 }, { p: 'e1', v: 4, q: 7 }] });
+  assert.deepEqual(s.ev, [{ p: 'c1', v: 4, q: 1 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2 }, { p: 'e1', v: 4 }]);
+});

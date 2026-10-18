@@ -12,6 +12,7 @@
 //                    name(), data(), saved(name) nach dem Speichern, load(song) aus der Liste oder dem Autosave
 //   menu             eigene Abschnitte im Menü (optional): open() blendet sie ein (sie tragen data-area im HTML)
 //   receive(data)    nimmt etwas aus einem anderen Bereich entgegen (optional, siehe handOver)
+//   cover            Verdecken (optional): from, card, reset, clear für die Knöpfe mit data-cover in seiner Leiste
 import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
 import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
@@ -164,6 +165,12 @@ export function startShell() {
     btn.addEventListener('click', () => { const f = cur.tools && cur.tools[k]; if (f) f(btn); });
   }
   el.btnPlay.addEventListener('click', () => togglePlay(cur.plan, cur.mark));
+  // Verdecken: dieselben Knöpfe in der Leiste jedes Bereichs
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-cover]');
+    const f = b && cur.cover && cur.cover[b.dataset.cover];
+    if (f) f();
+  });
   el.btnSide.addEventListener('click', () => setCollapsed(!collapsed));
   showPresent();
   el.btnPresent.addEventListener('click', () => setPresent(!present));

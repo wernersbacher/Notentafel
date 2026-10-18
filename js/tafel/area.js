@@ -1,6 +1,6 @@
 // Meldet Melodie und Rhythmus beim Kern an. Beide nutzen dieselbe Tafel, jede mit eigenem Stand.
 import { register } from '../core/shell.js';
-import { beatsOf, startAt } from '../core/plan.js';
+import { beatsOf, startAt, cutAt } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
@@ -44,7 +44,10 @@ function plan() {
     if (sounds(cell)) { last = items.length - 1; end = t; }
   });
   // Zählschlag nach der ersten Taktart auf der Tafel; abgespielt wird ab der Markierung (dahinter nichts mehr: von vorn)
-  const plan = { items: items.slice(0, last + 1), end, ...beatsOf((S.rows.find((row) => row.meter) || {}).meter || '') };
+  let plan = { items: items.slice(0, last + 1), end, ...beatsOf((S.rows.find((row) => row.meter) || {}).meter || '') };
+  // Was unter dem Tuch liegt, klingt noch nicht
+  const k = act.coverRow();
+  if (k >= 0) plan = cutAt(plan, (s) => s.pos.r >= k);
   const sel = S.sel;
   return startAt(plan, plan.items.findIndex((s) => s.pos.r > sel.r || (s.pos.r === sel.r && s.pos.c >= sel.c)));
 }
@@ -68,6 +71,7 @@ function area(id, label, panel, texts) {
     receive: act.receiveRows,
     plan,
     mark: markPlaying,
+    cover: { from: act.coverFrom, card: act.toggleCard, reset: act.resetCover, clear: act.clearCover },
     songs: {
       store: stores[id],
       texts,

@@ -62,3 +62,15 @@ test('defekte Daten ergeben leere Liste bzw. nichts', () => {
   store.set('notentafel.v1', 'nicht json');
   assert.equal(S.loadBoard('mel'), null);
 });
+
+test('Verdecken: Tuch an der Zeile und ?-Karten bleiben beim Speichern erhalten', () => {
+  const rows = [tune('C', 'D'), tune('E'), tune('F')];
+  rows[0][1].q = 1; rows[1][0].q = 2;
+  rows[1].coverFrom = true; rows[2].cover = true;
+  S.saveSong('mel', rows, 'Lied');
+  const [s] = S.loadSongs('mel');
+  assert.deepEqual(s.rows, rows);
+  assert.equal(s.rows[0].cover, undefined);
+  assert.equal(s.rows[2].cover, true);
+  assert.equal(s.rows[1].coverFrom, true);
+});

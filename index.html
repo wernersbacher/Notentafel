@@ -175,6 +175,25 @@
         </div>
       </section>
 
+      <section class="group block">
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <div class="tools covers">
+          <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+          </button>
+          <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
+            <span class="big">?</span><span class="small">Karte</span>
+          </button>
+          <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+          </button>
+          <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+          </button>
+        </div>
+        <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt ist alles hinter der aktuellen Note ausgeblendet">Mitspielen: nur bis zur Note zeigen</button>
+      </section>
+
     </div>
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
@@ -218,6 +237,25 @@
       <section class="group block">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
         <div class="zbtns" id="counts"></div>
+      </section>
+
+      <section class="group block">
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <div class="tools covers">
+          <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+          </button>
+          <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
+            <span class="big">?</span><span class="small">Karte</span>
+          </button>
+          <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+          </button>
+          <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+          </button>
+        </div>
+        <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt ist alles hinter der aktuellen Note ausgeblendet">Mitspielen: nur bis zur Note zeigen</button>
       </section>
 
     </div>
@@ -296,6 +334,25 @@
           <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
           <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
         </div>
+      </section>
+
+      <section class="group block">
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <div class="tools covers">
+          <button type="button" class="btn" data-cover="from" title="Ab der markierten Note alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+          </button>
+          <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
+            <span class="big">?</span><span class="small">Karte</span>
+          </button>
+          <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+          </button>
+          <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
+            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+          </button>
+        </div>
+        <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt ist alles hinter der aktuellen Note ausgeblendet">Mitspielen: nur bis zur Note zeigen</button>
       </section>
 
 

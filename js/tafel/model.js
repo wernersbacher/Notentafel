@@ -183,21 +183,30 @@ function cleanCell(c) {
   } else if (DUR_BY[c.d]) o = { k: c.k === 'b' ? 'b' : 'r', d: c.d };
   if (o && typeof c.z === 'string' && /^[1-6+]( [1-6+]){0,5}$/.test(c.z)) o.z = c.z;
   if (c.bar) { o = o || {}; o.bar = [2, 3, 4, 5].includes(c.bar) ? c.bar : 1; }
+  // ?-Karte über einem Ton oder Zeichen: 1 verdeckt, 2 aufgedeckt (bleibt eine Karte für „neu abdecken“)
+  if (o && (o.n || o.k) && (c.q === 1 || c.q === 2)) o.q = c.q;
   return o;
 }
-// Zeilen-Eigenschaften line und meter. Gespeichert als lines: pro Zeile 0, 1 (nur Linie, älteres Format) oder { l, m }.
+// Zeilen-Eigenschaften line, meter und das Tuch: cover (ab dieser Zeile ist jetzt abgedeckt) und coverFrom (hier lag
+// das Tuch am Anfang, dorthin kommt es mit „neu abdecken“). Gespeichert als lines: pro Zeile 0, 1 (nur Linie, älteres
+// Format) oder { l, m, c, f }.
 export function attachLines(rs, lines) {
   rs.forEach((row, r) => {
     const v = Array.isArray(lines) ? lines[r] : 0;
     row.line = v === 1 || !!(v && v.l);
     row.meter = v && METERS.includes(v.m) ? v.m : '';
+    if (v && v.c) row.cover = true; else delete row.cover;
+    if (v && v.f) row.coverFrom = true; else delete row.coverFrom;
   });
   return rs;
 }
 export function packLines(rs) {
   return rs.map((row) => {
-    if (!row.meter) return row.line ? 1 : 0;
-    return { l: row.line ? 1 : 0, m: row.meter };
+    if (!row.meter && !row.cover && !row.coverFrom) return row.line ? 1 : 0;
+    const o = { l: row.line ? 1 : 0, m: row.meter };
+    if (row.cover) o.c = 1;
+    if (row.coverFrom) o.f = 1;
+    return o;
   });
 }
 // Prüft gespeicherte Zeilen und liefert eine saubere Kopie (oder null).

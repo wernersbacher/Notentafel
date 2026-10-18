@@ -4,7 +4,7 @@ import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
 import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
-import { render, renderSheet, commit } from './render.js';
+import { render, renderSheet, commit, lineStartAfter } from './render.js';
 
 const ev = () => L.song.ev;
 const cur = () => L.song.ev[L.sel];
@@ -15,10 +15,12 @@ function fresh(o) {
   if (L.pen.dot && canDot(L.pen.v)) o.dot = 1;
   return o;
 }
-// Takt- und Schlussstrich und Umbruch hinter dem Platz bleiben stehen, wenn das Zeichen ersetzt wird
+// Takt- und Schlussstrich, Umbruch und Tuch bleiben stehen, wenn das Zeichen ersetzt wird
 function keepMarks(prev, o) {
   if (prev.bar) o.bar = prev.bar;
   if (prev.brk) o.brk = 1;
+  if (prev.cv) o.cv = 1;
+  if (prev.cf) o.cf = 1;
   return o;
 }
 function full() {
@@ -338,4 +340,61 @@ export function loadSong(s) {
   L.last = null;
   commit();
   toast('„' + (s.name || 'Ohne Namen') + '“ geladen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
+}
+
+/* ---------- Verdecken ---------- */
+// Tuch: ab dem Ereignis mit cv ist alles abgedeckt; cf merkt, wo es am Anfang lag. ?-Karte: q an der Note
+// (1 verdeckt, 2 aufgedeckt). Alles hängt an den Ereignissen und wird mit dem Lied gespeichert.
+export const coverIndex = () => ev().findIndex((e) => e.cv);
+
+// Tuch ab der markierten Note
+export function coverFrom() {
+  if (!cur()) { toast('Erst eine Note markieren, ab der abgedeckt wird.', true); return; }
+  snap();
+  ev().forEach((e) => { delete e.cv; delete e.cf; });
+  cur().cv = cur().cf = 1;
+  commit();
+}
+// Tipp auf das Tuch: die nächste Notenzeile kommt hervor, ab ihr geht es beim Abspielen weiter
+export function revealLine() {
+  const k = coverIndex();
+  if (k < 0) return;
+  const next = lineStartAfter(k);
+  snap();
+  delete ev()[k].cv;
+  if (next > 0) ev()[next].cv = 1;
+  L.sel = k;
+  L.last = null;
+  commit();
+}
+// ?-Karte auf die markierte Note legen oder wieder wegnehmen
+export function toggleCard() {
+  const e = cur();
+  if (!e) { toast('Erst eine Note markieren, dann die Karte darauflegen.', true); return; }
+  snap();
+  if (e.q) delete e.q; else e.q = 1;
+  commit();
+}
+// Tipp auf eine Note: eine verdeckte Karte wird aufgedeckt, sonst wird markiert
+export function tapEv(i) {
+  const e = ev()[i];
+  if (!e || e.q !== 1) { select(i); return; }
+  snap();
+  e.q = 2;
+  commit();
+}
+// Alles wieder wie am Anfang: Tuch an seinen Anfang, alle Karten zu
+export function resetCover() {
+  snap();
+  ev().forEach((e) => {
+    if (e.cf) e.cv = 1; else delete e.cv;
+    if (e.q) e.q = 1;
+  });
+  commit();
+}
+// Tuch und alle Karten weg
+export function clearCover() {
+  snap();
+  ev().forEach((e) => { delete e.cv; delete e.cf; delete e.q; });
+  commit();
 }

@@ -21,3 +21,14 @@ export function startAt(plan, k) {
     barStart: (plan.barStart || 0) - shift
   };
 }
+
+// Ablaufplan bis vor den ersten Eintrag, für den hidden(s) gilt (z. B. was unter dem Tuch liegt). Stille Einträge am
+// Ende fallen weg, end ist das Ende des letzten Tons davor. Ist nichts verdeckt, bleibt der Plan, wie er ist.
+export function cutAt(plan, hidden) {
+  const k = plan.items.findIndex(hidden);
+  if (k < 0) return plan;
+  const items = plan.items.slice(0, k);
+  while (items.length && !items[items.length - 1].sound) items.pop();
+  const last = items[items.length - 1];
+  return { ...plan, items, end: last ? last.t + last.len : 0 };
+}

@@ -23,6 +23,7 @@ export function cleanCoreSettings(s) {
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
     songSort: s.songSort === 'abc' ? 'abc' : 'group', // bekannte Lieder nach Thema oder alphabetisch
     step: !!s.step, // Schritt für Schritt: jeder Tipp auf den großen Knopf eine Note weiter
+    stepHide: !!s.stepHide, // dabei nur bis zur aktuellen Note zeigen, der Rest ist ausgeblendet
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
     open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+d$/.test(k)) : OPEN_START.slice()

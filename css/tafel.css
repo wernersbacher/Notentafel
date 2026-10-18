@@ -244,3 +244,16 @@
 @media (prefers-reduced-motion: reduce) {
   .dot { transition: none; }
 }
+
+/* ---------- Verdecken ---------- */
+/* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
+.grid > .cloth { grid-column: 1; }
+/* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */
+.cell.quiz .stack, .cell.ahead .stack { visibility: hidden; }
+.cell.quiz .stack > .rnum, .cell.quiz .stack > .meter, .cell.quiz .stack > .barline,
+.cell.ahead .stack > .rnum, .cell.ahead .stack > .meter { visibility: visible; }
+.cell .qcard { position: absolute; left: 50%; top: 0; z-index: 2; width: calc(var(--d) * 1.05); height: calc(var(--d) * 1.2); transform: translate(-50%, calc(var(--d) * -.1)); font-size: calc(var(--d) * .7); visibility: visible; }
+.cell.ahead .qcard { visibility: hidden; }
+/* aufgedeckt: beim Bearbeiten ein kleines „?“ oben rechts als Hinweis, im Vorführen nichts */
+.cell.quizopen .qcard { left: auto; right: calc(50% - var(--d) * .62); top: calc(var(--d) * -.12); width: calc(var(--d) * .38); height: calc(var(--d) * .38); transform: none; border-radius: 50%; font: 800 calc(var(--d) * .26)/1 var(--font-ui); box-shadow: none; opacity: .8; pointer-events: none; }
+.grid.clean .cell.quizopen .qcard { display: none; }

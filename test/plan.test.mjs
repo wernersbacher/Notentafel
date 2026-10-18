@@ -19,3 +19,15 @@ test('startAt: ab der Markierung, Zeiten beginnen bei 0, der Takt läuft weiter'
   assert.equal(startAt(plan, -1), plan);
   assert.equal(startAt(plan, 0), plan);
 });
+
+test('cutAt: bis vor das Tuch, stille Einträge davor fallen weg', async () => {
+  const { cutAt } = await import('../js/core/plan.js');
+  const items = [
+    { t: 0, len: 1, sound: 'bell', pos: 0 }, { t: 1, len: 2, sound: 'bell', pos: 1 },
+    { t: 3, len: 1, sound: '', pos: 2 }, { t: 4, len: 1, sound: 'bell', pos: 3 }
+  ];
+  const plan = { items, end: 5, beat: 1 };
+  assert.deepEqual(cutAt(plan, (s) => s.pos >= 3), { items: items.slice(0, 2), end: 3, beat: 1 });
+  assert.equal(cutAt(plan, (s) => s.pos >= 9), plan);
+  assert.deepEqual(cutAt(plan, () => true).items, []);
+});

@@ -81,7 +81,9 @@ export function initSheetInput() {
   // Antippen markiert den Platz darunter
   el.sheet.addEventListener('click', (e) => {
     if (justDragged) return;
+    // Tipp auf das Tuch deckt die nächste Notenzeile auf, auf eine ?-Karte deckt sie auf
+    if (e.target.closest('.cloth:not(.stepcloth)')) { act.revealLine(); return; }
     const hit = e.target.closest('[data-i]');
-    if (hit) act.select(+hit.dataset.i);
+    if (hit) act.tapEv(+hit.dataset.i);
   });
 }

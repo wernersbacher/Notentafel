@@ -5,6 +5,7 @@ import { autoMarks, barAt, meterOf } from './theory.js';
 import { S, settings, wraps } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
+import { stepHides } from '../core/player.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
@@ -107,11 +108,15 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   // Eine Achtel im geteilten Feld (Rhythmus) ist schmaler als ihr Zeichen: --f > 1, das Zeichen steht mittig über ihr
   const fr = geo ? 2 / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]) : 1;
   const span = geo ? ' style="grid-column:span ' + geo.k + ';--f:' + fr.toFixed(4) + '"' : '';
-  return '<div class="cell' + (isSel ? ' sel' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
+  // ?-Karte: verdeckt liegt sie über dem Zeichen, aufgedeckt bleibt beim Bearbeiten ein kleines „?“ als Hinweis
+  const q = cell && cell.q;
+  if (q === 1) label = where + ': verdeckt (antippen deckt auf)';
+  return '<div class="cell' + (isSel ? ' sel' : '') + (q ? (q === 1 ? ' quiz' : ' quizopen') : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + dot +
-    '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand + '</div></div>';
+    '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
+    (q ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
 
 /* ---------- Eine Zeile ---------- */
@@ -136,7 +141,8 @@ function rowHTML(row, r, cols, P, marks) {
     const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
     cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo });
   }
-  const tpl = ' style="--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
+  // Feste Rasterzeile, damit das Tuch (das mehrere Zeilen überdeckt) die Zeilen nicht verschiebt
+  const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
   return '<div class="row"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
 }
 
@@ -157,17 +163,30 @@ export function renderBoard() {
   const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));
-  grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('');
+  // Tuch: deckt ab seiner Zeile alles bis unten ab; ein Tipp darauf deckt die nächste Zeile auf
+  const k = S.rows.findIndex((row) => row.cover);
+  const cloth = k < 0 ? '' : '<div class="cloth" style="grid-row:' + (k + 1) + ' / ' + (S.rows.length + 1) + '" role="button" tabindex="0" aria-label="Abgedeckt. Antippen deckt die nächste Zeile auf.">' +
+    '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span></div>';
+  grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('') + cloth;
   // Passt die Tafel nicht mehr in die Breite, darf man sie seitlich wischen
   grid.classList.toggle('wide', el.board.scrollWidth > el.board.clientWidth + 1);
 }
 
 export const cellEl = (r, c) => el.grid.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
 
-// Hebt beim Abspielen den gerade klingenden Platz hervor (pos = null: keinen)
+// Hebt beim Abspielen den gerade klingenden Platz hervor (pos = null: keinen). Schritt für Schritt mit „nur bis zur
+// Note zeigen“: alles dahinter ist ausgeblendet (die Zeilennummern und Taktarten bleiben)
 export function markPlaying(pos) {
   const old = el.grid.querySelector('.cell.playing');
   if (old) old.classList.remove('playing');
+  el.grid.querySelectorAll('.cell.ahead').forEach((x) => x.classList.remove('ahead'));
   const cur = pos && cellEl(pos.r, pos.c);
-  if (cur) { cur.classList.add('playing'); follow(cur, el.board); }
+  if (!cur) return;
+  cur.classList.add('playing');
+  follow(cur, el.board);
+  if (!stepHides()) return;
+  el.grid.querySelectorAll('.cell').forEach((x) => {
+    const r = +x.dataset.r, c = +x.dataset.c;
+    if (r > pos.r || (r === pos.r && c > pos.c)) x.classList.add('ahead');
+  });
 }

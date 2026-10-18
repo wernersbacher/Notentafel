@@ -178,3 +178,14 @@ aside.side { padding: 12px; overflow: hidden; }
 @media (orientation: portrait) and (min-width: 601px) {
   .side .steps .btn { font-size: 1.35rem; }
 }
+
+/* ---------- Verdecken ---------- */
+/* Tuch und Karten liegen als Felder über dem Notenblatt; das Tuch aus zwei Stücken (Rest der Zeile, alles darunter) */
+.sheet > .cloth { position: absolute; z-index: 4; }
+.sheet > .cloth:not(.rest) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+.sheet > .cloth.rest { border-top-left-radius: 0; border-top: 0; }
+/* Beim Mitspielen: schlicht in der Farbe des Blatts, ohne Rand und Hinweis */
+.sheet > .cloth.stepcloth { background: var(--board); border: 0; cursor: default; pointer-events: none; }
+.score .ev.quiz { visibility: hidden; }
+.sheet > .qcard { position: absolute; z-index: 3; font-size: 1.4rem; }
+.sheet > .qcard.qopen { border-radius: 50%; font: 800 .7rem/1 var(--font-ui); box-shadow: none; opacity: .8; pointer-events: none; }

@@ -21,6 +21,9 @@ let play = null; // { out, timers, cur, mark } während des Abspielens; Schritt 
 
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
+// Schritt für Schritt mit „nur bis zur Note zeigen“ (settings.stepHide): die Bereiche blenden alles hinter der
+// markierten Stelle aus
+export const stepHides = () => !!(play && play.steps && settings.stepHide);
 
 // Der runde Abspielen-Knopf unten rechts auf der Tafel: ▶ oder ■, Schritt für Schritt ▶| (nächste Note)
 function showButton(playing) {
@@ -148,7 +151,7 @@ export function initPlayer() {
     const b = e.target.closest && e.target.closest('[data-play]');
     if (!b) return;
     // Wechsel zwischen Abspielen und Schritt für Schritt: was gerade läuft, endet
-    if (b.dataset.play === 'step') stopPlay();
+    if (b.dataset.play === 'step' || b.dataset.play === 'stepHide') stopPlay();
     settings[b.dataset.play] = !settings[b.dataset.play];
     persistSettings();
     renderPlayOpts();

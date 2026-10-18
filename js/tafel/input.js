@@ -3,7 +3,7 @@ import { filled } from './model.js';
 import { S } from './state.js';
 import { render } from './render.js';
 import { cellEl } from './board.js';
-import { select, swapCells, deleteCell } from './actions.js';
+import { tapCell, swapCells, deleteCell, revealRow } from './actions.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
@@ -59,7 +59,7 @@ function onEnd(e, cancel) {
     const t = cancel ? null : cellAt(e.clientX, e.clientY);
     if (t && (t.r !== d.r || t.c !== d.c)) swapCells(d, t);
     else render();
-  } else if (!cancel) select(d.r, d.c);
+  } else if (!cancel) tapCell(d.r, d.c);
 }
 // Mit Tastatur: Eingabe/Leertaste markiert, Entfernen löscht
 function onKey(e) {
@@ -80,4 +80,6 @@ export function initBoardInput() {
   el.grid.addEventListener('pointercancel', (e) => onEnd(e, true));
   el.grid.addEventListener('contextmenu', (e) => e.preventDefault());
   el.grid.addEventListener('keydown', onKey);
+  // Tipp auf das Tuch deckt die nächste Zeile auf
+  el.grid.addEventListener('click', (e) => { if (e.target.closest('.cloth')) revealRow(); });
 }

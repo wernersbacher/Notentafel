@@ -1,5 +1,5 @@
 // Zeichnet Notenblatt und Leiste neu (render) und schließt Änderungen ab (commit)
-import { stopPlay, playingPos } from '../core/player.js';
+import { stopPlay, playingPos, stepHides } from '../core/player.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
 import { isNote } from './model.js';
@@ -43,7 +43,59 @@ export function renderSheet() {
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';
   placeGrabber();
+  placeCovers(clean);
+  if (pos != null && stepHides()) clothFrom(pos + 1, 'cloth stepcloth');
   showMark();
+}
+
+/* ---------- Verdecken ---------- */
+// Tuch und ?-Karten liegen als HTML-Felder über dem Notenblatt (wie das Feld zum Ziehen)
+const hitOf = (i) => el.sheet.querySelector('.hit[data-i="' + i + '"]:not(:first-child)');
+function boxOf(node) {
+  const r = node.getBoundingClientRect(), b = el.sheet.getBoundingClientRect();
+  return { l: r.left - b.left + el.sheet.scrollLeft, t: r.top - b.top + el.sheet.scrollTop, w: r.width, h: r.height };
+}
+function addBox(cls, x, html = '', i = null) {
+  const d = document.createElement('div');
+  d.className = cls;
+  if (i != null) d.dataset.i = i;
+  d.style.cssText = 'left:' + x.l + 'px;top:' + x.t + 'px;width:' + x.w + 'px;height:' + x.h + 'px';
+  d.innerHTML = html;
+  el.sheet.appendChild(d);
+}
+// Tuch ab Ereignis i: der Rest seiner Notenzeile und alles darunter
+function clothFrom(i, cls, tip = '') {
+  const h = hitOf(i), score = el.sheet.querySelector('.score');
+  if (!h || !score) return;
+  const r = boxOf(h), s = boxOf(score), l = Math.max(0, r.l - 2), below = r.t + r.h;
+  addBox(cls, { l, t: r.t, w: s.l + s.w - l, h: r.h }, tip);
+  if (s.t + s.h > below + 1) addBox(cls + ' rest', { l: s.l, t: below, w: s.w, h: s.t + s.h - below });
+}
+function placeCovers(clean) {
+  const k = L.song.ev.findIndex((e) => e.cv);
+  if (k >= 0) clothFrom(k, 'cloth', '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span>');
+  // ?-Karten: verdeckt eine Karte über der Note; aufgedeckt beim Bearbeiten ein kleines „?“ als Hinweis
+  L.song.ev.forEach((e, i) => {
+    if (!e.q || (e.q === 2 && clean)) return;
+    const g = el.sheet.querySelector('.ev[data-i="' + i + '"]');
+    if (!g) return;
+    const x = boxOf(g);
+    if (e.q === 2) { addBox('qcard qopen', { l: x.l + x.w - 4, t: x.t - 8, w: 16, h: 16 }, '?'); return; }
+    g.classList.add('quiz');
+    const w = Math.max(x.w + 10, spPx * 2.2), h = Math.max(x.h + 10, spPx * 3);
+    addBox('qcard', { l: x.l + x.w / 2 - w / 2, t: x.t + x.h / 2 - h / 2, w, h }, '?', i);
+  });
+}
+// Erste Note der nächsten Notenzeile nach Ereignis i (-1: es kommt keine mehr); so weit deckt ein Tipp aufs Tuch auf
+export function lineStartAfter(i) {
+  const h = hitOf(i);
+  if (!h) return -1;
+  const top = h.getBoundingClientRect().top;
+  for (let j = i + 1; j < L.song.ev.length; j++) {
+    const x = hitOf(j);
+    if (x && x.getBoundingClientRect().top > top + 1) return j;
+  }
+  return -1;
 }
 // Über die markierte Note kommt ein unsichtbares HTML-Feld zum Ziehen. Anders als SVG-Elemente beachten es alle
 // Browser mit touch-action: none, sodass der Finger dort zieht statt zu scrollen.
@@ -82,12 +134,14 @@ export function commit() {
 // Hebt beim Abspielen das klingende Zeichen hervor (i = null: keins)
 // Hebt beim Abspielen die klingende Note hervor: farbig und mit einem Balken dahinter (so groß wie ihre Tippfläche,
 // ganz hinten im System, damit er nichts verdeckt)
+// Schritt für Schritt mit „nur bis zur Note zeigen“: alles dahinter liegt unter einem schlichten Tuch
 export function markPlaying(i) {
   const old = el.sheet.querySelector('.ev.playing');
   if (old) old.classList.remove('playing');
-  el.sheet.querySelectorAll('.playbar').forEach((b) => b.remove());
+  el.sheet.querySelectorAll('.playbar, .stepcloth').forEach((b) => b.remove());
   const now = i != null && el.sheet.querySelector('.ev[data-i="' + i + '"]');
   if (!now) return;
+  if (stepHides()) clothFrom(i + 1, 'cloth stepcloth');
   now.classList.add('playing');
   const hit = el.sheet.querySelector('.hit[data-i="' + i + '"]:not(:first-child)');
   if (!hit) return;

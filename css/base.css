@@ -151,8 +151,8 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 }
 .fab .ico { width: 1.5rem; height: 1.5rem; }
 .fab.on { background: var(--fg); color: var(--board); border-color: var(--fg); }
-.fab.play { width: 68px; height: 68px; background: var(--fg); color: var(--board); border-color: var(--fg); }
-.fab.play .ico { width: 1.9rem; height: 1.9rem; }
+.fab.play { width: 80px; height: 80px; background: var(--fg); color: var(--board); border-color: var(--fg); }
+.fab.play .ico { width: 2.3rem; height: 2.3rem; }
 .fab.play.on { background: var(--danger); border-color: var(--danger); }
 /* Ein-/Ausklappen: großer Griff am rechten Rand der Tafel, senkrecht in der Mitte; eingeklappt zeigt der Pfeil nach links */
 .fab.sidetoggle { position: absolute; top: 50%; right: 10px; z-index: 15; width: 52px; height: 84px; border-radius: 26px; transform: translateY(-50%); }

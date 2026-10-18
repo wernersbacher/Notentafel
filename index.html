@@ -91,17 +91,17 @@
       <div class="grid" id="grid" aria-label="Musiktafel"></div>
       <div class="sheet" id="sheet" aria-label="Notenblatt" hidden></div>
     </div>
-    <!-- Abspielen, Einzählen und Metronom: runde Knöpfe unten rechts auf der Tafel (für alle Bereiche) -->
+    <!-- Runde Knöpfe unten rechts auf der Tafel (für alle Bereiche): Vorführen, Metronom, Einzählen, Tempo, Schritt für Schritt, Abspielen -->
     <!-- Leiste ein- und ausklappen; eingeklappt ist das Bearbeiten beendet (keine Markierung, keine leeren Plätze) -->
     <button type="button" class="fab sidetoggle" id="btnSide" aria-expanded="true" aria-controls="side" title="Leiste einklappen (Bearbeiten beenden)" aria-label="Leiste einklappen">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <div class="playfab" role="group" aria-label="Abspielen">
       <button type="button" class="fab" id="btnPresent" aria-pressed="false" title="Vorführen: nur die Tafel, über den ganzen Bildschirm" aria-label="Vorführen"></button>
-      <button type="button" class="fab" data-play="step" aria-pressed="false" title="Schritt für Schritt: jeder Tipp auf den großen Knopf zeigt die nächste Note" aria-label="Schritt für Schritt"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h5v-4.5h5V10h5V5.5h3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <button type="button" class="fab" data-play="countIn" aria-pressed="false" title="Einzählen: vor dem Abspielen einen Takt vorweg" aria-label="Einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span></button>
       <button type="button" class="fab" data-play="metro" aria-pressed="false" title="Metronom: jeden Schlag mitklicken" aria-label="Metronom"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button type="button" class="fab" data-play="countIn" aria-pressed="false" title="Einzählen: vor dem Abspielen einen Takt vorweg" aria-label="Einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span></button>
       <button type="button" class="fab tempo" id="btnTempo" aria-haspopup="true" aria-expanded="false" aria-controls="tempoPop" title="Tempo ändern"><span class="tnum" id="tempoNum"></span><span class="tlbl">Tempo</span></button>
+      <button type="button" class="fab" data-play="step" aria-pressed="false" title="Schritt für Schritt: jeder Tipp auf den großen Knopf zeigt die nächste Note" aria-label="Schritt für Schritt"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h5v-4.5h5V10h5V5.5h3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <button type="button" class="fab play" id="btnPlay"></button>
       <!-- Tempo direkt auf der Tafel: kleines Feld über den Knöpfen, ein Tipp daneben schließt es -->
       <div class="tempopop" id="tempoPop" role="group" aria-label="Tempo" hidden>

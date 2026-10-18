@@ -130,3 +130,37 @@
 /* Im Bereich Lied vier Knöpfe unten: Symbol über der Schrift, etwas kleinere Schrift */
 .side[data-area="lied"] .actions { gap: 6px; }
 .side[data-area="lied"] .actions > .btn { flex-direction: column; gap: .15rem; padding: .2rem .15rem; font-size: .78rem; hyphens: manual; }
+
+/* ---------- Größere Knöpfe zum Schreiben (Platz aus den aufklappbaren Blöcken) ---------- */
+aside.side { padding: 12px; }
+.panel .block { padding-left: 8px; padding-right: 8px; }
+/* Lied: Töne höher und mit größerer Schrift, Werte etwas höher */
+.steps { gap: 4px; }
+.steps .btn { min-height: 48px; font-size: 1.45rem; }
+.values.v6 .btn { min-height: 54px; }
+.values.v6 .sym { height: 2.05rem; }
+/* Melodie: Farbpunkte dichter, damit sie größer werden */
+.side .palette { gap: 4px; }
+/* Rhythmus: viel Platz, also alles deutlich größer */
+#panelRhy .values .btn { min-height: 66px; }
+#panelRhy .values .sym { height: 2.5rem; }
+#panelRhy .tools.five .btn { min-height: 66px; }
+#panelRhy .tools.five .big .ico { width: 1.6rem; height: 1.6rem; }
+#panelRhy .zbtns .btn { min-height: 56px; font-size: 1.6rem; }
+
+/* Hochformat: viel Höhe, wenig Breite – Farbpunkte 5 pro Reihe (Stammtöne, dann die hohen Töne), alles höher */
+@media (orientation: portrait) and (min-width: 601px) {
+  .side .palette { display: flex; flex-direction: column; gap: 8px; }
+  .side .pal { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .side .note { font-size: 1.9rem; }
+  .steps .btn { min-height: 58px; font-size: 1.6rem; }
+  .values.v6 .btn { min-height: 64px; }
+  .values.v6 .sym { height: 2.3rem; }
+  #panelMel .tools .btn { min-height: 58px; }
+  #panelRhy .values .btn, #panelRhy .tools.five .btn { min-height: 80px; }
+  #panelRhy .values .sym { height: 2.8rem; }
+  #panelRhy .zbtns .btn { min-height: 64px; }
+  .meterrow .btn { min-height: 56px; }
+  .side .tools.toprow { gap: 4px; }
+  .side .tools.toprow .small { font-size: .56rem; }
+}

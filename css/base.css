@@ -54,7 +54,7 @@ body {
 .app {
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 33vw, 350px);
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 34vw, 370px);
   grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
 }

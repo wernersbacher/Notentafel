@@ -173,3 +173,8 @@ aside.side { padding: 12px; overflow: hidden; }
 /* Lied: Taktstriche automatisch oder von Hand */
 .tools.barmode { grid-template-columns: 1fr 1fr; }
 .tools.barmode .btn { min-height: 50px; font: 800 .9rem var(--font-ui); }
+/* Lied: Tonnamen auf den Knöpfen in der Schrift der Überschriften der Leiste */
+.side .steps .btn { font-family: var(--font-ui); font-weight: 800; }
+@media (orientation: portrait) and (min-width: 601px) {
+  .side .steps .btn { font-size: 1.35rem; }
+}

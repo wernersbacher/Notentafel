@@ -3,6 +3,7 @@ import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js'
 import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { S, settings, wraps } from './state.js';
+import { sideCollapsed } from '../core/shell.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
@@ -150,7 +151,7 @@ export function renderBoard() {
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
   grid.classList.toggle('meters', hasMeter(S.rows));
   grid.classList.toggle('inserting', S.insertMode);
-  grid.classList.toggle('clean', S.clean);
+  grid.classList.toggle('clean', sideCollapsed()); // eingeklappte Leiste: ohne Markierung und leere Plätze
   grid.classList.toggle('nolen', !settings.lens && !(settings.syl && S.variant === 'rhy'));
   const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind

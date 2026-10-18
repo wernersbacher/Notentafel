@@ -79,7 +79,6 @@ export function renderSidebar() {
   el.btnDel.disabled = !filled(cur);
   el.btnGap.disabled = !canCloseGap(S.rows, S.sel);
   el.btnBreak.disabled = S.rows.length >= MAX_ROWS && !canStepDown(S.rows, S.sel);
-  pressed(el.btnDone, S.clean);
   el.btnUndo.disabled = S.hist.length === 0;
   el.btnAddRow.disabled = S.rows.length >= MAX_ROWS;
   el.btnDelRow.disabled = S.rows.length <= 1;

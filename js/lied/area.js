@@ -126,13 +126,12 @@ export function registerLied() {
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
     id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,
-    enter() { L.insertMode = false; L.clean = false; render(); },
+    enter() { L.insertMode = false; render(); },
     tools: {
       insert: act.toggleInsert,
       gap: act.removeEv,
       del: act.deleteEv,
       brk: act.lineBreak,
-      done: act.toggleClean,
       undo: act.undo,
       clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
     },

@@ -23,7 +23,6 @@ export const S = {
   // Markierung und Rückgängig-Verlauf der gerade nicht sichtbaren Tafel (nur bis zum Schließen der App)
   parked: {},
   insertMode: false,
-  clean: false, // „Fertig“: Markierung und leere Plätze ausgeblendet
   countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
   cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };

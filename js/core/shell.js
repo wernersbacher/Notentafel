@@ -5,7 +5,7 @@
 //   panel, board     seine Elemente in der Leiste und im Rahmen der Tafel
 //   enter()          wird sichtbar: Stand laden und zeichnen
 //   leave()          wird verlassen (optional)
-//   tools            gemeinsame Knöpfe: insert, gap, del, brk, done, undo, addRow, delRow(btn), clear(btn);
+//   tools            gemeinsame Knöpfe: insert, gap, del, brk, undo, addRow, delRow(btn), clear(btn);
 //                    fehlt einer, ist der Knopf ausgeblendet. Ihren Zustand zeichnet der Bereich selbst.
 //   plan(), mark(pos)  Abspielen (siehe player.js); ohne plan kein Abspielen-Knopf
 //   songs            Speichern und Laden (optional): store (aus makeStore), texts { menu, save, songs },
@@ -25,7 +25,7 @@ export const register = (area) => { areas.push(area); };
 export const current = () => cur;
 
 /* ---------- Bereiche ---------- */
-const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', done: 'btnDone', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
+const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
 
 function show(a) {
   areas.forEach((x) => { x.panel.hidden = x !== a; });
@@ -34,7 +34,7 @@ function show(a) {
   el.tabs.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.area === a.id ? 'true' : 'false'));
   const tools = a.tools || {};
   for (const k in TOOL_BTNS) el[TOOL_BTNS[k]].hidden = !tools[k];
-  el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk', 'done'].some((k) => tools[k]);
+  el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk'].some((k) => tools[k]);
   el.btnPlay.hidden = !a.plan;
   el.btnSaveSide.hidden = !a.songs;
 }
@@ -47,6 +47,22 @@ export function handOver(id, data) {
   a.receive(data);
   return true;
 }
+/* ---------- Leiste ein- und ausklappen ---------- */
+// Eingeklappt nutzt die Tafel die ganze Breite und das Bearbeiten ist beendet: Die Bereiche zeichnen dann ohne Markierung
+// und ohne leere Plätze (sideCollapsed() beim Zeichnen abfragen). Ausgeklappt erscheint die Markierung wieder.
+let collapsed = false;
+export const sideCollapsed = () => collapsed;
+function setCollapsed(on) {
+  collapsed = on;
+  stopPlay();
+  savePop.close();
+  document.querySelector('.app').classList.toggle('collapsed', on);
+  el.btnSide.setAttribute('aria-expanded', on ? 'false' : 'true');
+  el.btnSide.title = on ? 'Leiste ausklappen (bearbeiten)' : 'Leiste einklappen (Bearbeiten beenden)';
+  el.btnSide.setAttribute('aria-label', on ? 'Leiste ausklappen' : 'Leiste einklappen');
+  if (cur) cur.enter();
+}
+
 function setArea(id) {
   savePop.close();
   if (cur && cur.id === id) return;
@@ -114,6 +130,7 @@ export function startShell() {
     btn.addEventListener('click', () => { const f = cur.tools && cur.tools[k]; if (f) f(btn); });
   }
   el.btnPlay.addEventListener('click', () => togglePlay(cur.plan, cur.mark));
+  el.btnSide.addEventListener('click', () => setCollapsed(!collapsed));
 
   savePop = popover(el.savePop, el.btnSaveSide, { onOpen: prepareSavePop, onClose: leaveSavePop });
   el.btnSaveOk.addEventListener('click', saveFromSide);

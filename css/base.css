@@ -58,6 +58,9 @@ body {
   grid-template-rows: minmax(0, 1fr);
   gap: 14px;
 }
+/* Leiste eingeklappt: die Tafel nimmt die ganze Breite */
+.app.collapsed { grid-template-columns: minmax(0, 1fr); }
+.app.collapsed > .side { display: none; }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
 /* ---------- Knöpfe ---------- */
@@ -128,6 +131,10 @@ body {
 .fab.play { width: 68px; height: 68px; background: var(--fg); color: var(--board); border-color: var(--fg); }
 .fab.play .ico { width: 1.9rem; height: 1.9rem; }
 .fab.play.on { background: var(--danger); border-color: var(--danger); }
+/* Ein-/Ausklappen: klein oben rechts auf der Tafel; eingeklappt zeigt der Pfeil nach links */
+.fab.sidetoggle { position: absolute; top: 20px; right: 22px; z-index: 15; width: 40px; height: 40px; }
+.fab.sidetoggle .ico { width: 1.2rem; height: 1.2rem; }
+.app.collapsed .fab.sidetoggle .ico { transform: scaleX(-1); }
 .fab .cnt4 { display: flex; gap: 2px; align-items: flex-end; }
 .fab .cnt4 i { font: 800 .62rem/1 var(--font-ui); font-style: normal; }
 .fab .cnt4 i:first-child { font-size: .95rem; }

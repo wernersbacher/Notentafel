@@ -14,7 +14,6 @@ export const L = {
   sel: saved ? saved.song.ev.length : 0, // markierter Platz: Index in song.ev, song.ev.length ist der Platz am Ende
   hist: [], // Rückgängig-Verlauf (als JSON)
   insertMode: false,
-  clean: false, // „Fertig“: Markierung und leerer Platz ausgeblendet
   last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt
   pen: { v: 4, dot: 0 } // vorgewählter Notenwert für die nächsten Töne und Pausen
 };

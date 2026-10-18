@@ -27,7 +27,7 @@ function enter(v) {
     S.hist = p ? p.hist : [];
     S.sel = p && p.sel.r < S.rows.length ? p.sel : appendPos(S.rows);
   }
-  S.insertMode = false; S.clean = false; S.countAt = null;
+  S.insertMode = false; S.countAt = null;
   render();
 }
 
@@ -54,7 +54,6 @@ const tools = {
   gap: act.closeGap,
   del: act.deleteCell,
   brk: act.lineBreak,
-  done: act.toggleClean,
   undo: act.undo,
   addRow: act.addRow,
   // − Zeile (wenn in der Zeile Noten stehen) und Alles löschen muss man zweimal antippen

@@ -3,7 +3,7 @@ import { filled } from './model.js';
 import { S } from './state.js';
 import { render } from './render.js';
 import { cellEl } from './board.js';
-import { select, unclean, swapCells, deleteCell } from './actions.js';
+import { select, swapCells, deleteCell } from './actions.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
@@ -41,7 +41,6 @@ function onMove(e) {
   if (!drag || e.pointerId !== drag.id) return;
   if (!drag.active) {
     if (!filled(S.rows[drag.r][drag.c])) return;
-    unclean();
     if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < DRAG_START) return;
     beginDrag();
   }

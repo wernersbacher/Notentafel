@@ -69,6 +69,10 @@
       <div class="sheet" id="sheet" aria-label="Notenblatt" hidden></div>
     </div>
     <!-- Abspielen, Einzählen und Metronom: runde Knöpfe unten rechts auf der Tafel (für alle Bereiche) -->
+    <!-- Leiste ein- und ausklappen; eingeklappt ist das Bearbeiten beendet (keine Markierung, keine leeren Plätze) -->
+    <button type="button" class="fab sidetoggle" id="btnSide" aria-expanded="true" aria-controls="side" title="Leiste einklappen (Bearbeiten beenden)" aria-label="Leiste einklappen">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <div class="playfab" role="group" aria-label="Abspielen">
       <button type="button" class="fab" data-play="countIn" aria-pressed="false" title="Einzählen: vor dem Abspielen einen Takt vorweg" aria-label="Einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span></button>
       <button type="button" class="fab" data-play="metro" aria-pressed="false" title="Metronom: jeden Schlag mitklicken" aria-label="Metronom"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -78,7 +82,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </div>
 
-  <aside class="side" aria-label="Werkzeuge">
+  <aside class="side" id="side" aria-label="Werkzeuge">
     <div class="head">
       <h1 class="title">Musiktafel</h1>
       <div class="headbtns">
@@ -93,7 +97,7 @@
 
     <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
 
-    <div class="tools five">
+    <div class="tools">
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
       </button>
@@ -105,9 +109,6 @@
       </button>
       <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
         <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
-      </button>
-      <button type="button" class="btn" id="btnDone" aria-pressed="false" title="Markierung und leere Plätze ausblenden">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">fertig</span>
       </button>
     </div>
 

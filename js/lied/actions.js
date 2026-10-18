@@ -31,13 +31,11 @@ function full() {
 export function select(i) {
   L.sel = Math.max(0, Math.min(i, ev().length));
   L.last = null;
-  L.clean = false;
   const e = cur();
   if (e) L.pen = { v: e.v, dot: e.dot ? 1 : 0 };
   render();
 }
-export function toggleInsert() { L.insertMode = !L.insertMode; L.clean = false; render(); }
-export function toggleClean() { L.clean = !L.clean; render(); }
+export function toggleInsert() { L.insertMode = !L.insertMode; render(); }
 
 // Der Ton, auf den Vorzeichen und Bogen wirken: der zuletzt gesetzte, sonst der markierte (oder keiner)
 export function target() {

@@ -13,7 +13,6 @@ export function render() {
 // Nach jeder Änderung der Tafel: Abspielen stoppen, Markierung wieder einblenden, speichern, neu zeichnen
 export function commit() {
   stopPlay();
-  S.clean = false;
   persistBoard();
   render();
 }

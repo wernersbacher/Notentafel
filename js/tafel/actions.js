@@ -69,13 +69,9 @@ function replaceCur(v) {
 export function select(r, c) {
   S.sel = { r, c };
   S.countAt = null;
-  S.clean = false;
   render();
 }
-export function toggleInsert() { S.insertMode = !S.insertMode; S.clean = false; render(); }
-export function toggleClean() { S.clean = !S.clean; render(); }
-// Blendet nach „Fertig“ alles wieder ein, z. B. sobald man auf der Tafel zieht
-export function unclean() { if (S.clean) { S.clean = false; render(); } }
+export function toggleInsert() { S.insertMode = !S.insertMode; render(); }
 
 /* ---------- Zeichen setzen ---------- */
 // Fügt an der Markierung ein; der Rest der Zeile rückt einen Platz weiter
@@ -238,7 +234,7 @@ export function deleteCell() {
 // Umbruch: Die Markierung und alles dahinter rutscht in eine neue Zeile darunter.
 // Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
 export function lineBreak() {
-  if (canStepDown(S.rows, S.sel)) { S.sel = { r: S.sel.r + 1, c: 0 }; S.clean = false; render(); return; }
+  if (canStepDown(S.rows, S.sel)) { S.sel = { r: S.sel.r + 1, c: 0 }; render(); return; }
   if (S.rows.length >= MAX_ROWS) return;
   snap();
   const rest = curRow().splice(S.sel.c);

@@ -101,6 +101,5 @@ export function renderSidebar() {
   el.btnDel.disabled = !cur;
   el.btnGap.disabled = !cur && L.sel === 0;
   el.btnBreak.disabled = L.sel === 0;
-  pressed(el.btnDone, L.clean);
   el.btnUndo.disabled = L.hist.length === 0;
 }

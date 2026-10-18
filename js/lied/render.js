@@ -1,5 +1,6 @@
 // Zeichnet Notenblatt und Leiste neu (render) und schließt Änderungen ab (commit)
 import { stopPlay, playingPos } from '../core/player.js';
+import { sideCollapsed } from '../core/shell.js';
 import { isNote } from './model.js';
 import { layout, widestMeasure } from './layout.js';
 import { sheetSVG } from './sheet.js';
@@ -30,13 +31,15 @@ export function renderSheet() {
   }
   const W = Math.max(...lay.systems.map((s) => s.width), avail / sp - 0.1);
   spPx = sp;
-  const last = !L.clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
+  // Eingeklappte Leiste: Bearbeiten beendet, ohne Markierung und leeren Platz
+  const clean = sideCollapsed();
+  const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
-    width: W, sel: L.sel, clean: L.clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ,
+    width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ,
     target: last, playing: pos == null ? -1 : pos
   });
-  el.sheet.innerHTML = '<svg class="score' + (L.clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
+  el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';
   placeGrabber();
   showMark();
@@ -71,7 +74,6 @@ export function render() {
 // Nach jeder Änderung: Abspielen stoppen, Markierung wieder einblenden, speichern, neu zeichnen
 export function commit() {
   stopPlay();
-  L.clean = false;
   persistSong();
   render();
 }

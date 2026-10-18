@@ -59,7 +59,10 @@
 .grid.prop .cell { justify-items: start; }
 /* Achtel im geteilten Feld (Rhythmus): das Zeichen ist so groß wie sonst und steht mittig über seiner halben Spalte;
    der Balken reicht nur bis zur nächsten Achtel (eine halbe Stapelbreite) */
-.grid.prop .cell.half { justify-items: center; }
+/* Das Zeichen ist doppelt so breit wie der halbe Platz und ragt auf beiden Seiten gleich weit hinaus. Mit justify-items:
+   center ginge das nicht: Die Spalte im Platz wächst mit dem Zeichen, und es stünde eine halbe Spalte zu weit rechts
+   (das zweite Achtel eines Paars dann genau auf dem Taktstrich danach). */
+.grid.prop .cell.half .stack { --bx: calc((var(--sw) - 100cqw) / 2); margin-left: calc(0px - var(--bx)); }
 /* ein leerer halber Platz (nach einer einzelnen Achtel) bekommt einen kleineren Kreis, damit er den nächsten nicht überdeckt */
 .grid.prop .cell.half .dot.ghost { transform: scale(.5); }
 .grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .02); }
@@ -133,21 +136,24 @@
 .meter .mtr { font-size: calc(var(--d) * .42); gap: calc(var(--d) * .08); }
 .cell.has-meter.line-first .stack::before,
 .cell.has-meter.line-one .stack::before { left: calc(0px - var(--g) - 2.6rem); }
-/* Taktstrich in der Lücke vor dem Platz, so hoch wie Kreis und Notenzeichen */
+/* Taktstrich in der Lücke vor dem Platz, so hoch wie Kreis und Notenzeichen. --bx: wie weit das Zeichen links über
+   seinen Platz hinausragt (Achtel im geteilten Feld, siehe .half); um so viel rückt der Strich zurück an den Platz */
 .barline {
-  position: absolute; left: calc(var(--g) / -2 - 1.5px); top: calc(var(--d) * -.2);
+  position: absolute; left: calc(var(--bx, 0px) + var(--g) / -2 - 1.5px); top: calc(var(--d) * -.2);
   height: calc(var(--d) * 1.6); width: 3px; border-radius: 2px; background: var(--fg);
 }
 .grid.nolen .barline { height: calc(var(--d) * 1.4); }
+/* hinter dem Platz (Ende einer vollen Zeile) */
+.barline.after { left: auto; right: calc(var(--sw) - var(--bx, 0px) - 100cqw - var(--g) / 2 - 1.5px); }
 /* Schlussstrich: dünner und dicker Strich, der dicke direkt vor dem Platz */
 .barline.final {
-  left: calc(var(--g) / -2 - 6px); width: 9px; border-radius: 0; background: none;
+  left: calc(var(--bx, 0px) + var(--g) / -2 - 6px); width: 9px; border-radius: 0; background: none;
   border-left: 2px solid var(--fg); border-right: 5px solid var(--fg);
 }
 /* Wiederholung: Anfang ‖: (dicker Strich zuerst, Punkte rechts), Ende :‖ (wie der Schlussstrich, Punkte links),
    beides :‖: (dicker Strich in der Mitte, Punkte auf beiden Seiten). Die Punkte sitzen über und unter der Notenlinie. */
 .barline.rep-start { border-left-width: 5px; border-right-width: 2px; }
-.barline.rep-end.rep-start { left: calc(var(--g) / -2 - 7px); width: 14px; border-left-width: 2px; border-right-width: 2px;
+.barline.rep-end.rep-start { left: calc(var(--bx, 0px) + var(--g) / -2 - 7px); width: 14px; border-left-width: 2px; border-right-width: 2px;
   background: linear-gradient(90deg, transparent 3px, var(--fg) 3px, var(--fg) 8px, transparent 8px); }
 .barline.rep-end::before, .barline.rep-start::after {
   content: ""; position: absolute; top: calc(var(--d) * .48); width: 6px; height: 6px; border-radius: 50%;

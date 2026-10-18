@@ -66,7 +66,8 @@ function countsHTML(zz, geo) {
 // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens.
 // line: Lage auf der Notenlinie der Zeile ('first', 'mid', 'last', 'one' oder leer). meter: Taktart vor dem Platz.
 // marks: automatische Taktstriche und Zählzeiten der Zeile. Der erste Platz trägt die Zeilennummer (auf Höhe des Kreises).
-function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
+// endBar: Taktstrich hinter dem Platz (letztes Zeichen einer vollen Zeile, hinter dem kein leerer Platz mehr kommt)
+function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar }) {
   const isSel = S.sel.r === r && S.sel.c === c;
   const where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
   let dot, label, len = '', stackCls = '';
@@ -114,7 +115,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo }) {
   return '<div class="cell' + (isSel ? ' sel' : '') + (q ? (q === 1 ? ' quiz' : ' quizopen') : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
-    (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + dot +
+    (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after"></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
     (q ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
@@ -130,16 +131,18 @@ function rowHTML(row, r, cols, P, marks) {
   const b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
-  let cells = '';
+  let cells = '', c = 0;
   // u: belegte Achtel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen Achtel
   // erst eine halbe, damit sie wieder auf den Schlägen stehen
-  for (let c = 0, u = 0; u < cols && c < MAX_LEN; c++) {
+  for (let u = 0; u < cols && c < MAX_LEN; c++) {
     const beyond = c >= row.length;
     const geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P };
     u += geo.k;
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
     const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
-    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo });
+    // Füllt die Zeile alle Spalten, kommt hinter dem letzten Zeichen kein leerer Platz, der den Taktstrich tragen könnte
+    const endBar = c === row.length - 1 && u >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1;
+    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar });
   }
   // Feste Rasterzeile, damit das Tuch (das mehrere Zeilen überdeckt) die Zeilen nicht verschiebt
   const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';

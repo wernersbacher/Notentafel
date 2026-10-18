@@ -111,15 +111,15 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
   // Eine Achtel im geteilten Feld (Rhythmus) ist schmaler als ihr Zeichen: --f > 1, das Zeichen steht mittig über ihr
   const fr = geo ? 2 / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]) : 1;
   const span = geo ? ' style="grid-column:span ' + geo.k + ';--f:' + fr.toFixed(4) + '"' : '';
-  // ?-Karte: verdeckt liegt sie über dem Zeichen, aufgedeckt bleibt beim Bearbeiten ein kleines „?“ als Hinweis
+  // ?-Karte: verdeckt liegt sie über dem Zeichen; aufgedeckt ist nichts mehr zu sehen (sie bleibt für „neu abdecken“ gemerkt)
   const q = cell && cell.q;
   if (q === 1) label = where + ': verdeckt (antippen deckt auf)';
-  return '<div class="cell' + (isSel ? ' sel' : '') + (q ? (q === 1 ? ' quiz' : ' quizopen') : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
+  return '<div class="cell' + (isSel ? ' sel' : '') + (q === 1 ? ' quiz' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after"></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
-    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (q ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
+    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
 
 /* ---------- Eine Zeile ---------- */

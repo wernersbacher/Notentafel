@@ -43,7 +43,7 @@ export function renderSheet() {
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';
   placeGrabber();
-  placeCovers(clean);
+  placeCovers();
   if (pos != null && stepHides()) clothFrom(pos + 1, 'cloth stepcloth');
   showMark();
 }
@@ -70,22 +70,21 @@ function clothFrom(i, cls, tip = '') {
   addBox(cls, { l, t: r.t, w: s.l + s.w - l, h: r.h }, tip);
   if (s.t + s.h > below + 1) addBox(cls + ' rest', { l: s.l, t: below, w: s.w, h: s.t + s.h - below });
 }
-function placeCovers(clean) {
+function placeCovers() {
   const k = L.song.ev.findIndex((e) => e.cv);
   if (k >= 0) clothFrom(k, 'cloth', '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span>');
-  // ?-Karten: verdeckt eine Karte über der Note bzw. ihrem Namen; aufgedeckt beim Bearbeiten ein kleines „?“ als Hinweis
+  // ?-Karten: verdeckt eine Karte über der Note bzw. ihrem Namen (aufgedeckte bleiben gemerkt für „neu abdecken“)
   L.song.ev.forEach((e, i) => {
-    if (e.q) noteCard(e.q, i, clean);
-    if (e.qn) nameCard(e.qn, i, clean);
+    if (e.q === 1) noteCard(i);
+    if (e.qn === 1) nameCard(i);
   });
 }
 // Karte über der Note: so hoch wie alle fünf Notenlinien (mit etwas Rand), bei Noten über oder unter dem System auch
 // über sie hinaus. Der Notenname darunter bleibt zu sehen.
-function noteCard(q, i, clean) {
+function noteCard(i) {
   const g = el.sheet.querySelector('.ev[data-i="' + i + '"] > .nh'), h = hitOf(i);
-  if (!g || !h || (q === 2 && clean)) return;
+  if (!g || !h) return;
   const x = boxOf(g);
-  if (q === 2) { addBox('qcard qopen', { l: x.l + x.w - 4, t: x.t - 8, w: 16, h: 16 }, '?'); return; }
   g.parentNode.classList.add('quiz');
   // Notenlinien: im System von y = 0 bis 4 (in Linienabständen)
   const m = h.getCTM(), top0 = scoreAt().t + m.f, pad = spPx * 0.7;
@@ -94,11 +93,10 @@ function noteCard(q, i, clean) {
   addBox('qcard', { l: x.l + x.w / 2 - w / 2, t: top, w, h: bottom - top }, '?', i);
 }
 // Karte über dem Notennamen (nur, wenn die Namen zu sehen sind); die Note selbst bleibt
-function nameCard(q, i, clean) {
+function nameCard(i) {
   const t = el.sheet.querySelector('.ev[data-i="' + i + '"] > .nm');
-  if (!t || (q === 2 && clean)) return;
+  if (!t) return;
   const x = boxOf(t);
-  if (q === 2) { addBox('qcard qopen', { l: x.l + x.w - 2, t: x.t - 10, w: 16, h: 16 }, '?'); return; }
   t.classList.add('quiz');
   const w = Math.max(x.w + spPx, spPx * 2.2), hh = x.h + spPx * 0.6;
   addBox('qcard qname', { l: x.l + x.w / 2 - w / 2, t: x.t + x.h / 2 - hh / 2, w, h: hh }, '?', i, true);
@@ -137,8 +135,13 @@ function boxOf(node) {
   const o = scoreAt(), m = node.getCTM(), b = node.getBBox();
   return { l: o.l + m.a * b.x + m.e, t: o.t + m.d * b.y + m.f, w: m.a * b.width, h: m.d * b.height };
 }
-// Holt die Markierung ins Bild, wenn sie außerhalb liegt (z. B. nach dem Schreiben am unteren Rand)
+// Holt die Markierung ins Bild, wenn sie außerhalb liegt (z. B. nach dem Schreiben am unteren Rand) – nur, wenn sie sich
+// bewegt hat. Sonst sprünge das Blatt bei jedem Neuzeichnen zur Markierung, die nach dem Laden am Ende des Lieds steht.
+let shownSel = null;
 function showMark() {
+  const first = shownSel === null, moved = L.sel !== shownSel;
+  shownSel = L.sel;
+  if (first || !moved) return; // beim Start der App bleibt das Blatt oben
   const c = el.sheet.querySelector('.cur');
   if (!c) return;
   const r = c.getBoundingClientRect(), b = el.sheet.getBoundingClientRect();
@@ -146,6 +149,13 @@ function showMark() {
   else if (r.top < b.top) el.sheet.scrollTop -= b.top - r.top + 8;
   if (r.right > b.right) el.sheet.scrollLeft += r.right - b.right + 8;
   else if (r.left < b.left) el.sheet.scrollLeft -= b.left - r.left + 8;
+}
+
+// Nach dem Laden eines Lieds: oben beginnen (die Markierung steht am Ende, dorthin wird nicht gescrollt)
+export function scrollTop() {
+  shownSel = L.sel;
+  el.sheet.scrollTop = 0;
+  el.sheet.scrollLeft = 0;
 }
 
 export function render() {

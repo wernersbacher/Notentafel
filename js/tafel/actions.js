@@ -6,6 +6,7 @@ import { S, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js
 import { render, commit } from './render.js';
 import { toast } from '../core/ui.js';
 import { stopPlay } from '../core/player.js';
+import { el } from './dom.js';
 
 // Ist die Zeile mit dem Platz c voll? Gezählt werden Schläge (S.cap pro Zeile; ein Platz je Schlag).
 function fullAt(row, c) {
@@ -312,6 +313,7 @@ export function loadSong(song) {
   S.name = song.name;
   S.sel = appendPos(S.rows);
   commit();
+  el.board.scrollLeft = 0; // jedes geladene Lied beginnt vorn
   toast('„' + (song.name || 'Ohne Namen') + '“ geladen. Die vorherige Tafel liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }
 

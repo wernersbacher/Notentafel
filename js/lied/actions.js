@@ -4,7 +4,7 @@ import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
 import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
-import { render, renderSheet, commit, lineStartAfter } from './render.js';
+import { render, renderSheet, commit, lineStartAfter, scrollTop } from './render.js';
 
 const ev = () => L.song.ev;
 const cur = () => L.song.ev[L.sel];
@@ -328,6 +328,7 @@ export function receiveSong({ name, song, colors }) {
   L.last = null;
   if (colors) { opts.colors = true; persistOpts(); }
   commit();
+  scrollTop();
   toast('Ins Notenblatt übernommen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }
 // Lädt ein Lied (oder den Autosave). Das bisherige wandert in den Autosave-Platz.
@@ -339,6 +340,7 @@ export function loadSong(s) {
   L.sel = L.song.ev.length;
   L.last = null;
   commit();
+  scrollTop();
   toast('„' + (s.name || 'Ohne Namen') + '“ geladen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }
 

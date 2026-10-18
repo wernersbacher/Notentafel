@@ -147,7 +147,8 @@ export function playOrderRows(rows) {
 /* ---------- Ins Lied übernehmen ---------- */
 // Tonhöhe im Lied ('c1' = c') und Vorzeichen zu jedem bunten Punkt
 const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: ['a1'], H: ['h1'],
-  'C+': ['c2'], 'D+': ['d2'], 'E+': ['e2'], 'F+': ['f2'], Fis: ['f1', 1], B: ['h1', -1] };
+  'C+': ['c2'], 'D+': ['d2'], 'E+': ['e2'], 'F+': ['f2'], Fis: ['f1', 1], B: ['h1', -1],
+  Cis: ['c1', 1], Dis: ['d1', 1], Gis: ['g1', 1], 'Cis+': ['c2', 1], 'Dis+': ['d2', 1] };
 // Länge in Schlägen als Notenwert im Lied [v, dot]
 const LIED_VALUE = { 0.5: [8], 1: [4], 1.5: [4, 1], 2: [2], 3: [2, 1], 4: [1] };
 // Die Tafel als Lied (Format wie in lied/model.js): bunte Punkte werden Noten auf ihrer Tonhöhe, eigenständige

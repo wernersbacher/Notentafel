@@ -1,6 +1,6 @@
 // Zeichnet das berechnete Notenblatt (layout.js) als ein SVG. Maße in Linienabständen (sp); sp ist die Größe in Pixeln.
-import { isNote, noteName, parsePitch, keySignature, hasLyrics } from './model.js';
-import { TONE_COLORS } from '../core/colors.js';
+import { isNote, noteName, parsePitch, accOf, keySignature, hasLyrics } from './model.js';
+import { toneColor } from '../core/colors.js';
 import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, volta, staffLines } from './glyphs.js';
 import { tie } from './glyphs.js';
 
@@ -16,17 +16,18 @@ const escText = (t) => String(t).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<':
 const rect = (cls, x1, y1, x2, y2, attrs = '') =>
   '<rect class="' + cls + '" x="' + f(x1) + '" y="' + f(y1) + '" width="' + f(x2 - x1) + '" height="' + f(y2 - y1) + '"' + attrs + '/>';
 
-// Farbe eines Tons wie bei Melodie, nach dem Stammton (Fis wie F, B wie H)
-const colorOf = (e) => TONE_COLORS['CDEFGAH'[parsePitch(e.p).step]];
+// Farbe eines Tons wie bei den Farbnoten, nach dem klingenden Ton (mit Tonart und Vorzeichen; Fis mittelgrün, B violett)
+const colorOf = (e, key) => toneColor(parsePitch(e.p).step, accOf(e, key));
 
-function itemSVG(it, e, colors) {
+// key: Tonart, wenn die Notenköpfe farbig sein sollen (sonst null)
+function itemSVG(it, e, key) {
   let s = '';
   if (it.rest) s += rest(it.x, e.v);
   else {
     const y = yOf(it.pos);
     it.ledger.forEach((p) => { s += ledger(it.x, yOf(p), e.v === 1 ? 1.25 : 1.05); });
     if (it.accX != null) s += accidental(it.accX, y, it.acc);
-    s += head(it.x, y, e.v, colors ? colorOf(e) : null);
+    s += head(it.x, y, e.v, key != null ? colorOf(e, key) : null);
     if (it.stem) {
       s += stem(it.stem.x, y + (it.stem.up ? -0.1 : 0.1), yOf(it.stem.end));
       if (it.flags) s += flags(it.stem.x, yOf(it.stem.end), it.flags, it.stem.up);
@@ -78,7 +79,7 @@ export function sheetSVG(song, lay, o) {
     s.items.forEach((it) => {
       const e = ev[it.i];
       const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
-      g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e, o.colors);
+      g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e, o.colors ? song.key || 0 : null);
       // Zählzeiten direkt unter dem System, darunter die Notennamen
       if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
       if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';

@@ -1,5 +1,5 @@
 // Darstellung der Leiste: Töne, Werte, Zählzeiten und der Zustand aller Knöpfe
-import { MAX_ROWS, NOTE_BY, GROUPS, DUR_BY, VALUE_BTNS, COUNTS } from './config.js';
+import { MAX_ROWS, NOTE_BY, GROUPS, MORE_SEMIS, DUR_BY, VALUE_BTNS, COUNTS } from './config.js';
 import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap, dotTargetIn } from './model.js';
 import { meterOf } from './theory.js';
 import { S, settings, curCell, curRow } from './state.js';
@@ -13,13 +13,22 @@ const pressed = (btn, on) => {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 };
 
-// Töne der Leiste; nach einem Wechsel des Farbthemas neu zeichnen
+// Töne der Leiste; nach einem Wechsel des Farbthemas neu zeichnen. Darunter klappen die weiteren Halbtöne auf.
+let moreSemis = false;
+const toneBtn = (id) => {
+  const n = NOTE_BY[id];
+  return '<button type="button" class="note' + (n.up ? ' up' : '') + '" data-id="' + n.id +
+    '" style="' + colorStyle(n) + '" aria-label="' + n.n + '">' + noteLabel(n) + '</button>';
+};
 export function renderPalette() {
-  el.palette.innerHTML = GROUPS.map((g) => '<div class="pal">' + g.map((id) => {
-    const n = NOTE_BY[id];
-    return '<button type="button" class="note' + (n.up ? ' up' : '') + '" data-id="' + n.id +
-      '" style="' + colorStyle(n) + '" aria-label="' + n.n + '">' + noteLabel(n) + '</button>';
-  }).join('') + '</div>').join('');
+  el.palette.innerHTML = GROUPS.map((g) => '<div class="pal">' + g.map(toneBtn).join('') + '</div>').join('') +
+    '<button type="button" class="btn more" data-more aria-expanded="' + moreSemis + '">' +
+    (moreSemis ? '▴ weniger Halbtöne' : '▾ weitere Halbtöne: Cis, Dis, Gis') + '</button>' +
+    (moreSemis ? '<div class="pal">' + MORE_SEMIS.map(toneBtn).join('') + '</div>' : '');
+}
+export function toggleMoreSemis() {
+  moreSemis = !moreSemis;
+  renderPalette();
 }
 
 // Zählzeiten-Knöpfe: 1–6, „+“ (und) und Löschen

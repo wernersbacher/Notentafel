@@ -6,6 +6,7 @@ import { S, settings } from './state.js';
 import { persistSettings } from '../core/settings.js';
 import { meterHTML } from './symbols.js';
 import { render } from './render.js';
+import { toggleMoreSemis } from './sidebar.js';
 import { toast, delegate } from '../core/ui.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
@@ -29,6 +30,7 @@ export function initControls() {
   [el.rhyMeters, el.melMeters].forEach((box) => delegate(box, '[data-m]', (b) => act.setMeter(b.dataset.m)));
 
   delegate(el.palette, '.note', (b) => act.placeNote(b.dataset.id));
+  delegate(el.palette, '[data-more]', toggleMoreSemis);
   [el.valuesMel, el.values].forEach((box) => delegate(box, '[data-d]', (b) => act.placeValue(+b.dataset.d)));
   [el.rests, el.restsMel].forEach((box) => delegate(box, '[data-d]', (b) => act.placeRest(+b.dataset.d)));
   [el.valuesMel, el.values].forEach((box) => delegate(box, '[data-dot]', act.toggleDot));

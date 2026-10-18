@@ -1,5 +1,5 @@
 // Feste Größen und Tabellen der Tafel (Melodie und Rhythmus)
-import { TONE_COLORS as T } from '../core/colors.js';
+import { TONE_COLORS as T, SEMI_COLORS as S } from '../core/colors.js';
 
 // Zeilen sind beliebig lang (bis MAX_LEN)
 export const MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
@@ -23,18 +23,26 @@ export const NOTES = [
   { id: 'D+',  l: 'D',   up: 1, bg: T.C, n: 'hohes D', f: 587.33 },
   { id: 'E+',  l: 'E',   up: 1, bg: T.C, n: 'hohes E', f: 659.25 },
   { id: 'F+',  l: 'F',   up: 1, bg: T.C, n: 'hohes F', f: 698.46 },
-  { id: 'Fis', l: 'F', sharp: 1, bg: T.F, n: 'Fis', f: 369.99 },
-  { id: 'B',   l: 'B',   bg: T.H, n: 'B',  f: 466.16 }
+  { id: 'Fis', l: 'F', sharp: 1, bg: S.Fis, n: 'Fis', f: 369.99 },
+  { id: 'B',   l: 'B',   bg: S.B, n: 'B',  f: 466.16 },
+  // weitere Halbtöne (in der Leiste aufklappbar)
+  { id: 'Cis', l: 'C', sharp: 1, bg: S.Cis, n: 'Cis', f: 277.18 },
+  { id: 'Dis', l: 'D', sharp: 1, bg: S.Dis, n: 'Dis', f: 311.13 },
+  { id: 'Gis', l: 'G', sharp: 1, bg: S.Gis, n: 'Gis', f: 415.30 },
+  { id: 'Cis+', l: 'C', up: 1, sharp: 1, bg: T.C, n: 'hohes Cis', f: 554.37 },
+  { id: 'Dis+', l: 'D', up: 1, sharp: 1, bg: T.C, n: 'hohes Dis', f: 622.25 }
 ];
 export const NOTE_BY = Object.fromEntries(NOTES.map((n) => [n.id, n]));
 // Gruppen der Leiste: Grundtöne, hohe Töne, Halbtöne
 export const GROUPS = [['C', 'D', 'E', 'F', 'G', 'A', 'H'], ['C+', 'D+', 'E+', 'F+'], ['Fis', 'B']];
+// Weitere Halbtöne, mit „weitere Halbtöne“ aufklappbar
+export const MORE_SEMIS = ['Cis', 'Dis', 'Gis', 'Cis+', 'Dis+'];
 
 // Farbthemen überschreiben nur einzelne Töne; alles andere kommt aus NOTES
 export const THEMES = [
   { id: 'original', name: 'Original', desc: 'Hohe Töne sind alle rot.', colors: {} },
   { id: 'oktave', name: 'Oktavfarben', desc: 'Hohe Töne in der Farbe ihres Grundtons.', colors: {
-    'D+': T.D, 'E+': T.E, 'F+': T.F
+    'D+': T.D, 'E+': T.E, 'F+': T.F, 'Cis+': S.Cis, 'Dis+': S.Dis
   } }
 ];
 export const THEME_BY = Object.fromEntries(THEMES.map((t) => [t.id, t]));

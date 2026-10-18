@@ -1,7 +1,7 @@
 // Alles, was das Lied verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
 import { handOver } from '../core/shell.js';
-import { MAX_EV, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
+import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
 import { render, renderSheet, commit } from './render.js';
 
@@ -294,11 +294,11 @@ export function lineBreak() {
 export function undo() {
   if (restore()) commit();
 }
-// Neues, leeres Lied; Taktart und Auftakt bleiben
+// Neues, leeres Lied in der Grundeinstellung: 4/4, C-Dur, ohne Auftakt
 export function clearAll() {
   snap();
   stashSong();
-  L.song = { meter: L.song.meter, pickup: L.song.pickup, key: L.song.key || 0, ev: [] };
+  L.song = emptySong();
   L.name = '';
   L.sel = 0;
   L.last = null;

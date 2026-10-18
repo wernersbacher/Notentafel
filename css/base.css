@@ -150,9 +150,9 @@ body {
 .fab.play { width: 68px; height: 68px; background: var(--fg); color: var(--board); border-color: var(--fg); }
 .fab.play .ico { width: 1.9rem; height: 1.9rem; }
 .fab.play.on { background: var(--danger); border-color: var(--danger); }
-/* Ein-/Ausklappen: klein oben rechts auf der Tafel; eingeklappt zeigt der Pfeil nach links */
-.fab.sidetoggle { position: absolute; top: 20px; right: 22px; z-index: 15; width: 40px; height: 40px; }
-.fab.sidetoggle .ico { width: 1.2rem; height: 1.2rem; }
+/* Ein-/Ausklappen: großer Griff am rechten Rand der Tafel, senkrecht in der Mitte; eingeklappt zeigt der Pfeil nach links */
+.fab.sidetoggle { position: absolute; top: 50%; right: 10px; z-index: 15; width: 52px; height: 84px; border-radius: 26px; transform: translateY(-50%); }
+.fab.sidetoggle .ico { width: 1.7rem; height: 1.7rem; }
 .app.collapsed .fab.sidetoggle .ico { transform: scaleX(-1); }
 .fab .cnt4 { display: flex; gap: 2px; align-items: flex-end; }
 .fab .cnt4 i { font: 800 .62rem/1 var(--font-ui); font-style: normal; }

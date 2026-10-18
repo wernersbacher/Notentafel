@@ -5,7 +5,7 @@ import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, mete
 import { tie } from './glyphs.js';
 
 const f = (n) => +n.toFixed(3);
-const NAMES_H = 1.8; // Platz für die Notennamen unter dem System
+const NAMES_H = 2.5; // Platz für die Notennamen unter dem System
 const COUNTS_H = 1.9; // Platz für die Zählzeiten unter dem System
 const LYRICS_H = 2;   // Platz für den Liedtext darunter
 const GAP = 0.6;     // Abstand zwischen zwei Systemen
@@ -84,7 +84,7 @@ export function sheetSVG(song, lay, o) {
       // Zählzeiten direkt unter dem System, darunter die Notennamen
       if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
       if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';
-      if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.55) + '">' + noteName(e, song.key) + '</text>';
+      if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
       g += '</g>';
     });
     s.beams.forEach((b) => {

@@ -23,7 +23,7 @@
 .score .mt { font: 700 2.75px "Times New Roman", Times, "Noto Serif", serif; font-variant-numeric: lining-nums; text-anchor: middle; dominant-baseline: central; }
 .score .ly { font: 600 1.4px var(--font-ui); text-anchor: middle; }
 .score .vt { font: 700 1.2px var(--font-ui); }
-.score .nm { font: 800 1.25px var(--font-ui); text-anchor: middle; fill: var(--muted); }
+.score .nm { font: 800 1.75px var(--font-ui); text-anchor: middle; fill: var(--muted); }
 .score .cnt { font: 700 1.35px var(--font-display); text-anchor: middle; }
 .score .cnt.held { opacity: .4; }
 

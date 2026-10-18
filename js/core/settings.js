@@ -5,6 +5,8 @@ import { readJSON, writeJSON } from './store.js';
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
 export const UI_SCALE = { min: 0.5, max: 2 };
+// Aufgeklappte Blöcke der Leiste (Bereich + Nummer); am Anfang je Bereich „schreiben“
+export const OPEN_START = ['mel2', 'rhy2', 'lied2'];
 // Größe der Oberfläche: auf ganze Prozent gerundet und begrenzt, Unbrauchbares wird 100 %
 export function clampUi(v) {
   const n = Number(v);
@@ -20,7 +22,8 @@ export function cleanCoreSettings(s) {
     countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
-    ui: s.ui === undefined ? 1 : clampUi(s.ui) // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
+    ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
+    open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+d$/.test(k)) : OPEN_START.slice()
   };
 }
 

@@ -1,5 +1,6 @@
-// Aufklappbare Blöcke der Leiste: Tipp auf die Überschrift klappt auf oder zu, je Bereich ist immer nur einer offen.
-// Am Anfang ist jeweils der zweite Block offen (Noten schreiben). Eingeklappt zeigt die Überschrift eine Kurzinfo (blockSum).
+// Aufklappbare Blöcke der Leiste: Tipp auf die Überschrift klappt auf oder zu, jeder Block für sich.
+// Welche offen sind, bleibt gemerkt (settings.open, z. B. 'lied2'). Eingeklappt zeigt die Überschrift eine Kurzinfo (blockSum).
+import { settings, persistSettings } from './settings.js';
 
 function setOpen(block, on) {
   block.classList.toggle('open', on);
@@ -8,12 +9,17 @@ function setOpen(block, on) {
 
 export function initBlocks() {
   document.querySelectorAll('.side .panel').forEach((panel) => {
-    const blocks = [...panel.querySelectorAll(':scope > .block')];
-    blocks.forEach((b) => b.querySelector('.bhead').addEventListener('click', () => {
-      const on = !b.classList.contains('open');
-      blocks.forEach((x) => setOpen(x, x === b && on));
-    }));
-    blocks.forEach((b, i) => setOpen(b, i === 1));
+    const area = panel.id.replace('panel', '').toLowerCase();
+    panel.querySelectorAll(':scope > .block').forEach((b, i) => {
+      const key = area + (i + 1);
+      setOpen(b, settings.open.includes(key));
+      b.querySelector('.bhead').addEventListener('click', () => {
+        const on = !b.classList.contains('open');
+        setOpen(b, on);
+        settings.open = settings.open.filter((k) => k !== key).concat(on ? [key] : []);
+        persistSettings();
+      });
+    });
   });
 }
 

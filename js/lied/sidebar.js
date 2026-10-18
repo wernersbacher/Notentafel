@@ -19,11 +19,11 @@ const meterHTML = (m) => {
   return '<span class="mtr"><span>' + top + '</span><span>' + bottom + '</span></span>';
 };
 
-// Knöpfe für die Töne, eine Reihe je Oktave, die höchste oben: sonst c'–h'', ausgeklappt c–h'''
+// Knöpfe für die Töne, eine Reihe je Oktave, die tiefste oben: sonst c'–h'', ausgeklappt c–h'''
 export function buildSteps() {
   const lo = opts.allTones ? OCT_MIN : 1, hi = opts.allTones ? OCT_MAX : 2;
   let html = '';
-  for (let o = hi; o >= lo; o--) {
+  for (let o = lo; o <= hi; o++) {
     for (let s = 0; s < STEPS.length; s++) {
       const p = makePitch(s, o);
       html += '<button type="button" class="btn step" data-p="' + p + '">' + pitchLabel(p) + '</button>';

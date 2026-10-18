@@ -66,8 +66,10 @@ function countsHTML(zz, geo) {
 // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens.
 // line: Lage auf der Notenlinie der Zeile ('first', 'mid', 'last', 'one' oder leer). meter: Taktart vor dem Platz.
 // marks: automatische Taktstriche und Zählzeiten der Zeile. Der erste Platz trägt die Zeilennummer (auf Höhe des Kreises).
-// endBar: Taktstrich hinter dem Platz (letztes Zeichen einer vollen Zeile, hinter dem kein leerer Platz mehr kommt)
-function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar }) {
+// endBar: Taktstrich hinter dem Platz (letztes Zeichen einer vollen Zeile, hinter dem kein leerer Platz mehr kommt).
+// Balken an einem verdeckten Achtel (?-Karte): beamCut – der Balken dieses Platzes endet in der Mitte, weil das Achtel
+// danach verdeckt ist; beamIn – das Achtel davor ist verdeckt, sein Balken fehlt, also kommt die Hälfte bis hierher.
+function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, beamCut, beamIn }) {
   const isSel = S.sel.r === r && S.sel.c === c;
   const where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
   let dot, label, len = '', stackCls = '';
@@ -79,7 +81,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar })
   } else if (isBeat(cell)) {
     dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
-    if (beam === 1) stackCls = ' bbeam';
+    if (beam === 1) stackCls = ' bbeam' + (beamCut ? ' bhalf' : '');
     // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);
     // mit Breite nach Notenlänge auf die Schläge verteilt (Halbe: ta unter Schlag 1, ja unter Schlag 2)
     // Jede Silbengruppe liegt auf einem Farbfeld: ta, ti, ta ja (ja …) einer langen Note und ti ti zweier Achtel mit Balken
@@ -117,7 +119,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar })
     '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after"></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
-    (q ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
+    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (q ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
 
 /* ---------- Eine Zeile ---------- */
@@ -142,7 +144,9 @@ function rowHTML(row, r, cols, P, marks) {
     const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
     // Füllt die Zeile alle Spalten, kommt hinter dem letzten Zeichen kein leerer Platz, der den Taktstrich tragen könnte
     const endBar = c === row.length - 1 && u >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1;
-    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar });
+    const hid = (k) => !!(row[k] && row[k].q === 1);
+    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar,
+      beamCut: b[c] === 1 && hid(c + 1), beamIn: c > 0 && b[c - 1] === 1 && hid(c - 1) && !hid(c) });
   }
   // Feste Rasterzeile, damit das Tuch (das mehrere Zeilen überdeckt) die Zeilen nicht verschiebt
   const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';

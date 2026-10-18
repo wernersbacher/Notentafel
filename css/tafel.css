@@ -260,8 +260,18 @@
 .cell.ahead .stack > .rnum, .cell.ahead .stack > .meter { visibility: visible; }
 .cell .qcard { position: absolute; left: 50%; top: 0; z-index: 2; width: calc(var(--d) * 1.05); height: calc(var(--d) * 1.2); transform: translate(-50%, calc(var(--d) * -.1)); font-size: calc(var(--d) * .7); visibility: visible; }
 .cell.ahead .qcard { visibility: hidden; }
-/* Achtel im geteilten Feld (Rhythmus): die Karte nur so breit wie der halbe Platz, damit das Nachbar-Achtel frei bleibt */
-.grid.prop .cell.half.quiz .qcard { width: calc(100cqw - 4px); font-size: min(calc(var(--d) * .7), calc(100cqw * .75)); border-radius: 8px; }
+/* Die Notenlinie läuft unter Karten und ausgeblendeten Zeichen weiter */
+.cell.quiz .stack::before, .cell.ahead .stack::before { visibility: visible; }
+/* Rhythmus: die Karte liegt genau über dem Notenzeichen, vom Ende des Halses (dort auch der Balken) bis unter den
+   Notenkopf; das Zeichen reicht von der Mitte aus gemessen von −.19 bis +.13 und von −.38 bis +.63 Kreisgrößen.
+   Pausen stehen mittig auf der Linie und sind breiter. */
+.grid.rhy .cell .qcard { left: calc(50% - var(--d) * .24); top: calc(var(--d) * -.43); width: calc(var(--d) * .42); height: calc(var(--d) * 1.11);
+  transform: none; border-radius: calc(var(--d) * .1); font-size: calc(var(--d) * .34); }
+.grid.rhy .cell .dot.rest ~ .qcard { left: calc(50% - var(--d) * .18); top: calc(var(--d) * .12); width: calc(var(--d) * .36); height: calc(var(--d) * .75); }
+/* Balken an einem verdeckten Achtel: nur die Hälfte bis zur Grenze der beiden halben Plätze (75 % bzw. 25 % des Zeichens,
+   das doppelt so breit ist wie sein Platz) bleibt; die andere liegt unter der Karte bzw. fehlt mit dem verdeckten Achtel */
+.grid.rhy.prop .cell.half .stack.bbeam.bhalf::after { width: calc(25% - var(--d) * .105); }
+.grid.rhy .hbeam { position: absolute; left: 25%; top: calc(var(--d) * -.382); width: calc(25% + var(--d) * .135); height: calc(var(--d) * .126); background: var(--fg); }
 /* aufgedeckt: beim Bearbeiten ein kleines „?“ oben rechts als Hinweis, im Vorführen nichts */
 .cell.quizopen .qcard { left: auto; right: calc(50% - var(--d) * .62); top: calc(var(--d) * -.12); width: calc(var(--d) * .38); height: calc(var(--d) * .38); transform: none; border-radius: 50%; font: 400 calc(var(--d) * .3)/1 var(--font-display); box-shadow: none; opacity: .8; pointer-events: none; }
 .grid.clean .cell.quizopen .qcard { display: none; }

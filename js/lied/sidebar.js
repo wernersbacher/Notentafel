@@ -86,6 +86,8 @@ export function renderSidebar() {
   el.liedVolta.disabled = !(bar === 3 || bar === 5);
   pressed(el.liedVolta, !!(prev && prev.volta));
   el.liedMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === L.song.meter));
+  pressed(el.liedBarAuto, opts.autoBar);
+  pressed(el.liedBarHand, !opts.autoBar);
   renderPickups();
   // Liedtext der markierten Note (beim Schreiben nicht überschreiben)
   const lt = isNote(cur) && !tiedFrom(ev[L.sel - 1], cur) ? cur : null;
@@ -97,7 +99,7 @@ export function renderSidebar() {
   el.liedKeyName.textContent = keyName(k) + (k ? ' · ' + Math.abs(k) + (k > 0 ? '♯' : '♭') : '');
   el.liedKeyDown.disabled = k <= KEY_MIN;
   el.liedKeyUp.disabled = k >= KEY_MAX;
-  blockSum('liedSetup', (L.song.meter || 'ohne Taktart') + ' · ' + keyName(k) + (L.song.pickup ? ' · Auftakt' : ''));
+  blockSum('liedSetup', (L.song.meter || 'ohne Taktart') + ' · ' + keyName(k) + (L.song.pickup ? ' · Auftakt' : '') + (opts.autoBar ? '' : ' · Striche von Hand'));
 
   // Gemeinsame Knöpfe
   pressed(el.btnIns, L.insertMode);

@@ -54,6 +54,10 @@ function initControls() {
   el.liedVolta.addEventListener('click', act.toggleVolta);
   el.liedShowCounts.addEventListener('click', act.toggleAutoZ);
   el.btnAutoBarToggle.addEventListener('click', () => { act.toggleAutoBar(); renderToggle(AUTOBAR); });
+  // Taktstriche automatisch oder von Hand, auch in der Leiste (Block 1)
+  const setAutoBar = (on) => { if (opts.autoBar !== on) { act.toggleAutoBar(); renderToggle(AUTOBAR); } };
+  el.liedBarAuto.addEventListener('click', () => setAutoBar(true));
+  el.liedBarHand.addEventListener('click', () => setAutoBar(false));
 
   initSheetInput();
   // Ändert sich die Breite, wird neu eingeteilt

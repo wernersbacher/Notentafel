@@ -169,3 +169,7 @@ aside.side { padding: 12px; overflow: hidden; }
   aside.side { overflow: visible; }
   .side > .panel { overflow: visible; }
 }
+
+/* Lied: Taktstriche automatisch oder von Hand */
+.tools.barmode { grid-template-columns: 1fr 1fr; }
+.tools.barmode .btn { min-height: 50px; font: 800 .9rem var(--font-ui); }

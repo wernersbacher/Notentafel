@@ -215,6 +215,7 @@ test('songToMelody: Noten werden Farbpunkte, Takte bleiben in einer Zeile', () =
 });
 
 test('cleanSong: Tuch (cv, cf) und ?-Karten (q) bleiben erhalten, Unsinn fällt weg', () => {
-  const s = cleanSong({ meter: '4/4', pickup: 0, ev: [{ p: 'c1', v: 4, q: 1 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2 }, { p: 'e1', v: 4, q: 7 }] });
-  assert.deepEqual(s.ev, [{ p: 'c1', v: 4, q: 1 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2 }, { p: 'e1', v: 4 }]);
+  const s = cleanSong({ meter: '4/4', pickup: 0, ev: [{ p: 'c1', v: 4, q: 1, qn: 2 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2, qn: 1 }, { p: 'e1', v: 4, q: 7 }] });
+  // qn (Karte über dem Notennamen) gibt es nur bei Noten
+  assert.deepEqual(s.ev, [{ p: 'c1', v: 4, q: 1, qn: 2 }, { p: 'd1', v: 4, cv: 1, cf: 1 }, { v: 4, q: 2 }, { p: 'e1', v: 4 }]);
 });

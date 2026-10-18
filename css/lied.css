@@ -186,6 +186,8 @@ aside.side { padding: 12px; overflow: hidden; }
 .sheet > .cloth.rest { border-top-left-radius: 0; border-top: 0; }
 /* Beim Mitspielen: schlicht in der Farbe des Blatts, ohne Rand und Hinweis */
 .sheet > .cloth.stepcloth { background: var(--board); border: 0; cursor: default; pointer-events: none; }
-.score .ev.quiz { visibility: hidden; }
-.sheet > .qcard { position: absolute; z-index: 3; font-size: 1.9rem; }
+/* verdeckt: die Note (nh) bzw. ihr Name, je nach Karte */
+.score .ev.quiz > .nh, .score .nm.quiz { visibility: hidden; }
+.sheet > .qcard { position: absolute; z-index: 3; font-size: 2.2rem; }
+.sheet > .qcard.qname { font-size: 1.1rem; border-radius: 8px; }
 .sheet > .qcard.qopen { border-radius: 50%; font: 400 .8rem/1 var(--font-display); box-shadow: none; opacity: .8; pointer-events: none; }

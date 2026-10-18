@@ -308,8 +308,10 @@ function cleanEvent(e) {
   if (e.bar) o.bar = [2, 3, 4, 5].includes(e.bar) ? e.bar : 1;
   if (e.volta && (o.bar === 3 || o.bar === 5)) o.volta = 1;
   if (e.brk) o.brk = 1;
-  // Verdecken: q ?-Karte (1 verdeckt, 2 aufgedeckt), cv ab hier liegt jetzt das Tuch, cf hier lag es am Anfang
+  // Verdecken: q ?-Karte über der Note, qn über ihrem Notennamen (je 1 verdeckt, 2 aufgedeckt), cv ab hier liegt jetzt
+  // das Tuch, cf hier lag es am Anfang
   if (e.q === 1 || e.q === 2) o.q = e.q;
+  if (o.p && (e.qn === 1 || e.qn === 2)) o.qn = e.qn;
   if (e.cv) o.cv = 1;
   if (e.cf) o.cf = 1;
   return o;

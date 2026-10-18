@@ -343,8 +343,8 @@ export function loadSong(s) {
 }
 
 /* ---------- Verdecken ---------- */
-// Tuch: ab dem Ereignis mit cv ist alles abgedeckt; cf merkt, wo es am Anfang lag. ?-Karte: q an der Note
-// (1 verdeckt, 2 aufgedeckt). Alles hängt an den Ereignissen und wird mit dem Lied gespeichert.
+// Tuch: ab dem Ereignis mit cv ist alles abgedeckt; cf merkt, wo es am Anfang lag. ?-Karten: q über der Note, qn über
+// ihrem Notennamen (1 verdeckt, 2 aufgedeckt). Alles hängt an den Ereignissen und wird mit dem Lied gespeichert.
 export const coverIndex = () => ev().findIndex((e) => e.cv);
 
 // Tuch ab der markierten Note
@@ -375,12 +375,24 @@ export function toggleCard() {
   if (e.q) delete e.q; else e.q = 1;
   commit();
 }
-// Tipp auf eine Note: eine verdeckte Karte wird aufgedeckt, sonst wird markiert
-export function tapEv(i) {
-  const e = ev()[i];
-  if (!e || e.q !== 1) { select(i); return; }
+// ?-Karte nur über den Notennamen der markierten Note legen oder wieder wegnehmen (die Note bleibt zu sehen)
+export function toggleNameCard() {
+  const e = cur();
+  if (!isNote(e)) { toast('Erst eine Note markieren, dann die Karte auf ihren Namen legen.', true); return; }
   snap();
-  e.q = 2;
+  if (e.qn) delete e.qn; else e.qn = 1;
+  if (!opts.names) { opts.names = true; persistOpts(); toast('Notennamen eingeschaltet, damit es etwas abzudecken gibt.'); }
+  commit();
+}
+// Tipp auf eine Note: eine verdeckte Karte wird aufgedeckt (name: die über dem Notennamen) und die Note markiert,
+// sonst wird nur markiert
+export function tapEv(i, name) {
+  const e = ev()[i], key = name ? 'qn' : 'q';
+  if (!e || e[key] !== 1) { select(i); return; }
+  snap();
+  e[key] = 2;
+  L.sel = i;
+  L.last = null;
   commit();
 }
 // Alles wieder wie am Anfang: Tuch an seinen Anfang, alle Karten zu
@@ -389,12 +401,13 @@ export function resetCover() {
   ev().forEach((e) => {
     if (e.cf) e.cv = 1; else delete e.cv;
     if (e.q) e.q = 1;
+    if (e.qn) e.qn = 1;
   });
   commit();
 }
 // Tuch und alle Karten weg
 export function clearCover() {
   snap();
-  ev().forEach((e) => { delete e.cv; delete e.cf; delete e.q; });
+  ev().forEach((e) => { delete e.cv; delete e.cf; delete e.q; delete e.qn; });
   commit();
 }

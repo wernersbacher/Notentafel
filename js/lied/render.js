@@ -51,10 +51,12 @@ export function renderSheet() {
 /* ---------- Verdecken ---------- */
 // Tuch und ?-Karten liegen als HTML-Felder über dem Notenblatt (wie das Feld zum Ziehen)
 const hitOf = (i) => el.sheet.querySelector('.hit[data-i="' + i + '"]:not(:first-child)');
-function addBox(cls, x, html = '', i = null) {
+// i: das Ereignis, zu dem das Feld gehört (ein Tipp darauf geht an tapEv); name: das Feld liegt über dem Notennamen
+function addBox(cls, x, html = '', i = null, name = false) {
   const d = document.createElement('div');
   d.className = cls;
   if (i != null) d.dataset.i = i;
+  if (name) d.dataset.name = '';
   d.style.cssText = 'left:' + x.l + 'px;top:' + x.t + 'px;width:' + x.w + 'px;height:' + x.h + 'px';
   d.innerHTML = html;
   el.sheet.appendChild(d);
@@ -71,17 +73,35 @@ function clothFrom(i, cls, tip = '') {
 function placeCovers(clean) {
   const k = L.song.ev.findIndex((e) => e.cv);
   if (k >= 0) clothFrom(k, 'cloth', '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span>');
-  // ?-Karten: verdeckt eine Karte über der Note; aufgedeckt beim Bearbeiten ein kleines „?“ als Hinweis
+  // ?-Karten: verdeckt eine Karte über der Note bzw. ihrem Namen; aufgedeckt beim Bearbeiten ein kleines „?“ als Hinweis
   L.song.ev.forEach((e, i) => {
-    if (!e.q || (e.q === 2 && clean)) return;
-    const g = el.sheet.querySelector('.ev[data-i="' + i + '"]');
-    if (!g) return;
-    const x = boxOf(g);
-    if (e.q === 2) { addBox('qcard qopen', { l: x.l + x.w - 4, t: x.t - 8, w: 16, h: 16 }, '?'); return; }
-    g.classList.add('quiz');
-    const w = Math.max(x.w + 10, spPx * 2.2), h = Math.max(x.h + 10, spPx * 3);
-    addBox('qcard', { l: x.l + x.w / 2 - w / 2, t: x.t + x.h / 2 - h / 2, w, h }, '?', i);
+    if (e.q) noteCard(e.q, i, clean);
+    if (e.qn) nameCard(e.qn, i, clean);
   });
+}
+// Karte über der Note: so hoch wie alle fünf Notenlinien (mit etwas Rand), bei Noten über oder unter dem System auch
+// über sie hinaus. Der Notenname darunter bleibt zu sehen.
+function noteCard(q, i, clean) {
+  const g = el.sheet.querySelector('.ev[data-i="' + i + '"] > .nh'), h = hitOf(i);
+  if (!g || !h || (q === 2 && clean)) return;
+  const x = boxOf(g);
+  if (q === 2) { addBox('qcard qopen', { l: x.l + x.w - 4, t: x.t - 8, w: 16, h: 16 }, '?'); return; }
+  g.parentNode.classList.add('quiz');
+  // Notenlinien: im System von y = 0 bis 4 (in Linienabständen)
+  const m = h.getCTM(), top0 = scoreAt().t + m.f, pad = spPx * 0.7;
+  const top = Math.min(top0 - pad, x.t - pad / 2), bottom = Math.max(top0 + 4 * m.d + pad, x.t + x.h + pad / 2);
+  const w = Math.max(x.w + spPx, spPx * 2.6);
+  addBox('qcard', { l: x.l + x.w / 2 - w / 2, t: top, w, h: bottom - top }, '?', i);
+}
+// Karte über dem Notennamen (nur, wenn die Namen zu sehen sind); die Note selbst bleibt
+function nameCard(q, i, clean) {
+  const t = el.sheet.querySelector('.ev[data-i="' + i + '"] > .nm');
+  if (!t || (q === 2 && clean)) return;
+  const x = boxOf(t);
+  if (q === 2) { addBox('qcard qopen', { l: x.l + x.w - 2, t: x.t - 10, w: 16, h: 16 }, '?'); return; }
+  t.classList.add('quiz');
+  const w = Math.max(x.w + spPx, spPx * 2.2), hh = x.h + spPx * 0.6;
+  addBox('qcard qname', { l: x.l + x.w / 2 - w / 2, t: x.t + x.h / 2 - hh / 2, w, h: hh }, '?', i, true);
 }
 // Erste Note der nächsten Notenzeile nach Ereignis i (-1: es kommt keine mehr); so weit deckt ein Tipp aufs Tuch auf
 export function lineStartAfter(i) {

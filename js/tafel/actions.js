@@ -347,12 +347,13 @@ export function toggleCard() {
   if (cell.q) delete cell.q; else cell.q = 1;
   commit();
 }
-// Tipp auf einen Platz: eine verdeckte Karte wird aufgedeckt, sonst wird markiert
+// Tipp auf einen Platz: eine verdeckte Karte wird aufgedeckt und der Platz markiert, sonst wird nur markiert
 export function tapCell(r, c) {
   const cell = S.rows[r][c];
   if (!cell || cell.q !== 1) { select(r, c); return; }
   snap();
   cell.q = 2;
+  S.sel = { r, c };
   commit();
 }
 // Alles wieder wie am Anfang (z. B. für die nächste Klasse): Tuch an seinen Anfang, alle Karten zu

@@ -84,6 +84,6 @@ export function initSheetInput() {
     // Tipp auf das Tuch deckt die nächste Notenzeile auf, auf eine ?-Karte deckt sie auf
     if (e.target.closest('.cloth:not(.stepcloth)')) { act.revealLine(); return; }
     const hit = e.target.closest('[data-i]');
-    if (hit) act.tapEv(+hit.dataset.i);
+    if (hit) act.tapEv(+hit.dataset.i, 'name' in hit.dataset);
   });
 }

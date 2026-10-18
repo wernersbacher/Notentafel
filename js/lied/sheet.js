@@ -79,7 +79,8 @@ export function sheetSVG(song, lay, o) {
     s.items.forEach((it) => {
       const e = ev[it.i];
       const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
-      g += '<g class="' + cls + '" data-i="' + it.i + '">' + itemSVG(it, e, o.colors ? song.key || 0 : null);
+      // Das Zeichen selbst in eigener Gruppe (nh), damit eine ?-Karte nur die Note verdecken kann und der Name bleibt
+      g += '<g class="' + cls + '" data-i="' + it.i + '"><g class="nh">' + itemSVG(it, e, o.colors ? song.key || 0 : null) + '</g>';
       // Zählzeiten direkt unter dem System, darunter die Notennamen
       if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
       if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';

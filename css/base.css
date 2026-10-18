@@ -210,9 +210,12 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
    Fetter gibt es die Schrift nicht, ein nachgebautes Fett sähe nicht mehr nach Grundschrift aus. */
 .qcard {
   display: grid; place-items: center;
-  border-radius: 12px; background: var(--fg); color: var(--board);
+  border-radius: 12px; background: var(--card, var(--fg)); color: var(--card-fg, var(--board));
   font: 400 1.6rem/1 var(--font-display); box-shadow: 0 3px 8px var(--shadow);
   cursor: pointer;
 }
+/* Rhythmus und Notenblatt sind schwarz gezeichnet; dort ist die Karte türkis, damit sie nicht wie ein Notenzeichen
+   wirkt (Türkis gehört zu keinem Ton). Die Farbnoten behalten die dunkle Karte, die sich von den bunten Punkten abhebt. */
+.grid.rhy, .sheet { --card: #0f766e; --card-fg: #fff; }
 /* Leiste: Schalter fürs Mitspielen unter den Knöpfen */
 .btn.stephide { width: 100%; margin-top: 6px; min-height: 44px; font-size: .85rem; }

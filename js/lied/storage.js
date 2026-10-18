@@ -22,7 +22,7 @@ export function cleanLiedSettings(s) {
   return {
     autoBar: s.autoBar !== false, // Taktstriche nach der Taktart (Standard: an)
     names: !!s.names, // Notennamen unter den Noten
-    colors: !!s.colors, // Notenköpfe in den Farben der Töne (wie bei Melodie)
+    colors: !!s.colors, // Notenköpfe in den Farben der Töne (wie die Farbnoten)
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
     check: s.check !== false, // Takte prüfen (Standard: an)
     size: [1, 2, 3].includes(s.size) ? s.size : 1, // Notengröße: normal, groß, sehr groß

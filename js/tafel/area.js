@@ -87,6 +87,7 @@ export function registerTafel() {
   initControls();
   initBoardInput();
   initTafelMenu();
-  register(area('mel', 'Melodie', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
+  // Reihenfolge der Reiter als Lernweg: erst Rhythmus, dann Farbnoten (danach das Notenblatt)
   register(area('rhy', 'Rhythmus', el.panelRhy, { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
+  register(area('mel', 'Farbnoten', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
 }

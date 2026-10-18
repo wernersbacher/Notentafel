@@ -129,7 +129,7 @@ export function registerLied() {
   el.btnLiedPrint.addEventListener('click', printSheet);
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
-    id: 'lied', label: 'Lied', panel: el.panelLied, board: el.sheet,
+    id: 'lied', label: 'Notenblatt', panel: el.panelLied, board: el.sheet,
     enter() { L.insertMode = false; render(); },
     tools: {
       insert: act.toggleInsert,

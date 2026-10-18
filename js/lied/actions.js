@@ -323,7 +323,7 @@ export function receiveSong({ name, song, colors }) {
   L.last = null;
   if (colors) { opts.colors = true; persistOpts(); }
   commit();
-  toast('Ins Lied übernommen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
+  toast('Ins Notenblatt übernommen. Das vorherige Lied liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
 }
 // Lädt ein Lied (oder den Autosave). Das bisherige wandert in den Autosave-Platz.
 export function loadSong(s) {

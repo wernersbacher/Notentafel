@@ -84,7 +84,7 @@
       <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </header>
-  <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Melodie · Rhythmus · Lied</span></button>
+  <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rhythmus · Farbnoten · Notenblatt</span></button>
   <div class="boardwrap">
     <div class="board">
       <div class="grid" id="grid" aria-label="Musiktafel"></div>
@@ -135,7 +135,7 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Melodie schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
         <h2 class="glabel">Töne</h2>
         <div class="palette" id="palette"></div>
         <h2 class="glabel">Hand</h2>
@@ -295,8 +295,8 @@
       <button type="button" class="btn" id="btnSaveSide" aria-haspopup="true" aria-expanded="false" aria-controls="savePop">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Speichern
       </button>
-      <button type="button" class="btn tomel" id="btnToMelody" title="Macht aus dem Lied Farbpunkte im Bereich Melodie (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.">
-        <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span><span>Als Melodie</span>
+      <button type="button" class="btn tomel" id="btnToMelody" title="Macht aus dem Lied Farbnoten im Bereich Farbnoten (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' (und andere Vorzeichen als Fis und B) werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.">
+        <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span><span>Als Farbnoten</span>
       </button>
       <button type="button" class="btn danger" id="btnClear">Alles löschen</button>
     </div>
@@ -342,11 +342,11 @@
     </section>
 
     <section data-area="tafel" data-part="songs">
-      <h3>Ins Lied übernehmen</h3>
+      <h3>Ins Notenblatt übernehmen</h3>
       <div class="themes">
         <button type="button" class="btn theme" id="btnToLied">
-          <span>Als Noten ins Lied übernehmen</span>
-          <span class="desc">Macht aus der Tafel echte Noten im Bereich Lied – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</span>
+          <span>Als Noten ins Notenblatt übernehmen</span>
+          <span class="desc">Macht aus der Tafel echte Noten im Bereich Notenblatt – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</span>
         </button>
       </div>
     </section>
@@ -404,7 +404,7 @@
         </button>
         <button type="button" class="btn switch" id="btnColorsToggle" aria-pressed="false">
           <span class="sname">Noten farbig</span><span class="state" id="colorsToggleState">aus</span>
-          <span class="desc">Färbt die Notenköpfe wie die Punkte bei Melodie: C rot, D orange, E gelb, F hellgrün, G grün, A lila, H pink – in jeder Oktave gleich.</span>
+          <span class="desc">Färbt die Notenköpfe wie die Farbnoten: C rot, D orange, E gelb, F hellgrün, G grün, A lila, H pink – in jeder Oktave gleich.</span>
         </button>
         <button type="button" class="btn switch" id="btnAutoBarToggle" aria-pressed="true">
           <span class="sname">Taktstriche automatisch</span><span class="state" id="autoBarToggleState">an</span>

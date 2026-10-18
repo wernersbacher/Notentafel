@@ -80,6 +80,19 @@ export function downloadFile(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Holt beim Abspielen die markierte Stelle node ins Bild der scrollbaren Fläche box: Liegt sie (fast) draußen,
+// rückt sie mit etwas Vorlauf nach oben bzw. ein Stück nach links, sodass man das Folgende sieht.
+// Unten zählt der Streifen hinter den runden Knöpfen (FABS) schon als draußen.
+const FABS = 96;
+export function follow(node, box) {
+  const r = node.getBoundingClientRect(), b = box.getBoundingClientRect(), m = 12;
+  const top = r.bottom > b.bottom - FABS || r.top < b.top ? r.top - b.top - m : 0;
+  const left = r.right > b.right - m || r.left < b.left ? r.left - b.left - b.width / 4 : 0;
+  if (!top && !left) return;
+  const smooth = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  box.scrollBy({ top, left, behavior: smooth ? 'smooth' : 'auto' });
+}
+
 // Liste mit Zwischenüberschriften: Einträge mit group bekommen eine Überschrift, wenn die Gruppe wechselt.
 // abc: stattdessen alphabetisch nach name, ohne Überschriften. itemHTML bekommt immer die Stelle in items.
 export function groupedHTML(items, itemHTML, abc) {

@@ -39,8 +39,12 @@ export function useSettings(clean) {
 }
 export const persistSettings = () => writeJSON(KEY, settings);
 
-// Tempo setzen, begrenzt und in Fünferschritten wie der Regler (z. B. das eigene Tempo eines bekannten Lieds)
+// Tempo setzen, begrenzt und in Fünferschritten wie der Regler (z. B. das eigene Tempo eines bekannten Lieds).
+// watchTempo(f): f wird danach aufgerufen, damit jede Anzeige des Tempos (Menü, Knopf auf der Tafel) mitgeht.
+const tempoWatchers = [];
+export const watchTempo = (f) => { tempoWatchers.push(f); };
 export function setTempo(v) {
   settings.tempo = Math.min(TEMPO.max, Math.max(TEMPO.min, Math.round(v / 5) * 5));
   persistSettings();
+  tempoWatchers.forEach((f) => f());
 }

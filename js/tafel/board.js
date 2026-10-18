@@ -4,6 +4,7 @@ import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, sylla
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { S, settings, wraps } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
+import { follow } from '../core/ui.js';
 import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
@@ -168,5 +169,5 @@ export function markPlaying(pos) {
   const old = el.grid.querySelector('.cell.playing');
   if (old) old.classList.remove('playing');
   const cur = pos && cellEl(pos.r, pos.c);
-  if (cur) cur.classList.add('playing');
+  if (cur) { cur.classList.add('playing'); follow(cur, el.board); }
 }

@@ -158,6 +158,22 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .fab.sidetoggle { position: absolute; top: 50%; right: 10px; z-index: 15; width: 52px; height: 84px; border-radius: 26px; transform: translateY(-50%); }
 .fab.sidetoggle .ico { width: 1.7rem; height: 1.7rem; }
 .app.collapsed .fab.sidetoggle .ico { transform: scaleX(-1); }
+/* Tempo: die Zahl groß, darunter klein „Tempo“; offen wie die anderen Schalter dunkel */
+.fab.tempo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.fab.tempo .tnum { font: 800 1.05rem/1 var(--font-ui); }
+.fab.tempo .tlbl { font: 800 .5rem/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; opacity: .75; }
+.fab.tempo[aria-expanded="true"] { background: var(--fg); color: var(--board); border-color: var(--fg); }
+.tempopop {
+  position: absolute; right: 0; bottom: calc(100% + 12px); width: min(340px, calc(100vw - 48px));
+  padding: 12px 14px 10px; border: 2px solid var(--btn-line); border-radius: 18px;
+  background: var(--btn); box-shadow: 0 8px 24px var(--shadow);
+}
+.tempopop .tphead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font: 800 .74rem var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tempopop .tphead output { font-size: 1rem; letter-spacing: 0; text-transform: none; color: var(--fg); }
+.tempopop .tprow { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 10px; align-items: center; }
+.tempopop .tprow .btn { padding: 0; }
+.tempopop input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--fg); }
+.tempopop .tpscale { display: flex; justify-content: space-between; padding: 0 58px; font: 700 .7rem var(--font-ui); color: var(--muted); }
 .fab .cnt4 { display: flex; gap: 2px; align-items: flex-end; }
 .fab .cnt4 i { font: 800 .62rem/1 var(--font-ui); font-style: normal; }
 .fab .cnt4 i:first-child { font-size: .95rem; }

@@ -1,7 +1,7 @@
 // Seitenleiste (Slide-in) für Liedersammlung und Einstellungen; früher ein gemeinsames Menü, jetzt zwei Knöpfe. Gruppen: oben der offene Bereich (Lieder speichern und laden, seine eigenen Abschnitte und
 // darunter seine Einstellungen), unten die Einstellungen für alle Bereiche (Tempo, Bildschirm anlassen).
 // Eigene Abschnitte eines Bereichs tragen im HTML data-area und werden von ihm selbst eingeblendet.
-import { settings, persistSettings, clampUi } from './settings.js';
+import { settings, persistSettings, clampUi, setTempo } from './settings.js';
 import { current, saveAs, closeSavePop } from './shell.js';
 import { stopPlay } from './player.js';
 import { esc, confirmTap, disarm, isArmed, delegate, onEnter } from './ui.js';
@@ -184,8 +184,7 @@ export function initMenu() {
   el.uiNum.addEventListener('change', () => { setUi(el.uiNum.value / 100); el.uiNum.value = Math.round(settings.ui * 100); });
   onEnter(el.uiNum, () => el.uiNum.blur());
   el.tempo.addEventListener('input', () => {
-    settings.tempo = +el.tempo.value;
+    setTempo(+el.tempo.value);
     renderTempo();
-    persistSettings();
   });
 }

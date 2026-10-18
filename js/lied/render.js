@@ -1,6 +1,7 @@
 // Zeichnet Notenblatt und Leiste neu (render) und schließt Änderungen ab (commit)
 import { stopPlay, playingPos } from '../core/player.js';
 import { sideCollapsed } from '../core/shell.js';
+import { follow } from '../core/ui.js';
 import { isNote } from './model.js';
 import { layout, widestMeasure } from './layout.js';
 import { sheetSVG } from './sheet.js';
@@ -98,4 +99,5 @@ export function markPlaying(i) {
   bar.setAttribute('height', Math.max(0, +hit.getAttribute('height') - 0.4));
   bar.setAttribute('rx', 0.8);
   hit.parentNode.insertBefore(bar, hit.parentNode.firstChild);
+  follow(hit, el.sheet);
 }

@@ -22,6 +22,19 @@ export function startAt(plan, k) {
   };
 }
 
+// Ablaufplan ohne die Einträge, für die hidden(s) gilt (z. B. eingeklappte Zeilen): Was danach kommt, rückt nach vorn.
+export function skip(plan, hidden) {
+  let shift = 0;
+  const items = [];
+  plan.items.forEach((s) => {
+    if (hidden(s)) shift += s.len;
+    else items.push(shift ? { ...s, t: s.t - shift } : s);
+  });
+  if (!shift) return plan;
+  const last = items[items.length - 1];
+  return { ...plan, items, end: last ? last.t + last.len : 0 };
+}
+
 // Ablaufplan bis vor den ersten Eintrag, für den hidden(s) gilt (z. B. was unter dem Tuch liegt). Stille Einträge am
 // Ende fallen weg, end ist das Ende des letzten Tons davor. Ist nichts verdeckt, bleibt der Plan, wie er ist.
 export function cutAt(plan, hidden) {

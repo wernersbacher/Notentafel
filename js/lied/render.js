@@ -4,7 +4,7 @@ import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
 import { isNote } from './model.js';
 import { layout, widestMeasure } from './layout.js';
-import { sheetSVG } from './sheet.js';
+import { sheetSVG, NUM_W, foldedLine } from './sheet.js';
 import { L, opts, persistSong } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
@@ -21,28 +21,34 @@ export let spPx = 16;
 // Erstes Ereignis der letzten Zeile, so wie das Notenblatt gerade umbrochen ist (für „− Zeile“)
 let lastFirst = 0;
 export const lastLineStart = () => lastFirst;
+// Ereignisse in eingeklappten Zeilen, so wie das Notenblatt gerade umbrochen ist (sie werden nicht abgespielt)
+let folded = new Set();
+export const isFolded = (i) => folded.has(i);
 
 export function renderSheet() {
   const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check };
   let lay, sp;
   if (opts.wrap) {
-    sp = Math.max(8, Math.min(WRAP[opts.size], avail / (widestMeasure(L.song, o) + 0.2)));
-    lay = layout(L.song, { ...o, width: avail / sp - 0.1 });
+    sp = Math.max(8, Math.min(WRAP[opts.size], avail / (widestMeasure(L.song, o) + NUM_W + 0.2)));
+    lay = layout(L.song, { ...o, width: avail / sp - 0.1 - NUM_W });
   } else {
     lay = layout(L.song, o);
     const [min, max] = SP[opts.size];
-    sp = Math.max(min, Math.min(max, avail / Math.max(...lay.systems.map((s) => s.width))));
+    sp = Math.max(min, Math.min(max, avail / (Math.max(...lay.systems.map((s) => s.width)) + NUM_W)));
   }
-  const W = Math.max(...lay.systems.map((s) => s.width), avail / sp - 0.1);
+  // Vor jeder Zeile steht ihre Nummer (NUM_W breit)
+  const W = Math.max(...lay.systems.map((s) => s.width + NUM_W), avail / sp - 0.1);
   spPx = sp;
   lastFirst = lay.systems[lay.systems.length - 1].first;
+  folded = new Set();
+  lay.systems.forEach((s) => { if (foldedLine(L.song.ev, s)) for (let i = s.first; i < s.end; i++) folded.add(i); });
   // Eingeklappte Leiste: Bearbeiten beendet, ohne Markierung und leeren Platz
   const clean = sideCollapsed();
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
     width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ,
-    target: last, playing: pos == null ? -1 : pos
+    target: last, playing: pos == null ? -1 : pos, nums: true
   });
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';

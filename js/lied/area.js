@@ -4,13 +4,13 @@ import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js
 import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
-import { beatsOf, startAt, cutAt } from '../core/plan.js';
+import { beatsOf, startAt, cutAt, skip } from '../core/plan.js';
 import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { printHTML } from './print.js';
 import { L, opts, persistOpts } from './state.js';
-import { render, renderSheet, markPlaying } from './render.js';
+import { render, renderSheet, markPlaying, isFolded } from './render.js';
 import { buildPanel, buildSteps } from './sidebar.js';
 import { initSheetInput } from './input.js';
 import * as act from './actions.js';
@@ -147,7 +147,8 @@ export function registerLied() {
     receive: act.receiveSong,
     plan: () => {
       let p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
-      // Was unter dem Tuch liegt, klingt noch nicht
+      // Eingeklappte Zeilen werden übersprungen; was unter dem Tuch liegt, klingt noch nicht
+      p = skip(p, (s) => isFolded(s.pos));
       const k = act.coverIndex();
       if (k >= 0) p = cutAt(p, (s) => s.pos >= k);
       return startAt(p, p.items.findIndex((s) => s.pos >= L.sel));

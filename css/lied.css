@@ -190,3 +190,12 @@ aside.side { padding: 12px; overflow: hidden; }
 .score .ev.quiz > .nh, .score .nm.quiz { visibility: hidden; }
 .sheet > .qcard { position: absolute; z-index: 3; font-size: 2.2rem; }
 .sheet > .qcard.qname { font-size: 1.1rem; border-radius: 8px; }
+
+/* ---------- Zeilennummern und eingeklappte Zeilen ---------- */
+/* Vor jeder Zeile ihre Nummer; ein Tipp auf die Spalte davor klappt die Zeile ein */
+.score .lnum { font: 700 1.3px var(--font-ui); text-anchor: end; dominant-baseline: central; fill: var(--muted); }
+.score .fold { fill: transparent; cursor: pointer; }
+/* Eingeklappt: nur die Nummer als Knopf mit Pfeil und eine feine Linie auf Höhe der Mittellinie */
+.score .fpill { fill: var(--btn); stroke: var(--btn-line); stroke-width: .16; }
+.score .fnum { text-anchor: middle; }
+.score .fline { fill: var(--btn-line); }

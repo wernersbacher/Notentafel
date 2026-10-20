@@ -37,78 +37,117 @@ function itemSVG(it, e, key) {
   return s;
 }
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, target, playing, fit }.
+// Platz für die Zeilennummer vor jedem System (in sp)
+export const NUM_W = 2.6;
+// Eine Zeile ist eingeklappt, wenn eines ihrer Ereignisse fd trägt (so bleibt sie es auch, wenn neu umbrochen wird)
+export const foldedLine = (ev, s) => ev.slice(s.first, s.end).some((e) => e.fd);
+
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, target, playing, fit, nums }.
 // fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
+// nums: Vor jedem System steht seine Nummer (NUM_W breit, das System rückt so weit nach rechts); ein Tipp darauf klappt
+// es ein. Eingeklappt behält es seine Höhe, zu sehen ist nur die Nummer als Knopf und eine feine Linie.
 // Liefert { svg, height, parts } – height in sp, damit der Aufrufer die Größe setzen kann; parts sind die Systeme
 // einzeln ({ svg, height }, jedes ab seiner Oberkante), z. B. für den Druck.
 export function sheetSVG(song, lay, o) {
-  const ev = song.ev, W = o.width, lyrics = hasLyrics(song);
+  const ev = song.ev, N = o.nums ? NUM_W : 0, W = o.width - N, lyrics = hasLyrics(song);
   let y = 0, out = '';
   const parts = [];
-  lay.systems.forEach((s) => {
+  lay.systems.forEach((s, si) => {
     // Unter dem System: Zählzeiten, dann Liedtext, dann Notennamen
     const zz = o.counts ? COUNTS_H : 0, ly = lyrics ? LYRICS_H : 0;
     const top = y + s.top, bottom = s.bottom + zz + ly + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
-    let g = '';
-    // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
-    g += rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
-    // Beim Abspielen: farbiger Balken hinter der klingenden Note (über die ganze Höhe des Systems)
-    if (o.playing >= s.first && o.playing < s.end) {
-      const col = lay.at[o.playing];
-      g += rect('playbar', col.l + 0.1, -s.top + 0.2, col.r - 0.1, 4 + bottom - 0.2, ' rx="0.8"');
-    }
-    // Markierung (nicht nach „fertig“)
-    if (!o.clean) {
-      const col = o.sel < ev.length ? (o.sel >= s.first && o.sel < s.end ? lay.at[o.sel] : null) : s.ghost;
-      if (col) {
-        g += rect('cur', col.l + 0.15, -s.top + 0.4, col.r - 0.15, 4 + bottom - 0.4, ' rx="0.6"');
-        if (o.insert) g += rect('caret', col.l - 0.12, -s.top + 0.4, col.l + 0.12, 4 + bottom - 0.4);
-      }
-    }
-    // Takte, die nicht aufgehen, sanft hinter den Noten
-    s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
-    // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen)
-    const last = s.bars[s.bars.length - 1];
-    const end = s.barEnd ? last.x + (last.k === 2 || last.k === 3 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
-    g += staffLines(0, end) + clef(s.clefX, yOf(2));
-    // Tonart-Vorzeichen in der üblichen Lage (♯ ab f'', ♭ ab b')
-    keySignature(song.key || 0).forEach(([, a], j) => {
-      g += accidental(s.keyX + 0.45 + j * 0.9, yOf((a > 0 ? SHARP_POS : FLAT_POS)[j]), a);
-    });
-    if (s.meterX != null) g += meter(s.meterX, song.meter);
-    s.items.forEach((it) => {
-      const e = ev[it.i];
-      const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
-      // Das Zeichen selbst in eigener Gruppe (nh), damit eine ?-Karte nur die Note verdecken kann und der Name bleibt
-      g += '<g class="' + cls + '" data-i="' + it.i + '"><g class="nh">' + itemSVG(it, e, o.colors ? song.key || 0 : null) + '</g>';
-      // Zählzeiten direkt unter dem System, darunter die Notennamen
-      if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
-      if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';
-      if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
-      g += '</g>';
-    });
-    s.beams.forEach((b) => {
-      // Höhe auf der Linie des Balkens; die zweiten Balken liegen parallel dazu, zum Kopf hin versetzt
-      const y1 = yOf(b.end1), y2 = yOf(b.end2), d = b.up ? 0.75 : -0.75;
-      const by = (x) => y1 + (y2 - y1) * (x - b.x1) / (b.x2 - b.x1) + d;
-      g += beam(b.x1, y1, b.x2, y2, b.up);
-      b.sub.forEach(([x1, x2]) => { g += beam(x1, by(x1), x2, by(x2), b.up); });
-    });
-    s.bars.forEach((b) => { g += barline(b.x, b.k); });
-    if (s.rep != null) g += barline(s.rep, 4);
-    s.voltas.forEach((v) => { g += volta(v.x1, v.x2, -s.top + 0.6, v.n, v.open); });
-    if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
-    s.ties.forEach((t) => {
-      const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);
-      g += tie(t.x1, t.x2 == null ? end - 0.6 : t.x2, y, t.down);
-    });
-    // Tippflächen über den Zeichen: jede Spalte reicht über die ganze Höhe des Systems
-    // Die markierte Spalte lässt sich ziehen (grab), alle anderen scrollen wie gewohnt
-    s.items.forEach((it) => { g += rect(it.i === o.sel && !o.clean ? 'hit grab' : 'hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
-    if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');
+    const fold = N > 0 && foldedLine(ev, s);
+    let g = fold ? foldedSVG(s, W, bottom) : systemSVG(song, lay, s, o, W, bottom, zz);
+    if (N) g = '<g transform="translate(' + N + ' 0)">' + g + '</g>' + numSVG(s, si, W + N, bottom, fold);
     out += '<g transform="translate(0 ' + f(top) + ')">' + g + '</g>';
     parts.push({ svg: '<g transform="translate(0 ' + f(s.top) + ')">' + g + '</g>', height: h });
     y += h + GAP;
   });
   return { svg: out, height: y, parts };
+}
+
+// Zeilennummer vor dem System; die ganze Spalte davor ist die Tippfläche zum Einklappen (data-fold: first,end).
+// Eingeklappt: die Nummer als Knopf mit Pfeil, dahinter eine feine Linie auf Höhe der Mittellinie, und die ganze Zeile
+// ist die Tippfläche zum Aufklappen.
+function numSVG(s, si, width, bottom, fold) {
+  const mid = yOf(4), can = s.end > s.first, data = can ? ' data-fold="' + s.first + ',' + s.end + '"' : '';
+  if (!fold) {
+    return '<text class="lnum" x="' + f(NUM_W - 0.5) + '" y="' + f(mid) + '">' + (si + 1) + '</text>' +
+      (can ? rect('fold', 0, -s.top, NUM_W, 4 + bottom, data) : '');
+  }
+  const pw = 3.6;
+  return rect('fline', pw + 0.2, mid - 0.08, width - 0.3, mid + 0.08) +
+    rect('fpill', 0.2, mid - 1.1, 0.2 + pw, mid + 1.1, ' rx="1.1"') +
+    '<text class="lnum fnum" x="' + f(0.2 + pw / 2) + '" y="' + f(mid) + '">' + (si + 1) + ' ▸</text>' +
+    rect('fold', 0, -s.top, width, 4 + bottom, data + ' role="button" aria-label="Zeile ' + (si + 1) + ' eingeklappt. Antippen klappt sie auf."');
+}
+// Eingeklappt: nichts zu sehen, nur die Tippflächen der Zeichen bleiben (unsichtbar), damit Tuch und „nächste Zeile
+// aufdecken“ ihre Lage finden; darüber liegt die Fläche zum Aufklappen
+function foldedSVG(s, W, bottom) {
+  let g = rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
+  s.items.forEach((it) => { g += rect('hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
+  return g;
+}
+
+// Ein System mit allem, was darin steht (in Linienabständen ab seiner obersten Notenlinie)
+function systemSVG(song, lay, s, o, W, bottom, zz) {
+  const ev = song.ev;
+  let g = '';
+  // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
+  g += rect('hit', 0, -s.top, W, 4 + bottom, ' data-i="' + s.end + '"');
+  // Beim Abspielen: farbiger Balken hinter der klingenden Note (über die ganze Höhe des Systems)
+  if (o.playing >= s.first && o.playing < s.end) {
+    const col = lay.at[o.playing];
+    g += rect('playbar', col.l + 0.1, -s.top + 0.2, col.r - 0.1, 4 + bottom - 0.2, ' rx="0.8"');
+  }
+  // Markierung (nicht nach „fertig“)
+  if (!o.clean) {
+    const col = o.sel < ev.length ? (o.sel >= s.first && o.sel < s.end ? lay.at[o.sel] : null) : s.ghost;
+    if (col) {
+      g += rect('cur', col.l + 0.15, -s.top + 0.4, col.r - 0.15, 4 + bottom - 0.4, ' rx="0.6"');
+      if (o.insert) g += rect('caret', col.l - 0.12, -s.top + 0.4, col.l + 0.12, 4 + bottom - 0.4);
+    }
+  }
+  // Takte, die nicht aufgehen, sanft hinter den Noten
+  s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
+  // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen)
+  const last = s.bars[s.bars.length - 1];
+  const end = s.barEnd ? last.x + (last.k === 2 || last.k === 3 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
+  g += staffLines(0, end) + clef(s.clefX, yOf(2));
+  // Tonart-Vorzeichen in der üblichen Lage (♯ ab f'', ♭ ab b')
+  keySignature(song.key || 0).forEach(([, a], j) => {
+    g += accidental(s.keyX + 0.45 + j * 0.9, yOf((a > 0 ? SHARP_POS : FLAT_POS)[j]), a);
+  });
+  if (s.meterX != null) g += meter(s.meterX, song.meter);
+  s.items.forEach((it) => {
+    const e = ev[it.i];
+    const cls = 'ev' + (it.i === o.target ? ' target' : '') + (it.i === o.playing ? ' playing' : '');
+    // Das Zeichen selbst in eigener Gruppe (nh), damit eine ?-Karte nur die Note verdecken kann und der Name bleibt
+    g += '<g class="' + cls + '" data-i="' + it.i + '"><g class="nh">' + itemSVG(it, e, o.colors ? song.key || 0 : null) + '</g>';
+    // Zählzeiten direkt unter dem System, darunter die Notennamen
+    if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
+    if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';
+    if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
+    g += '</g>';
+  });
+  s.beams.forEach((b) => {
+    // Höhe auf der Linie des Balkens; die zweiten Balken liegen parallel dazu, zum Kopf hin versetzt
+    const y1 = yOf(b.end1), y2 = yOf(b.end2), d = b.up ? 0.75 : -0.75;
+    const by = (x) => y1 + (y2 - y1) * (x - b.x1) / (b.x2 - b.x1) + d;
+    g += beam(b.x1, y1, b.x2, y2, b.up);
+    b.sub.forEach(([x1, x2]) => { g += beam(x1, by(x1), x2, by(x2), b.up); });
+  });
+  s.bars.forEach((b) => { g += barline(b.x, b.k); });
+  if (s.rep != null) g += barline(s.rep, 4);
+  s.voltas.forEach((v) => { g += volta(v.x1, v.x2, -s.top + 0.6, v.n, v.open); });
+  if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
+  s.ties.forEach((t) => {
+    const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);
+    g += tie(t.x1, t.x2 == null ? end - 0.6 : t.x2, y, t.down);
+  });
+  // Tippflächen über den Zeichen: jede Spalte reicht über die ganze Höhe des Systems
+  // Die markierte Spalte lässt sich ziehen (grab), alle anderen scrollen wie gewohnt
+  s.items.forEach((it) => { g += rect(it.i === o.sel && !o.clean ? 'hit grab' : 'hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
+  if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');
+  return g;
 }

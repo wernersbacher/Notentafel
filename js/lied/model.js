@@ -309,11 +309,12 @@ function cleanEvent(e) {
   if (e.volta && (o.bar === 3 || o.bar === 5)) o.volta = 1;
   if (e.brk) o.brk = 1;
   // Verdecken: q ?-Karte über der Note, qn über ihrem Notennamen (je 1 verdeckt, 2 aufgedeckt), cv ab hier liegt jetzt
-  // das Tuch, cf hier lag es am Anfang
+  // das Tuch, cf hier lag es am Anfang; fd: die Zeile mit diesem Ereignis ist eingeklappt
   if (e.q === 1 || e.q === 2) o.q = e.q;
   if (o.p && (e.qn === 1 || e.qn === 2)) o.qn = e.qn;
   if (e.cv) o.cv = 1;
   if (e.cf) o.cf = 1;
+  if (e.fd) o.fd = 1;
   return o;
 }
 // Prüft ein gespeichertes Lied und liefert eine saubere Kopie (oder null). Ungültige Ereignisse fallen weg.

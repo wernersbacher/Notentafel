@@ -123,3 +123,18 @@ test('Zeichnen: Rechteck der Klasse bad vor den Notenlinien', () => {
   assert.ok(!svg.slice(0, i).includes('<line') && !svg.slice(0, i).includes('<path'));
   assert.match(svg.slice(i - 12, i + 80), /y="-0\.6".*height="5\.2"/);
 });
+
+test('Zeichnen: Zeilennummern, eine eingeklappte Zeile zeigt nur ihre Nummer', () => {
+  const s = song([n('c1'), n('d1', 4, { brk: 1 }), n('e1', 4, { fd: 1 }), n('f1')]);
+  const { svg } = sheetSVG(s, layout(s), { width: 40, clean: true, nums: true });
+  assert.match(svg, /class="lnum"[^>]*>1</);
+  assert.match(svg, /data-fold="0,2"/);
+  // Zeile 2: nur Knopf mit Pfeil, keine Zeichen, aber ihre Tippflächen bleiben (für das Tuch)
+  assert.match(svg, />2 ▸</);
+  assert.match(svg, /aria-label="Zeile 2 eingeklappt/);
+  assert.ok(!svg.includes('class="ev" data-i="2"') && !svg.includes('class="ev" data-i="3"'));
+  assert.ok(svg.includes('class="hit" ') && svg.includes('data-i="3"'));
+  // Ohne nums (Druck): keine Nummern, nichts eingeklappt
+  const plain = sheetSVG(s, layout(s), { width: 40, clean: true }).svg;
+  assert.ok(!plain.includes('lnum') && plain.includes('class="ev" data-i="2"'));
+});

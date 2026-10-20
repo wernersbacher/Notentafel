@@ -15,12 +15,13 @@ function fresh(o) {
   if (L.pen.dot && canDot(L.pen.v)) o.dot = 1;
   return o;
 }
-// Takt- und Schlussstrich, Umbruch und Tuch bleiben stehen, wenn das Zeichen ersetzt wird
+// Takt- und Schlussstrich, Umbruch, Tuch und Einklappen bleiben stehen, wenn das Zeichen ersetzt wird
 function keepMarks(prev, o) {
   if (prev.bar) o.bar = prev.bar;
   if (prev.brk) o.brk = 1;
   if (prev.cv) o.cv = 1;
   if (prev.cf) o.cf = 1;
+  if (prev.fd) o.fd = 1;
   return o;
 }
 function full() {
@@ -438,6 +439,15 @@ export function tapEv(i, name) {
   L.last = null;
   commit();
 }
+// Tipp auf eine Zeilennummer: die Zeile (Ereignisse first … end−1) einklappen oder wieder aufklappen. Eingeklappt ist
+// sie, wenn eines ihrer Ereignisse fd trägt; so bleibt sie es auch, wenn anders umbrochen wird.
+export function toggleFold(first, end) {
+  const part = ev().slice(first, end);
+  if (!part.length) return;
+  snap();
+  if (part.some((e) => e.fd)) part.forEach((e) => { delete e.fd; }); else part[0].fd = 1;
+  commit();
+}
 // Alles wieder wie am Anfang: Tuch an seinen Anfang, alle Karten zu
 export function resetCover() {
   snap();
@@ -448,9 +458,9 @@ export function resetCover() {
   });
   commit();
 }
-// Tuch und alle Karten weg
+// Tuch und alle Karten weg, alle Zeilen aufgeklappt
 export function clearCover() {
   snap();
-  ev().forEach((e) => { delete e.cv; delete e.cf; delete e.q; delete e.qn; });
+  ev().forEach((e) => { delete e.cv; delete e.cf; delete e.q; delete e.qn; delete e.fd; });
   commit();
 }

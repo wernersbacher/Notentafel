@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { beatsOf, startAt } from '../js/core/plan.js';
+import { beatsOf, startAt, skip } from '../js/core/plan.js';
 
 test('beatsOf: Zählschlag nach der Taktart', () => {
   assert.deepEqual(beatsOf('3/4'), { beat: 1, perBar: 3 });
@@ -30,4 +30,13 @@ test('cutAt: bis vor das Tuch, stille Einträge davor fallen weg', async () => {
   assert.deepEqual(cutAt(plan, (s) => s.pos >= 3), { items: items.slice(0, 2), end: 3, beat: 1 });
   assert.equal(cutAt(plan, (s) => s.pos >= 9), plan);
   assert.deepEqual(cutAt(plan, () => true).items, []);
+});
+
+test('skip: eingeklappte Einträge fallen weg, was danach kommt, rückt nach vorn', () => {
+  const plan = { items: [{ t: 0, len: 1, sound: 'piano', pos: 0 }, { t: 1, len: 2, sound: 'piano', pos: 1 }, { t: 3, len: 1, sound: 'piano', pos: 2 }], end: 4 };
+  const p = skip(plan, (s) => s.pos === 1);
+  assert.deepEqual(p.items.map((s) => [s.t, s.pos]), [[0, 0], [1, 2]]);
+  assert.equal(p.end, 2);
+  // Nichts eingeklappt: der Plan bleibt
+  assert.equal(skip(plan, () => false), plan);
 });

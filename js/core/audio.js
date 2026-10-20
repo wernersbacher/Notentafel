@@ -1,5 +1,5 @@
 // Klangerzeugung mit Web Audio: Glockenspiel für die bunten Punkte, Klanghölzer für eigenständige Notenzeichen,
-// Klavier für das Notenblatt
+// Klavier für das Notenblatt, Klatschen oder Woodblock fürs Rhythmus-Echo
 let audio = null;
 
 // Liefert den AudioContext (beim ersten Mal erzeugt) oder null, wenn der Browser kein Web Audio kann
@@ -29,11 +29,11 @@ function partial(out, freq, t0, amp, att, tau, damp, stop, rel = 0.04) {
   o.stop(stop);
 }
 
-// Rauschen für den Anschlag der Klanghölzer, einmal erzeugt
+// Rauschen für Anschläge und Klatschen, einmal erzeugt
 let noiseBuf = null;
 function noise() {
   if (!noiseBuf) {
-    const n = Math.round(audio.sampleRate * 0.03);
+    const n = Math.round(audio.sampleRate * 0.3);
     noiseBuf = audio.createBuffer(1, n, audio.sampleRate);
     const data = noiseBuf.getChannelData(0);
     for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
@@ -59,24 +59,44 @@ export function clave(out, t0) {
   src.stop(t0 + 0.03);
 }
 
-// Triangel fürs Rhythmus-Echo: heller, metallischer Klang aus unharmonischen Teiltönen mit kurzem, klirrendem
-// Anschlag. Er klingt lange nach und wird am Ende der Notenlänge abgedämpft (wie mit der Hand), so hört man, ob eine
-// Note kurz oder lang ist
-export function triangle(out, t0, len) {
-  const damp = t0 + len, stop = damp + 0.25;
-  [[1250, 0.5, 1.4], [3180, 0.3, 1], [5040, 0.18, 0.7], [7420, 0.1, 0.45]].forEach(([f, amp, tau]) =>
-    partial(out, f, t0, amp, 0.001, tau, damp, stop, 0.03));
-  const src = audio.createBufferSource(), hp = audio.createBiquadFilter(), n = audio.createGain();
+// Gefiltertes Rauschen ab t0: Pegel amp, klingt mit der Zeitkonstante tau ab (für Anschläge und Klatschen)
+function burst(out, t0, type, freq, q, amp, tau, len = 0.3) {
+  const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
   src.buffer = noise();
-  hp.type = 'highpass';
-  hp.frequency.value = 5000;
-  n.gain.setValueAtTime(0.35, t0);
-  n.gain.setTargetAtTime(0.0001, t0, 0.006);
-  src.connect(hp);
-  hp.connect(n);
-  n.connect(out);
+  f.type = type;
+  f.frequency.value = freq;
+  f.Q.value = q;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(amp, t0 + 0.001);
+  g.gain.setTargetAtTime(0.0001, t0 + 0.001, tau);
+  src.connect(f);
+  f.connect(g);
+  g.connect(out);
   src.start(t0);
-  src.stop(t0 + 0.03);
+  src.stop(t0 + len);
+}
+
+// Klatschen fürs Rhythmus-Echo: drei schnell aufeinanderfolgende Rauschstöße (die Hände treffen nicht ganz gleichzeitig)
+// und ein kurzer Nachhall
+export function clap(out, t0) {
+  [0, 0.011, 0.022].forEach((d, k) => burst(out, t0 + d, 'bandpass', 1100, 1.2, k === 2 ? 1.4 : 1, 0.006, 0.03));
+  burst(out, t0 + 0.022, 'bandpass', 1300, 0.9, 0.7, 0.05);
+}
+
+// Woodblock fürs Rhythmus-Echo: hölzerner, hohler Schlag, voller und lauter als die Klanghölzer
+export function wood(out, t0) {
+  partial(out, 820, t0, 1, 0.001, 0.045, 0, t0 + 0.3);
+  partial(out, 1980, t0, 0.35, 0.001, 0.025, 0, t0 + 0.2);
+  burst(out, t0, 'bandpass', 1500, 1.5, 0.6, 0.004, 0.03);
+}
+
+// Ein Klang nach Namen: 'bell', 'piano', 'clave', 'clap', 'wood' (f und len nur für Glockenspiel und Klavier)
+export function strike(sound, out, f, t0, len) {
+  if (sound === 'bell') bell(out, f, t0, len);
+  else if (sound === 'piano') piano(out, f, t0, len);
+  else if (sound === 'clave') clave(out, t0);
+  else if (sound === 'clap') clap(out, t0);
+  else if (sound === 'wood') wood(out, t0);
 }
 
 // Metronom: kurzer, heller Klick; accent (erster Schlag im Takt) höher und lauter; soft: leise im Hintergrund

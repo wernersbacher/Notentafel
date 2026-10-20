@@ -10,7 +10,7 @@ import { games, persistGames } from './games.js';
 import { S, snap, stashBoard } from './state.js';
 import { commit } from './render.js';
 import { markPlaying } from './board.js';
-import { playNow, stopPlay } from '../core/player.js';
+import { playNow, stopPlay, previewTone } from '../core/player.js';
 import { beatsOf } from '../core/plan.js';
 import { openGame, endGame, gameOn, gameBtn, GAME_ICONS } from '../core/game.js';
 import { toast, delegate } from '../core/ui.js';
@@ -23,6 +23,8 @@ const ICONS = {
   again: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 let row = -1; // Zeile des zuletzt gewürfelten Rhythmus
+// Glockenspiel und Klavier spielen den Rhythmus auf einem Ton (g')
+const ECHO_F = 392;
 
 const echoRow = () => S.rows[row];
 const covered = () => !!(echoRow() && echoRow().hide);
@@ -80,7 +82,7 @@ function playEcho() {
   let t = 0;
   x.forEach((cell, c) => {
     if (!filled(cell)) return;
-    items.push({ t, len: dur(cell), sound: isBeat(cell) ? 'triangle' : '', f: 0, pos: { r: row, c } });
+    items.push({ t, len: dur(cell), sound: isBeat(cell) ? games.echo.sound : '', f: ECHO_F, pos: { r: row, c } });
     t += dur(cell);
   });
   playNow({ items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, row)) }, covered() ? pulse : markPlaying);
@@ -121,14 +123,14 @@ function startEcho() {
 /* ---------- Leiste rechts ---------- */
 const OPTS = [['echoBars', 'bars'], ['echoNotes', 'notes'], ['echoRests', 'rests']];
 const LEVEL = ['ohne Pausen', 'leicht', 'mittel', 'schwer'];
+function pressed(b, on) {
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
 function renderEchoSide() {
-  OPTS.forEach(([id, k]) => el[id].querySelectorAll('[data-v]').forEach((b) => {
-    const on = +b.dataset.v === games.echo[k];
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  }));
-  el.echoPulse.classList.toggle('on', games.echo.pulse);
-  el.echoPulse.setAttribute('aria-pressed', games.echo.pulse ? 'true' : 'false');
+  OPTS.forEach(([id, k]) => el[id].querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === games.echo[k])));
+  el.echoSound.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === games.echo.sound));
+  pressed(el.echoPulse, games.echo.pulse);
   const e = games.echo;
   blockSum('rhyGame', e.bars + (e.bars > 1 ? ' Takte' : ' Takt') + ' · ' + LEVEL[e.notes] + (e.rests ? ' · Pausen ' + LEVEL[e.rests] : ''));
 }
@@ -138,6 +140,13 @@ export function initEcho() {
     persistGames();
     renderEchoSide();
   }));
+  // Ein Tipp auf einen Klang wählt ihn und lässt ihn einmal hören
+  delegate(el.echoSound, '[data-v]', (b) => {
+    games.echo.sound = b.dataset.v;
+    persistGames();
+    renderEchoSide();
+    previewTone(ECHO_F, games.echo.sound, 0.5);
+  });
   el.echoPulse.addEventListener('click', () => { games.echo.pulse = !games.echo.pulse; persistGames(); renderEchoSide(); });
   el.echoGo.addEventListener('click', startEcho);
   renderEchoSide();

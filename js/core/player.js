@@ -1,12 +1,12 @@
 // Abspielen. Der Bereich liefert einen fertigen Ablaufplan, der Player kennt weder Zeilen noch Takte.
 // Plan: { items: [{ t, len, sound, f, pos }], end, beat?, perBar?, barStart?, pulse? } – Zeiten in Schlägen (Vierteln); sound ist
-// 'bell', 'piano', 'clave', 'triangle' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
+// 'bell', 'piano', 'clave', 'clap', 'wood' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
 // Schritt für Schritt (settings.step): statt im Tempo rückt die Markierung bei jedem Tipp auf den großen Knopf eine Note
 // oder Pause weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Mit settings.stepSound erklingt die
 // erreichte Note dabei in ihrer Länge im eingestellten Tempo. Nach der letzten Note ist Schluss.
-import { audioCtx, bell, clave, piano, triangle, tick } from './audio.js';
+import { audioCtx, strike, tick } from './audio.js';
 import { settings, persistSettings, setTempo, watchTempo } from './settings.js';
 import { startAt } from './plan.js';
 import { toast, popover } from './ui.js';
@@ -71,10 +71,7 @@ function startPlay(plan, mark, again) {
     }
   }
   plan.items.forEach((s, k) => {
-    if (s.sound === 'bell') bell(out, s.f, t0 + s.t * step, s.len * step * 0.95);
-    else if (s.sound === 'piano') piano(out, s.f, t0 + s.t * step, s.len * step * 0.95);
-    else if (s.sound === 'clave') clave(out, t0 + s.t * step);
-    else if (s.sound === 'triangle') triangle(out, t0 + s.t * step, s.len * step * 0.95);
+    strike(s.sound, out, s.f, t0 + s.t * step, s.len * step * 0.95);
     play.timers.push(setTimeout(() => { play.cur = s.pos; play.k = k; mark(s.pos); }, delay(s.t)));
   });
   play.timers.push(setTimeout(stopPlay, delay(plan.end)));
@@ -100,10 +97,7 @@ function stepSound(s) {
   const out = play.out = ctx.createGain(), t0 = ctx.currentTime + 0.01, len = s.len * 60 / settings.tempo * 0.95;
   out.gain.value = 0.6;
   out.connect(ctx.destination);
-  if (s.sound === 'bell') bell(out, s.f, t0, len);
-  else if (s.sound === 'piano') piano(out, s.f, t0, len);
-  else if (s.sound === 'clave') clave(out, t0);
-  else if (s.sound === 'triangle') triangle(out, t0, len);
+  strike(s.sound, out, s.f, t0, len);
 }
 
 // Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.
@@ -194,7 +188,7 @@ export function initPlayer() {
 }
 
 // Ein einzelner kurzer Ton zum Vorhören (z. B. beim Ziehen einer Note), unabhängig vom Abspielen.
-// sound: 'piano' (Notenblatt) oder 'bell' (Farbnoten); len: Länge in Sekunden
+// sound: 'piano' (Notenblatt), 'bell' (Farbnoten) oder ein anderer Klang aus audio.js; len: Länge in Sekunden
 let preview = null;
 export function previewTone(f, sound = 'piano', len = 0.35) {
   const ctx = audioCtx();
@@ -203,5 +197,5 @@ export function previewTone(f, sound = 'piano', len = 0.35) {
   preview = ctx.createGain();
   preview.gain.value = 0.5;
   preview.connect(ctx.destination);
-  (sound === 'bell' ? bell : piano)(preview, f, ctx.currentTime + 0.01, len);
+  strike(sound, preview, f, ctx.currentTime + 0.01, len);
 }

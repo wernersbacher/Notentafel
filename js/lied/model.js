@@ -273,6 +273,14 @@ export function barsAfter(song, auto) {
   });
 }
 
+// Striche so, wie sie gezeichnet werden: Mit Automatik und Taktart endet das Lied immer mit einem Schlussstrich
+// (außer es endet schon mit einem Wiederholungszeichen).
+export function drawnBars(song, auto) {
+  const bars = barsAfter(song, auto), n = bars.length;
+  if (auto && song.meter && n && bars[n - 1] < 2) bars[n - 1] = 2;
+  return bars;
+}
+
 // Zählzeiten wie in der Tafel, nach dem Auftakt gezählt: pro Ereignis [{ t, held, o }]. Auf der Zählzeit steht die Zahl,
 // genau dazwischen „+“; Zählzeiten, die das Zeichen hält, folgen blasser (held) mit ihrem Abstand o in Ticks.
 // Gezählt wird in der Einheit der Taktart (6/8 in Achteln, 2/2 in Halben). Eine Note hinter einem Haltebogen

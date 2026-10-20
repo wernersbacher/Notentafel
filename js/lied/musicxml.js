@@ -1,6 +1,6 @@
 // Export als MusicXML 4.0 (partwise), dem Austauschformat der Notenprogramme (MuseScore, Sibelius, Dorico …).
 // Alles hier ist rein: aus dem Lied wird ein XML-Text.
-import { isNote, ticks, parsePitch, barsAfter, shownAccidentals, tiedFrom, accOf, QUARTER } from './model.js';
+import { isNote, ticks, parsePitch, drawnBars, shownAccidentals, tiedFrom, accOf, QUARTER } from './model.js';
 import { beamGroups } from './layout.js';
 
 const STEP = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -63,7 +63,7 @@ function measuresOf(song, bars) {
 
 // o: { name, autoBar, tempo (Viertel pro Minute) }
 export function songToMusicXML(song, { name = '', autoBar = true, tempo = 0 } = {}) {
-  const ev = song.ev, bars = barsAfter(song, autoBar);
+  const ev = song.ev, bars = drawnBars(song, autoBar);
   const shown = shownAccidentals(song, autoBar), beams = beamsOf(song, bars);
   const measures = measuresOf(song, bars);
   let body = '', num = song.pickup ? 0 : 1, lastLy = '';

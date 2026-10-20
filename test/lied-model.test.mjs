@@ -1,12 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, cleanSong, parsePitch,
+  ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, drawnBars, cleanSong, parsePitch,
   pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
 const r = (v = 4, x = {}) => ({ v, ...x });
+
+test('drawnBars: mit Automatik und Taktart am Ende ein Schlussstrich', () => {
+  assert.deepEqual(drawnBars({ meter: '2/4', ev: [n('c1'), n('d1'), r(2)] }, true), [0, 1, 2]);
+  // auch, wenn der letzte Takt nicht aufgeht
+  assert.deepEqual(drawnBars({ meter: '2/4', ev: [n('c1'), n('d1'), r()] }, true), [0, 1, 2]);
+  // Wiederholung am Ende bleibt, von Hand und ohne Taktart kommt nichts dazu
+  assert.deepEqual(drawnBars({ meter: '2/4', ev: [n('c1'), n('d1', 4, { bar: 3 })] }, true), [0, 3]);
+  assert.deepEqual(drawnBars({ meter: '2/4', ev: [n('c1'), n('d1')] }, false), [0, 0]);
+  assert.deepEqual(drawnBars({ meter: '', ev: [n('c1', 1)] }, true), [0]);
+});
 
 test('ticks: alle Notenwerte, auch punktiert', () => {
   assert.deepEqual([1, 2, 4, 8, 16].map((v) => ticks({ v })), [32, 16, 8, 4, 2]);

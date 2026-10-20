@@ -366,7 +366,7 @@ export function receiveSong({ name, song, colors }) {
   stashSong();
   L.song = opts.autoBar ? splitAll(s) : s;
   L.name = name || '';
-  L.sel = L.song.ev.length;
+  L.sel = 0;
   L.last = null;
   if (colors) { opts.colors = true; persistOpts(); }
   commit();
@@ -379,7 +379,7 @@ export function loadSong(s) {
   stashSong();
   L.song = JSON.parse(JSON.stringify(s.song));
   L.name = s.name;
-  L.sel = L.song.ev.length;
+  L.sel = 0; // am Anfang, damit das Lied mit seinem Schlussstrich abgeschlossen dasteht (Weiterschreiben: hinter das Ende tippen)
   L.last = null;
   commit();
   scrollTop();

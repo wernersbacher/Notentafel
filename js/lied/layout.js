@@ -1,6 +1,6 @@
 // Notensatz: berechnet aus dem Lied die Lage aller Zeichen, ohne DOM. Gezeichnet wird in sheet.js.
 // Waagerecht zählt alles in Linienabständen (sp), senkrecht in Plätzen (pos, halbe Linienabstände, unterste Linie = 0).
-import { isNote, ticks, staffPos, barsAfter, gridStarts, countsOf, shownAccidentals, badMeasures } from './model.js';
+import { isNote, ticks, staffPos, drawnBars, gridStarts, countsOf, shownAccidentals, badMeasures } from './model.js';
 
 export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
@@ -79,7 +79,7 @@ export function beamGroups(song, bars, brks) {
 // lyrics: Mit Liedtext rückt eine Note so weit von der nächsten ab, dass ihre Silben nicht zusammenstoßen
 // (zwischen verbundenen Silben bleibt Platz für den Bindestrich).
 function measurer(song, autoBar, lyrics) {
-  const ev = song.ev, bars = barsAfter(song, autoBar), shown = shownAccidentals(song, autoBar);
+  const ev = song.ev, bars = drawnBars(song, autoBar), shown = shownAccidentals(song, autoBar);
   const room = (i) => {
     const ly = ev[i].ly, next = ev[i + 1];
     if (!ly) return next && next.ly ? lyricWidth(next.ly) / 2 + 0.3 : 0;

@@ -135,9 +135,13 @@ function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
   }
   // Takte, die nicht aufgehen, sanft hinter den Noten
   s.bad.forEach((b) => { g += rect('bad', b.x1, -0.6, b.x2, 4.6, ' rx="0.6"'); });
-  // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen)
+  // Endet die Zeile mit einem Strich, enden dort auch die Linien; sonst laufen sie bis zum Rand (beim Druck bis hinter das letzte Zeichen).
+  // Hat das Lied einen Schlussstrich, enden die Linien dort, und der leere Platz zum Weiterschreiben dahinter zeigt sich
+  // erst, wenn man ihn antippt (dann laufen die Linien wieder bis zum Rand).
   const last = s.bars[s.bars.length - 1];
-  const end = s.barEnd ? last.x + (last.k === 2 || last.k === 3 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
+  const writing = !!s.ghost && !o.clean && o.sel >= ev.length;
+  const closed = !!s.ghost && !writing && !!last && last.i === s.end - 1 && (last.k === 2 || last.k === 3);
+  const end = s.barEnd || closed ? last.x + (last.k === 2 || last.k === 3 ? 0.03 : 0) : !o.fit ? W : s.width - 0.6;
   g += staffLines(0, end) + clef(s.clefX, yOf(2));
   // Tonart-Vorzeichen in der üblichen Lage (♯ ab f'', ♭ ab b')
   keySignature(song.key || 0).forEach(([, a], j) => {
@@ -166,7 +170,7 @@ function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
   s.bars.forEach((b) => { g += barline(b.x, b.k); });
   if (s.rep != null) g += barline(s.rep, 4);
   s.voltas.forEach((v) => { g += volta(v.x1, v.x2, -s.top + 0.6, v.n, v.open); });
-  if (s.ghost && !o.clean) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
+  if (s.ghost && !o.clean && !closed) g += '<g class="ghost">' + head(s.ghost.x, yOf(4), 4) + '</g>';
   s.ties.forEach((t) => {
     const y = yOf(t.pos) + (t.down ? 0.55 : -0.55);
     g += tie(t.x1, t.x2 == null ? end - 0.6 : t.x2, y, t.down);

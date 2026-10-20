@@ -138,3 +138,14 @@ test('Zeichnen: Zeilennummern, eine eingeklappte Zeile zeigt nur ihre Nummer', (
   const plain = sheetSVG(s, layout(s), { width: 40, clean: true }).svg;
   assert.ok(!plain.includes('lnum') && plain.includes('class="ev" data-i="2"'));
 });
+
+test('mit Schlussstrich enden die Notenlinien dort; erst am leeren Platz dahinter laufen sie bis zum Rand', () => {
+  const s = { meter: '2/4', ev: [{ p: 'c1', v: 4 }, { p: 'd1', v: 4 }] };
+  const lay = layout(s, { autoBar: true }), sys = lay.systems[0], fin = sys.bars[sys.bars.length - 1];
+  assert.equal(fin.k, 2);
+  const ends = (o) => [...sheetSVG(s, lay, { width: 40, ...o }).svg.matchAll(/<line x1="0" y1="0" x2="([\d.]+)"/g)].map((m) => +m[1]);
+  assert.ok(Math.abs(ends({ sel: 0 })[0] - fin.x) < 0.1, 'endet am Schlussstrich');
+  assert.ok(!sheetSVG(s, lay, { width: 40, sel: 0 }).svg.includes('class="ghost"'));
+  assert.equal(ends({ sel: 2 })[0], 40, 'beim Weiterschreiben bis zum Rand');
+  assert.ok(Math.abs(ends({ sel: 2, clean: true })[0] - fin.x) < 0.1, 'nach „fertig“ wieder am Schlussstrich');
+});

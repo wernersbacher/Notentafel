@@ -11,7 +11,7 @@ const saved = store.loadBoard();
 export const L = {
   song: saved ? saved.song : emptySong(),
   name: saved ? saved.name : '',
-  sel: saved ? saved.song.ev.length : 0, // markierter Platz: Index in song.ev, song.ev.length ist der Platz am Ende
+  sel: 0, // markierter Platz: Index in song.ev, song.ev.length ist der Platz am Ende (beim Start: der Anfang)
   hist: [], // Rückgängig-Verlauf (als JSON)
   insertMode: false,
   last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt

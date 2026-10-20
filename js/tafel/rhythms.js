@@ -61,7 +61,11 @@ const has16 = (p) => p.ev.some((d) => Math.abs(d) === 0.25);
 // Ob Sechzehntel darin vorkommen, wird vorab entschieden (SIXTEENTHS). Damit die Stufe auch zu hören ist, wird dann so
 // lange neu gewürfelt, bis ein Baustein der gewählten Stufe vorkommt (bei Pausen: überhaupt eine Pause), gegebenenfalls
 // Sechzehntel, der Rhythmus mit einer Note beginnt und höchstens gut ein Drittel davon Pause ist.
-export function makeRhythm({ meter = '4/4', bars = 2, notes = 1, rests = 0 } = {}, rnd = Math.random) {
+export function makeRhythm(o = {}, rnd = Math.random) {
+  return makeBlocks(o, rnd).flat().map((d) => (d < 0 ? { k: 'r', d: -d } : { k: 'b', d }));
+}
+// Wie makeRhythm, aber die Bausteine einzeln: Längen in Vierteln, negativ für Pausen, z. B. [[1], [0.5, 0.5], [-1], [2]]
+export function makeBlocks({ meter = '4/4', bars = 2, notes = 1, rests = 0 } = {}, rnd = Math.random) {
   const mp = meterParts(meter), with16 = notes >= 3 && rnd() < SIXTEENTHS;
   const usable = mp.parts.filter((p) => p.lv <= notes && p.rv <= rests && (with16 || !has16(p)));
   const topLv = Math.max(...usable.map((p) => p.lv)), topRv = Math.max(...usable.map((p) => p.rv));
@@ -81,10 +85,14 @@ export function makeRhythm({ meter = '4/4', bars = 2, notes = 1, rests = 0 } = {
     const silent = ev.filter((d) => d < 0).reduce((s, d) => s - d, 0);
     const ok = used.some((p) => p.lv === topLv) && (!rests || used.some((p) => p.rv === topRv)) &&
       (!with16 || used.some(has16)) && silent <= bars * mp.len * 0.36;
-    best = ev;
+    best = used.map((p) => p.ev.slice());
     if (ok) break;
   }
-  return best.map((d) => (d < 0 ? { k: 'r', d: -d } : { k: 'b', d }));
+  return best;
+}
+// Alle Bausteine, die bei diesen Einstellungen vorkommen können (für die Knöpfe von „Rhythmus legen“)
+export function usableBlocks({ meter = '4/4', notes = 1, rests = 0 } = {}) {
+  return meterParts(meter).parts.filter((p) => p.lv <= notes && p.rv <= rests).map((p) => p.ev.slice());
 }
 
 function pick(list, rnd) {

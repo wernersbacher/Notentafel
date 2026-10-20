@@ -244,6 +244,7 @@
           <button type="button" class="gtile" data-game="quiz" aria-pressed="false">Tonnamen-Quiz</button>
           <button type="button" class="gtile" data-game="melo" aria-pressed="false">Melodie-Echo</button>
           <button type="button" class="gtile" data-game="updown" aria-pressed="false">Höher oder tiefer?</button>
+          <button type="button" class="gtile" data-game="guess" aria-pressed="false">Lied erraten</button>
         </div>
         <div class="group game" data-game="quiz">
           <p class="ghint" id="melQuizHint"></p>
@@ -279,7 +280,16 @@
           <p class="ghint">Zwei Töne erklingen nacheinander. Die Kinder sagen, ob der zweite höher, tiefer oder gleich ist, und tippen es unten. Mit der Lösung bekommen die beiden Punkte ihre Farbe.</p>
           <button type="button" class="btn gamego" id="updownGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
         </div>
-        <div class="group" id="melQuizRand">
+        <div class="group game" data-game="guess">
+          <p class="ghint">Der Anfang eines bekannten Lieds erklingt, die Kinder wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel.</p>
+          <button type="button" class="btn gamego" id="guessGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <h2 class="glabel">Vorspielen</h2>
+          <div class="seg two" id="guessLen">
+            <button type="button" class="btn" data-v="short" aria-pressed="false">die ersten fünf Töne</button>
+            <button type="button" class="btn" data-v="row" aria-pressed="false">die erste Zeile</button>
+          </div>
+        </div>
+        <div class="group" id="melQuizRand" data-for="quiz melo updown">
           <h2 class="glabel">Töne</h2>
           <div class="seg" id="melQuizSemis">
             <button type="button" class="btn" data-v="0" aria-pressed="false">C bis H</button>
@@ -365,6 +375,8 @@
           <button type="button" class="gtile" data-game="echo" aria-pressed="false">Rhythmus-Echo</button>
           <button type="button" class="gtile" data-game="which" aria-pressed="false">Welcher war's?</button>
           <button type="button" class="gtile" data-game="read" aria-pressed="false">Vom Blatt klatschen</button>
+          <button type="button" class="gtile" data-game="build" aria-pressed="false">Rhythmus legen</button>
+          <button type="button" class="gtile" data-game="fix" aria-pressed="false">Fehler finden</button>
         </div>
         <div class="group game" data-game="echo">
           <p class="ghint">Die Tafel spielt einen Rhythmus vor, die Kinder klatschen ihn nach. Die Zeile bleibt leer, bis man ihn auflöst.</p>
@@ -383,6 +395,14 @@
         <div class="group game" data-game="read">
           <p class="ghint">Ein Rhythmus steht auf der Tafel, die Kinder klatschen ihn vom Blatt. „Mitklatschen“ zählt ein und gibt den Grundschlag, die Noten leuchten mit. „Anhören“ spielt ihn zur Kontrolle.</p>
           <button type="button" class="btn gamego" id="readGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+        </div>
+        <div class="group game" data-game="build">
+          <p class="ghint">Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen nach. Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur. Je schwerer die Notenwerte, desto mehr Bausteine.</p>
+          <button type="button" class="btn gamego" id="buildGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+        </div>
+        <div class="group game" data-game="fix">
+          <p class="ghint">Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn aber mit einem Fehler in einem Takt. Die Kinder tippen unten den Takt. Es sind immer mindestens zwei Takte.</p>
+          <button type="button" class="btn gamego" id="fixGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
         </div>
         <h2 class="glabel">Taktart</h2>
         <div class="seg four" id="echoMeter">
@@ -532,6 +552,7 @@
           <button type="button" class="gtile" data-game="quiz" aria-pressed="false">Tonnamen-Quiz</button>
           <button type="button" class="gtile" data-game="place" aria-pressed="false">Note setzen</button>
           <button type="button" class="gtile" data-game="step" aria-pressed="false">Schritt oder Sprung?</button>
+          <button type="button" class="gtile" data-game="values" aria-pressed="false">Notenwerte</button>
         </div>
         <div class="group game" data-game="quiz">
           <p class="ghint">Eine Note erscheint, die Kinder tippen unten auf der Tafel ihren Namen – in der Farbe des Tons, mit Oktavstrichen.</p>
@@ -557,7 +578,18 @@
           <p class="ghint">Zwei Noten stehen nebeneinander und erklingen. Die Kinder sagen, ob es ein Schritt (zum Nachbarton), ein Sprung oder derselbe Ton ist.</p>
           <button type="button" class="btn gamego" id="stepGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
         </div>
-        <div class="group" id="liedQuizRange">
+        <div class="group game" data-game="values">
+          <p class="ghint">Eine Note oder Pause steht auf der Tafel und erklingt, jeder Schlag klickt dabei. Die Kinder tippen unten, wie sie heißt.</p>
+          <button type="button" class="btn gamego" id="valuesGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <h2 class="glabel">Notenwerte</h2>
+          <div class="seg" id="valLevel">
+            <button type="button" class="btn" data-v="1" aria-pressed="false"><span>leicht</span><span class="small">Ganze, Halbe, Viertel</span></button>
+            <button type="button" class="btn" data-v="2" aria-pressed="false"><span>mittel</span><span class="small">+ Achtel</span></button>
+            <button type="button" class="btn" data-v="3" aria-pressed="false"><span>schwer</span><span class="small">+ 16tel, punktiert</span></button>
+          </div>
+          <button type="button" class="btn wide" id="valRests" aria-pressed="false">auch Pausen</button>
+        </div>
+        <div class="group" id="liedQuizRange" data-for="quiz place step">
           <h2 class="glabel">Tonraum</h2>
           <div class="rangerow">
             <div class="rgroup">

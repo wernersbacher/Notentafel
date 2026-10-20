@@ -3,13 +3,16 @@
 //                        Eine falsche Note bleibt kurz blass stehen und erklingt zum Vergleich.
 //   Schritt oder Sprung? Zwei Noten stehen nebeneinander und erklingen; die Kinder sagen, ob es ein Schritt zum
 //                        Nachbarton, ein Sprung oder derselbe Ton ist.
+//   Notenwerte           Eine Note oder Pause steht groß über der Tafel und erklingt mit dem Grundschlag; die Kinder
+//                        tippen ihren Namen (Ganze, Halbe, Viertel …).
 import { parsePitch, makePitch, staffPos, freq, pitchLabel, whiteRange, makeInterval, OCT_MIN, OCT_MAX } from './model.js';
-import { clef, staffLines, yOf, head, stem, ledger } from './glyphs.js';
+import { clef, staffLines, yOf, head, stem, ledger, flags, dot, rest } from './glyphs.js';
 import { frameOf } from './quiz.js';
-import { opts } from './state.js';
+import { opts, persistOpts } from './state.js';
 import { toneColor } from '../core/colors.js';
 import { startQuiz, quizAnswer, playTones } from '../core/game.js';
-import { previewTone, stopPlay } from '../core/player.js';
+import { previewTone, stopPlay, playNow, planMs } from '../core/player.js';
+import { delegate } from '../core/ui.js';
 import { settings } from '../core/settings.js';
 import { el } from './dom.js';
 
@@ -110,7 +113,66 @@ function stepQuiz() {
   };
 }
 
+/* ---------- Notenwerte ---------- */
+// Werte je Stufe: key ist Grundwert und Punkt (z. B. '2.' punktierte Halbe)
+const VALUES = [
+  ['1', 'Ganze', 1], ['2', 'Halbe', 1], ['4', 'Viertel', 1], ['8', 'Achtel', 2], ['16', 'Sechzehntel', 3],
+  ['2.', 'punktierte Halbe', 3], ['4.', 'punktierte Viertel', 3]
+];
+// Die Note (oder Pause, ohne p) groß auf Notenlinien, Hals und Fähnchen wie im Notenblatt
+function valueSVG(e) {
+  const x = 10.5;
+  let s = '';
+  if (!e.p) {
+    s += rest(x, e.v);
+    if (e.dot) s += dot(x + 1.2, yOf(5));
+  } else {
+    const pos = staffPos(e.p), y = yOf(pos), up = pos < 4, xs = x + (up ? 0.6 : -0.6), ye = up ? y - 3.5 : y + 3.5;
+    s += head(x, y, e.v);
+    if (e.v > 1) s += stem(xs, y + (up ? -0.1 : 0.1), ye);
+    if (e.v >= 8) s += flags(xs, ye, e.v === 8 ? 1 : 2, up);
+    if (e.dot) s += dot(x + 1.2, pos % 2 === 0 ? y - 0.5 : y); // der Punkt steht im Zwischenraum
+  }
+  return staffSVG({ top: -3, bottom: 7.5 }, s, e.p ? 'Note' : 'Pause');
+}
+function valuesQuiz() {
+  const vals = VALUES.filter((x) => x[2] <= opts.valLevel), pitches = whiteRange('e1', 'f2');
+  const keys = vals.map(([key, name]) => ({ key, html: '<span>' + name + '</span>', label: name }));
+  let cur = null, plan = null;
+  el.quizView.hidden = false;
+  // Die Note klingt so lange, wie sie dauert; dazu klickt jeder Schlag, damit man mitzählen kann
+  const hear = () => playNow(plan, () => {});
+  return {
+    layout: 'words', keys,
+    next() {
+      stopPlay();
+      const pick = vals.filter((x) => x[0] !== cur);
+      cur = pick[rnd(pick.length)][0];
+      const v = parseInt(cur, 10), dot = cur.endsWith('.') ? 1 : 0, silent = opts.valRests && Math.random() < 0.4;
+      const e = { v, dot, p: silent ? null : pitches[rnd(pitches.length)] };
+      el.quizView.innerHTML = valueSVG(e);
+      const beats = 4 / v * (dot ? 1.5 : 1);
+      plan = { items: [{ t: 0, len: beats, sound: silent ? '' : 'piano', f: silent ? 0 : freq(e), pos: 0 }], end: Math.max(1, beats), metro: true, silent, beat: 1, perBar: 4 };
+      hear();
+      return { ok: new Set([cur]) };
+    },
+    hear,
+    solved: hear,
+    wait: () => planMs(plan) + 1500,
+    stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
+  };
+}
+function renderValSide() {
+  el.valLevel.querySelectorAll('[data-v]').forEach((b) => { const on = +b.dataset.v === opts.valLevel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  el.valRests.classList.toggle('on', opts.valRests);
+  el.valRests.setAttribute('aria-pressed', opts.valRests ? 'true' : 'false');
+}
+
 export function initLiedGames() {
+  delegate(el.valLevel, '[data-v]', (b) => { opts.valLevel = +b.dataset.v; persistOpts(); renderValSide(); });
+  el.valRests.addEventListener('click', () => { opts.valRests = !opts.valRests; persistOpts(); renderValSide(); });
+  el.valuesGo.addEventListener('click', () => startQuiz(valuesQuiz()));
+  renderValSide();
   // Tipp auf die Notenlinien bei „Note setzen“: Höhe in den Maßen des Bilds
   el.quizView.addEventListener('click', (e) => {
     const svg = onStaff && e.target.closest && e.target.closest('.qstaff');

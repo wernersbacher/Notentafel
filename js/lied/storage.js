@@ -28,6 +28,8 @@ export function cleanLiedSettings(s) {
     quizHi: range ? s.quizHi : 'c3',
     quizSharp: !!s.quizSharp, // Zufallsnoten auch mit ♯
     quizFlat: !!s.quizFlat, // Zufallsnoten auch mit ♭
+    valLevel: [1, 2, 3].includes(s.valLevel) ? s.valLevel : 1, // Notenwerte: leicht, mittel (+ Achtel), schwer (+ 16tel, punktiert)
+    valRests: !!s.valRests, // Notenwerte: auch Pausen
     autoBar: s.autoBar !== false, // Taktstriche nach der Taktart (Standard: an)
     names: !!s.names, // Notennamen unter den Noten
     colors: !!s.colors, // Notenköpfe in den Farben der Töne (wie die Farbnoten)

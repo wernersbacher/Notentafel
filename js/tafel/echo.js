@@ -43,14 +43,19 @@ export function rhythmRow(cells, meter) {
 export function rowPlan(r) {
   const x = S.rows[r];
   if (!x || !x.some(filled)) return null;
+  const ev = [];
+  x.forEach((cell, c) => { if (filled(cell)) ev.push({ d: isBeat(cell) ? dur(cell) : -dur(cell), pos: { r, c } }); });
+  return planOf(ev, meterOf(S.rows, r));
+}
+// Ablaufplan für Längen, die nicht (so) auf der Tafel stehen: [{ d (negativ: Pause), pos }] in der Taktart meter
+export function planOf(ev, meter) {
   const items = [];
   let t = 0;
-  x.forEach((cell, c) => {
-    if (!filled(cell)) return;
-    items.push({ t, len: dur(cell), sound: isBeat(cell) ? games.echo.sound : '', f: ECHO_F, pos: { r, c } });
-    t += dur(cell);
+  ev.forEach(({ d, pos }) => {
+    items.push({ t, len: Math.abs(d), sound: d > 0 ? games.echo.sound : '', f: ECHO_F, pos: pos || null });
+    t += Math.abs(d);
   });
-  return { items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, r)) };
+  return { items, end: t, pulse: games.echo.pulse, ...beatsOf(meter) };
 }
 
 /* ---------- Würfeln, Vorspielen, Auflösen ---------- */

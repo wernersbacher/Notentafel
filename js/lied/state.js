@@ -4,7 +4,7 @@ import { emptySong, cleanSong } from './model.js';
 import { store, loadLiedSettings, saveLiedSettings } from './storage.js';
 
 // Einstellungen nur für Lied: autoBar, names, colors, autoZ, lyrics, check, size, wrap, allTones und die des
-// Tonnamen-Quiz (quizMode, quizLo, quizHi, quizSharp, quizFlat)
+// Tonnamen-Quiz (quizMode, quizLo, quizHi, quizSharp, quizFlat) und der Notenwerte (valLevel, valRests)
 export const opts = loadLiedSettings();
 export const persistOpts = () => saveLiedSettings(opts);
 

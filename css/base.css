@@ -272,6 +272,12 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
   font: 800 1.35rem/1 var(--font-ui);
 }
 .qkeys.words .qkey .ico { width: 1.6rem; height: 1.6rem; }
+/* Viele Antworten (Rhythmus legen, Notenwerte) brechen um; Liednamen in kleinerer Schrift */
+.qkeys.words { flex-wrap: wrap; }
+.qkeys.words .qkey.name { font-size: 1rem; line-height: 1.15; padding: 0 .6rem; text-align: center; }
+/* Bausteine von „Rhythmus legen“: ihre Notenzeichen nebeneinander */
+.qkey .blk { display: flex; align-items: flex-end; }
+.qkey .blk .sym { height: 3.8rem; width: auto; margin: -.4rem -.2rem; }
 /* Ohne Antwortknöpfe (Note setzen: getippt wird auf die Notenlinien) stehen die Knöpfe der Leiste rechts */
 .gamebar.quiz .gctl:only-child { margin-left: auto; }
 .qkey.right { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 4px var(--board), 0 0 0 8px #1e8449; animation: qright .5s ease; }

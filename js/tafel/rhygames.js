@@ -3,18 +3,26 @@
 //                       unten seine Nummer; ein falscher erklingt zum Vergleich.
 //   Vom Blatt klatschen Ein Rhythmus steht auf der Tafel. „Mitklatschen“ zählt ein und gibt den Grundschlag, die Zeichen
 //                       leuchten dabei mit, aber es klingt nichts; „Anhören“ spielt ihn zur Kontrolle.
-import { makeRhythm } from './rhythms.js';
+//   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
+//                       Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur.
+//   Fehler finden       Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn mit einem Fehler in einem Takt. Die Kinder
+//                       tippen den Takt; mit der Lösung wird er rot hinterlegt.
+import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
 import { games, persistGames } from './games.js';
 import { S } from './state.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
-import { rhythmRow, rowPlan, AGAIN_ICON } from './echo.js';
+import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
+import { noteSym, restSym } from './symbols.js';
 import { playNow, stopPlay, planMs } from '../core/player.js';
 import { openGame, endGame, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
 import { delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
 const quiet = () => {};
+const rnd = (n) => Math.floor(Math.random() * n);
+const cellOf = (d) => (d < 0 ? { k: 'r', d: -d } : { k: 'b', d });
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 // n verschiedene Rhythmen (gibt es nicht so viele, z. B. 1 Takt 2/4 leicht, dann weniger)
 function distinctRhythms(n) {
   const seen = new Set(), out = [];
@@ -81,6 +89,101 @@ function startRead() {
   newSheet();
 }
 
+/* ---------- Rhythmus legen ---------- */
+const NAMES = { 4: 'Ganze', 3: 'punktierte Halbe', 2: 'Halbe', 1.5: 'punktierte Viertel', 1: 'Viertel', 0.5: 'Achtel', 0.25: 'Sechzehntel' };
+// Knopf eines Bausteins: seine Zeichen nebeneinander (Achtel mit Fähnchen)
+const blockHTML = (ev) => '<span class="blk">' + ev.map((d) => (d < 0 ? restSym(-d, false) : noteSym(d, false))).join('') + '</span>';
+const blockLabel = (ev) => ev.map((d) => (d < 0 ? NAMES[-d] + ' Pause' : NAMES[d])).join(', ');
+function buildQuiz() {
+  const o = games.echo, blocks = usableBlocks(o);
+  const keys = blocks.map((ev, i) => ({ key: String(i), html: blockHTML(ev), label: blockLabel(ev) }));
+  let target = [], placed = [];
+  // Auf der Tafel steht, was schon gelegt ist; der Schlussstrich kommt erst, wenn alles liegt
+  const show = (done) => {
+    const r = rhythmRow(placed.map(cellOf), o.meter);
+    if (!done) r.pop();
+    S.rows = [r];
+    S.sel = { r: 0, c: 0 };
+    render();
+  };
+  const hear = () => playNow(planOf(target.map((d) => ({ d })), o.meter), quiet);
+  return {
+    layout: 'words', keys,
+    next() {
+      stopPlay();
+      target = makeBlocks(o).flat();
+      placed = [];
+      show(false);
+      hear();
+      return { ok: new Set() };
+    },
+    // Ein Baustein passt, wenn seine Längen die nächsten des Rhythmus sind
+    answer(key) {
+      const ev = blocks[+key];
+      if (!ev || !same(ev, target.slice(placed.length, placed.length + ev.length))) return 'wrong';
+      placed.push(...ev);
+      const done = placed.length === target.length;
+      show(done);
+      return done ? 'done' : 'step';
+    },
+    hear,
+    solved() {
+      placed = target.slice();
+      show(true);
+      const p = rowPlan(0);
+      if (p) playNow(p, markPlaying);
+    },
+    wait: () => { const p = rowPlan(0); return (p ? planMs(p) : 0) + 1400; },
+    stop() { render(); }
+  };
+}
+
+/* ---------- Fehler finden ---------- */
+// Teilt Längen in Takte (kein Baustein ragt über einen Taktstrich)
+function byBar(ev, len) {
+  const bars = [];
+  let t = 0;
+  ev.forEach((d) => { const b = Math.floor(t / len + 1e-9); (bars[b] = bars[b] || []).push(d); t += Math.abs(d); });
+  return bars;
+}
+function fixQuiz() {
+  // Mindestens zwei Takte, sonst gäbe es nichts zu suchen
+  const o = { ...games.echo, bars: Math.max(2, games.echo.bars) }, len = meterParts(o.meter).len;
+  const keys = Array.from({ length: o.bars }, (_, i) => ({ key: String(i), html: 'Takt ' + (i + 1), label: 'Takt ' + (i + 1) }));
+  let played = [], bad = 0, from = 0, count = 0;
+  // Gespielt wird mit dem Fehler; die Zeichen der richtigen Takte leuchten mit, im falschen Takt leuchtet nichts
+  const play = () => playNow(planOf(played, o.meter), markPlaying);
+  return {
+    layout: 'words', keys,
+    next() {
+      stopPlay();
+      const bars = byBar(makeBlocks(o).flat(), len);
+      bad = rnd(bars.length);
+      let other = bars[bad];
+      for (let t = 0; t < 40 && same(other, bars[bad]); t++) other = makeBlocks({ ...o, bars: 1 }).flat();
+      played = [];
+      let c = 0;
+      bars.forEach((bar, b) => {
+        if (b === bad) { from = c; count = bar.length; other.forEach((d) => played.push({ d })); c += bar.length; }
+        else bar.forEach((d) => played.push({ d, pos: { r: 0, c: c++ } }));
+      });
+      S.rows = [rhythmRow(bars.flat().map(cellOf), o.meter)];
+      S.sel = { r: 0, c: 0 };
+      render();
+      play();
+      return { ok: new Set([String(bad)]) };
+    },
+    hear: play,
+    // Der falsche Takt wird rot hinterlegt (bis zum nächsten Zeichnen)
+    solved() {
+      for (let c = from; c < from + count; c++) { const x = el.grid.querySelector('.cell[data-r="0"][data-c="' + c + '"]'); if (x) x.classList.add('qbad'); }
+      play();
+    },
+    wait: () => planMs(planOf(played, o.meter)) + 1400,
+    stop() { render(); }
+  };
+}
+
 /* ---------- Leiste rechts ---------- */
 function renderSide() {
   el.whichCount.querySelectorAll('[data-v]').forEach((b) => {
@@ -93,5 +196,7 @@ export function initRhyGames() {
   delegate(el.whichCount, '[data-v]', (b) => { games.which.count = +b.dataset.v; persistGames(); renderSide(); });
   el.whichGo.addEventListener('click', () => startQuiz(whichQuiz()));
   el.readGo.addEventListener('click', startRead);
+  el.buildGo.addEventListener('click', () => startQuiz(buildQuiz()));
+  el.fixGo.addEventListener('click', () => startQuiz(fixQuiz()));
   renderSide();
 }

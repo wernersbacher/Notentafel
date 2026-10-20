@@ -94,10 +94,11 @@ export function initGamePicks() {
 //   wrong(key)  (optional) nach einer falschen Antwort; sonst klingt der Ton des Knopfs zum Vergleichen
 //   solved() zeigt die Lösung (mit hear() lässt sie sie auch selbst hören); wait: Pause danach in ms (Zahl oder Funktion)
 //   stop()   räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
+//   rekey    die Antwortknöpfe ändern sich mit jeder Frage (next() setzt q.keys neu, z. B. Lied erraten)
 let quiz = null; // { q, cur, timer }
 
 function keysHTML(q) {
-  if (!q.keys || !q.keys.length) return '';
+  if (!q.keys || !q.keys.length) return q.rekey ? '<div class="qkeys ' + q.layout + '"></div>' : ''; // rekey: Platz für die Knöpfe der ersten Frage
   // Klaviatur: jeder Stammton zwei Spalten breit, ein Halbton liegt mittig über der Grenze zweier Stammtöne
   const n = q.keys.filter((k) => !k.black).length;
   const cols = q.layout === 'piano' ? ' style="grid-template-columns:repeat(' + 2 * n + ', minmax(0, 1fr))"' : '';
@@ -121,6 +122,8 @@ function quizNext() {
   el.gameBar.querySelectorAll('.qkey').forEach((b) => b.classList.remove('right', 'wrong'));
   quiz.timer = null;
   quiz.cur = quiz.q.next();
+  const box = quiz.cur && quiz.q.rekey && el.gameBar.querySelector('.qkeys');
+  if (box) box.outerHTML = keysHTML(quiz.q);
   if (!quiz.cur) {
     const done = quiz.q.done;
     endGame();

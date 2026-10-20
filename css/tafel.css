@@ -332,3 +332,5 @@
 .qpair { display: flex; gap: min(8vw, 80px); }
 .qpair .qdot { --d: min(30vh, 190px); transition: transform .15s ease; }
 .qpair .qdot.on { transform: scale(1.12); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line), 0 0 0 12px var(--play-bg); }
+/* Fehler finden: der falsche Takt mit der Lösung rot hinterlegt */
+.cell.qbad { background: rgba(209, 40, 31, .16); border-radius: 10px; }

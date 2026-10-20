@@ -7,7 +7,7 @@ const ids = [
   'panelMel', 'panelRhy', 'btnAutoBar', 'btnAutoZ', 'btnSyl', 'btnToLied', 'btnToLiedSide',
   'melodiesSec', 'melodies',
   'btnLensToggle', 'lensToggleState',
-  'whichCount', 'whichGo', 'readGo', 'meloLen', 'meloSteps', 'meloGo', 'updownGo',
+  'whichCount', 'whichGo', 'readGo', 'buildGo', 'fixGo', 'guessGo', 'guessLen', 'meloLen', 'meloSteps', 'meloGo', 'updownGo',
   'echoMeter', 'echoBars', 'echoNotes', 'echoRests', 'echoSound', 'echoPulse', 'echoGo', 'melQuizHint', 'melQuizMode', 'melQuizAsk', 'melQuizRand', 'melQuizSemis', 'melQuizHigh', 'melQuizGo'
 ];
 export const el = Object.assign(Object.create(core), Object.fromEntries(ids.map((id) => [id, document.getElementById(id)])));

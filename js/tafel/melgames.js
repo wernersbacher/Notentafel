@@ -3,8 +3,11 @@
 //                       Übungstafel. Die Kinder tippen sie unten der Reihe nach, jeder richtige Ton deckt seine Karte auf.
 //   Höher oder tiefer?  Zwei Töne erklingen nacheinander; die Kinder sagen, ob der zweite höher, tiefer oder gleich ist.
 //                       Erst mit der Lösung bekommen die beiden Punkte über der Tafel ihre Farbe.
+//   Lied erraten        Der Anfang eines mitgelieferten Lieds erklingt (die ersten Töne oder die erste Zeile); die Kinder
+//                       wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel.
 import { MAX_ROWS, NOTE_BY } from './config.js';
-import { newRow } from './model.js';
+import { newRow, isNote, dur } from './model.js';
+import { MELODIES, melodyRows } from './melodies.js';
 import { makeMelody } from './theory.js';
 import { pool } from './quiz.js';
 import { games, persistGames } from './games.js';
@@ -12,7 +15,7 @@ import { S } from './state.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
 import { colorStyle, noteLabel } from './symbols.js';
-import { previewTone, stopPlay } from '../core/player.js';
+import { previewTone, stopPlay, playNow, planMs } from '../core/player.js';
 import { settings } from '../core/settings.js';
 import { startQuiz, playTones } from '../core/game.js';
 import { delegate } from '../core/ui.js';
@@ -111,6 +114,65 @@ function updownQuiz() {
   };
 }
 
+/* ---------- Lied erraten ---------- */
+// Der Anfang eines Lieds: die erste Zeile, bei „short“ nur bis zum fünften Ton (Pausen am Anfang zählen nicht)
+function openingOf(m, short) {
+  const row = melodyRows(m)[0].filter(Boolean), out = [];
+  let n = 0;
+  for (const c of row) {
+    if (short && n >= 5) break;
+    out.push({ ...c });
+    if (isNote(c)) n++;
+  }
+  return out;
+}
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function guessQuiz() {
+  let cells = [], last = -1, solved = false;
+  const plan = () => {
+    const items = [];
+    let t = 0;
+    cells.forEach((c, i) => {
+      items.push({ t, len: dur(c), sound: isNote(c) ? 'bell' : '', f: isNote(c) ? NOTE_BY[c.n].f : 0, pos: { r: 0, c: i } });
+      t += dur(c);
+    });
+    return { items, end: t, bare: true };
+  };
+  // Vor der Lösung ist die Tafel leer, danach leuchten die Punkte mit
+  const hear = () => playNow(plan(), solved ? markPlaying : () => {});
+  const q = {
+    layout: 'words', rekey: true, keys: [],
+    next() {
+      stopPlay();
+      let k = rnd(MELODIES.length);
+      if (k === last) k = (k + 1) % MELODIES.length;
+      last = k;
+      const others = shuffle(MELODIES.map((_, i) => i).filter((i) => i !== k)).slice(0, 2);
+      q.keys = shuffle([k, ...others]).map((i) => ({ key: String(i), html: '<span>' + MELODIES[i].name + '</span>', label: MELODIES[i].name, cls: 'name' }));
+      cells = openingOf(MELODIES[k], games.guess.len === 'short');
+      solved = false;
+      S.rows = [newRow(false)];
+      S.sel = { r: 0, c: 0 };
+      render();
+      hear();
+      return { ok: new Set([String(k)]) };
+    },
+    hear,
+    solved() {
+      solved = true;
+      const row = newRow(false);
+      cells.forEach((c) => row.push({ ...c }));
+      row.meter = MELODIES[last].meter;
+      S.rows = [row];
+      render();
+      hear();
+    },
+    wait: () => planMs(plan()) + 1500,
+    stop() { render(); }
+  };
+  return q;
+}
+
 /* ---------- Leiste rechts ---------- */
 function pressed(b, on) {
   b.classList.toggle('on', on);
@@ -119,11 +181,14 @@ function pressed(b, on) {
 function renderSide() {
   el.meloLen.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === games.melo.len));
   el.meloSteps.querySelectorAll('[data-v]').forEach((b) => pressed(b, (b.dataset.v === 'steps') === games.melo.steps));
+  el.guessLen.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === games.guess.len));
 }
 export function initMelGames() {
   delegate(el.meloLen, '[data-v]', (b) => { games.melo.len = +b.dataset.v; persistGames(); renderSide(); });
   delegate(el.meloSteps, '[data-v]', (b) => { games.melo.steps = b.dataset.v === 'steps'; persistGames(); renderSide(); });
   el.meloGo.addEventListener('click', () => startQuiz(meloQuiz()));
   el.updownGo.addEventListener('click', () => startQuiz(updownQuiz()));
+  delegate(el.guessLen, '[data-v]', (b) => { games.guess.len = b.dataset.v; persistGames(); renderSide(); });
+  el.guessGo.addEventListener('click', () => startQuiz(guessQuiz()));
   renderSide();
 }

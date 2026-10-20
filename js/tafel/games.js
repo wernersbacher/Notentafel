@@ -1,6 +1,6 @@
 // Einstellungen von „Üben und Spielen“ auf der Tafel. Rhythmus: echo gilt für alle Rhythmus-Spiele (Rhythmus-Echo,
-// Welcher war's?, Vom Blatt klatschen), dazu which. Farbnoten: quiz (Tonnamen-Quiz; die Töne gelten auch für
-// Melodie-Echo und Höher oder tiefer?), dazu melo (Melodie-Echo).
+// Welcher war's?, Vom Blatt klatschen, Rhythmus legen, Fehler finden), dazu which. Farbnoten: quiz (Tonnamen-Quiz;
+// die Töne gelten auch für Melodie-Echo und Höher oder tiefer?), dazu melo (Melodie-Echo) und guess (Lied erraten).
 // Eigener Speicherplatz, damit die Einstellungen der Tafel selbst unberührt bleiben.
 import { readJSON, writeJSON } from '../core/store.js';
 
@@ -10,9 +10,10 @@ const objOf = (v) => (v && typeof v === 'object' ? v : {});
 
 export function cleanGames(s) {
   s = objOf(s);
-  const e = objOf(s.echo), q = objOf(s.quiz), w = objOf(s.which), m = objOf(s.melo);
+  const e = objOf(s.echo), q = objOf(s.quiz), w = objOf(s.which), m = objOf(s.melo), g = objOf(s.guess);
   return {
     which: { count: pickOf(w.count, [2, 3, 4], 3) }, // Welcher war's?: so viele Rhythmen zur Auswahl
+    guess: { len: pickOf(g.len, ['short', 'row'], 'row') }, // Lied erraten: die ersten Töne oder die erste Zeile
     melo: {
       len: pickOf(m.len, [2, 3, 4, 5], 3), // Melodie-Echo: so viele Töne
       steps: m.steps !== false // nur Nachbartöne (Schritte), sonst auch Sprünge

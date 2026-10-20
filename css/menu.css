@@ -18,7 +18,13 @@
 /* Die Seitenleiste zeigt entweder die Liedersammlung oder die Einstellungen */
 .drawer[data-mode="songs"] [data-part="settings"], .drawer[data-mode="settings"] [data-part="songs"] { display: none !important; }
 .sizes.uiscale { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 8px; }
-/* Bekannte Lieder: nach Thema oder alphabetisch */
+/* Bekannte Lieder: Suchfeld, darunter nach Thema oder alphabetisch */
+.songsearch {
+  width: 100%; min-height: 48px; margin-bottom: 8px; padding: 0 .75rem;
+  font: 700 16px var(--font-ui); color: var(--fg); background: var(--btn);
+  border: 2px solid var(--btn-line); border-radius: 12px;
+  -webkit-user-select: text; user-select: text;
+}
 .sizes.sortrow { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 10px; }
 /* Größe: − Regler + und Feld für die Prozentzahl */
 .uirow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px auto; gap: 8px; align-items: center; }

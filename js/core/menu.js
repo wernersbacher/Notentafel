@@ -89,6 +89,22 @@ function renderSort() {
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 }
+// Suche in den bekannten Liedern: zeigt nur Lieder, deren Name den Suchtext enthält (ohne Groß/klein, Umlaute und
+// Satzzeichen, „hanschen“ findet „Hänschen klein“); Überschriften ohne Treffer verschwinden mit
+const fold = (t) => t.toLocaleLowerCase('de').replace(/ß/g, 'ss').normalize('NFD').replace(/[^a-z0-9]+/g, '');
+function searchSongs(input) {
+  const sec = input.closest('section'), q = fold(input.value);
+  let head = null, found = 0;
+  sec.querySelectorAll('.songs > li').forEach((li) => {
+    if (li.classList.contains('sgroup')) { head = li; li.hidden = true; return; }
+    li.hidden = !fold(li.querySelector('.name').textContent).includes(q);
+    if (li.hidden) return;
+    found++;
+    if (head) head.hidden = false;
+  });
+  sec.querySelector('[data-none]').hidden = found > 0;
+}
+const searchAll = () => el.drawer.querySelectorAll('.songsearch').forEach(searchSongs);
 function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
 
 /* ---------- Öffnen und schließen ---------- */
@@ -114,7 +130,9 @@ function openMenu(mode) {
     renderAuto();
   }
   el.drawer.querySelectorAll('[data-area]').forEach((sec) => { sec.hidden = true; });
+  el.drawer.querySelectorAll('.songsearch').forEach((i) => { i.value = ''; });
   if (a.menu) a.menu.open();
+  searchAll();
   renderSort();
   renderToggle(WAKE);
   el.tempo.value = settings.tempo;
@@ -127,6 +145,7 @@ function openMenu(mode) {
 export function closeMenu() {
   disarm();
   el.songName.blur();
+  el.drawer.querySelectorAll('.songsearch').forEach((i) => i.blur());
   el.drawer.classList.remove('open');
   el.drawer.inert = true;
   el.backdrop.hidden = true;
@@ -171,6 +190,11 @@ export function initMenu() {
     persistSettings();
     renderSort();
     if (current().menu) current().menu.open();
+    searchAll();
+  });
+  el.drawer.querySelectorAll('.songsearch').forEach((input) => {
+    input.addEventListener('input', () => searchSongs(input));
+    onEnter(input, () => input.blur()); // Tastatur zu, die Treffer bleiben
   });
   toggleSetting(WAKE, updateWake);
   // Größe der Oberfläche: skaliert die ganze Seite (CSS zoom), Tippen und Ziehen bleiben dabei genau

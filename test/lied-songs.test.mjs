@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SONGS, songOf } from '../js/lied/songs.js';
-import { cleanSong, ticks, measureTicks, barsAfter } from '../js/lied/model.js';
+import { cleanSong, ticks, measureTicks, barsAfter, hasLyrics } from '../js/lied/model.js';
 
 const evOf = (notes) => songOf({ name: 'x', meter: '4/4', notes }).song.ev;
 
@@ -37,6 +37,22 @@ test('songOf: Name, Taktart und Auftakt', () => {
   assert.deepEqual(songOf({ name: 'A', meter: '3/4', pickup: 8, notes: 'c1' }),
     { name: 'A', song: { meter: '3/4', pickup: 8, key: 0, ev: [{ p: 'c1', v: 4 }] } });
   assert.equal(songOf({ name: 'B', meter: '4/4', notes: 'c1' }).song.pickup, 0);
+});
+
+test('songOf: Liedtext je Zeile, ohne Pausen und übergebundene Noten, „_“ lässt aus', () => {
+  const { ev } = songOf({ name: 'x', meter: '4/4', notes: 'c1 r d1:2~ / d1:4 e1 f1:2', lyrics: 'Al- le / _ Ent-' }).song;
+  assert.deepEqual(ev.map((e) => e.ly), ['Al-', undefined, 'le', undefined, undefined, 'Ent-']);
+});
+
+test('songOf: Liedtext muss zu den Noten passen', () => {
+  const def = (lyrics) => ({ name: 'x', meter: '4/4', notes: 'c1 d1 / e1 f1', lyrics });
+  assert.throws(() => songOf(def('a b c / d')), /Zeile 1: 3 Silben für 2 Noten/);
+  assert.throws(() => songOf(def('a b c d')), /1 Zeilen, die Noten 2/);
+  assert.throws(() => songOf(def('a b / c Siebzehnbuchstaben')), /zu lang/);
+});
+
+test('alle bekannten Lieder haben die erste Strophe als Liedtext', () => {
+  for (const def of SONGS) assert.ok(hasLyrics(songOf(def).song), def.name);
 });
 
 test('songOf: unbekannte Token werfen einen Fehler mit dem Token', () => {

@@ -4,6 +4,7 @@ import { noteIcon, dotIcon, restIcon } from './glyphs.js';
 import { L, opts } from './state.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
+import { breakJoins } from '../core/shell.js';
 
 const VALUE_NAMES = { 1: 'Ganze', 2: 'Halbe', 4: 'Viertel', 8: 'Achtel', 16: 'Sechzehntel' };
 // Auftakte in Ticks als Notenwert (mit Punkt) für Symbol und Namen
@@ -74,6 +75,7 @@ export function renderSidebar() {
   pressed(el.liedShowNames, opts.names);
   pressed(el.liedShowColors, opts.colors);
   pressed(el.liedShowCounts, opts.autoZ);
+  pressed(el.liedShowLyrics, opts.lyrics);
   // Takt- und Schlussstrich hinter dem Zeichen vor der Markierung; Taktstriche von Hand nur ohne Automatik
   const prev = ev[L.sel - 1], bar = prev ? prev.bar : 0;
   el.liedBar.disabled = !prev || opts.autoBar;
@@ -106,5 +108,6 @@ export function renderSidebar() {
   el.btnDel.disabled = !cur;
   el.btnGap.disabled = !cur && L.sel === 0;
   el.btnBreak.disabled = L.sel === 0;
+  breakJoins(!!(ev[L.sel - 1] && ev[L.sel - 1].brk));
   el.btnUndo.disabled = L.hist.length === 0;
 }

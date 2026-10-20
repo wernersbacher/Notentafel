@@ -53,6 +53,7 @@ function initControls() {
   el.liedRepEnd.addEventListener('click', () => act.toggleRepeat('end'));
   el.liedVolta.addEventListener('click', act.toggleVolta);
   el.liedShowCounts.addEventListener('click', act.toggleAutoZ);
+  el.liedShowLyrics.addEventListener('click', act.toggleLyrics);
   el.btnAutoBarToggle.addEventListener('click', () => { act.toggleAutoBar(); renderToggle(AUTOBAR); });
   // Taktstriche automatisch oder von Hand, auch in der Leiste (Block 1)
   const setAutoBar = (on) => { if (opts.autoBar !== on) { act.toggleAutoBar(); renderToggle(AUTOBAR); } };
@@ -104,7 +105,7 @@ function exportMusicXML() {
 // Druckansicht füllen und den Druckdialog öffnen (dort „Als PDF speichern“)
 function printSheet() {
   if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
-  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, wrap: opts.wrap, size: opts.size });
+  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, wrap: opts.wrap, size: opts.size });
   closeMenu();
   window.print();
 }

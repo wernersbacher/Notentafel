@@ -77,14 +77,31 @@ test('widestMeasure: breitester Takt samt Zeilenanfang; mit dieser Breite wird n
 
 test('höchstens fünf Takte in einer Zeile, auch wenn mehr passen würden', () => {
   const song = { meter: '2/4', ev: Array.from({ length: 24 }, () => n('c1')) };
-  const lay = layout(song, { autoBar: true, width: 400 });
-  assert.deepEqual(lines(lay), [[0, 10], [10, 20], [20, 24]]);
+  // Beim Schreiben am Ende wird die letzte Zeile einfach gefüllt, sonst werden die Stücke gleich lang
+  assert.deepEqual(lines(layout(song, { autoBar: true, width: 400, growing: true })), [[0, 10], [10, 20], [20, 24]]);
+  assert.deepEqual(lines(layout(song, { autoBar: true, width: 400 })), [[0, 8], [8, 16], [16, 24]]);
+});
+
+test('eine zu lange Zeile wird in gleich lange Stücke geteilt, nicht in drei Takte und einen', () => {
+  const song = { meter: '4/4', ev: [...quarters(4).map((e, i) => (i === 15 ? { ...e, brk: 1 } : e)), ...quarters(1)] };
+  const w = layout({ meter: '4/4', ev: quarters(3) }, { autoBar: true }).systems[0].width + 1;
+  assert.deepEqual(lines(layout(song, { autoBar: true, width: w })), [[0, 8], [8, 16], [16, 20]]);
+});
+
+test('mit Liedtext rücken die Noten so weit auseinander, dass die Silben nicht zusammenstoßen', () => {
+  const ev = [n('c1', 8, { ly: 'Schwänz-' }), n('d1', 8, { ly: 'chen' }), n('e1', 8, { ly: 'in' })];
+  const xs = (lyrics) => layout({ meter: '', ev }, { lyrics }).systems[0].items.map((it) => it.x);
+  const [a, b, c] = xs(true);
+  assert.ok(b - a > xs(false)[1] - xs(false)[0]);
+  assert.ok(b - a >= (6 + 4) * 0.74 / 2 + 1.3 - 1e-9, 'Platz für beide Hälften und den Bindestrich');
+  assert.ok(c - b >= (4 + 2) * 0.74 / 2 + 0.7 - 1e-9);
 });
 
 test('ohne Taktart: Umbruch nach je einer Ganzen, die Noten bleiben groß', () => {
   const song = { meter: '', ev: quarters(12) };
   const lay = layout(song, { autoBar: true, width: 400 });
-  assert.deepEqual(lines(lay), [[0, 20], [20, 40], [40, 48]]);
+  assert.deepEqual(lines(layout(song, { autoBar: true, width: 400, growing: true })), [[0, 20], [20, 40], [40, 48]]);
+  assert.deepEqual(lines(lay), [[0, 16], [16, 32], [32, 48]]);
   assert.ok(lay.systems.every((s) => s.bars.length === 0), 'ohne Taktart keine Striche');
   // Der breiteste „Takt“ ist eine Ganze, nicht das ganze Lied
   assert.ok(widestMeasure(song, { autoBar: true }) < widestMeasure({ meter: '4/4', ev: quarters(2) }, { autoBar: true }));

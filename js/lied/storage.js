@@ -24,6 +24,7 @@ export function cleanLiedSettings(s) {
     names: !!s.names, // Notennamen unter den Noten
     colors: !!s.colors, // Notenköpfe in den Farben der Töne (wie die Farbnoten)
     autoZ: !!s.autoZ, // Zählzeiten nach der Taktart
+    lyrics: s.lyrics !== false, // Liedtext unter den Noten (Standard: an)
     check: s.check !== false, // Takte prüfen (Standard: an)
     size: [1, 2, 3].includes(s.size) ? s.size : 1, // Notengröße: normal, groß, sehr groß
     wrap: s.wrap !== false, // Zeilen automatisch umbrechen (Standard: an)

@@ -7,6 +7,7 @@ import { colorStyle, noteLabel, ICONS } from './symbols.js';
 import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
+import { breakJoins } from '../core/shell.js';
 
 const pressed = (btn, on) => {
   btn.classList.toggle('on', on);
@@ -94,6 +95,7 @@ export function renderSidebar() {
   el.btnDel.disabled = !filled(cur);
   el.btnGap.disabled = !canCloseGap(S.rows, S.sel);
   el.btnBreak.disabled = S.rows.length >= MAX_ROWS && !canStepDown(S.rows, S.sel);
+  breakJoins(false);
   el.btnUndo.disabled = S.hist.length === 0;
   el.btnAddRow.disabled = S.rows.length >= MAX_ROWS;
   el.btnDelRow.disabled = S.rows.length <= 1;

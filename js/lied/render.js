@@ -26,11 +26,13 @@ let folded = new Set();
 export const isFolded = (i) => folded.has(i);
 
 export function renderSheet() {
-  const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check };
+  // Schreibt man gerade am Ende, bleibt die letzte Zeile beim Umbrechen einfach gefüllt (growing in layout.js)
+  const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check, lyrics: opts.lyrics };
+  const growing = L.last != null && L.sel >= L.song.ev.length;
   let lay, sp;
   if (opts.wrap) {
     sp = Math.max(8, Math.min(WRAP[opts.size], avail / (widestMeasure(L.song, o) + NUM_W + 0.2)));
-    lay = layout(L.song, { ...o, width: avail / sp - 0.1 - NUM_W });
+    lay = layout(L.song, { ...o, width: avail / sp - 0.1 - NUM_W, growing });
   } else {
     lay = layout(L.song, o);
     const [min, max] = SP[opts.size];
@@ -47,7 +49,7 @@ export function renderSheet() {
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   const pos = playingPos();
   const { svg, height } = sheetSVG(L.song, lay, {
-    width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ,
+    width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics,
     target: last, playing: pos == null ? -1 : pos, nums: true
   });
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +

@@ -3,6 +3,7 @@ import { isNote, noteName, parsePitch, accOf, keySignature, hasLyrics } from './
 import { toneColor } from '../core/colors.js';
 import { yOf, head, stem, ledger, dot, flags, beam, accidental, rest, clef, meter, barline, volta, staffLines } from './glyphs.js';
 import { tie } from './glyphs.js';
+import { lyricText, lyricWidth } from './layout.js';
 
 const f = (n) => +n.toFixed(3);
 const NAMES_H = 2.5; // Platz für die Notennamen unter dem System
@@ -42,14 +43,15 @@ export const NUM_W = 2.6;
 // Eine Zeile ist eingeklappt, wenn eines ihrer Ereignisse fd trägt (so bleibt sie es auch, wenn neu umbrochen wird)
 export const foldedLine = (ev, s) => ev.slice(s.first, s.end).some((e) => e.fd);
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, target, playing, fit, nums }.
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, lyrics, target, playing, fit,
+// nums }. lyrics: false blendet den Liedtext aus (layout() dann auch ohne lyrics rechnen lassen).
 // fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
 // nums: Vor jedem System steht seine Nummer (NUM_W breit, das System rückt so weit nach rechts); ein Tipp darauf klappt
 // es ein. Eingeklappt behält es seine Höhe, zu sehen ist nur die Nummer als Knopf und eine feine Linie.
 // Liefert { svg, height, parts } – height in sp, damit der Aufrufer die Größe setzen kann; parts sind die Systeme
 // einzeln ({ svg, height }, jedes ab seiner Oberkante), z. B. für den Druck.
 export function sheetSVG(song, lay, o) {
-  const ev = song.ev, N = o.nums ? NUM_W : 0, W = o.width - N, lyrics = hasLyrics(song);
+  const ev = song.ev, N = o.nums ? NUM_W : 0, W = o.width - N, lyrics = o.lyrics !== false && hasLyrics(song);
   let y = 0, out = '';
   const parts = [];
   lay.systems.forEach((s, si) => {
@@ -57,13 +59,36 @@ export function sheetSVG(song, lay, o) {
     const zz = o.counts ? COUNTS_H : 0, ly = lyrics ? LYRICS_H : 0;
     const top = y + s.top, bottom = s.bottom + zz + ly + (o.names ? NAMES_H : 0), h = s.top + 4 + bottom;
     const fold = N > 0 && foldedLine(ev, s);
-    let g = fold ? foldedSVG(s, W, bottom) : systemSVG(song, lay, s, o, W, bottom, zz);
+    let g = fold ? foldedSVG(s, W, bottom) : systemSVG(song, lay, s, o, W, bottom, zz, lyrics);
     if (N) g = '<g transform="translate(' + N + ' 0)">' + g + '</g>' + numSVG(s, si, W + N, bottom, fold);
     out += '<g transform="translate(0 ' + f(top) + ')">' + g + '</g>';
     parts.push({ svg: '<g transform="translate(0 ' + f(s.top) + ')">' + g + '</g>', height: h });
     y += h + GAP;
   });
   return { svg: out, height: y, parts };
+}
+
+// Zwischen den Silben eines Worts steht der Bindestrich in der Mitte (am Zeilenende gleich hinter der Silbe).
+// Klingt eine Silbe über weitere Noten ohne eigene Silbe weiter, zeigt ein Strich auf der Grundlinie, wie lange.
+function lyricMarks(ev, s, y) {
+  let g = '';
+  const its = s.items, half = (it) => lyricWidth(ev[it.i].ly) / 2;
+  its.forEach((it, j) => {
+    const ly = ev[it.i].ly;
+    if (!ly) return;
+    const right = it.x + half(it);
+    if (ly.length > 1 && ly.endsWith('-')) {
+      const next = its.slice(j + 1).find((n) => ev[n.i].ly);
+      const x = next ? (right + next.x - half(next)) / 2 : right + 0.6;
+      g += '<text class="ly" x="' + f(x) + '" y="' + f(y) + '">-</text>';
+      return;
+    }
+    let k = j;
+    while (k + 1 < its.length && isNote(ev[its[k + 1].i]) && !ev[its[k + 1].i].ly) k++;
+    const x2 = its[k].x + 0.65;
+    if (k > j && x2 - right > 0.6) g += '<rect class="lyx" x="' + f(right + 0.2) + '" y="' + f(y - 0.08) + '" width="' + f(x2 - right - 0.2) + '" height="0.1"/>';
+  });
+  return g;
 }
 
 // Zeilennummer vor dem System; die ganze Spalte davor ist die Tippfläche zum Einklappen (data-fold: first,end).
@@ -90,7 +115,7 @@ function foldedSVG(s, W, bottom) {
 }
 
 // Ein System mit allem, was darin steht (in Linienabständen ab seiner obersten Notenlinie)
-function systemSVG(song, lay, s, o, W, bottom, zz) {
+function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
   const ev = song.ev;
   let g = '';
   // Antippen neben die Zeichen markiert den Platz am Ende dieser Zeile
@@ -126,10 +151,11 @@ function systemSVG(song, lay, s, o, W, bottom, zz) {
     g += '<g class="' + cls + '" data-i="' + it.i + '"><g class="nh">' + itemSVG(it, e, o.colors ? song.key || 0 : null) + '</g>';
     // Zählzeiten direkt unter dem System, darunter die Notennamen
     if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
-    if (e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(e.ly) + '</text>';
+    if (lyrics && e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(lyricText(e.ly)) + '</text>';
     if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
     g += '</g>';
   });
+  if (lyrics) g += lyricMarks(ev, s, 4 + s.bottom + zz + 1.35);
   s.beams.forEach((b) => {
     // Höhe auf der Linie des Balkens; die zweiten Balken liegen parallel dazu, zum Kopf hin versetzt
     const y1 = yOf(b.end1), y2 = yOf(b.end2), d = b.up ? 0.75 : -0.75;

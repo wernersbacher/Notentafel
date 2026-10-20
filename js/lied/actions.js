@@ -2,7 +2,7 @@
 import { toast } from '../core/ui.js';
 import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
-import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, KEY_MIN, KEY_MAX } from './model.js';
+import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, hasLyrics, KEY_MIN, KEY_MAX } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
 import { render, renderSheet, commit, lineStartAfter, scrollTop, lastLineStart } from './render.js';
 
@@ -169,7 +169,12 @@ export function swap(i, j) {
 // Note, die eine Silbe bekommen kann: die markierte, wenn sie nicht nur eine übergebundene Fortsetzung ist
 export const lyricTarget = () => { const e = cur(); return isNote(e) && !tiedFrom(ev()[L.sel - 1], e) ? e : null; };
 // Beim Schreiben einer Silbe wird nur einmal (beim Hineintippen ins Feld) für „Rückgängig“ gemerkt
-export function beginLyric() { if (lyricTarget()) snap(); }
+// Ist der Liedtext ausgeblendet, kommt er dabei wieder, damit man sieht, was man schreibt
+export function beginLyric() {
+  if (!lyricTarget()) return;
+  snap();
+  if (!opts.lyrics) { opts.lyrics = true; persistOpts(); render(); }
+}
 export function setLyric(text) {
   const e = lyricTarget();
   if (!e) return;
@@ -254,6 +259,12 @@ export function toggleAutoBar() {
   opts.autoBar = !opts.autoBar;
   persistOpts();
   if (opts.autoBar && !L.song.meter) toast('Wähle zuerst eine Taktart, dann kommen die Taktstriche von selbst.');
+  render();
+}
+export function toggleLyrics() {
+  opts.lyrics = !opts.lyrics;
+  persistOpts();
+  if (opts.lyrics && !hasLyrics(L.song)) toast('Das Lied hat noch keinen Liedtext. Silben schreibt man unter ④ Liedtext.');
   render();
 }
 export function toggleAutoZ() {

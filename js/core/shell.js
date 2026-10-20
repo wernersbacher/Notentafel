@@ -40,6 +40,19 @@ function show(a) {
   el.btnSaveSide.hidden = !a.songs;
   document.getElementById('side').dataset.area = a.id;
 }
+// Der Knopf „Umbruch“ wird zu „verbinden“, wenn die Markierung am Anfang einer Zeile steht, die man selbst umbrochen
+// hat: Dann nimmt er den Umbruch wieder weg und die Zeile rückt an die vorige an.
+const BREAK = { title: 'Ab der Markierung in einer neuen Zeile weiterschreiben', small: 'Umbruch', path: 'M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4' };
+const JOIN = { title: 'Den Umbruch vor der Markierung entfernen: Die Zeile rückt an die vorige an', small: 'verbinden', path: 'M5 19v-6a3 3 0 0 1 3-3h10M14 6l4 4-4 4' };
+export function breakJoins(join) {
+  const t = join ? JOIN : BREAK, b = el.btnBreak;
+  if (b.dataset.join === String(join)) return;
+  b.dataset.join = String(join);
+  b.title = t.title;
+  b.querySelector('.small').textContent = t.small;
+  b.querySelector('path').setAttribute('d', t.path);
+}
+
 // Übergibt data an den Bereich id und wechselt dorthin (z. B. eine Melodie als Lied). Was data ist, vereinbaren die
 // beiden Bereiche; der Kern reicht es nur weiter. false, wenn es den Bereich nicht gibt oder er nichts annimmt.
 export function handOver(id, data) {

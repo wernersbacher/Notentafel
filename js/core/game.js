@@ -38,6 +38,8 @@ export const GAME_ICONS = {
   close: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>',
   ear: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   eye: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
+  check: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5L19.5 6.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5.5l6.5 6.5-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   dice: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor"/></svg>'
 };
 // Runder Knopf der Leiste mit Zeichen und kleiner Schrift darunter; act steht in data-act
@@ -91,11 +93,45 @@ export function initGamePicks() {
 //   answer(key)  (optional) prüft selbst: 'done' gelöst, 'step' richtig und es geht weiter (Melodie-Echo), 'wrong';
 //            sonst ist key richtig, wenn er in ok steht
 //   hear()   (optional) lässt die Frage noch einmal hören; sonst klingt der Ton f
-//   wrong(key)  (optional) nach einer falschen Antwort; sonst klingt der Ton des Knopfs zum Vergleichen
-//   solved() zeigt die Lösung (mit hear() lässt sie sie auch selbst hören); wait: Pause danach in ms (Zahl oder Funktion)
+//   wrong(key)  (optional) nach einer falschen Antwort, z. B. sie auf der Tafel rot markieren. Dabei klingt nichts:
+//            zu hören ist nur, was richtig ist
+//   solved() zeigt die Lösung (mit hear() lässt sie sie auch selbst hören)
+//   replay(key)  (optional) Tipp auf eine Antwort, wenn die Frage gelöst ist (z. B. diesen Rhythmus abspielen); sonst
+//            klingt der Ton des Knopfs, falls er einen hat
+//   row(r)   (optional, Tafel) Tipp auf die Zeilennummer r, wenn die Frage gelöst ist; die Zeile klappt dann nie ein
 //   stop()   räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
 //   rekey    die Antwortknöpfe ändern sich mit jeder Frage (next() setzt q.keys neu, z. B. Lied erraten)
-let quiz = null; // { q, cur, timer }
+// Rückmeldung: Eine richtige Antwort wird grün, eine falsche rot (sie bleibt es bis zur nächsten Frage), über der Leiste
+// steht dazu ein Hinweis. Ist die Frage gelöst (richtig getippt oder „Lösung“), geht es erst mit „Weiter“ weiter.
+let quiz = null; // { q, cur, solved: false, 'right' (richtig getippt) oder 'shown' (Lösung gezeigt) }
+
+const FEED = {
+  right: ['check', 'Richtig!'],
+  wrong: ['close', 'Leider falsch – probier es nochmal'],
+  shown: ['eye', 'Das ist die Lösung']
+};
+// Hinweis über der Leiste (kind null: keiner); er springt bei jeder Antwort neu auf
+function feedback(kind) {
+  const f = el.gameBar.querySelector('.gfeed');
+  if (!f) return;
+  f.hidden = !kind;
+  f.className = 'gfeed';
+  if (!kind) return;
+  f.innerHTML = GAME_ICONS[FEED[kind][0]] + '<span>' + FEED[kind][1] + '</span>';
+  void f.offsetWidth; // Aufspringen neu starten
+  f.classList.add(kind);
+}
+// Ungelöst „Lösung“, gelöst „Weiter“ (dunkel, damit man ihn findet)
+function setMain(solved) {
+  const b = el.gameBar.querySelector('.gbtn[data-act="solve"], .gbtn[data-act="next"]');
+  if (b) b.outerHTML = solved ? gameBtn('next', GAME_ICONS.next, 'Weiter', 'main') : gameBtn('solve', GAME_ICONS.eye, 'Lösung');
+}
+// Tipp auf eine Zeilennummer der Tafel: true, wenn das Spiel ihn übernimmt (dann klappt die Zeile nicht ein)
+export function quizRow(r) {
+  if (!quiz || !quiz.q.row) return false;
+  if (quiz.solved) quiz.q.row(r);
+  return true;
+}
 
 function keysHTML(q) {
   if (!q.keys || !q.keys.length) return q.rekey ? '<div class="qkeys ' + q.layout + '"></div>' : ''; // rekey: Platz für die Knöpfe der ersten Frage
@@ -109,18 +145,21 @@ function keysHTML(q) {
   }).join('') + '</div>';
 }
 export function startQuiz(q) {
-  const html = keysHTML(q) + '<div class="gctl">' + gameBtn('hear', GAME_ICONS.ear, 'anhören') +
+  const html = '<div class="gfeed" role="status" hidden></div>' + keysHTML(q) + '<div class="gctl">' + gameBtn('hear', GAME_ICONS.ear, 'anhören') +
     gameBtn('solve', GAME_ICONS.eye, 'Lösung') + gameBtn('end', GAME_ICONS.close, 'Ende') + '</div>';
   openGame('quiz', html, {
     tap: quizTap,
-    stop() { clearTimeout(quiz.timer); stopPlay(); const x = quiz; quiz = null; x.q.stop(); }
+    stop() { stopPlay(); el.gameBar.parentNode.classList.remove('rowplay'); const x = quiz; quiz = null; x.q.stop(); }
   });
-  quiz = { q, cur: null, timer: null };
+  quiz = { q, cur: null, solved: false };
   quizNext();
 }
 function quizNext() {
-  el.gameBar.querySelectorAll('.qkey').forEach((b) => b.classList.remove('right', 'wrong'));
-  quiz.timer = null;
+  el.gameBar.querySelectorAll('.qkey').forEach((b) => b.classList.remove('right', 'wrong', 'shown'));
+  quiz.solved = false;
+  el.gameBar.parentNode.classList.remove('rowplay');
+  feedback(null);
+  setMain(false);
   quiz.cur = quiz.q.next();
   const box = quiz.cur && quiz.q.rekey && el.gameBar.querySelector('.qkeys');
   if (box) box.outerHTML = keysHTML(quiz.q);
@@ -134,32 +173,42 @@ function hear() {
   if (quiz.q.hear) quiz.q.hear();
   else previewTone(quiz.cur.f, quiz.q.sound, 0.9);
 }
-// Lösung zeigen und nach einer Pause weiter (die richtigen Knöpfe leuchten so lange)
-function solve(wait) {
+// Lösung zeigen: richtig getippt (right) werden die richtigen Knöpfe grün, sonst grün umrandet. Es bleibt so bis „Weiter“
+function solve(right) {
+  quiz.solved = right ? 'right' : 'shown';
   quiz.q.solved();
-  el.gameBar.querySelectorAll('.qkey').forEach((b) => { if (quiz.cur.ok.has(b.dataset.key)) b.classList.add('right'); });
+  el.gameBar.querySelectorAll('.qkey').forEach((b) => { if (quiz.cur.ok.has(b.dataset.key)) b.classList.add(quiz.solved); });
   if (!quiz.q.hear) previewTone(quiz.cur.f, quiz.q.sound, 0.9);
-  const w = quiz.q.wait;
-  quiz.timer = setTimeout(quizNext, typeof w === 'function' ? w() : w || wait);
+  feedback(quiz.solved);
+  setMain(true);
+  if (quiz.q.row) el.gameBar.parentNode.classList.add('rowplay'); // die Zeilennummern spielen jetzt ab
 }
 function answer(key, b) {
-  if (!quiz || !quiz.cur || quiz.timer) return; // keine Frage, oder die Lösung steht gerade da
+  if (!quiz || !quiz.cur) return;
+  // Gelöst: ein Tipp auf eine Antwort lässt sie hören
+  if (quiz.solved) {
+    if (quiz.q.replay) { quiz.q.replay(key); return; }
+    const k = (quiz.q.keys || []).find((x) => String(x.key) === key);
+    if (k && k.f) previewTone(k.f, quiz.q.sound, 0.6);
+    return;
+  }
   const r = quiz.q.answer ? quiz.q.answer(key) : quiz.cur.ok.has(key) ? 'done' : 'wrong';
-  if (r === 'done') { solve(1300); return; }
+  if (r === 'done') { solve(true); return; }
   if (r === 'step') {
-    // Richtig, es geht weiter: der Knopf leuchtet kurz auf
+    // Richtig, es geht weiter: der Knopf leuchtet kurz grün, die falschen von vorher sind wieder normal
+    el.gameBar.querySelectorAll('.qkey.wrong').forEach((x) => x.classList.remove('wrong'));
+    feedback(null);
     if (b) { b.classList.add('right'); setTimeout(() => b.classList.remove('right'), 450); }
     return;
   }
-  // Falsch: der Knopf wackelt und wird blass, sein Ton erklingt zum Vergleichen
+  // Falsch: der Knopf wackelt und wird rot; es klingt nichts
   if (b) {
     b.classList.remove('wrong');
     void b.offsetWidth; // Wackeln neu starten
     b.classList.add('wrong');
   }
-  if (quiz.q.wrong) { quiz.q.wrong(key); return; }
-  const k = (quiz.q.keys || []).find((x) => String(x.key) === key);
-  if (k && k.f) previewTone(k.f, quiz.q.sound, 0.6);
+  feedback('wrong');
+  if (quiz.q.wrong) quiz.q.wrong(key);
 }
 // Antwort von außerhalb der Leiste (z. B. ein Tipp auf die Notenlinien)
 export const quizAnswer = (key) => answer(String(key), null);
@@ -168,7 +217,7 @@ function quizTap(b) {
   const act = b.dataset.act;
   if (act === 'end') { endGame(); return; }
   if (act === 'hear') { hear(); return; }
-  if (quiz.timer) return; // die Lösung steht gerade da
-  if (act === 'solve') { solve(2200); return; }
+  if (act === 'next') { quizNext(); return; }
+  if (act === 'solve') { if (!quiz.solved) solve(false); return; }
   if (b.dataset.key != null) answer(b.dataset.key, b);
 }

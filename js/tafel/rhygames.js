@@ -1,6 +1,7 @@
 // Weitere Rhythmus-Spiele („Üben und Spielen“), mit denselben Einstellungen wie das Rhythmus-Echo:
 //   Welcher war's?      Auf der Übungstafel stehen 2–4 gewürfelte Rhythmen, einer davon erklingt. Die Kinder tippen
-//                       unten seine Nummer; ein falscher erklingt zum Vergleich.
+//                       unten seine Nummer. Eine falsche Nummer wird rot (auch auf der Tafel) und erklingt nicht; die
+//                       richtige wird grün. Danach spielt ein Tipp auf eine Zeilennummer diesen Rhythmus ab.
 //   Vom Blatt klatschen Ein Rhythmus steht auf der Tafel. „Mitklatschen“ zählt ein und gibt den Grundschlag, die Zeichen
 //                       leuchten dabei mit, aber es klingt nichts; „Anhören“ spielt ihn zur Kontrolle.
 //   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
@@ -14,7 +15,7 @@ import { render } from './render.js';
 import { markPlaying } from './board.js';
 import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
 import { noteSym, restSym } from './symbols.js';
-import { playNow, stopPlay, planMs } from '../core/player.js';
+import { playNow, stopPlay } from '../core/player.js';
 import { openGame, endGame, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
 import { delegate } from '../core/ui.js';
 import { el } from './dom.js';
@@ -23,6 +24,8 @@ const quiet = () => {};
 const rnd = (n) => Math.floor(Math.random() * n);
 const cellOf = (d) => (d < 0 ? { k: 'r', d: -d } : { k: 'b', d });
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Der Rhythmus in der ersten Zeile, so wie er dasteht (Rhythmus legen, Fehler finden: Tipp auf die Zeilennummer)
+const playRow = () => { const p = rowPlan(0); if (p) playNow(p, markPlaying); };
 // n verschiedene Rhythmen (gibt es nicht so viele, z. B. 1 Takt 2/4 leicht, dann weniger)
 function distinctRhythms(n) {
   const seen = new Set(), out = [];
@@ -36,9 +39,14 @@ function distinctRhythms(n) {
 }
 
 /* ---------- Welcher war's? ---------- */
+// Zeilennummer r auf der Tafel grün (ok) oder rot (bad) hinterlegen, bis zum nächsten Zeichnen
+function markNum(r, cls) {
+  const x = el.grid.querySelector('.rnum[data-fold="' + r + '"]');
+  if (x) x.classList.add(cls);
+}
 function whichQuiz() {
   const n = games.which.count;
-  let ans = 0;
+  let ans = 0, solved = false;
   // Antworten: die Nummern der Zeilen
   const keys = Array.from({ length: n }, (_, i) => ({ key: String(i), html: String(i + 1), label: 'Rhythmus ' + (i + 1) }));
   const play = (r, mark) => { const p = rowPlan(r); if (p) playNow(p, mark); };
@@ -46,6 +54,7 @@ function whichQuiz() {
     layout: 'words', keys,
     next() {
       stopPlay();
+      solved = false;
       S.rows = distinctRhythms(n).map((cells) => rhythmRow(cells, games.echo.meter));
       S.sel = { r: 0, c: 0 };
       ans = Math.floor(Math.random() * S.rows.length);
@@ -53,11 +62,17 @@ function whichQuiz() {
       play(ans, quiet); // ohne Leuchten, sonst wäre die Antwort zu sehen
       return { ok: new Set([String(ans)]) };
     },
-    hear: () => play(ans, quiet),
-    // Gelöst: der richtige Rhythmus erklingt, seine Zeichen leuchten mit; falsch: der getippte erklingt zum Vergleich
-    solved: () => play(ans, markPlaying),
-    wrong: (key) => { if (S.rows[+key]) play(+key, markPlaying); },
-    wait: () => { const p = rowPlan(ans); return (p ? planMs(p) : 0) + 1400; },
+    hear: () => play(ans, solved ? markPlaying : quiet),
+    // Falsch: die Nummer wird rot, es klingt nichts. Gelöst: die richtige wird grün und erklingt, die Zeichen leuchten
+    // mit; die Zeilennummern spielen jetzt ihren Rhythmus
+    wrong: (key) => markNum(+key, 'bad'),
+    solved() {
+      solved = true;
+      markNum(ans, 'ok');
+      play(ans, markPlaying);
+    },
+    replay: (key) => play(+key, markPlaying),
+    row: (r) => play(r, markPlaying),
     stop() { render(); }
   };
 }
@@ -130,10 +145,9 @@ function buildQuiz() {
     solved() {
       placed = target.slice();
       show(true);
-      const p = rowPlan(0);
-      if (p) playNow(p, markPlaying);
+      playRow();
     },
-    wait: () => { const p = rowPlan(0); return (p ? planMs(p) : 0) + 1400; },
+    row: playRow,
     stop() { render(); }
   };
 }
@@ -179,7 +193,8 @@ function fixQuiz() {
       for (let c = from; c < from + count; c++) { const x = el.grid.querySelector('.cell[data-r="0"][data-c="' + c + '"]'); if (x) x.classList.add('qbad'); }
       play();
     },
-    wait: () => planMs(planOf(played, o.meter)) + 1400,
+    // Die Zeilennummer spielt den Rhythmus richtig, wie er dasteht
+    row: playRow,
     stop() { render(); }
   };
 }

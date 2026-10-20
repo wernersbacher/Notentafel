@@ -332,5 +332,11 @@
 .qpair { display: flex; gap: min(8vw, 80px); }
 .qpair .qdot { --d: min(30vh, 190px); transition: transform .15s ease; }
 .qpair .qdot.on { transform: scale(1.12); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line), 0 0 0 12px var(--play-bg); }
+/* Spiele: Ist die Frage gelöst, spielen die Zeilennummern ihre Zeile ab (umrandet wie ein Knopf). Welcher war's?: die
+   richtige Nummer grün, falsch getippte rot */
+.boardwrap.rowplay .rnum, .rnum.ok, .rnum.bad { width: 1.9rem; height: 1.9rem; line-height: 1.9rem; border-radius: 50%; }
+.boardwrap.rowplay .rnum { line-height: calc(1.9rem - 4px); border: 2px solid currentColor; color: var(--fg); }
+.boardwrap .rnum.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+.boardwrap .rnum.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
 /* Fehler finden: der falsche Takt mit der Lösung rot hinterlegt */
 .cell.qbad { background: rgba(209, 40, 31, .16); border-radius: 10px; }

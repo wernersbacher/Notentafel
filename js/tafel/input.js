@@ -4,6 +4,7 @@ import { S } from './state.js';
 import { render } from './render.js';
 import { cellEl } from './board.js';
 import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
+import { quizRow } from '../core/game.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
@@ -84,9 +85,10 @@ export function initBoardInput() {
   el.grid.addEventListener('contextmenu', (e) => e.preventDefault());
   el.grid.addEventListener('keydown', onKey);
   // Tipp auf das Tuch deckt die nächste Zeile auf, Tipp auf eine Zeilennummer klappt die Zeile ein oder wieder auf
+  // (in manchen Spielen spielt er stattdessen die Zeile ab)
   el.grid.addEventListener('click', (e) => {
     const f = e.target.closest('[data-fold]');
-    if (f) toggleFold(+f.dataset.fold);
+    if (f) { if (!quizRow(+f.dataset.fold)) toggleFold(+f.dataset.fold); }
     else if (e.target.closest('.cloth')) revealRow();
   });
 }

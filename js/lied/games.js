@@ -1,6 +1,6 @@
 // Weitere Spiele im Notenblatt („Üben und Spielen“), im Tonraum des Tonnamen-Quiz und nur mit Stammtönen:
 //   Note setzen          Ein Notenname steht über leeren Notenlinien; die Kinder tippen die Linie oder den Zwischenraum.
-//                        Eine falsche Note bleibt kurz blass stehen und erklingt zum Vergleich.
+//                        Eine falsche Note bleibt kurz rot stehen und erklingt nicht.
 //   Schritt oder Sprung? Zwei Noten stehen nebeneinander und erklingen; die Kinder sagen, ob es ein Schritt zum
 //                        Nachbarton, ein Sprung oder derselbe Ton ist.
 //   Notenwerte           Eine Note oder Pause steht groß über der Tafel und erklingt mit dem Grundschlag; die Kinder
@@ -11,9 +11,8 @@ import { frameOf } from './quiz.js';
 import { opts, persistOpts } from './state.js';
 import { toneColor } from '../core/colors.js';
 import { startQuiz, quizAnswer, playTones } from '../core/game.js';
-import { previewTone, stopPlay, playNow, planMs } from '../core/player.js';
+import { previewTone, stopPlay, playNow } from '../core/player.js';
 import { delegate } from '../core/ui.js';
-import { settings } from '../core/settings.js';
 import { el } from './dom.js';
 
 const rnd = (n) => Math.floor(Math.random() * n);
@@ -63,16 +62,16 @@ function placeQuiz() {
       show();
       return { ok: new Set([target]), f: freq({ p: target }) };
     },
-    // Daneben: die getippte Note bleibt kurz blass stehen und erklingt
+    // Daneben: die getippte Note bleibt kurz rot stehen, es klingt nichts
     wrong(p) {
       miss = p;
       show();
-      previewTone(freq({ p }), 'piano', 0.6);
       clearTimeout(fade);
       fade = setTimeout(() => { miss = null; if (!solved) show(); }, 1400);
     },
     solved() { miss = null; solved = true; show(); },
-    wait: 1600,
+    // Gelöst: ein Tipp auf die Notenlinien lässt den Ton dort hören
+    replay: (p) => previewTone(freq({ p }), 'piano', 0.6),
     stop() { onStaff = null; clearTimeout(fade); el.quizView.hidden = true; el.quizView.innerHTML = ''; }
   };
 }
@@ -108,7 +107,6 @@ function stepQuiz() {
     },
     hear,
     solved() { solved = true; show(); hear(); },
-    wait: () => 2.6 * 60000 / settings.tempo + 1500,
     stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
   };
 }
@@ -158,7 +156,6 @@ function valuesQuiz() {
     },
     hear,
     solved: hear,
-    wait: () => planMs(plan) + 1500,
     stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
   };
 }

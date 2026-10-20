@@ -4,7 +4,9 @@
 //   Höher oder tiefer?  Zwei Töne erklingen nacheinander; die Kinder sagen, ob der zweite höher, tiefer oder gleich ist.
 //                       Erst mit der Lösung bekommen die beiden Punkte über der Tafel ihre Farbe.
 //   Lied erraten        Der Anfang eines mitgelieferten Lieds erklingt (die ersten Töne oder die erste Zeile); die Kinder
-//                       wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel.
+//                       wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel;
+//                       danach lässt ein Tipp auf einen Namen den Anfang dieses Lieds hören.
+// Eine falsche Antwort wird rot und erklingt nicht (Melodie-Echo: auch der falsche Ton nicht).
 import { MAX_ROWS, NOTE_BY } from './config.js';
 import { newRow, isNote, dur } from './model.js';
 import { MELODIES, melodyRows } from './melodies.js';
@@ -15,8 +17,7 @@ import { S } from './state.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
 import { colorStyle, noteLabel } from './symbols.js';
-import { previewTone, stopPlay, playNow, planMs } from '../core/player.js';
-import { settings } from '../core/settings.js';
+import { previewTone, stopPlay, playNow } from '../core/player.js';
 import { startQuiz, playTones } from '../core/game.js';
 import { delegate } from '../core/ui.js';
 import { el } from './dom.js';
@@ -67,7 +68,13 @@ function meloQuiz() {
       render();
       later = setTimeout(() => { if (live) hear(); }, 700);
     },
-    wait: () => 700 + seq.length * 1.15 * 60000 / settings.tempo + 1200,
+    // Tipp auf eine Zeilennummer: diese Melodie noch einmal (die Punkte leuchten mit)
+    row(k) {
+      const x = S.rows[k], at = [];
+      if (!x) return;
+      x.forEach((c, j) => { if (isNote(c)) at.push(j); });
+      playTones(at.map((j) => ({ f: NOTE_BY[x[j].n].f })), 'bell', (m) => markPlaying(m == null ? null : { r: k, c: at[m] }));
+    },
     stop() { live = false; clearTimeout(later); render(); }
   };
 }
@@ -109,7 +116,6 @@ function updownQuiz() {
     },
     hear,
     solved() { show(true); hear(); },
-    wait: () => 2.8 * 60000 / settings.tempo + 1500,
     stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
   };
 }
@@ -129,10 +135,10 @@ function openingOf(m, short) {
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function guessQuiz() {
   let cells = [], last = -1, solved = false;
-  const plan = () => {
+  const plan = (cs = cells) => {
     const items = [];
     let t = 0;
-    cells.forEach((c, i) => {
+    cs.forEach((c, i) => {
       items.push({ t, len: dur(c), sound: isNote(c) ? 'bell' : '', f: isNote(c) ? NOTE_BY[c.n].f : 0, pos: { r: 0, c: i } });
       t += dur(c);
     });
@@ -167,7 +173,9 @@ function guessQuiz() {
       render();
       hear();
     },
-    wait: () => planMs(plan()) + 1500,
+    // Danach lässt ein Tipp auf einen Namen den Anfang dieses Lieds hören, die Zeilennummer den richtigen
+    replay: (key) => playNow(plan(openingOf(MELODIES[+key], games.guess.len === 'short')), () => {}),
+    row: () => hear(),
     stop() { render(); }
   };
   return q;

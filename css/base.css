@@ -13,6 +13,7 @@
   --btn-line: #c3cdc7;
   --ring: #18211d;
   --danger: #b3261e;
+  --ok: #1e8449; --bad: #c62828; /* Spiele: richtig, falsch */
   --shadow: rgba(24, 33, 29, .18);
   /* Playwrite DE Grund ist die Deutschland-Grundschrift für die Grundschule; die Schrift hat nur Stärken bis 400, fett wird vom Browser verstärkt */
   --font-display: "Playwrite DE Grund", "Andika", "Trebuchet MS", system-ui, sans-serif;
@@ -26,7 +27,7 @@
     --play-bg: rgba(255, 196, 0, .3);
     --bg: #101614; --board: #1c2925; --frame: #46524d; --frame-edge: #33403a;
     --panel: #17201d; --fg: #eaf1ed; --muted: #9aaba3; --line: #41504a;
-    --btn: #22302b; --btn-line: #3a4943; --ring: #eaf1ed; --danger: #ff8f86;
+    --btn: #22302b; --btn-line: #3a4943; --ring: #eaf1ed; --danger: #ff8f86; --ok: #2e9d5b; --bad: #e0483e;
     --shadow: rgba(0, 0, 0, .45);
     color-scheme: dark;
   }
@@ -232,8 +233,9 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .gamebar.quiz { right: 24px; }
 .boardwrap.game-quiz .playfab { display: none; }
 /* Unten auf der Tafel bleibt so viel frei, dass die Leiste nichts verdeckt */
-.boardwrap.game-echo .grid, .boardwrap.game-quiz .grid { padding-bottom: 116px; }
-.boardwrap.game-quiz .sheet { padding-bottom: 180px; }
+.boardwrap.game-echo .grid { padding-bottom: 116px; }
+.boardwrap.game-quiz .grid { padding-bottom: 170px; } /* dazu der Hinweis über der Leiste */
+.boardwrap.game-quiz .sheet { padding-bottom: 230px; }
 .gbtn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   min-width: 70px; height: 70px; padding: 0 10px; border-radius: 20px;
@@ -262,7 +264,7 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .qkey.black { min-height: 44px; font-size: .92rem; border-radius: 10px; }
 .qkey.black span + span { font-size: .85em; }
 /* Namen tippen: die Knöpfe ohne Farbe (sie würde die Antwort verraten); der richtige färbt sich mit der Lösung */
-.qkey.plain:not(.right) { background: var(--board); color: var(--fg); box-shadow: inset 0 0 0 2px var(--btn-line), inset 0 -4px 0 rgba(0, 0, 0, .16); }
+.qkey.plain:not(.right):not(.shown):not(.wrong) { background: var(--board); color: var(--fg); box-shadow: inset 0 0 0 2px var(--btn-line), inset 0 -4px 0 rgba(0, 0, 0, .16); }
 .qkeys.row .qkey { flex: 0 1 64px; min-width: 40px; aspect-ratio: 1; min-height: 0; border-radius: 50%; font-size: 1.6rem; }
 /* Wörter (höher, tiefer, gleich; Schritt, Sprung; Nummern der Rhythmen): breite Knöpfe ohne Farbe */
 .qkeys.words { display: flex; justify-content: center; gap: 10px; }
@@ -279,15 +281,35 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .qkey .blk { display: flex; align-items: flex-end; }
 .qkey .blk .sym { height: 3.8rem; width: auto; margin: -.4rem -.2rem; }
 /* Ohne Antwortknöpfe (Note setzen: getippt wird auf die Notenlinien) stehen die Knöpfe der Leiste rechts */
-.gamebar.quiz .gctl:only-child { margin-left: auto; }
-.qkey.right { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 4px var(--board), 0 0 0 8px #1e8449; animation: qright .5s ease; }
-.qkey.wrong { opacity: .3; animation: qwrong .4s ease; }
+.gamebar.quiz .gfeed + .gctl { margin-left: auto; }
+/* Rückmeldung: richtig grün, falsch rot. Farbige Knöpfe bekommen einen Ring (ihre Farbe bleibt zu sehen, ein falscher
+   ohne Farbe verrät sie auch jetzt nicht), Wörter werden ganz grün oder rot. Nur mit „Lösung“ gezeigt: grün umrandet */
+.qkey.right, .qkey.shown { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 4px var(--board), 0 0 0 8px var(--ok); }
+.qkey.right { animation: qright .5s ease; }
+.qkeys .qkey.wrong { opacity: .5; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 4px var(--board), 0 0 0 8px var(--bad); animation: qwrong .4s ease; }
+.qkeys .qkey.plain.wrong { background: var(--board); color: var(--fg); }
+.qkeys.words .qkey.right { background: var(--ok); color: #fff; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .2); }
+.qkeys.words .qkey.shown { color: var(--ok); box-shadow: inset 0 0 0 4px var(--ok), inset 0 -4px 0 rgba(0, 0, 0, .16); }
+.qkeys.words .qkey.wrong { background: var(--bad); color: #fff; opacity: .85; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .2); }
 @keyframes qright { 40% { transform: scale(1.15); } }
 @keyframes qwrong { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+/* Hinweis mittig über der Leiste: grün „Richtig!“, rot „Leider falsch“, grün umrandet „Das ist die Lösung“ */
+.gfeed {
+  position: absolute; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; padding: 10px 24px 10px 16px; border-radius: 999px;
+  background: var(--btn); color: #fff; box-shadow: 0 3px 10px var(--shadow);
+  font: 800 1.35rem/1.1 var(--font-ui); white-space: nowrap; pointer-events: none;
+}
+.gfeed .ico { width: 1.9rem; height: 1.9rem; flex: none; }
+.gfeed.right { background: var(--ok); animation: qpop .35s ease; }
+.gfeed.wrong { background: var(--bad); animation: qshake .4s ease; }
+.gfeed.shown { color: var(--ok); box-shadow: inset 0 0 0 3px var(--ok), 0 3px 10px var(--shadow); animation: qpop .35s ease; }
+@keyframes qpop { from { transform: translateX(-50%) scale(.6); opacity: 0; } }
+@keyframes qshake { 20%, 60% { transform: translateX(calc(-50% - 6px)); } 40%, 80% { transform: translateX(calc(-50% + 6px)); } }
 /* Die Frage groß über der Tafel; unten bleibt Platz für die Leiste */
 .quizview {
   position: absolute; top: 10px; left: 10px; right: 10px; bottom: 22px; z-index: 12;
-  display: grid; place-items: center; padding: 16px 16px 150px; border-radius: 8px;
+  display: grid; place-items: center; padding: 16px 16px 200px; border-radius: 8px;
   background: var(--board); color: var(--fg);
 }
 /* Schmale Tafel (z. B. iPad im Hochformat): Die Leiste des Echos rückt über die runden Knöpfe; beim Quiz stehen die
@@ -300,10 +322,10 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
   .gamebar.quiz .gctl { order: -1; justify-content: flex-end; }
   .qkey { font-size: 1.05rem; }
   .qkey.black { font-size: .78rem; }
-  .quizview { padding-bottom: 240px; }
-  .boardwrap.game-quiz .grid { padding-bottom: 200px; }
-  .boardwrap.game-quiz .sheet { padding-bottom: 260px; }
+  .quizview { padding-bottom: 290px; }
+  .boardwrap.game-quiz .grid { padding-bottom: 250px; }
+  .boardwrap.game-quiz .sheet { padding-bottom: 310px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .qkey.right, .qkey.wrong { animation: none; }
+  .qkey.right, .qkeys .qkey.wrong, .gfeed { animation: none; }
 }

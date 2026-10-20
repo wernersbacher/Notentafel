@@ -16,7 +16,8 @@
 //   write            Name der Hälfte „schreiben“ des Umschalters unter den Reitern, z. B. „Rhythmus schreiben“
 //   play             Üben und Spielen (optional): enter() legt eine neue, leere Übungstafel an (vor enter() des
 //                    Bereichs), leave() holt die geschriebene Tafel unverändert zurück. Die Übungstafel wird nie
-//                    gespeichert. Ob ein Bereich gerade übt, bleibt gemerkt (settings.play).
+//                    gespeichert. Ob ein Bereich gerade übt, bleibt gemerkt (settings.play). clear() macht die
+//                    Übungstafel wieder leer (beim Wählen eines Spiels).
 import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
 import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
@@ -90,6 +91,13 @@ export function handOver(id, data) {
   setPlay(false); // angekommen wird beim Schreiben, nicht auf der Übungstafel
   a.receive(data);
   return true;
+}
+// Beim Üben: die Übungstafel wieder leer und neu gezeichnet
+export function clearPractice() {
+  if (!playing()) return;
+  stopPlay();
+  cur.play.clear();
+  cur.enter();
 }
 /* ---------- Leiste ein- und ausklappen ---------- */
 // Eingeklappt nutzt die Tafel die ganze Breite und das Bearbeiten ist beendet: Die Bereiche zeichnen dann ohne Markierung

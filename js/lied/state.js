@@ -37,6 +37,10 @@ export function startPractice() {
   L.written = { song: L.song, name: L.name, sel: L.sel, hist: L.hist };
   Object.assign(L, { song: emptySong(), name: '', sel: 0, hist: [], last: null });
 }
+// Die Übungstafel wieder leer (beim Wählen eines Spiels)
+export function clearPractice() {
+  if (L.written) Object.assign(L, { song: emptySong(), sel: 0, hist: [], last: null });
+}
 // Legt eine Kopie des geschriebenen Lieds auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz)
 export function practiceWritten() {
   if (L.written) Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(L.written.song))), sel: 0, last: null });

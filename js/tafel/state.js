@@ -54,6 +54,10 @@ export function startPractice() {
   S.written = { rows: S.rows, name: S.name, sel: S.sel, hist: S.hist };
   Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), name: '', sel: { r: 0, c: 0 }, hist: [], insertMode: false, countAt: null });
 }
+// Die Übungstafel wieder leer (beim Wählen eines Spiels)
+export function clearPractice() {
+  if (S.written) Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [] });
+}
 // Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten
 export function practiceWritten() {
   if (!S.written) return;

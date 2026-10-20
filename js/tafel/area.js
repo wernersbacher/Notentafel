@@ -4,7 +4,7 @@ import { beatsOf, startAt, cutAt } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
-import { S, persistBoard, useVariant, startPractice, endPractice } from './state.js';
+import { S, persistBoard, useVariant, startPractice, endPractice, clearPractice } from './state.js';
 import { loadBoard, stores } from './storage.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
@@ -80,7 +80,7 @@ function area(id, label, panel, write, texts) {
     // Rhythmus-Echo und Tonnamen-Quiz gehören zu ihrer Tafel und enden beim Wechsel
     leave: endGame,
     // Üben und Spielen: eine neue Übungstafel für diesen Bereich, die geschriebene wartet so lange
-    play: { enter() { useBoard(id); startPractice(); }, leave: endPractice },
+    play: { enter() { useBoard(id); startPractice(); }, leave: endPractice, clear: clearPractice },
     receive: act.receiveRows,
     plan,
     mark: markPlaying,

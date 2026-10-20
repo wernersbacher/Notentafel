@@ -3,6 +3,7 @@
 // Es läuft immer nur ein Spiel; ein neues beendet das alte. Beim Wechsel des Bereichs endet es (endGame).
 import { previewTone, playNow, stopPlay } from './player.js';
 import { settings, persistSettings } from './settings.js';
+import { clearPractice } from './shell.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
 
@@ -56,6 +57,7 @@ export function playTones(tones, sound, mark = () => {}, gap = 0.15) {
 // In der Leiste jedes Bereichs wählen Kacheln (.gamepick mit data-area, Knöpfe mit data-game) ein Spiel. Zu sehen ist
 // dann sein Abschnitt (.game mit data-game) und die Einstellungen, die es betreffen (data-for: Spiele, durch Leerzeichen
 // getrennt). Der Rahmen .play trägt das Spiel in data-game (für das CSS). Die Wahl bleibt gemerkt (settings.game).
+// Ein Tipp auf eine Kachel beendet das laufende Spiel und macht die Übungstafel leer.
 function showPick(box) {
   const play = box.closest('.play'), ids = [...box.querySelectorAll('[data-game]')].map((b) => b.dataset.game);
   const want = settings.game[box.dataset.area], g = ids.includes(want) ? want : ids[0];
@@ -73,6 +75,7 @@ export function initGamePicks() {
       settings.game[box.dataset.area] = b.dataset.game;
       persistSettings();
       endGame();
+      clearPractice(); // jedes Spiel beginnt auf einer leeren Tafel
       showPick(box);
     });
   });

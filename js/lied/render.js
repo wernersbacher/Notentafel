@@ -26,6 +26,8 @@ let folded = new Set();
 export const isFolded = (i) => folded.has(i);
 
 export function renderSheet() {
+  // Leere Übungstafel: ganz leer, ohne Notenlinien
+  if (L.written && !L.song.ev.length) { el.sheet.innerHTML = ''; lastFirst = 0; folded = new Set(); return; }
   // Schreibt man gerade am Ende, bleibt die letzte Zeile beim Umbrechen einfach gefüllt (growing in layout.js)
   const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check, lyrics: opts.lyrics };
   const growing = L.last != null && L.sel >= L.song.ev.length;

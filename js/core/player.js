@@ -4,7 +4,8 @@
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
 // Schritt für Schritt (settings.step): statt im Tempo rückt die Markierung bei jedem Tipp auf den großen Knopf eine Note
-// oder Pause weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Nach der letzten Note ist Schluss.
+// oder Pause weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Mit settings.stepSound erklingt die
+// erreichte Note dabei in ihrer Länge im eingestellten Tempo. Nach der letzten Note ist Schluss.
 import { audioCtx, bell, clave, piano, tick } from './audio.js';
 import { settings, persistSettings, setTempo, watchTempo } from './settings.js';
 import { startAt } from './plan.js';
@@ -14,6 +15,8 @@ import { el } from './dom.js';
 export const ICONS = {
   play: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>',
   stop: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
+  sound: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  mute: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15l11-7.5z" fill="currentColor"/><rect x="16.5" y="4.5" width="3.2" height="15" rx="1" fill="currentColor"/></svg>'
 };
 
@@ -86,6 +89,20 @@ export function stopPlay() {
   showButton(false);
 }
 
+// Schritt für Schritt mit Ton: die erreichte Note klingt in ihrer Länge, die vorige verstummt
+function stepSound(s) {
+  if (play.out) { try { play.out.disconnect(); } catch (e) { /* schon getrennt */ } play.out = null; }
+  if (!settings.stepSound || !s.sound) return;
+  const ctx = audioCtx();
+  if (!ctx) return;
+  const out = play.out = ctx.createGain(), t0 = ctx.currentTime + 0.01, len = s.len * 60 / settings.tempo * 0.95;
+  out.gain.value = 0.6;
+  out.connect(ctx.destination);
+  if (s.sound === 'bell') bell(out, s.f, t0, len);
+  else if (s.sound === 'piano') piano(out, s.f, t0, len);
+  else if (s.sound === 'clave') clave(out, t0);
+}
+
 // Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.
 // Jede Note und jede Pause ist ein Schritt, auch die zweite Note eines Haltebogens; Wiederholungen laufen mit.
 function stepNext(getPlan, mark) {
@@ -98,6 +115,7 @@ function stepNext(getPlan, mark) {
   if (++play.i >= play.steps.length) { stopPlay(); return; }
   play.cur = play.steps[play.i].pos;
   mark(play.cur);
+  stepSound(play.steps[play.i]);
 }
 
 // getPlan() liefert den Ablaufplan erst beim Start; mark(pos) hebt die klingende Stelle hervor (null: keine)
@@ -106,12 +124,17 @@ export function togglePlay(getPlan, mark) {
   else if (play) stopPlay();
   else startPlay(getPlan(), mark);
 }
-// Einzählen und Metronom: die Knöpfe mit data-play (unten rechts auf der Tafel) schalten die gemeinsame Einstellung um
+// Einzählen und Metronom: die Knöpfe mit data-play (unten rechts auf der Tafel) schalten die gemeinsame Einstellung um.
+// Der Ton-Knopf (stepSound) gibt es nur bei Schritt für Schritt: Lautsprecher oder durchgestrichener Lautsprecher.
 function renderPlayOpts() {
   document.querySelectorAll('[data-play]').forEach((b) => {
     const on = !!settings[b.dataset.play];
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (b.dataset.play !== 'stepSound') return;
+    b.hidden = !settings.step;
+    b.innerHTML = on ? ICONS.sound : ICONS.mute;
+    b.title = on ? 'Ton an: jede Note erklingt beim Weitertippen' : 'Ton aus: Schritt für Schritt ohne Klang';
   });
 }
 /* ---------- Tempo auf der Tafel ---------- */

@@ -53,7 +53,7 @@ function whichQuiz() {
   const keys = Array.from({ length: n }, (_, i) => ({ key: String(i), html: String(i + 1), label: 'Rhythmus ' + (i + 1) }));
   const play = (r, mark) => { const p = rowPlan(r); if (p) playNow(p, mark); };
   return {
-    layout: 'words', keys, look: true,
+    layout: 'words', keys,
     next() {
       stopPlay();
       solved = false;
@@ -170,7 +170,7 @@ function fixQuiz() {
   // Gespielt wird mit dem Fehler, ohne Leuchten (sonst bliebe der falsche Takt dunkel und verriete sich)
   const play = () => playNow(planOf(played, o.meter), quiet);
   return {
-    layout: 'words', keys, look: true,
+    layout: 'words', keys,
     next() {
       stopPlay();
       const bars = byBar(makeBlocks(o).flat(), len);

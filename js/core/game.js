@@ -34,14 +34,14 @@ export const gameOn = (kind) => !!game && (!kind || game.kind === kind);
 el.gameBar.addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b || b.disabled || !game) return;
-  // Vor „Spiel starten“ wirken nur dieser Knopf und „Ende“
+  // Vor „Abspielen“ wirken nur dieser Knopf und „Ende“
   if (game.gate) { if (b.dataset.act === 'start') gameStart(); else if (b.dataset.act === 'end') endGame(); return; }
   if (game.tap) game.tap(b);
 });
-// Spiele, bei denen man die Aufgabe sieht und zugleich hört: Die erste Aufgabe (first()) steht gleich auf der Tafel,
-// ihr Ton aber noch nicht. Erst „Spiel starten“ in der Leiste lässt ihn erklingen, so sehen die Kinder sie zuerst in
+// Spiele mit Ton: Die erste Aufgabe (first()) steht gleich auf der Tafel,
+// ihr Ton aber noch nicht. Erst „Abspielen“ in der Leiste lässt ihn erklingen, so sehen die Kinder sie zuerst in
 // Ruhe. Bis dahin ist die Leiste blass und nur „Ende“ wirkt. Klingt bei first() nichts, geht es gleich los.
-function gameFirst(first) {
+export function gameFirst(first) {
   holdSound();
   try { first(); } finally {
     const replay = releaseSound();
@@ -49,18 +49,19 @@ function gameFirst(first) {
       game.gate = replay;
       el.gameBar.classList.add('gated');
       const box = el.gameBar.querySelector('.gctl');
-      (box || el.gameBar).insertAdjacentHTML('afterbegin', gameBtn('start', PLAY_ICON, 'Spiel starten', box ? 'main' : 'main big'));
+      (box || el.gameBar).insertAdjacentHTML('afterbegin', gameBtn('start', PLAY_ICON, 'Abspielen', box ? 'main' : 'main big'));
     }
   }
 }
-// Lässt den zurückgehaltenen Ton erklingen
-function gameStart() {
-  if (!game || !game.gate) return;
+// Lässt den zurückgehaltenen Ton erklingen; false, wenn nichts wartet
+export function gameStart() {
+  if (!game || !game.gate) return false;
   const replay = game.gate;
   game.gate = null;
   el.gameBar.classList.remove('gated');
   el.gameBar.querySelector('.gbtn[data-act="start"]').remove();
   replay();
+  return true;
 }
 
 export const GAME_ICONS = {
@@ -150,7 +151,6 @@ export function initGamePicks() {
 //   cell(r, c)  (optional, Tafel) die Antwort, die ein Tipp auf den Platz (r, c) gibt, oder null
 //   stop()   räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
 //   rekey    die Antwortknöpfe ändern sich mit jeder Frage (next() setzt q.keys neu, z. B. Lied erraten)
-//   look     die Aufgabe ist zu sehen und zu hören (z. B. Fehler finden): Die erste erklingt erst mit „Spiel starten“
 // Rückmeldung: Eine richtige Antwort wird grün, eine falsche rot (sie bleibt es bis zur nächsten Frage), über der Leiste
 // steht dazu ein Hinweis. Ist die Frage gelöst (richtig getippt oder „Lösung“), geht es erst mit „Weiter“ weiter.
 let quiz = null; // { q, cur, solved: false, 'right' (richtig getippt) oder 'shown' (Lösung gezeigt) }
@@ -210,7 +210,7 @@ export function startQuiz(q) {
     stop() { stopPlay(); el.gameBar.parentNode.classList.remove('rowplay'); const x = quiz; quiz = null; x.q.stop(); }
   });
   quiz = { q, cur: null, solved: false };
-  if (q.look) gameFirst(quizNext); else quizNext();
+  gameFirst(quizNext);
 }
 function quizNext() {
   el.gameBar.querySelectorAll('.qkey').forEach((b) => b.classList.remove('right', 'wrong', 'shown'));
@@ -242,7 +242,7 @@ function solve(right) {
   if (quiz.q.row) el.gameBar.parentNode.classList.add('rowplay'); // die Zeilennummern spielen jetzt ab
 }
 function answer(key, b) {
-  if (!quiz || !quiz.cur || game.gate) return; // vor „Spiel starten“ wird noch nicht geantwortet
+  if (!quiz || !quiz.cur || game.gate) return; // vor „Abspielen“ wird noch nicht geantwortet
   // Gelöst: ein Tipp auf eine Antwort lässt sie hören
   if (quiz.solved) {
     if (quiz.q.replay) { quiz.q.replay(key); return; }

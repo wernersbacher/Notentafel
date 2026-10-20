@@ -12,7 +12,7 @@ import { commit } from './render.js';
 import { markPlaying } from './board.js';
 import { playNow, stopPlay, previewTone } from '../core/player.js';
 import { beatsOf } from '../core/plan.js';
-import { openGame, endGame, gameOn, gameBtn, GAME_ICONS } from '../core/game.js';
+import { openGame, endGame, gameOn, gameFirst, gameStart, gameBtn, GAME_ICONS } from '../core/game.js';
 import { toast, delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
@@ -116,14 +116,14 @@ function tap(b) {
   else if (act === 'again') playEcho();
   else if (act === 'end') endGame();
 }
-// Ein neues Echo beginnt auf einer leeren Übungstafel; läuft es schon, kommt nur ein neuer Rhythmus dazu
+// Ein neues Echo beginnt auf einer leeren Übungstafel, der erste Rhythmus erklingt erst mit „Abspielen“; läuft es
+// schon, kommt nur ein neuer Rhythmus dazu (wartet der erste noch, erklingt er)
 function startEcho() {
-  if (!gameOn('echo')) {
-    openGame('echo', gameBtn('again', AGAIN_ICON, 'Nochmal hören') + gameBtn('main', GAME_ICONS.eye, 'Auflösen', 'main big') +
-      gameBtn('end', GAME_ICONS.close, 'Ende'), { tap, stop: stopPlay });
-    S.rows = [];
-  }
-  newRhythm();
+  if (gameOn('echo')) { if (!gameStart()) newRhythm(); return; }
+  openGame('echo', gameBtn('again', AGAIN_ICON, 'Nochmal hören') + gameBtn('main', GAME_ICONS.eye, 'Auflösen', 'main big') +
+    gameBtn('end', GAME_ICONS.close, 'Ende'), { tap, stop: stopPlay });
+  S.rows = [];
+  gameFirst(newRhythm);
 }
 
 /* ---------- Leiste rechts ---------- */

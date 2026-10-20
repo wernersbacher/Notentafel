@@ -204,9 +204,12 @@ aside.side { padding: 12px; overflow: hidden; }
 /* ---------- Tonnamen-Quiz: die Zufallsnote groß auf eigenen Notenlinien ---------- */
 .qstaff { height: 100%; max-height: 62vh; width: auto; max-width: 100%; overflow: visible; }
 .qstaff .qnm { font: 400 2.6px var(--font-display); text-anchor: middle; }
-/* Note setzen: der Name groß über den Notenlinien, getippt wird auf die Linien; eine falsche Note bleibt kurz rot */
+/* Note setzen: der Name groß unter den Notenlinien, die Note wird mit dem Finger auf die Linien geschoben (blass, ihr
+   Platz hinterlegt); eine falsche Note bleibt kurz rot */
 .quizview > .qset { align-self: stretch; justify-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 0; }
-.qset .qstaff { flex: 1 1 0; height: 0; width: 100%; max-height: none; cursor: pointer; }
+.qset .qstaff { flex: 1 1 0; height: 0; width: 100%; max-height: none; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; }
+.qstaff .qn.ghost { opacity: .45; }
+.qstaff .qband { fill: var(--play-bg); }
 .qset .qname { font-size: 3rem; letter-spacing: .1em; } /* Abstand, sonst verschwindet der Oktavstrich im Bogen des f */
 .qstaff .qn.miss { color: var(--bad); opacity: .7; }
 /* Schritt oder Sprung?: die klingende Note leuchtet */

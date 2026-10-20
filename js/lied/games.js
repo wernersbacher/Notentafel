@@ -1,6 +1,7 @@
 // Weitere Spiele im Notenblatt („Üben und Spielen“), im Tonraum des Tonnamen-Quiz und nur mit Stammtönen:
-//   Note setzen          Ein Notenname steht unter leeren Notenlinien; die Kinder tippen die Linie oder den Zwischenraum.
-//                        Eine falsche Note bleibt kurz rot stehen und erklingt nicht.
+//   Note setzen          Ein Notenname steht unter leeren Notenlinien; die Kinder schieben mit dem Finger eine Note auf
+//                        die Linie oder in den Zwischenraum, sie rastet dort ein, erst das Loslassen zählt. Eine falsche
+//                        Note bleibt kurz rot stehen und erklingt nicht.
 //   Schritt oder Sprung? Zwei Noten stehen nebeneinander und erklingen; die Kinder sagen, ob es ein Schritt zum
 //                        Nachbarton, ein Sprung oder derselbe Ton ist.
 //   Notenwerte           Eine Note oder Pause steht groß über der Tafel und erklingt mit dem Grundschlag; die Kinder
@@ -17,15 +18,16 @@ import { el } from './dom.js';
 
 const rnd = (n) => Math.floor(Math.random() * n);
 
-// Eine Note auf dem Platz von p bei x, mit Hilfslinien und Hals; cls für das CSS (z. B. blass), color nach Wahl farbig
-function note(x, p, cls = '', color = null) {
+// Eine Note auf dem Platz von p bei x, mit Hilfslinien und Hals (v 1: ganze Note ohne Hals); cls für das CSS (z. B.
+// blass), color nach Wahl farbig
+function note(x, p, cls = '', color = null, v = 4) {
   const pos = staffPos(p), y = yOf(pos);
   let s = '';
   for (let q = -2; q >= pos; q -= 2) s += ledger(x, yOf(q), 1.05);
   for (let q = 10; q <= pos; q += 2) s += ledger(x, yOf(q), 1.05);
-  s += head(x, y, 4, color);
+  s += head(x, y, v, color);
   const up = pos < 4, end = up ? Math.max(pos + 7, 4) : Math.min(pos - 7, 4);
-  s += stem(x + (up ? 0.6 : -0.6), y + (up ? -0.1 : 0.1), yOf(end));
+  if (v > 1) s += stem(x + (up ? 0.6 : -0.6), y + (up ? -0.1 : 0.1), yOf(end));
   return '<g class="qn' + (cls ? ' ' + cls : '') + '">' + s + '</g>';
 }
 const colorOf = (p) => (opts.colors ? toneColor(parsePitch(p).step, 0) : null);
@@ -35,7 +37,7 @@ const staffSVG = (frame, inner, label) =>
 
 /* ---------- Note setzen ---------- */
 const X = 10.5;
-let onStaff = null; // während „Note setzen“: Tipp auf die Notenlinien (Höhe in Linienabständen)
+let onStaff = null; // während „Note setzen“: { move(y), up(y) } für den Finger auf den Notenlinien (Höhe in Linienabständen)
 
 // Tonhöhe auf dem Platz pos (halbe Linienabstände, unterste Linie 0), begrenzt auf den Tonumfang des Notenblatts
 function pitchAt(pos) {
@@ -43,14 +45,25 @@ function pitchAt(pos) {
   return makePitch(d % 7, Math.floor(d / 7));
 }
 function placeQuiz() {
-  const lo = opts.quizLo, hi = opts.quizHi, frame = frameOf(lo, hi), whites = whiteRange(lo, hi);
+  const lo = opts.quizLo, hi = opts.quizHi, whites = whiteRange(lo, hi);
+  // Nur so viel Platz um die Notenlinien wie der Tonraum braucht (ganze Noten, ohne Hälse): So werden die Linien groß
+  const frame = { top: Math.min(-1.2, yOf(staffPos(hi)) - 1.2), bottom: Math.max(5.2, yOf(staffPos(lo)) + 1.2) };
+  // Ein Tipp über oder unter dem Bild zählt für den äußersten Platz darin
+  const posAt = (y) => Math.max(Math.ceil(8 - 2 * frame.bottom), Math.min(Math.floor(8 - 2 * frame.top), Math.round(8 - 2 * y)));
   let target = null, miss = null, solved = false, fade = null;
   const show = () => {
-    const inner = (miss ? note(X, miss, 'miss') : '') + (solved ? note(X, target, 'hit', colorOf(target)) : '');
-    el.quizView.innerHTML = '<div class="qset">' + staffSVG(frame, inner, 'Notenlinien: Wo steht ' + pitchLabel(target) + '?') +
+    const inner = (miss ? note(X, miss, 'miss', null, 1) : '') + (solved ? note(X, target, 'hit', colorOf(target), 1) : '');
+    el.quizView.innerHTML = '<div class="qset">' + staffSVG(frame, inner + '<g class="qghost"></g>', 'Notenlinien: Wo steht ' + pitchLabel(target) + '?') +
       '<p class="qname">' + pitchLabel(target) + '</p></div>';
   };
-  onStaff = (y) => quizAnswer(pitchAt(Math.round(8 - 2 * y)));
+  // Unter dem Finger: blasse Note auf dem nächsten Platz, die Linie oder der Zwischenraum hinterlegt (y null: weg)
+  const ghost = (y) => {
+    const g = el.quizView.querySelector('.qghost');
+    if (!g) return;
+    const pos = y == null ? null : posAt(y);
+    g.innerHTML = pos == null ? '' : '<rect class="qband" x="0.4" y="' + (yOf(pos) - 0.25) + '" width="15.2" height="0.5"/>' + note(X, pitchAt(pos), 'ghost', null, 1);
+  };
+  onStaff = { move: ghost, up(y) { ghost(null); quizAnswer(pitchAt(posAt(y))); } };
   el.quizView.hidden = false;
   return {
     sound: 'piano',
@@ -170,15 +183,30 @@ export function initLiedGames() {
   el.valRests.addEventListener('click', () => { opts.valRests = !opts.valRests; persistOpts(); renderValSide(); });
   el.valuesGo.addEventListener('click', () => startQuiz(valuesQuiz()));
   renderValSide();
-  // Tipp auf die Notenlinien bei „Note setzen“: Höhe in den Maßen des Bilds
-  el.quizView.addEventListener('click', (e) => {
-    const svg = onStaff && e.target.closest && e.target.closest('.qstaff');
-    if (!svg) return;
+  // Finger auf den Notenlinien bei „Note setzen“: Die Note folgt ihm, das Loslassen zählt. Höhe in den Maßen des Bilds
+  let held = null;
+  const yAt = (e) => {
+    const svg = el.quizView.querySelector('.qstaff') || held; // das Bild kann inzwischen neu gezeichnet sein
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
-    onStaff(pt.matrixTransform(svg.getScreenCTM().inverse()).y);
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).y;
+  };
+  el.quizView.addEventListener('pointerdown', (e) => {
+    const svg = onStaff && e.target.closest && e.target.closest('.qstaff');
+    if (!svg || held) return;
+    held = svg;
+    svg.setPointerCapture(e.pointerId);
+    onStaff.move(yAt(e));
   });
+  el.quizView.addEventListener('pointermove', (e) => { if (held && onStaff) onStaff.move(yAt(e)); });
+  el.quizView.addEventListener('pointerup', (e) => {
+    if (!held) return;
+    const y = yAt(e);
+    held = null;
+    if (onStaff) onStaff.up(y);
+  });
+  el.quizView.addEventListener('pointercancel', () => { if (held && onStaff) onStaff.move(null); held = null; });
   el.placeGo.addEventListener('click', () => startQuiz(placeQuiz()));
   el.stepGo.addEventListener('click', () => startQuiz(stepQuiz()));
 }

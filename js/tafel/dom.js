@@ -6,7 +6,8 @@ const ids = [
   'btnR', 'btnL', 'btnBar', 'btnEnd', 'btnBarMel', 'btnEndMel', 'btnRepStart', 'btnRepEnd', 'btnRepStartMel', 'btnRepEndMel', 'btnLine', 'rhyMeters', 'melMeters', 'restsMel', 'btnAutoBarMel', 'btnAutoZMel',
   'panelMel', 'panelRhy', 'btnAutoBar', 'btnAutoZ', 'btnSyl', 'btnToLied', 'btnToLiedSide',
   'melodiesSec', 'melodies',
-  'btnLensToggle', 'lensToggleState'
+  'btnLensToggle', 'lensToggleState',
+  'echoBars', 'echoNotes', 'echoRests', 'echoGo', 'melQuizMode', 'melQuizRand', 'melQuizSemis', 'melQuizHigh', 'melQuizGo'
 ];
 export const el = Object.assign(Object.create(core), Object.fromEntries(ids.map((id) => [id, document.getElementById(id)])));
 // Der Rahmen um die Tafel, der seitlich wischen lässt

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, subBeams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -96,6 +96,30 @@ test('beams: drei Achtel – nur die ersten beiden bekommen einen Balken', () =>
   assert.deepEqual(beams([e, e, e, e]), [1, 2, 1, 2]);
 });
 
+test('beams und subBeams: Sechzehntel in Gruppen von einem Schlag, zweiter Balken zwischen Sechzehnteln', () => {
+  const s = { k: 'b', d: 0.25 }, e = { k: 'b', d: 0.5 }, q = { k: 'b', d: 1 };
+  const four = beams([s, s, s, s, s]);
+  assert.deepEqual(four, [1, 1, 1, 2]);
+  assert.deepEqual(subBeams([s, s, s, s, s], four), [1, 1, 1]);
+  // Achtel und zwei Sechzehntel (ti tiri): ein Balken über alle, der zweite nur über den Sechzehnteln
+  const mix = beams([e, s, s, q]);
+  assert.deepEqual(mix, [1, 1, 2]);
+  assert.deepEqual(subBeams([e, s, s, q], mix), [, 1]);
+  // Sechzehntel, Achtel, Sechzehntel: die einzelnen Sechzehntel bekommen kurze Ansätze
+  const syn = beams([s, e, s]);
+  assert.deepEqual(syn, [1, 1, 2]);
+  assert.deepEqual(subBeams([s, e, s], syn), [3, , 4]);
+  // Eine einzelne Sechzehntel hat keinen Balken
+  assert.deepEqual(subBeams([s, q], beams([s, q])), []);
+});
+
+test('beams: kein Balken über eine Schlaggrenze, im 6/8-Takt drei Achtel zusammen', () => {
+  const e = { k: 'b', d: 0.5 }, dq = { k: 'b', d: 1.5 };
+  // punktierte Viertel, dann Achtel (allein, sie endet auf dem Schlag), dann zwei Achtel im nächsten Schlag
+  assert.deepEqual(beams([dq, e, e, e]), [, , 1, 2]);
+  assert.deepEqual(beams([e, e, e, e, e, e], 1.5), [1, 1, 2, 1, 1, 2]);
+});
+
 test('put füllt Lücken mit leeren Plätzen, setCell behält den Taktstrich', () => {
   const row = [];
   put(row, 2, C);
@@ -178,10 +202,14 @@ test('rowsToSong: Melodie und Rhythmus als Lied', () => {
 test('syllableParts: Silben auf die Schläge verteilt', () => {
   const b = (d) => ({ k: 'b', d });
   assert.deepEqual(syllableParts(b(1)), [['ta', 0]]);
-  assert.deepEqual(syllableParts(b(2)), [['ta', 0], ['ja', 2]]);
-  assert.deepEqual(syllableParts(b(3)), [['ta', 0], ['ja', 2], ['ja', 4]]);
-  assert.deepEqual(syllableParts(b(4)), [['ta', 0], ['ja', 2], ['ja', 4], ['ja', 6]]);
+  assert.deepEqual(syllableParts(b(2)), [['ta', 0], ['ja', 4]]);
+  assert.deepEqual(syllableParts(b(3)), [['ta', 0], ['ja', 4], ['ja', 8]]);
+  assert.deepEqual(syllableParts(b(4)), [['ta', 0], ['ja', 4], ['ja', 8], ['ja', 12]]);
   assert.deepEqual(syllableParts(b(0.5), 1), [['ti', 0]]);
+  assert.deepEqual(syllableParts(b(1.5)), [['ta', 0], ['i', 4]]);
+  // Sechzehntel: ti auf der Achtel, ri dazwischen
+  assert.deepEqual(syllableParts(b(0.25), 1, false), [['ti', 0]]);
+  assert.deepEqual(syllableParts(b(0.25), 1, true), [['ri', 0]]);
   assert.deepEqual(syllableParts({ k: 'r', d: 2 }), []);
 });
 

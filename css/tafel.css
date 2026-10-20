@@ -50,8 +50,8 @@
   width: var(--sw);
   display: flex; flex-direction: column; align-items: center; gap: .25rem;
 }
-/* Breite nach Notenlänge: Jede Spalte ist eine Achtel. Ein Schlag ist einen Kreis breit (zwei Spalten zu 1 --L);
-   steht in der Zeile auf diesem Schlag eine Achtel, ist er zwei Kreise breit (zwei Spalten zu 2 --L).
+/* Breite nach Notenlänge: Jede Spalte ist eine Sechzehntel. Ein Schlag ist einen Kreis breit (vier Spalten zu ½ --L);
+   steht in der Zeile auf diesem Schlag eine Achtel, ist er zwei Kreise breit (vier Spalten zu 1 --L).
    Jede Zeile bekommt ihre Spalten als --tpl aus dem Skript; --fr ist die Breite der längsten Zeile in --L.
    --L ist für alle Zeilen gleich, damit alle Kreise gleich groß sind: höchstens 3.5rem + 3px (ein Kreis also so breit
    wie sonst ein Platz mit Abstand), weniger, wenn die längste Zeile sonst nicht passt. Das Zeichen steht vorn in seinem Platz. */
@@ -68,7 +68,6 @@
 .grid.prop .cell.half .stack { --bx: calc((var(--sw) - 100cqw) / 2); margin-left: calc(0px - var(--bx)); }
 /* ein leerer halber Platz (nach einer einzelnen Achtel) bekommt einen kleineren Kreis, damit er den nächsten nicht überdeckt */
 .grid.prop .cell.half .dot.ghost { transform: scale(.5); }
-.grid.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .02); }
 /* Rhythmus: Notenzeichen größer (Rahmen 1,2 × Kreis statt .8; der Kopf bei 24.6/30 bleibt auf der Linie), Pausen
    ebenso; die Balken entsprechend: Halsmitte .12 rechts, Hals .03 breit, Halsende .382 über dem Kreis, Balken .126 dick */
 .grid.rhy .dot.beat .sym { height: calc(var(--d) * 1.2); top: calc(var(--d) * -.484); }
@@ -76,8 +75,16 @@
    wird so viel kleiner, dass es trotzdem in die Zeile passt). Sonst stießen sie in der ersten Zeile an den Rand der Tafel. */
 .grid.rhy .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 2))); margin-top: calc(var(--d) * .5); }
 .grid.rhy .dot.rest { --rh: calc(var(--d) * 1.05); }
-.grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .105); top: calc(var(--d) * -.382); width: calc(100% + var(--g) + var(--d) * .03); height: calc(var(--d) * .126); }
-.grid.rhy.prop .cell.half .stack.bbeam::after { width: calc(50% + var(--d) * .03); }
+.grid.rhy .stack.bbeam::after { left: calc(50% + var(--d) * .105); top: calc(var(--d) * -.382); width: calc(100% * var(--bw, 1) + var(--g) + var(--d) * .03); height: calc(var(--d) * .126); }
+/* Zweiter Balken der Sechzehntel, parallel zum ersten (ein dreiviertel Linienabstand des Lieds zum Kopf hin versetzt):
+   s1 bis zur nächsten Sechzehntel, s3 kurzer Ansatz nach rechts, s4 nach links (einzelne Sechzehntel neben Achteln) */
+.grid.rhy .bm2 {
+  position: absolute; left: calc(50% + var(--d) * .105); top: calc(var(--d) * -.193);
+  width: calc(100% * var(--bw, 1) + var(--d) * .03); height: calc(var(--d) * .126); background: var(--fg);
+}
+.grid.rhy .bm2.s3 { width: calc(var(--d) * .3); }
+.grid.rhy .bm2.s4 { left: calc(50% + var(--d) * -.165); width: calc(var(--d) * .3); }
+.cell.quiz .bm2, .cell.ahead .bm2 { visibility: hidden; }
 .len {
   position: relative; width: 100%; height: calc(var(--d) * .5);
   display: flex; justify-content: center; color: var(--fg);
@@ -91,6 +98,7 @@
   width: calc(100cqw * var(--w) + var(--d) * .6); height: calc(var(--d) * .42);
   border-radius: calc(var(--d) * .21); background: rgba(247, 209, 30, .4);
 }
+.len .sgrp.d025 { background: rgba(236, 72, 153, .26); } /* Sechzehntel: pink */
 .len .sgrp.d05 { background: rgba(90, 160, 240, .32); } /* Achtel: blau */
 .len .sgrp.d15 { background: rgba(40, 180, 170, .3); } /* punktierte Viertel: türkis */
 .len .sgrp.d2 { background: rgba(120, 200, 80, .36); }  /* Halbe: grün */
@@ -183,7 +191,7 @@
 .stack.bbeam::after {
   content: ""; position: absolute;
   left: calc(50% + var(--d) * .07); top: calc(var(--d) * -.088);
-  width: calc(100% + var(--g) + var(--d) * .02); height: calc(var(--d) * .084);
+  width: calc(100% * var(--bw, 1) + var(--g) + var(--d) * .02); height: calc(var(--d) * .084);
   background: var(--fg);
 }
 /* Balken von Hals zu Hals zweier Achtel unter bunten Punkten (Zeichen .5 × Kreis hoch): Halsmitte .05 × Kreis rechts der
@@ -191,7 +199,7 @@
 .len.beam::after {
   content: ""; position: absolute;
   left: calc(50% + var(--d) * .0437); top: calc(var(--d) * .0425);
-  width: calc(100% + var(--g) + var(--d) * .0126); height: calc(var(--d) * .0525);
+  width: calc(100% * var(--bw, 1) + var(--g) + var(--d) * .0126); height: calc(var(--d) * .0525);
   background: currentColor;
 }
 .dot {
@@ -303,5 +311,10 @@
 .grid.rhy .cell .dot.rest ~ .qcard { left: calc(50% - var(--d) * .18); top: calc(var(--d) * .12); width: calc(var(--d) * .36); height: calc(var(--d) * .75); }
 /* Balken an einem verdeckten Achtel: nur die Hälfte bis zur Grenze der beiden halben Plätze (75 % bzw. 25 % des Zeichens,
    das doppelt so breit ist wie sein Platz) bleibt; die andere liegt unter der Karte bzw. fehlt mit dem verdeckten Achtel */
-.grid.rhy.prop .cell.half .stack.bbeam.bhalf::after { width: calc(25% - var(--d) * .105); }
+.grid.rhy.prop .cell.half .stack.bbeam.bhalf::after { width: calc(50% * var(--bw, 1) - var(--d) * .105); }
 .grid.rhy .hbeam { position: absolute; left: 25%; top: calc(var(--d) * -.382); width: calc(25% + var(--d) * .135); height: calc(var(--d) * .126); background: var(--fg); }
+
+/* ---------- Tonnamen-Quiz: großer Farbpunkt über der Tafel ---------- */
+.qfarb { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.qdot { --d: min(38vh, 240px); }
+.qname { margin: 0; font: 700 2.4rem/1 var(--font-display); color: var(--fg); }

@@ -44,13 +44,15 @@ export function renderSheet() {
   lastFirst = lay.systems[lay.systems.length - 1].first;
   folded = new Set();
   lay.systems.forEach((s) => { if (foldedLine(L.song.ev, s)) for (let i = s.first; i < s.end; i++) folded.add(i); });
-  // Eingeklappte Leiste: Bearbeiten beendet, ohne Markierung und leeren Platz
-  const clean = sideCollapsed();
+  // Eingeklappte Leiste und Tonnamen-Quiz: Bearbeiten beendet, ohne Markierung und leeren Platz
+  const clean = sideCollapsed() || !!L.quiz;
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
-  const pos = playingPos();
+  // Hervorgehoben ist, was gerade klingt, sonst die Note, nach der das Tonnamen-Quiz fragt. Beim Quiz stehen die
+  // Notennamen nur unter den Noten, die schon benannt sind.
+  const q = L.quiz, pos = playingPos() ?? (q ? q.i : null);
   const { svg, height } = sheetSVG(L.song, lay, {
-    width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics,
-    target: last, playing: pos == null ? -1 : pos, nums: true
+    width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names || !!q, nameIf: q ? (i) => q.done.has(i) : null,
+    colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, target: last, playing: pos == null ? -1 : pos, nums: true
   });
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';

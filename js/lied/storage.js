@@ -1,6 +1,6 @@
 // Speicher des Lieds: eigene Schlüssel für das aktuelle Lied, gespeicherte Lieder, Autosave und Einstellungen
 import { makeStore, readJSON, writeJSON } from '../core/store.js';
-import { cleanSong } from './model.js';
+import { cleanSong, parsePitch, comparePitch } from './model.js';
 
 const KEYS = { board: 'notentafel.lied.v1', songs: 'notentafel.lied.songs.v1', auto: 'notentafel.lied.autosave.v1' };
 const SETTINGS_KEY = 'notentafel.lied.settings.v1';
@@ -19,7 +19,15 @@ export const store = makeStore(KEYS, { pack, unpack });
 
 export function cleanLiedSettings(s) {
   s = s || {};
+  // Tonraum der Zufallsnote im Tonnamen-Quiz: zwei Stammtöne, der untere tiefer als der obere (Standard c' bis c''')
+  const white = (p) => typeof p === 'string' && !!parsePitch(p);
+  const range = white(s.quizLo) && white(s.quizHi) && comparePitch(s.quizLo, s.quizHi) < 0;
   return {
+    quizMode: s.quizMode === 'song' ? 'song' : 'rand', // Tonnamen-Quiz: Zufallsnote oder Lied durchgehen
+    quizLo: range ? s.quizLo : 'c1',
+    quizHi: range ? s.quizHi : 'c3',
+    quizSharp: !!s.quizSharp, // Zufallsnoten auch mit ♯
+    quizFlat: !!s.quizFlat, // Zufallsnoten auch mit ♭
     autoBar: s.autoBar !== false, // Taktstriche nach der Taktart (Standard: an)
     names: !!s.names, // Notennamen unter den Noten
     colors: !!s.colors, // Notenköpfe in den Farben der Töne (wie die Farbnoten)

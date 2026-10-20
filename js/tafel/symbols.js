@@ -4,12 +4,13 @@ import { head, stem, flags, dot, rest, line } from '../core/glyphs.js';
 // Farbe eines Tons als CSS-Variable für style="…"
 export const colorStyle = (n) => '--c:' + n.bg;
 
+// Pfeil nach oben für die hohen Töne
+export const upArrow = (n) => n.up
+  ? '<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  : '';
 // Buchstabe des Tons, bei hohen Tönen mit Pfeil nach oben, bei Fis mit Kreuz
 export function noteLabel(n) {
-  const arrow = n.up
-    ? '<svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-    : '';
-  return arrow + '<span class="ltr">' + n.l + (n.sharp ? '<span class="sharp">♯</span>' : '') + '</span>';
+  return upArrow(n) + '<span class="ltr">' + n.l + (n.sharp ? '<span class="sharp">♯</span>' : '') + '</span>';
 }
 
 // Noten- und Pausenzeichen der Tafel: dieselben Formen wie im Lied (core/glyphs.js), gesetzt in einen festen Rahmen
@@ -18,13 +19,13 @@ export function noteLabel(n) {
 // beam: Achtel ohne Fähnchen, der Balken zur nächsten Achtel kommt aus dem CSS.
 const K = 6.3;
 const sym = (s) => '<svg class="sym" viewBox="0 0 22 30" fill="currentColor" aria-hidden="true">' + s + '</svg>';
-// Länge in Schlägen → Notenwert des Lieds (1 Ganze … 8 Achtel)
-const V = { 0.5: 8, 1: 4, 1.5: 4, 2: 2, 3: 2, 4: 1 };
+// Länge in Schlägen → Notenwert des Lieds (1 Ganze … 16 Sechzehntel)
+const V = { 0.25: 16, 0.5: 8, 1: 4, 1.5: 4, 2: 2, 3: 2, 4: 1 };
 export function noteSym(d, beam) {
   const v = V[d], hx = v === 1 ? 11 : 14 - 0.6 * K;
   let s = head(0, 0, v);
   if (v > 1) s += stem(0.6, -0.1, -3.5);
-  if (v === 8 && !beam) s += flags(0.6, -3.5, 1, true);
+  if (v >= 8 && !beam) s += flags(0.6, -3.5, v === 8 ? 1 : 2, true);
   if (d === 1.5 || d === 3) s += dot(1.45, -0.3);
   return sym('<g transform="translate(' + hx + ' 24.6) scale(' + K + ')">' + s + '</g>');
 }

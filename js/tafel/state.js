@@ -24,6 +24,7 @@ export const S = {
   parked: {},
   insertMode: false,
   countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
+  quiz: null, // Tonnamen-Quiz durch die Melodie: { pos (gefragter Platz), done (benannte Plätze als 'r,c') }, siehe quiz.js
   cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };
 // Zeilen werden automatisch umbrochen, wenn sie voll sind (Melodie: MAX_PER_ROW Plätze, Rhythmus: RHY_PER_ROW Schläge)

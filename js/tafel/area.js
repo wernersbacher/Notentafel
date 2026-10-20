@@ -12,6 +12,9 @@ import { renderPalette, buildCounts } from './sidebar.js';
 import { initControls } from './controls.js';
 import { initBoardInput } from './input.js';
 import { initTafelMenu, openTafelMenu } from './menu.js';
+import { initEcho } from './echo.js';
+import { initMelQuiz } from './quiz.js';
+import { endGame } from '../core/game.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
 
@@ -69,6 +72,8 @@ function area(id, label, panel, texts) {
   return {
     id, label, panel, board: el.grid, tools,
     enter: () => enter(id),
+    // Rhythmus-Echo und Tonnamen-Quiz gehören zu ihrer Tafel und enden beim Wechsel
+    leave: endGame,
     receive: act.receiveRows,
     plan,
     mark: markPlaying,
@@ -92,6 +97,8 @@ export function registerTafel() {
   initControls();
   initBoardInput();
   initTafelMenu();
+  initEcho();
+  initMelQuiz();
   // Reihenfolge der Reiter als Lernweg: erst Rhythmus, dann Farbnoten (danach das Notenblatt)
   register(area('rhy', 'Rhythmus', el.panelRhy, { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
   register(area('mel', 'Farbnoten', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));

@@ -1,12 +1,12 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, dur, beams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
+import { isNote, isBeat, isRest, units, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { S, settings, wraps } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
 import { stepHides } from '../core/player.js';
-import { colorStyle, noteLabel, noteSym, restSym, meterHTML } from './symbols.js';
+import { colorStyle, noteLabel, upArrow, noteSym, restSym, meterHTML } from './symbols.js';
 import { el } from './dom.js';
 
 const NO_MARKS = { b: {}, z: [] };
@@ -15,43 +15,50 @@ const BAR_CLS = { 2: ' final', 3: ' final rep-end', 4: ' final rep-start', 5: ' 
 
 
 /* ---------- Breite nach Notenlänge ---------- */
-// Jeder Schlag hat ein Feld: Ein Platz belegt so viele Achtel-Spalten, wie er dauert (leer = ein Schlag); eine Halbe
+// Jeder Schlag hat ein Feld: Ein Platz belegt so viele Sechzehntel-Spalten, wie er dauert (leer = ein Schlag); eine Halbe
 // hält also das nächste Feld frei. Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
-const spanOf = (x) => Math.round(dur(x) * 2);
+const spanOf = units;
 const rowUnits = (row) => row.reduce((u, x) => u + spanOf(x), 0);
+// Auf ganze Schläge (vier Spalten) aufgerundet
+const wholeBeats = (n) => n + (4 - n % 4) % 4;
 // Gezählt wird in Spalten. Rhythmus: immer S.cap Schläge (mehr nur, wenn eine ältere Zeile länger ist). Melodie: die
 // längste Zeile plus ein freier Schlag, mindestens bis zur Markierung, höchstens S.cap Schläge (außer ältere Zeilen),
 // aufgerundet auf ganze Schläge.
 function unitCount() {
   if (S.variant === 'rhy') {
-    let n = 2 * S.cap;
-    S.rows.forEach((row) => { if (rowUnits(row) > n) n = rowUnits(row) + 2; });
-    return n + n % 2;
+    let n = 4 * S.cap;
+    S.rows.forEach((row) => { if (rowUnits(row) > n) n = rowUnits(row) + 4; });
+    return wholeBeats(n);
   }
   let n = 0;
   S.rows.forEach((row, r) => {
-    const extra = r === S.sel.r && S.sel.c >= row.length ? (S.sel.c - row.length + 1) * 2 : 2;
+    const extra = r === S.sel.r && S.sel.c >= row.length ? (S.sel.c - row.length + 1) * 4 : 4;
     const u = rowUnits(row);
-    n = Math.max(n, u > 2 * S.cap ? u + 2 : Math.min(u + extra, 2 * S.cap));
+    n = Math.max(n, u > 4 * S.cap ? u + 4 : Math.min(u + extra, 4 * S.cap));
   });
-  return n + n % 2;
+  return wholeBeats(n);
 }
-// Breite der Spalten einer Zeile in --L, aufsummiert (P[u] = Breite aller Spalten vor u). Ein Schlag ist einen Kreis breit (2 × 1).
+// Breite der Spalten einer Zeile in --L, aufsummiert (P[u] = Breite aller Spalten vor u). Ein Schlag ist einen Kreis breit (4 × ½).
 // Melodie: Beginnt in der Zeile auf diesem Schlag eine Achtel oder ein Zeichen zwischen den Schlägen, wird er zwei Kreise
-// breit (2 × 2), damit die bunten Kreise nebeneinander passen. Rhythmus: Ein Schlag bleibt ein Feld, zwei Achtel teilen es sich.
+// breit (4 × 1), damit die bunten Kreise nebeneinander passen. Rhythmus: Ein Schlag bleibt ein Feld, zwei Achtel teilen
+// es sich; beginnt auf ihm eine Sechzehntel, wird er zwei Felder breit (die Sechzehntel stehen dann so weit auseinander
+// wie sonst zwei Achtel).
 function colFrs(cols, row) {
   const wide = [], P = [0], share = S.variant === 'rhy';
   let u = 0;
   row.forEach((x) => {
     const k = spanOf(x);
-    if (!share && (k === 1 || u % 2)) wide[u >> 1] = true;
+    if (share ? k === 1 || u % 2 : k < 4 || u % 4) wide[u >> 2] = true;
     u += k;
   });
-  for (u = 0; u < cols; u++) P.push(P[u] + (wide[u >> 1] ? 2 : 1));
+  for (u = 0; u < cols; u++) P.push(P[u] + (wide[u >> 2] ? 1 : 0.5));
   return P;
 }
-// geo (nur bei Breite nach Notenlänge): u0 = erste Achtel-Spalte des Platzes, k = Anzahl Spalten, P = aufsummierte Spaltenbreiten.
-// Liefert den Anteil des Platzes, der vor Achtel o liegt.
+// Mitte des Zeichens eines Platzes in --L: Ab einem Schlag Breite steht es vorn in seinem Platz (einen Kreis breit),
+// in einem schmaleren Platz (Achtel, Sechzehntel im geteilten Feld) mittig darüber
+const midOf = (geo) => geo.P[geo.u0] + Math.min(geo.P[geo.u0 + geo.k] - geo.P[geo.u0], 2) / 2;
+// geo (nur bei Breite nach Notenlänge): u0 = erste Sechzehntel-Spalte des Platzes, k = Anzahl Spalten, P = aufsummierte
+// Spaltenbreiten. Liefert den Anteil des Platzes, der vor Sechzehntel o liegt.
 const geoFrac = (geo, o) => (geo.P[geo.u0 + o] - geo.P[geo.u0]) / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]);
 
 /* ---------- Ein Platz ---------- */
@@ -69,14 +76,19 @@ function countsHTML(zz, geo) {
 // endBar: Taktstrich hinter dem Platz (letztes Zeichen einer vollen Zeile, hinter dem kein leerer Platz mehr kommt).
 // Balken an einem verdeckten Achtel (?-Karte): beamCut – der Balken dieses Platzes endet in der Mitte, weil das Achtel
 // danach verdeckt ist; beamIn – das Achtel davor ist verdeckt, sein Balken fehlt, also kommt die Hälfte bis hierher.
-function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, beamCut, beamIn }) {
+// bw: wie weit der Balken reicht (bis zum Hals des nächsten Zeichens, als Anteil eines Kreises); sub: zweiter Balken der
+// Sechzehntel (siehe subBeams); odd: zweite Sechzehntel einer Achtel (Silbe ri); gin: in einer Balkengruppe, aber nicht
+// am Anfang (kein eigenes Silbenfeld); reach: so weit reicht das Silbenfeld am Anfang einer Gruppe (in Platzbreiten).
+function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, beamCut, beamIn, bw, sub, odd, gin, reach: greach }) {
   const isSel = S.sel.r === r && S.sel.c === c;
   const where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
   let dot, label, len = '', stackCls = '';
   if (isNote(cell)) {
     const n = NOTE_BY[cell.n];
-    dot = '<div class="dot' + (n.up ? ' up' : '') + '" style="' + colorStyle(n) + '">' + noteLabel(n) + '</div>';
-    label = where + ': ' + n.n + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
+    // Tonnamen-Quiz durch die Melodie: der Buchstabe erscheint erst, wenn der Punkt benannt ist
+    const ask = S.quiz && !S.quiz.done.has(r + ',' + c);
+    dot = '<div class="dot' + (n.up ? ' up' : '') + '" style="' + colorStyle(n) + '">' + (ask ? upArrow(n) : noteLabel(n)) + '</div>';
+    label = where + ': ' + (ask ? 'Farbpunkt' : n.n) + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
     if (cell.d) len = noteSym(cell.d, beam);
   } else if (isBeat(cell)) {
     dot = '<div class="dot beat' + (cell.d < 4 ? ' stem' : '') + '">' + noteSym(cell.d, beam) + '</div>';
@@ -88,10 +100,10 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
     // (das Feld der ersten reicht bis zur Mitte der zweiten, eine halbe Feldbreite weiter; die zweite hat keins).
     // Die Farbe zeigt den Notenwert (Klasse d1, d05, d2, d3, d4).
     if (settings.syl && S.variant === 'rhy') {
-      const parts = geo ? syllableParts(cell, beam) : [[syllable(cell, beam), 0]];
+      const parts = geo ? syllableParts(cell, beam, odd) : [[syllable(cell, beam, odd), 0]];
       len = parts.map(([t, o]) => o ? '<span class="syl at" style="--t:' + geoFrac(geo, o).toFixed(4) + '">' + t + '</span>' : '<span class="syl">' + t + '</span>').join('');
-      const reach = parts.length > 1 ? geoFrac(geo, parts[parts.length - 1][1]) : geo && beam === 1 ? 1 : 0;
-      if (parts.length && beam !== 2) len += '<span class="sgrp d' + String(cell.d).replace('.', '') + '" style="--w:' + reach.toFixed(4) + '"></span>';
+      const reach = parts.length > 1 ? geoFrac(geo, parts[parts.length - 1][1]) : greach || 0;
+      if (parts.length && !gin) len += '<span class="sgrp d' + String(cell.d).replace('.', '') + '" style="--w:' + reach.toFixed(4) + '"></span>';
     }
   } else if (isRest(cell)) {
     // Halbe liegen auf der Linie, die Ganze hängt darunter (das stellt das Zeichen selbst ein)
@@ -116,10 +128,10 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
   if (q === 1) label = where + ': verdeckt (antippen deckt auf)';
   return '<div class="cell' + (isSel ? ' sel' : '') + (q === 1 ? ' quiz' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
-    '<div class="stack' + stackCls + '">' + (c === 0 ? '<span class="rnum" data-fold="' + r + '" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
+    '<div class="stack' + stackCls + '"' + (bw ? ' style="--bw:' + bw.toFixed(4) + '"' : '') + '>' + (c === 0 ? '<span class="rnum" data-fold="' + r + '" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after"></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
-    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
+    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (sub && isBeat(cell) ? '<span class="bm2 s' + sub + '"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
 
 /* ---------- Eine Zeile ---------- */
@@ -130,24 +142,38 @@ function rowHTML(row, r, cols, P, marks) {
   // Taktart vorn: die eigene der Zeile, sonst die geltende (aus einer Zeile darüber), sobald in der Zeile etwas steht –
   // so steht sie nach jedem Umbruch wieder am Zeilenanfang
   const meter = row.meter || (row.some(Boolean) ? meterOf(S.rows, r) : '');
-  const b = beams(row), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
+  const b = beams(row, meter === '6/8' ? 1.5 : 1), sub = subBeams(row, b), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
-  let cells = '', c = 0;
-  // u: belegte Achtel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen Achtel
-  // erst eine halbe, damit sie wieder auf den Schlägen stehen
-  for (let u = 0; u < cols && c < MAX_LEN; c++) {
-    const beyond = c >= row.length;
-    const geo = { u0: u, k: beyond ? (u % 2 ? 1 : 2) : spanOf(row[c]), P };
+  // Erst alle Plätze ausmessen (Balken und Silbenfelder reichen bis zu einem späteren Platz).
+  // u: belegte Sechzehntel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen
+  // Achtel oder Sechzehntel nur bis zum nächsten Schlag, damit sie wieder auf den Schlägen stehen
+  const geos = [];
+  for (let u = 0, c = 0; u < cols && c < MAX_LEN; c++) {
+    const geo = { u0: u, k: c >= row.length ? (u % 4 ? 4 - u % 4 : 4) : spanOf(row[c]), P };
+    geos.push(geo);
     u += geo.k;
+  }
+  const widthOf = (g) => P[g.u0 + g.k] - P[g.u0];
+  let cells = '';
+  geos.forEach((geo, c) => {
+    const beyond = c >= row.length;
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
     const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
     // Füllt die Zeile alle Spalten, kommt hinter dem letzten Zeichen kein leerer Platz, der den Taktstrich tragen könnte
-    const endBar = c === row.length - 1 && u >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1;
+    const endBar = c === row.length - 1 && geo.u0 + geo.k >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1;
     const hid = (k) => !!(row[k] && row[k].q === 1);
+    // Balken bis zum Hals des nächsten Zeichens (ein Kreis ist 2 --L); das Silbenfeld am Anfang einer Gruppe bis zur
+    // Mitte ihres letzten Zeichens
+    const bw = b[c] === 1 && geos[c + 1] ? (midOf(geos[c + 1]) - midOf(geo)) / 2 : 0;
+    const gin = c > 0 && b[c - 1] === 1;
+    let end = c;
+    while (b[end] === 1 && geos[end + 1]) end++;
+    const reach = !gin && end > c ? (midOf(geos[end]) - midOf(geo)) / widthOf(geo) : 0;
     cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar,
-      beamCut: b[c] === 1 && hid(c + 1), beamIn: c > 0 && b[c - 1] === 1 && hid(c - 1) && !hid(c) });
-  }
+      beamCut: b[c] === 1 && hid(c + 1), beamIn: c > 0 && b[c - 1] === 1 && hid(c - 1) && !hid(c),
+      bw, sub: sub[c], odd: geo.u0 % 2 === 1, gin, reach });
+  });
   // Feste Rasterzeile, damit das Tuch (das mehrere Zeilen überdeckt) die Zeilen nicht verschiebt
   const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
   // Eingeklappt: die Plätze bleiben (die Zeile behält ihre Höhe), zu sehen ist nur die Nummer; ein Tipp darauf klappt auf
@@ -167,15 +193,16 @@ export function renderBoard() {
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
   grid.classList.toggle('meters', hasMeter(S.rows));
   grid.classList.toggle('inserting', S.insertMode);
-  grid.classList.toggle('clean', sideCollapsed()); // eingeklappte Leiste: ohne Markierung und leere Plätze
+  grid.classList.toggle('clean', sideCollapsed() || !!S.quiz); // eingeklappte Leiste, Quiz: ohne Markierung und leere Plätze
   grid.classList.toggle('nolen', !settings.lens && !(settings.syl && S.variant === 'rhy'));
   const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));
-  // Tuch: deckt ab seiner Zeile alles bis unten ab; ein Tipp darauf deckt die nächste Zeile auf
-  const k = S.rows.findIndex((row) => row.cover);
-  const cloth = k < 0 ? '' : '<div class="cloth" style="grid-row:' + (k + 1) + ' / ' + (S.rows.length + 1) + '" role="button" tabindex="0" aria-label="Abgedeckt. Antippen deckt die nächste Zeile auf.">' +
-    '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span></div>';
+  // Tuch: deckt ab seiner Zeile alles bis unten ab; ein Tipp darauf deckt die nächste Zeile auf (liegt darunter nichts
+  // mehr, heißt es nur „aufdecken“, z. B. beim Rhythmus-Echo)
+  const k = S.rows.findIndex((row) => row.cover), more = S.rows.slice(k + 1).some((row) => row.some(Boolean));
+  const cloth = k < 0 ? '' : '<div class="cloth" style="grid-row:' + (k + 1) + ' / ' + (S.rows.length + 1) + '" role="button" tabindex="0" aria-label="Abgedeckt. Antippen deckt ' + (more ? 'die nächste Zeile ' : '') + 'auf.">' +
+    '<span class="clothtip">▼ antippen: ' + (more ? 'nächste Zeile aufdecken' : 'aufdecken') + '</span></div>';
   grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('') + cloth;
   // Passt die Tafel nicht mehr in die Breite, darf man sie seitlich wischen
   grid.classList.toggle('wide', el.board.scrollWidth > el.board.clientWidth + 1);

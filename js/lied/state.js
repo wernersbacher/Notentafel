@@ -3,7 +3,8 @@ import { pushState, popState } from '../core/history.js';
 import { emptySong, cleanSong } from './model.js';
 import { store, loadLiedSettings, saveLiedSettings } from './storage.js';
 
-// Einstellungen nur für Lied: autoBar, names, colors, autoZ, lyrics, check, size, wrap, allTones
+// Einstellungen nur für Lied: autoBar, names, colors, autoZ, lyrics, check, size, wrap, allTones und die des
+// Tonnamen-Quiz (quizMode, quizLo, quizHi, quizSharp, quizFlat)
 export const opts = loadLiedSettings();
 export const persistOpts = () => saveLiedSettings(opts);
 
@@ -15,7 +16,8 @@ export const L = {
   hist: [], // Rückgängig-Verlauf (als JSON)
   insertMode: false,
   last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt
-  pen: { v: 4, dot: 0 } // vorgewählter Notenwert für die nächsten Töne und Pausen
+  pen: { v: 4, dot: 0 }, // vorgewählter Notenwert für die nächsten Töne und Pausen
+  quiz: null // Tonnamen-Quiz durch das Lied: { i (gefragte Note), done (benannte Noten) }, siehe quiz.js
 };
 
 export const persistSong = () => store.saveBoard(L.song, L.name);

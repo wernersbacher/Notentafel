@@ -43,8 +43,9 @@ export const NUM_W = 2.6;
 // Eine Zeile ist eingeklappt, wenn eines ihrer Ereignisse fd trägt (so bleibt sie es auch, wenn neu umbrochen wird)
 export const foldedLine = (ev, s) => ev.slice(s.first, s.end).some((e) => e.fd);
 
-// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, colors, counts, lyrics, target, playing, fit,
-// nums }. lyrics: false blendet den Liedtext aus (layout() dann auch ohne lyrics rechnen lassen).
+// lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, nameIf, colors, counts, lyrics, target, playing,
+// fit, nums }. lyrics: false blendet den Liedtext aus (layout() dann auch ohne lyrics rechnen lassen).
+// nameIf(i) (optional): nur unter diesen Noten steht ihr Name (der Platz für die Namen bleibt unter allen).
 // fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
 // nums: Vor jedem System steht seine Nummer (NUM_W breit, das System rückt so weit nach rechts); ein Tipp darauf klappt
 // es ein. Eingeklappt behält es seine Höhe, zu sehen ist nur die Nummer als Knopf und eine feine Linie.
@@ -156,7 +157,7 @@ function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
     // Zählzeiten direkt unter dem System, darunter die Notennamen
     if (it.counts) it.counts.forEach((c) => { g += '<text class="cnt' + (c.held ? ' held' : '') + '" x="' + f(c.x) + '" y="' + f(4 + s.bottom + 1.1) + '">' + c.t + '</text>'; });
     if (lyrics && e.ly) g += '<text class="ly" x="' + f(it.x) + '" y="' + f(4 + s.bottom + zz + 1.35) + '">' + escText(lyricText(e.ly)) + '</text>';
-    if (o.names && isNote(e)) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
+    if (o.names && isNote(e) && (!o.nameIf || o.nameIf(it.i))) g += '<text class="nm" x="' + f(it.x) + '" y="' + f(4 + bottom - 0.7) + '">' + noteName(e, song.key) + '</text>';
     g += '</g>';
   });
   if (lyrics) g += lyricMarks(ev, s, 4 + s.bottom + zz + 1.35);

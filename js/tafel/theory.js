@@ -17,13 +17,15 @@ export function countSlots(rows, r, cell) {
   return Math.max(1, Math.round(dur(cell) / unit));
 }
 // Zählzeiten eines Zeichens, das an Stelle p im Takt beginnt und d Schläge dauert.
-// Auf der Zählzeit steht die Zahl, genau dazwischen „+“; gehaltene Zählzeiten folgen blasser.
+// Auf der Zählzeit steht die Zahl, genau dazwischen „+“, auf den Sechzehnteln dazwischen „e“ (1 e + e);
+// gehaltene Zählzeiten folgen blasser.
 function countsAt(p, d, mi) {
   const out = [], q = p / mi.unit, k = Math.floor(q);
   if (q === k) out.push({ t: String(k + 1) });
   else if (q - k === 0.5) out.push({ t: '+' });
-  // o: Abstand zum Anfang des Zeichens in Achteln (für „Breite nach Notenlänge“)
-  for (let x = k + 1; x < mi.n && x * mi.unit < p + d; x++) out.push({ t: String(x + 1), held: true, o: (x * mi.unit - p) * 2 });
+  else if (mi.unit === 1 && (q - k === 0.25 || q - k === 0.75)) out.push({ t: 'e' });
+  // o: Abstand zum Anfang des Zeichens in Sechzehnteln (für „Breite nach Notenlänge“)
+  for (let x = k + 1; x < mi.n && x * mi.unit < p + d; x++) out.push({ t: String(x + 1), held: true, o: (x * mi.unit - p) * 4 });
   return out;
 }
 // Automatische Taktstriche und Zählzeiten. Gezählt wird ab der ersten Zeile mit Taktart über die Zeilen hinweg;

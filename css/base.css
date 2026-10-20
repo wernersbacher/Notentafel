@@ -219,3 +219,70 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .grid.rhy, .sheet { --card: #0f766e; --card-fg: #fff; }
 /* Leiste: Schalter fürs Mitspielen unter den Knöpfen */
 .btn.stephide { width: 100%; margin-top: 6px; min-height: 44px; font-size: .85rem; }
+
+/* ---------- Üben und Spielen (alle Bereiche) ---------- */
+/* Leiste des Spiels unten links auf der Tafel; beim Quiz über die ganze Breite (die runden Knöpfe machen dann Platz) */
+.gamebar {
+  position: absolute; left: 24px; bottom: 30px; z-index: 16;
+  display: flex; align-items: flex-end; gap: 10px;
+}
+.gamebar.quiz { right: 24px; }
+.boardwrap.game-quiz .playfab { display: none; }
+/* Unten auf der Tafel bleibt so viel frei, dass die Leiste nichts verdeckt */
+.boardwrap.game-echo .grid, .boardwrap.game-quiz .grid { padding-bottom: 116px; }
+.boardwrap.game-quiz .sheet { padding-bottom: 180px; }
+.gbtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 70px; height: 70px; padding: 0 10px; border-radius: 20px;
+  border: 2px solid var(--btn-line); background: var(--btn); color: var(--fg); box-shadow: 0 3px 10px var(--shadow);
+  font: 800 .7rem/1.1 var(--font-ui); cursor: pointer; touch-action: manipulation;
+}
+.gbtn .ico { width: 1.6rem; height: 1.6rem; }
+.gbtn.main { background: var(--fg); color: var(--board); border-color: var(--fg); min-width: 96px; }
+.gbtn:disabled { opacity: .4; cursor: default; }
+.gbtn:active:not(:disabled) { transform: scale(.96); }
+.gctl { display: flex; gap: 8px; flex: none; }
+.gctl .gbtn { min-width: 62px; height: 62px; }
+/* Antworten: wie eine Klaviatur (Stammtöne unten, Halbtöne darüber dazwischen) oder runde Farbpunkte in einer Reihe */
+.qkeys { flex: 1; min-width: 0; padding: 8px; border-radius: 18px; background: var(--btn); border: 2px solid var(--btn-line); box-shadow: 0 3px 10px var(--shadow); }
+.qkeys.piano { display: grid; gap: 5px 3px; }
+.qkeys.row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.qkey {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-height: 58px; padding: 0 1px; border: 0; border-radius: 12px;
+  background: var(--c); color: #000; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16);
+  font: 700 1.25rem/1 var(--font-display); cursor: pointer; touch-action: manipulation; overflow: hidden;
+}
+.qkey.black { min-height: 44px; font-size: .92rem; border-radius: 10px; }
+.qkey.black span + span { font-size: .85em; }
+.qkeys.row .qkey { flex: 0 1 64px; min-width: 40px; aspect-ratio: 1; min-height: 0; border-radius: 50%; font-size: 1.6rem; }
+.qkey.right { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 4px var(--board), 0 0 0 8px #1e8449; animation: qright .5s ease; }
+.qkey.wrong { opacity: .3; animation: qwrong .4s ease; }
+@keyframes qright { 40% { transform: scale(1.15); } }
+@keyframes qwrong { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+/* Die Frage groß über der Tafel; unten bleibt Platz für die Leiste */
+.quizview {
+  position: absolute; top: 10px; left: 10px; right: 10px; bottom: 22px; z-index: 12;
+  display: grid; place-items: center; padding: 16px 16px 150px; border-radius: 8px;
+  background: var(--board); color: var(--fg);
+}
+/* Schmale Tafel (z. B. iPad im Hochformat): Die Leiste des Echos rückt über die runden Knöpfe; beim Quiz stehen die
+   Knöpfe anhören, Lösung, Ende über den Antworten, die so die ganze Breite bekommen */
+.boardwrap { container-type: inline-size; }
+@container (max-width: 880px) {
+  .gamebar.echo { bottom: 124px; }
+  .boardwrap.game-echo .grid { padding-bottom: 210px; }
+  .gamebar.quiz { flex-direction: column; align-items: stretch; gap: 8px; }
+  .gamebar.quiz .gctl { order: -1; justify-content: flex-end; }
+  .qkey { font-size: 1.05rem; }
+  .qkey.black { font-size: .78rem; }
+  .quizview { padding-bottom: 240px; }
+  .boardwrap.game-quiz .grid { padding-bottom: 200px; }
+  .boardwrap.game-quiz .sheet { padding-bottom: 260px; }
+}
+/* Tuch beim Rhythmus-Echo: blinkt bei jedem Schlag, der darunter erklingt */
+.cloth.beat { animation: clothbeat .18s ease-out; }
+@keyframes clothbeat { 0% { border-color: var(--fg); background-color: var(--play-bg); } }
+@media (prefers-reduced-motion: reduce) {
+  .qkey.right, .qkey.wrong, .cloth.beat { animation: none; }
+}

@@ -4,9 +4,10 @@ import { renderBoard, markPlaying } from './board.js';
 import { renderSidebar } from './sidebar.js';
 import { stopPlay, playingPos } from '../core/player.js';
 
+// Hervorgehoben ist, was gerade klingt, sonst der Punkt, nach dem das Tonnamen-Quiz fragt
 export function render() {
   renderBoard();
-  markPlaying(playingPos());
+  markPlaying(playingPos() || (S.quiz && S.quiz.pos));
   renderSidebar();
 }
 

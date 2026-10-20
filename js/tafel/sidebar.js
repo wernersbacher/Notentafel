@@ -1,5 +1,5 @@
 // Darstellung der Leiste: Töne, Werte, Zählzeiten und der Zustand aller Knöpfe
-import { MAX_ROWS, NOTE_BY, GROUPS, MORE_SEMIS, DUR_BY, VALUE_BTNS, COUNTS } from './config.js';
+import { MAX_ROWS, NOTE_BY, GROUPS, MORE_SEMIS, DUR_BY, VALUE_BTNS, RHY_VALUE_BTNS, COUNTS } from './config.js';
 import { isNote, isBeat, isRest, filled, canStepDown, canCloseGap, dotTargetIn } from './model.js';
 import { meterOf } from './theory.js';
 import { S, settings, curCell, curRow } from './state.js';
@@ -39,23 +39,24 @@ export function buildCounts() {
   ).join('') + '<button type="button" class="btn" data-zclear aria-label="Zählzeiten entfernen" title="Zählzeiten entfernen">' + ICONS.clearCount + '</button>';
 }
 
-// Noten- und Pausenwerte wie im Lied angeordnet: Ganze, Halbe, Viertel, Achtel, (frei), Punkt. Hervorgehoben ist der Wert
-// des markierten Platzes (ein punktierter zählt als sein Grundwert mit Punkt).
-// Die Zeichen sind dieselben wie im Lied (core/glyphs.js); V: Länge in Schlägen → Notenwert (1 Ganze … 8 Achtel).
-const BASE = { 1.5: 1, 3: 2 }, V = { 4: 1, 2: 2, 1: 4, 0.5: 8 };
-function valueBtns(on, sym, names) {
-  return VALUE_BTNS.map((d) =>
+// Noten- und Pausenwerte wie im Lied angeordnet: Ganze, Halbe, Viertel, Achtel, Sechzehntel (bei den Farbnoten frei),
+// Punkt. Hervorgehoben ist der Wert des markierten Platzes (ein punktierter zählt als sein Grundwert mit Punkt).
+// Die Zeichen sind dieselben wie im Lied (core/glyphs.js); V: Länge in Schlägen → Notenwert (1 Ganze … 16 Sechzehntel).
+const BASE = { 1.5: 1, 3: 2 }, V = { 4: 1, 2: 2, 1: 4, 0.5: 8, 0.25: 16 };
+function valueBtns(list, on, sym, names) {
+  return list.map((d) =>
     '<button type="button" class="btn' + (d === (BASE[on] || on) ? ' on' : '') + '" data-d="' + d + '" title="' + DUR_BY[d][names] +
     '" aria-label="' + DUR_BY[d][names] + '">' + sym(V[d]) + '</button>'
   ).join('');
 }
-const dotBtn = (on) => '<span class="vgap" aria-hidden="true"></span><button type="button" class="btn' + (on ? ' on' : '') +
+const dotBtn = (on, gap) => (gap ? '<span class="vgap" aria-hidden="true"></span>' : '') + '<button type="button" class="btn' + (on ? ' on' : '') +
   '" data-dot title="Punkt: aus der Halben eine punktierte Halbe, aus der Viertel eine punktierte Viertel" aria-label="Punkt">' + dotIcon() + '</button>';
 function renderValues(cur) {
   const dt = dotTargetIn(S.rows, S.sel), dotted = !!(dt && BASE[dt.d]);
-  el.valuesMel.innerHTML = valueBtns(isNote(cur) && cur.d, noteIcon, 'n') + dotBtn(dotted);
-  el.values.innerHTML = valueBtns((isNote(cur) || isBeat(cur)) && cur.d, noteIcon, 'n') + dotBtn(dotted);
-  el.restsMel.innerHTML = el.rests.innerHTML = valueBtns(isRest(cur) && cur.d, restIcon, 'p');
+  el.valuesMel.innerHTML = valueBtns(VALUE_BTNS, isNote(cur) && cur.d, noteIcon, 'n') + dotBtn(dotted, true);
+  el.values.innerHTML = valueBtns(RHY_VALUE_BTNS, (isNote(cur) || isBeat(cur)) && cur.d, noteIcon, 'n') + dotBtn(dotted, false);
+  el.restsMel.innerHTML = valueBtns(VALUE_BTNS, isRest(cur) && cur.d, restIcon, 'p');
+  el.rests.innerHTML = valueBtns(RHY_VALUE_BTNS, isRest(cur) && cur.d, restIcon, 'p');
 }
 // Aus, solange die Zählzeiten automatisch kommen
 function renderCounts(cur) {

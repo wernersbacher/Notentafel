@@ -1,8 +1,8 @@
 // Feste Größen und Tabellen der Tafel (Melodie und Rhythmus)
 import { TONE_COLORS as T, SEMI_COLORS as S } from '../core/colors.js';
 
-// Zeilen sind beliebig lang (bis MAX_LEN)
-export const MAX_LEN = 32, MAX_ROWS = 8, START_ROWS = 3;
+// Zeilen sind beliebig lang (bis MAX_LEN; so viele Sechzehntel hat eine volle Rhythmus-Zeile)
+export const MAX_LEN = 48, MAX_ROWS = 8, START_ROWS = 3;
 // Höchstens so viele Plätze stehen in einer Zeile; dann geht es automatisch in der nächsten weiter.
 // (Ältere Stände mit längeren Zeilen, bis MAX_LEN, bleiben, wie sie sind.)
 export const MAX_PER_ROW = 10;
@@ -41,6 +41,7 @@ export const MORE_SEMIS = ['Cis', 'Dis', 'Gis', 'Cis+', 'Dis+'];
 
 // Tonlängen in Schlägen; Viertel (1) ist der Normalfall. Punktierte Werte entstehen mit dem Punkt (DOTTED).
 export const DURS = [
+  { d: 0.25, l: '¼', n: 'Sechzehntel', p: 'Sechzehntelpause' },
   { d: 0.5, l: '½', n: 'Achtel', p: 'Achtelpause' },
   { d: 1,   l: '1', n: 'Viertel', p: 'Viertelpause' },
   { d: 1.5, l: '1½', n: 'Punktierte Viertel', p: 'Punktierte Viertelpause' },
@@ -48,8 +49,10 @@ export const DURS = [
   { d: 3,   l: '3', n: 'Punktierte Halbe', p: 'Punktierte halbe Pause' },
   { d: 4,   l: '4', n: 'Ganze', p: 'Ganze Pause' }
 ];
-// Knöpfe wie im Lied: Ganze, Halbe, Viertel, Achtel (der Platz der Sechzehntel bleibt frei), dann der Punkt
+// Knöpfe wie im Lied: Ganze, Halbe, Viertel, Achtel, Sechzehntel, dann der Punkt. Bei den Farbnoten bleibt der Platz
+// der Sechzehntel frei.
 export const VALUE_BTNS = [4, 2, 1, 0.5];
+export const RHY_VALUE_BTNS = [4, 2, 1, 0.5, 0.25];
 // Punkt an- und ausschalten: Halbe ↔ punktierte Halbe, Viertel ↔ punktierte Viertel
 export const DOTTED = { 2: 3, 3: 2, 1: 1.5, 1.5: 1 };
 export const DUR_BY = Object.fromEntries(DURS.map((x) => [x.d, x]));

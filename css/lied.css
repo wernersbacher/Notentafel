@@ -200,3 +200,7 @@ aside.side { padding: 12px; overflow: hidden; }
 .score .fpill { fill: var(--btn); stroke: var(--btn-line); stroke-width: .16; }
 .score .fnum { text-anchor: middle; }
 .score .fline { fill: var(--btn-line); }
+
+/* ---------- Tonnamen-Quiz: die Zufallsnote groß auf eigenen Notenlinien ---------- */
+.qstaff { height: 100%; max-height: 62vh; width: auto; max-width: 100%; overflow: visible; }
+.qstaff .qnm { font: 400 2.6px var(--font-display); text-anchor: middle; }

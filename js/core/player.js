@@ -106,6 +106,8 @@ function stepSound(s) {
 // Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.
 // Jede Note und jede Pause ist ein Schritt, auch die zweite Note eines Haltebogens; Wiederholungen laufen mit.
 function stepNext(getPlan, mark) {
+  // Läuft gerade etwas im Tempo (z. B. das Rhythmus-Echo), beendet der erste Tipp es nur
+  if (play && !play.steps) { stopPlay(); return; }
   if (!play) {
     const plan = getPlan(), steps = plan ? plan.items : [];
     if (!steps.some((s) => s.sound)) { toast('Noch keine Töne auf der Tafel.', true); return; }
@@ -123,6 +125,12 @@ export function togglePlay(getPlan, mark) {
   if (settings.step) stepNext(getPlan, mark);
   else if (play) stopPlay();
   else startPlay(getPlan(), mark);
+}
+// Spielt einen Plan gleich im Tempo ab, auch wenn Schritt für Schritt eingeschaltet ist (z. B. das Rhythmus-Echo);
+// was gerade läuft, endet. Einzählen und Metronom gelten wie sonst.
+export function playNow(plan, mark) {
+  stopPlay();
+  startPlay(plan, mark);
 }
 // Einzählen und Metronom: die Knöpfe mit data-play (unten rechts auf der Tafel) schalten die gemeinsame Einstellung um.
 // Der Ton-Knopf (stepSound) gibt es nur bei Schritt für Schritt: Lautsprecher oder durchgestrichener Lautsprecher.
@@ -182,14 +190,15 @@ export function initPlayer() {
   });
 }
 
-// Ein einzelner kurzer Ton zum Vorhören (z. B. beim Ziehen einer Note), unabhängig vom Abspielen
+// Ein einzelner kurzer Ton zum Vorhören (z. B. beim Ziehen einer Note), unabhängig vom Abspielen.
+// sound: 'piano' (Notenblatt) oder 'bell' (Farbnoten); len: Länge in Sekunden
 let preview = null;
-export function previewTone(f) {
+export function previewTone(f, sound = 'piano', len = 0.35) {
   const ctx = audioCtx();
   if (!ctx) return;
   if (preview) { try { preview.disconnect(); } catch (e) { /* schon getrennt */ } }
   preview = ctx.createGain();
   preview.gain.value = 0.5;
   preview.connect(ctx.destination);
-  piano(preview, f, ctx.currentTime + 0.01, 0.35);
+  (sound === 'bell' ? bell : piano)(preview, f, ctx.currentTime + 0.01, len);
 }

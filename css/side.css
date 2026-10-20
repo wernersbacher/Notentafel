@@ -97,3 +97,23 @@
 }
 /* Block „Weitere Symbole“: die Wiederholungen beginnen eine eigene Reihe unter den Strichen */
 .tools.three > .row2 { grid-column-start: 1; }
+
+/* ---------- Üben und Spielen ---------- */
+.ghint { margin: 0; font-size: .82rem; font-weight: 700; line-height: 1.35; color: var(--muted); }
+/* Auswahl aus drei (two, four: zwei, vier) Möglichkeiten; die gewählte ist dunkel */
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.seg.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seg.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.seg .btn { flex-direction: column; gap: .1rem; min-height: 48px; padding: .3rem .25rem; font-size: .86rem; line-height: 1.1; text-align: center; hyphens: manual; }
+.seg .btn .small { font-size: .66rem; line-height: 1.15; opacity: .85; }
+.seg .btn .acc { font: 700 1.2rem/1 var(--font-display); }
+.seg.two .btn { flex-direction: row; gap: .35rem; }
+.btn.wide { width: 100%; min-height: 44px; font-size: .85rem; }
+.btn.gamego { min-height: 56px; margin-top: 4px; background: var(--fg); color: var(--board); border-color: var(--fg); font-size: 1.05rem; }
+/* Tonraum: zwei Felder mit ◀ Ton ▶ */
+.rangerow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.rgroup { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; align-items: center; gap: 4px; }
+.rgroup .btn { padding: 0; min-height: 44px; font-size: .8rem; }
+.rval { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.rval .small { font: 700 .66rem var(--font-ui); color: var(--muted); }
+.rval output { font: 700 1.35rem/1.2 var(--font-display); }

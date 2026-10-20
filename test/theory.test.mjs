@@ -37,12 +37,18 @@ test('4/4: Zählzeiten und Taktstriche', () => {
 
 test('4/4: gehaltene Zählzeiten, Achtel mit „+“, leere Plätze zählen einen Schlag', () => {
   const [a] = autoMarks([row('4/4', n(2), n(0.5), n(0.5), null, n(4))], true).rows;
-  assert.deepEqual(a.z[0], [{ t: '1' }, { t: '2', held: true, o: 2 }]);
+  assert.deepEqual(a.z[0], [{ t: '1' }, { t: '2', held: true, o: 4 }]);
   assert.deepEqual(a.z[1], [{ t: '3' }]);
   assert.deepEqual(a.z[2], [{ t: '+' }]);
   assert.equal(a.z[3], undefined);
   assert.equal(a.z[4][0].t, '1');
   assert.deepEqual(a.b, { 4: 1, 5: 1 });
+});
+
+test('4/4: Sechzehntel mit „e“ (1 e + e)', () => {
+  const s = n(0.25);
+  const [a] = autoMarks([row('4/4', s, s, s, s, n(0.5), s, s)], true).rows;
+  assert.deepEqual(heads(a), ['1', 'e', '+', 'e', '2', '+', 'e']);
 });
 
 test('3/4: zählt über die Zeilen hinweg', () => {
@@ -58,7 +64,7 @@ test('3/4: zählt über die Zeilen hinweg', () => {
 test('6/8: in Achteln gezählt (1–6)', () => {
   const [a] = autoMarks([row('6/8', n(0.5), n(0.5), n(0.5), n(1), n(0.5), n(3))], true).rows;
   assert.deepEqual(heads(a), ['1', '2', '3', '4', '6', '1']);
-  assert.deepEqual(a.z[3], [{ t: '4' }, { t: '5', held: true, o: 1 }]);
+  assert.deepEqual(a.z[3], [{ t: '4' }, { t: '5', held: true, o: 2 }]);
   assert.deepEqual(a.z[5].map((z) => z.t), ['1', '2', '3', '4', '5', '6']);
   assert.deepEqual(a.b, { 5: 1, 6: 1 });
 });
@@ -66,7 +72,7 @@ test('6/8: in Achteln gezählt (1–6)', () => {
 test('2/2: in Halben gezählt', () => {
   const [a] = autoMarks([row('2/2', q, q, n(2), n(4))], true).rows;
   assert.deepEqual(heads(a), ['1', '+', '2', '1']);
-  assert.deepEqual(a.z[3], [{ t: '1' }, { t: '2', held: true, o: 4 }]);
+  assert.deepEqual(a.z[3], [{ t: '1' }, { t: '2', held: true, o: 8 }]);
   assert.deepEqual(a.b, { 3: 1, 4: 1 });
 });
 

@@ -99,7 +99,7 @@ function renderQuizSide() {
   el.melQuizSemis.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === g.semis));
   pressed(el.melQuizHigh, g.high);
   el.melQuizRand.hidden = g.mode !== 'rand';
-  blockSum('melGame', (g.ask === 'name' ? 'Farbe tippen · ' : '') + (g.mode === 'song' ? 'Melodie' : 'Zufall · ' + SEMIS[g.semis] + (g.high ? ' · hohe Töne' : '')));
+  blockSum('melGame', (g.ask === 'name' ? 'Welche Farbe? · ' : '') + (g.mode === 'song' ? 'Melodie' : 'Zufall · ' + SEMIS[g.semis] + (g.high ? ' · hohe Töne' : '')));
 }
 export function initMelQuiz() {
   const set = (k, v) => { games.quiz[k] = v; persistGames(); renderQuizSide(); };

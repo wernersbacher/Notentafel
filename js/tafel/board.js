@@ -2,6 +2,7 @@
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
 import { isNote, isBeat, isRest, units, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
+import { meterParts } from './rhythms.js';
 import { S, settings, wraps } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
@@ -179,15 +180,31 @@ function rowHTML(row, r, cols, P, marks) {
   const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
   // Eingeklappt: die Plätze bleiben (die Zeile behält ihre Höhe), zu sehen ist nur die Nummer; ein Tipp darauf klappt auf
   const fold = row.fold ? ' folded" data-fold="' + r + '" role="button" aria-label="Zeile ' + (r + 1) + ' eingeklappt. Antippen klappt sie auf.' : '';
-  return '<div class="row' + fold + '"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
+  return '<div class="row' + (row.hide ? ' blank' : '') + fold + '"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
 }
+
+// Rhythmus-Echo, noch nicht aufgelöst (hide): Statt der Zeichen steht eine leere Notenlinie mit Taktart, Takt- und
+// Schlussstrichen. Die Plätze sind unsichtbare Viertelpausen, damit alle Takte gleich breit sind und die Abstände nichts
+// über den Rhythmus verraten.
+function blankRow(row, meter) {
+  const len = meterParts(meter).len, n = Math.round(row.filter(isBeatOrRest).reduce((u, x) => u + spanOf(x), 0) / 4);
+  const b = [];
+  for (let i = 0; i < n; i++) b.push(i && i % len === 0 ? { k: 'r', d: 1, bar: 1 } : { k: 'r', d: 1 });
+  b.push({ bar: 2 });
+  b.line = row.line;
+  b.meter = row.meter;
+  b.hide = true;
+  return b;
+}
+const isBeatOrRest = (x) => isBeat(x) || isRest(x);
 
 export function renderBoard() {
   S.cap = S.variant === 'rhy' ? RHY_PER_ROW : MAX_PER_ROW;
   const grid = el.grid, cols = unitCount();
   grid.classList.add('prop');
   grid.classList.toggle('rhy', S.variant === 'rhy');
-  const Ps = S.rows.map((row) => colFrs(cols, row));
+  const rows = S.rows.map((row, r) => row.hide ? blankRow(row, meterOf(S.rows, r)) : row);
+  const Ps = rows.map((row) => colFrs(cols, row));
   grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
   grid.style.setProperty('--rows', S.rows.length);
   grid.style.setProperty('--cols', cols);
@@ -196,7 +213,7 @@ export function renderBoard() {
   grid.classList.toggle('inserting', S.insertMode);
   grid.classList.toggle('clean', sideCollapsed() || !!S.quiz); // eingeklappte Leiste, Quiz: ohne Markierung und leere Plätze
   grid.classList.toggle('nolen', !settings.lens && !(settings.syl && S.variant === 'rhy'));
-  const auto = autoMarks(S.rows, settings.autoBar || settings.autoZ);
+  const auto = autoMarks(rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));
   // Tuch: deckt ab seiner Zeile alles bis unten ab; ein Tipp darauf deckt die nächste Zeile auf (liegt darunter nichts
@@ -204,7 +221,7 @@ export function renderBoard() {
   const k = S.rows.findIndex((row) => row.cover), more = S.rows.slice(k + 1).some((row) => row.some(Boolean));
   const cloth = k < 0 ? '' : '<div class="cloth" style="grid-row:' + (k + 1) + ' / ' + (S.rows.length + 1) + '" role="button" tabindex="0" aria-label="Abgedeckt. Antippen deckt ' + (more ? 'die nächste Zeile ' : '') + 'auf.">' +
     '<span class="clothtip">▼ antippen: ' + (more ? 'nächste Zeile aufdecken' : 'aufdecken') + '</span></div>';
-  grid.innerHTML = S.rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('') + cloth;
+  grid.innerHTML = rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('') + cloth;
   // Passt die Tafel nicht mehr in die Breite, darf man sie seitlich wischen
   grid.classList.toggle('wide', el.board.scrollWidth > el.board.clientWidth + 1);
 }
@@ -217,7 +234,8 @@ export function markPlaying(pos) {
   const old = el.grid.querySelector('.cell.playing');
   if (old) old.classList.remove('playing');
   el.grid.querySelectorAll('.cell.ahead').forEach((x) => x.classList.remove('ahead'));
-  const cur = pos && cellEl(pos.r, pos.c);
+  // In einer leeren Zeile des Rhythmus-Echos leuchtet nichts (sonst sähe man, wo die Zeichen stehen)
+  const cur = pos && !(S.rows[pos.r] && S.rows[pos.r].hide) && cellEl(pos.r, pos.c);
   if (!cur) return;
   cur.classList.add('playing');
   follow(cur, el.board);

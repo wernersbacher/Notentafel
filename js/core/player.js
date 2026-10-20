@@ -1,12 +1,12 @@
 // Abspielen. Der Bereich liefert einen fertigen Ablaufplan, der Player kennt weder Zeilen noch Takte.
-// Plan: { items: [{ t, len, sound, f, pos }], end, beat?, perBar?, barStart? } – Zeiten in Schlägen (Vierteln); sound ist
-// 'bell', 'piano', 'clave' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
+// Plan: { items: [{ t, len, sound, f, pos }], end, beat?, perBar?, barStart?, pulse? } – Zeiten in Schlägen (Vierteln); sound ist
+// 'bell', 'piano', 'clave', 'drum' oder leer (still). pos wird beim Erreichen von t an mark(pos) gemeldet, damit der Bereich die
 // Stelle hervorheben kann. beat (Länge eines Zählschlags), perBar (Schläge pro Takt) und barStart (wo ein Takt beginnt,
 // z. B. nach einem Auftakt) braucht der Player für Einzähler und Metronom; ohne sie zählt er Viertel, vier pro Takt.
 // Schritt für Schritt (settings.step): statt im Tempo rückt die Markierung bei jedem Tipp auf den großen Knopf eine Note
 // oder Pause weiter, ohne Klang – gespielt wird auf Boomwhackers oder Glockenspiel. Mit settings.stepSound erklingt die
 // erreichte Note dabei in ihrer Länge im eingestellten Tempo. Nach der letzten Note ist Schluss.
-import { audioCtx, bell, clave, piano, tick } from './audio.js';
+import { audioCtx, bell, clave, drum, piano, tick } from './audio.js';
 import { settings, persistSettings, setTempo, watchTempo } from './settings.js';
 import { startAt } from './plan.js';
 import { toast, popover } from './ui.js';
@@ -61,18 +61,20 @@ function startPlay(plan, mark, again) {
   // plan und k (der Eintrag, der gerade klingt) braucht ein Tempowechsel zum Weiterspielen
   play = { out, timers: [], cur: null, mark, plan, k: -1 };
   for (let k = 0; k < perBar && pre; k++) tick(out, t0 - pre * step + k * beat * step, k === 0);
-  // Metronom: jeder Schlag des Stücks, betont am Taktanfang (gerechnet ab barStart)
-  if (settings.metro) {
+  // Metronom: jeder Schlag des Stücks, betont am Taktanfang (gerechnet ab barStart). plan.pulse: leiser Grundschlag
+  // unabhängig vom Metronom-Schalter (Rhythmus-Echo)
+  if (settings.metro || plan.pulse) {
     const first = ((plan.barStart || 0) % beat + beat) % beat;
     for (let t = first; t < plan.end - 1e-9; t += beat) {
       const inBar = ((t - (plan.barStart || 0)) % bar + bar) % bar;
-      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6);
+      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6, !settings.metro);
     }
   }
   plan.items.forEach((s, k) => {
     if (s.sound === 'bell') bell(out, s.f, t0 + s.t * step, s.len * step * 0.95);
     else if (s.sound === 'piano') piano(out, s.f, t0 + s.t * step, s.len * step * 0.95);
     else if (s.sound === 'clave') clave(out, t0 + s.t * step);
+    else if (s.sound === 'drum') drum(out, t0 + s.t * step);
     play.timers.push(setTimeout(() => { play.cur = s.pos; play.k = k; mark(s.pos); }, delay(s.t)));
   });
   play.timers.push(setTimeout(stopPlay, delay(plan.end)));
@@ -101,6 +103,7 @@ function stepSound(s) {
   if (s.sound === 'bell') bell(out, s.f, t0, len);
   else if (s.sound === 'piano') piano(out, s.f, t0, len);
   else if (s.sound === 'clave') clave(out, t0);
+  else if (s.sound === 'drum') drum(out, t0);
 }
 
 // Schritt für Schritt: der erste Tipp zeigt die erste Note ab der Markierung, jeder weitere die nächste.

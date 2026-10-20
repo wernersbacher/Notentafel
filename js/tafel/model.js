@@ -211,7 +211,8 @@ function cleanCell(c) {
 }
 // Zeilen-Eigenschaften line, meter und das Tuch: cover (ab dieser Zeile ist jetzt abgedeckt) und coverFrom (hier lag
 // das Tuch am Anfang, dorthin kommt es mit „neu abdecken“), dazu fold (eingeklappt). Gespeichert als lines: pro Zeile
-// 0, 1 (nur Linie, älteres Format) oder { l, m, c, f, k }.
+// 0, 1 (nur Linie, älteres Format) oder { l, m, c, f, k, h }. hide (h): die Zeile des Rhythmus-Echos ist noch nicht
+// aufgelöst und erscheint leer (siehe board.js).
 export function attachLines(rs, lines) {
   rs.forEach((row, r) => {
     const v = Array.isArray(lines) ? lines[r] : 0;
@@ -220,16 +221,18 @@ export function attachLines(rs, lines) {
     if (v && v.c) row.cover = true; else delete row.cover;
     if (v && v.f) row.coverFrom = true; else delete row.coverFrom;
     if (v && v.k) row.fold = true; else delete row.fold;
+    if (v && v.h) row.hide = true; else delete row.hide;
   });
   return rs;
 }
 export function packLines(rs) {
   return rs.map((row) => {
-    if (!row.meter && !row.cover && !row.coverFrom && !row.fold) return row.line ? 1 : 0;
+    if (!row.meter && !row.cover && !row.coverFrom && !row.fold && !row.hide) return row.line ? 1 : 0;
     const o = { l: row.line ? 1 : 0, m: row.meter };
     if (row.cover) o.c = 1;
     if (row.coverFrom) o.f = 1;
     if (row.fold) o.k = 1;
+    if (row.hide) o.h = 1;
     return o;
   });
 }

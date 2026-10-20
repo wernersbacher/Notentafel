@@ -12,7 +12,8 @@ export function cleanGames(s) {
     echo: {
       bars: pickOf(e.bars, [1, 2, 3], 2), // Länge in Takten
       notes: pickOf(e.notes, [1, 2, 3], 1), // Notenwerte: leicht, mittel, schwer
-      rests: pickOf(e.rests, [0, 1, 2, 3], 0) // Pausen: ohne, leicht, mittel, schwer
+      rests: pickOf(e.rests, [0, 1, 2, 3], 0), // Pausen: ohne, leicht, mittel, schwer
+      pulse: e.pulse !== false // leiser Grundschlag unter dem Rhythmus
     },
     quiz: {
       mode: pickOf(q.mode, ['rand', 'song'], 'rand'), // Zufallspunkt oder Melodie durchgehen

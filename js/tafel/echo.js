@@ -1,5 +1,6 @@
 // Rhythmus-Echo (Rhythmus, „Üben und Spielen“): Die Tafel würfelt einen Rhythmus, legt ihn verdeckt in eine neue Zeile
-// und spielt ihn vor. Die Kinder klatschen nach, dann wird er aufgedeckt. Die Rhythmen sammeln sich auf einer eigenen
+// und spielt ihn vor. Die Kinder klatschen nach, dann wird er aufgelöst. Bis dahin steht in der Zeile nur die leere
+// Notenlinie mit Taktart und Taktstrichen (row.hide, siehe board.js). Die Rhythmen sammeln sich auf einer eigenen
 // Tafel „Rhythmus-Echo“; die bisherige Tafel wandert beim ersten Mal unter „Zuletzt ersetzt“.
 import { MAX_ROWS } from './config.js';
 import { filled, isBeat, dur, newRow, hasNotes } from './model.js';
@@ -9,7 +10,6 @@ import { games, persistGames } from './games.js';
 import { S, snap, stashBoard } from './state.js';
 import { commit } from './render.js';
 import { markPlaying } from './board.js';
-import { revealRow } from './actions.js';
 import { playNow, stopPlay } from '../core/player.js';
 import { beatsOf } from '../core/plan.js';
 import { openGame, endGame, gameOn, gameBtn, GAME_ICONS } from '../core/game.js';
@@ -25,9 +25,9 @@ const ICONS = {
 let row = -1; // Zeile des zuletzt gewürfelten Rhythmus
 
 const echoRow = () => S.rows[row];
-const covered = () => !!(echoRow() && echoRow().cover);
+const covered = () => !!(echoRow() && echoRow().hide);
 
-/* ---------- Würfeln, Vorspielen, Aufdecken ---------- */
+/* ---------- Würfeln, Vorspielen, Auflösen ---------- */
 function newRhythm() {
   stopPlay();
   // Taktart der markierten Zeile (beim nächsten Echo also die des letzten), ohne Taktart 4/4
@@ -45,7 +45,7 @@ function newRhythm() {
   while (S.rows.length && !S.rows[S.rows.length - 1].some(Boolean)) S.rows.pop();
   // Ist die Tafel voll, fällt der älteste Rhythmus weg
   if (S.rows.length >= MAX_ROWS) S.rows.splice(0, S.rows.length - MAX_ROWS + 1);
-  S.rows.forEach((x) => { delete x.cover; delete x.coverFrom; });
+  S.rows.forEach((x) => { delete x.cover; delete x.coverFrom; delete x.hide; });
   // Jede Zeile mit Taktart, Taktstrichen (falls sie nicht automatisch kommen) und Schlussstrich
   const r = newRow(true), len = meterParts(meter).len;
   r.meter = meter;
@@ -56,7 +56,7 @@ function newRhythm() {
     r.push(c);
   });
   r.push({ bar: 2 });
-  r.cover = r.coverFrom = true;
+  r.hide = true;
   S.rows.push(r);
   row = S.rows.length - 1;
   S.sel = { r: row, c: 0 };
@@ -64,13 +64,14 @@ function newRhythm() {
   playEcho();
   updateBar();
 }
-// Unter dem Tuch blinkt es bei jedem Schlag kurz, aufgedeckt leuchtet das klingende Zeichen wie beim Abspielen
+// Solange der Rhythmus nicht aufgelöst ist, blinkt seine leere Zeile bei jedem Schlag kurz, aufgelöst leuchtet das
+// klingende Zeichen wie beim Abspielen
 function pulse(pos) {
-  const cloth = el.grid.querySelector('.cloth'), cell = pos && S.rows[pos.r] && S.rows[pos.r][pos.c];
-  if (!cloth || !isBeat(cell)) return;
-  cloth.classList.remove('beat');
-  void cloth.offsetWidth;
-  cloth.classList.add('beat');
+  const line = el.grid.querySelector('.row.blank:nth-child(' + (row + 1) + ')'), cell = pos && S.rows[pos.r] && S.rows[pos.r][pos.c];
+  if (!line || !isBeat(cell)) return;
+  line.classList.remove('beat');
+  void line.offsetWidth;
+  line.classList.add('beat');
 }
 function playEcho() {
   const x = echoRow();
@@ -79,34 +80,40 @@ function playEcho() {
   let t = 0;
   x.forEach((cell, c) => {
     if (!filled(cell)) return;
-    items.push({ t, len: dur(cell), sound: isBeat(cell) ? 'clave' : '', f: 0, pos: { r: row, c } });
+    items.push({ t, len: dur(cell), sound: isBeat(cell) ? 'drum' : '', f: 0, pos: { r: row, c } });
     t += dur(cell);
   });
-  playNow({ items, end: t, ...beatsOf(meterOf(S.rows, row)) }, covered() ? pulse : markPlaying);
+  playNow({ items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, row)) }, covered() ? pulse : markPlaying);
 }
 function reveal() {
   if (!covered()) return;
   stopPlay();
-  revealRow();
+  snap();
+  delete echoRow().hide;
+  S.sel = { r: row, c: 0 };
+  commit();
   updateBar();
 }
 
 /* ---------- Leiste auf der Tafel ---------- */
+// Unten in der Mitte: Nochmal hören, der große Knopf (erst „Auflösen“, danach „Neuer Rhythmus“) und Ende
 function updateBar() {
-  const b = el.gameBar.querySelector('.gbtn[data-act="show"]');
-  if (gameOn('echo') && b) b.disabled = !covered();
+  const b = el.gameBar.querySelector('.gbtn[data-act="main"]');
+  if (!gameOn('echo') || !b) return;
+  const text = covered() ? 'Auflösen' : 'Neuer Rhythmus';
+  b.innerHTML = (covered() ? GAME_ICONS.eye : ICONS.dice) + '<span>' + text + '</span>';
+  b.setAttribute('aria-label', text);
 }
 function tap(b) {
   const act = b.dataset.act;
-  if (act === 'new') newRhythm();
+  if (act === 'main') { if (covered()) reveal(); else newRhythm(); }
   else if (act === 'again') playEcho();
-  else if (act === 'show') reveal();
   else if (act === 'end') endGame();
 }
 function startEcho() {
   if (!gameOn('echo')) {
-    openGame('echo', gameBtn('new', ICONS.dice, 'Neuer Rhythmus', 'main') + gameBtn('again', ICONS.again, 'Nochmal hören') +
-      gameBtn('show', GAME_ICONS.eye, 'Aufdecken') + gameBtn('end', GAME_ICONS.close, 'Ende'), { tap, stop: stopPlay });
+    openGame('echo', gameBtn('again', ICONS.again, 'Nochmal hören') + gameBtn('main', GAME_ICONS.eye, 'Auflösen', 'main big') +
+      gameBtn('end', GAME_ICONS.close, 'Ende'), { tap, stop: stopPlay });
   }
   newRhythm();
 }
@@ -120,6 +127,8 @@ function renderEchoSide() {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   }));
+  el.echoPulse.classList.toggle('on', games.echo.pulse);
+  el.echoPulse.setAttribute('aria-pressed', games.echo.pulse ? 'true' : 'false');
   const e = games.echo;
   blockSum('rhyGame', e.bars + (e.bars > 1 ? ' Takte' : ' Takt') + ' · ' + LEVEL[e.notes] + (e.rests ? ' · Pausen ' + LEVEL[e.rests] : ''));
 }
@@ -129,8 +138,7 @@ export function initEcho() {
     persistGames();
     renderEchoSide();
   }));
+  el.echoPulse.addEventListener('click', () => { games.echo.pulse = !games.echo.pulse; persistGames(); renderEchoSide(); });
   el.echoGo.addEventListener('click', startEcho);
-  // Ein Tipp aufs Tuch deckt auch auf: dann ist „Aufdecken“ erledigt
-  el.grid.addEventListener('click', () => setTimeout(updateBar, 0));
   renderEchoSide();
 }

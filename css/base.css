@@ -221,11 +221,13 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 .btn.stephide { width: 100%; margin-top: 6px; min-height: 44px; font-size: .85rem; }
 
 /* ---------- Üben und Spielen (alle Bereiche) ---------- */
-/* Leiste des Spiels unten links auf der Tafel; beim Quiz über die ganze Breite (die runden Knöpfe machen dann Platz) */
+/* Leiste des Spiels unten auf der Tafel: beim Echo in der Mitte, beim Quiz über die ganze Breite (die runden Knöpfe
+   machen dann Platz) */
 .gamebar {
   position: absolute; left: 24px; bottom: 30px; z-index: 16;
   display: flex; align-items: flex-end; gap: 10px;
 }
+.gamebar.echo { left: 50%; transform: translateX(-50%); align-items: center; }
 .gamebar.quiz { right: 24px; }
 .boardwrap.game-quiz .playfab { display: none; }
 /* Unten auf der Tafel bleibt so viel frei, dass die Leiste nichts verdeckt */
@@ -239,6 +241,9 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
 }
 .gbtn .ico { width: 1.6rem; height: 1.6rem; }
 .gbtn.main { background: var(--fg); color: var(--board); border-color: var(--fg); min-width: 96px; }
+/* Großer Knopf in der Mitte (Rhythmus-Echo: Auflösen, danach Neuer Rhythmus): Zeichen neben der Schrift */
+.gbtn.big { flex-direction: row; gap: 10px; min-width: 240px; height: 76px; padding: 0 26px; font-size: 1.15rem; }
+.gbtn.big .ico { width: 2rem; height: 2rem; }
 .gbtn:disabled { opacity: .4; cursor: default; }
 .gbtn:active:not(:disabled) { transform: scale(.96); }
 .gctl { display: flex; gap: 8px; flex: none; }
@@ -282,9 +287,6 @@ body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4p
   .boardwrap.game-quiz .grid { padding-bottom: 200px; }
   .boardwrap.game-quiz .sheet { padding-bottom: 260px; }
 }
-/* Tuch beim Rhythmus-Echo: blinkt bei jedem Schlag, der darunter erklingt */
-.cloth.beat { animation: clothbeat .18s ease-out; }
-@keyframes clothbeat { 0% { border-color: var(--fg); background-color: var(--play-bg); } }
 @media (prefers-reduced-motion: reduce) {
-  .qkey.right, .qkey.wrong, .cloth.beat { animation: none; }
+  .qkey.right, .qkey.wrong { animation: none; }
 }

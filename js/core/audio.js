@@ -59,9 +59,38 @@ export function clave(out, t0) {
   src.stop(t0 + 0.03);
 }
 
-// Metronom: kurzer, heller Klick; accent (erster Schlag im Takt) höher und lauter
-export function tick(out, t0, accent) {
-  partial(out, accent ? 1760 : 1320, t0, accent ? 0.5 : 0.32, 0.001, 0.02, 0, t0 + 0.1);
+// Handtrommel fürs Rhythmus-Echo: kräftiger, tiefer Schlag (der Ton rutscht beim Ausklingen etwas nach unten) mit
+// hellem Anschlag, deutlich lauter als die Klanghölzer
+export function drum(out, t0) {
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(190, t0);
+  o.frequency.exponentialRampToValueAtTime(120, t0 + 0.18);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(1, t0 + 0.002);
+  g.gain.setTargetAtTime(0.0001, t0 + 0.002, 0.07);
+  o.connect(g);
+  g.connect(out);
+  o.start(t0);
+  o.stop(t0 + 0.5);
+  partial(out, 420, t0, 0.35, 0.001, 0.03, 0, t0 + 0.2);
+  const src = audio.createBufferSource(), bp = audio.createBiquadFilter(), n = audio.createGain();
+  src.buffer = noise();
+  bp.type = 'bandpass';
+  bp.frequency.value = 1500;
+  bp.Q.value = 0.8;
+  n.gain.setValueAtTime(0.7, t0);
+  n.gain.setTargetAtTime(0.0001, t0, 0.008);
+  src.connect(bp);
+  bp.connect(n);
+  n.connect(out);
+  src.start(t0);
+  src.stop(t0 + 0.03);
+}
+
+// Metronom: kurzer, heller Klick; accent (erster Schlag im Takt) höher und lauter; soft: leise im Hintergrund
+export function tick(out, t0, accent, soft) {
+  partial(out, accent ? 1760 : 1320, t0, (accent ? 0.5 : 0.32) * (soft ? 0.45 : 1), 0.001, 0.02, 0, t0 + 0.1);
 }
 
 // Glockenspiel: eine Oktave über dem notierten Ton wie beim echten Instrument,

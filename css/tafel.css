@@ -293,6 +293,13 @@
 }
 /* Mit Taktart beginnt die Linie gleich hinter dem Knopf */
 .row.folded .cell.has-meter .stack::before { left: calc(var(--bx, 0px) - var(--g) - 2.6rem); }
+/* Rhythmus-Echo, noch nicht aufgelöst: nur Notenlinie, Taktart, Takt- und Schlussstriche; bei jedem Schlag, der
+   erklingt, blinkt die Zeile kurz */
+.row.blank .dot, .row.blank .len, .row.blank .zz, .row.blank .hand { visibility: hidden; }
+.row.blank .cell { pointer-events: none; }
+.row.blank.beat { animation: blankbeat .18s ease-out; }
+@keyframes blankbeat { 0% { background-color: var(--play-bg); } }
+@media (prefers-reduced-motion: reduce) { .row.blank.beat { animation: none; } }
 /* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
 .grid > .cloth { grid-column: 1; }
 /* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */

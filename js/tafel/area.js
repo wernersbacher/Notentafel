@@ -35,8 +35,9 @@ function enter(v) {
 function plan() {
   const items = [];
   let last = -1, t = 0, end = 0;
-  // Wiederholungen werden mitgespielt (playOrderRows)
+  // Wiederholungen werden mitgespielt (playOrderRows), eingeklappte Zeilen nicht
   playOrderRows(S.rows).forEach(({ r, c }) => {
+    if (S.rows[r].fold) return;
     const cell = S.rows[r][c];
     const sound = isNote(cell) ? 'bell' : isBeat(cell) ? 'clave' : '';
     items.push({ t, len: dur(cell), sound, f: isNote(cell) ? NOTE_BY[cell.n].f : 0, pos: { r, c } });

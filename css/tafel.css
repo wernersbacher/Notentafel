@@ -123,8 +123,9 @@
   content: ""; position: absolute; z-index: -1;
   /* je 1px mehr als die halbe Lücke, damit sich die Stücke überlappen und beim Runden keine Haarlinie bleibt */
   /* dünn, damit das Loch halber und ganzer Noten frei bleibt */
-  top: calc(var(--d) / 2 - .75px); height: 1.5px; left: calc(var(--g) / -2 - 1px);
-  right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw))); /* bis zum Ende des Platzes, auch hinter dem Kreis */
+  /* --bx: so weit ragt das Zeichen einer Achtel links über ihren Platz hinaus, um so viel rückt die Linie zurück */
+  top: calc(var(--d) / 2 - .75px); height: 1.5px; left: calc(var(--bx, 0px) + var(--g) / -2 - 1px);
+  right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw)) - var(--bx, 0px)); /* bis zum Ende des Platzes, auch hinter dem Kreis */
   background: var(--fg);
 }
 .cell.line-first .stack::before { left: 50%; }
@@ -270,14 +271,17 @@
 }
 .row.folded .rnum::before { content: "▸"; order: 1; }
 /* Der Knopf beginnt, wo sonst die Nummer steht, und wächst nach rechts über den (leeren) ersten Platz */
-.row.folded .rnum { right: auto; left: calc(-1.5rem - var(--g)); }
-.grid.meters .row.folded .rnum { left: calc(-4.2rem - var(--g)); }
+.row.folded .rnum { right: auto; left: calc(var(--bx, 0px) - 1.5rem - var(--g)); }
+.grid.meters .row.folded .rnum { left: calc(var(--bx, 0px) - 4.2rem - var(--g)); }
 .row.folded .cell .stack::before {
   content: ""; visibility: visible; position: absolute; z-index: -1;
   top: calc(var(--d) / 2 - 1px); height: 2px; background: var(--btn-line);
-  /* je 1px über die halbe Lücke hinaus, damit die Stücke ohne Spalt aneinanderstoßen (wie bei der Notenlinie) */
-  left: calc(var(--g) / -2 - 1px); right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw)));
+  /* je 1px über die halbe Lücke hinaus, damit die Stücke ohne Spalt aneinanderstoßen (wie bei der Notenlinie);
+     --bx: so weit ragt das Zeichen einer Achtel links über ihren Platz hinaus, um so viel rückt die Linie zurück */
+  left: calc(var(--bx, 0px) + var(--g) / -2 - 1px); right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw)) - var(--bx, 0px));
 }
+/* Mit Taktart beginnt die Linie gleich hinter dem Knopf */
+.row.folded .cell.has-meter .stack::before { left: calc(var(--bx, 0px) - var(--g) - 2.6rem); }
 /* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
 .grid > .cloth { grid-column: 1; }
 /* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */

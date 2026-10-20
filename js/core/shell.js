@@ -13,6 +13,10 @@
 //   menu             eigene Abschnitte im Menü (optional): open() blendet sie ein (sie tragen data-area im HTML)
 //   receive(data)    nimmt etwas aus einem anderen Bereich entgegen (optional, siehe handOver)
 //   cover            Verdecken (optional): from, card, reset, clear für die Knöpfe mit data-cover in seiner Leiste
+//   write            Name der Hälfte „schreiben“ des Umschalters unter den Reitern, z. B. „Rhythmus schreiben“
+//   play             Üben und Spielen (optional): enter() legt eine neue, leere Übungstafel an (vor enter() des
+//                    Bereichs), leave() holt die geschriebene Tafel unverändert zurück. Die Übungstafel wird nie
+//                    gespeichert. Ob ein Bereich gerade übt, bleibt gemerkt (settings.play).
 import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
 import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
@@ -33,12 +37,36 @@ function show(a) {
   // Melodie und Rhythmus teilen sich eine Tafel; ausgeblendet wird nur, was der neue Bereich nicht nutzt
   areas.forEach((x) => { x.board.hidden = x.board !== a.board; });
   el.tabs.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.area === a.id ? 'true' : 'false'));
-  const tools = a.tools || {};
+  const tools = a.tools || {}, play = playing();
   for (const k in TOOL_BTNS) el[TOOL_BTNS[k]].hidden = !tools[k];
   el.sharedTools.hidden = !['insert', 'gap', 'del', 'brk'].some((k) => tools[k]);
-  el.btnPlay.hidden = !a.plan;
-  el.btnSaveSide.hidden = !a.songs;
-  document.getElementById('side').dataset.area = a.id;
+  el.btnPlay.hidden = !a.plan || play;
+  el.btnSaveSide.hidden = !a.songs || play;
+  // Umschalter unter den Reitern: schreiben oder Üben und Spielen; beim Üben blendet die Leiste ihre Werkzeuge aus
+  el.parts.hidden = !a.play;
+  el.parts.innerHTML = a.play ? partBtn('write', a.write || 'schreiben', !play) + partBtn('play', 'Üben und Spielen', play) : '';
+  const side = document.getElementById('side');
+  side.dataset.area = a.id;
+  side.dataset.part = play ? 'play' : 'write';
+  document.querySelector('.app').classList.toggle('practice', play);
+}
+const partBtn = (part, text, on) =>
+  '<button type="button" class="part" data-part="' + part + '" aria-pressed="' + on + '">' + text + '</button>';
+// Übt der offene Bereich gerade (Üben und Spielen)?
+export const playing = () => !!(cur && cur.play && settings.play[cur.id]);
+
+// Zwischen schreiben (play false) und Üben und Spielen umschalten. Üben beginnt immer auf einer neuen Übungstafel.
+export function setPlay(play) {
+  if (!cur || !cur.play || playing() === play) return;
+  savePop.close();
+  stopPlay();
+  disarm();
+  if (cur.leave) cur.leave();
+  if (play) settings.play[cur.id] = true; else delete settings.play[cur.id];
+  persistSettings();
+  if (play) cur.play.enter(); else cur.play.leave();
+  show(cur);
+  cur.enter();
 }
 // Der Knopf „Umbruch“ wird zu „verbinden“, wenn die Markierung am Anfang einer Zeile steht, die man selbst umbrochen
 // hat: Dann nimmt er den Umbruch wieder weg und die Zeile rückt an die vorige an.
@@ -59,6 +87,7 @@ export function handOver(id, data) {
   const a = areas.find((x) => x.id === id);
   if (!a || !a.receive) return false;
   setArea(id);
+  setPlay(false); // angekommen wird beim Schreiben, nicht auf der Übungstafel
   a.receive(data);
   return true;
 }
@@ -119,9 +148,11 @@ function setArea(id) {
   stopPlay();
   disarm();
   if (cur && cur.leave) cur.leave();
+  if (playing()) cur.play.leave();
   cur = next;
   settings.mode = id;
   persistSettings();
+  if (playing()) cur.play.enter();
   show(cur);
   cur.enter();
 }
@@ -171,6 +202,10 @@ export function startShell() {
   el.tabs.addEventListener('click', (e) => {
     const t = e.target.closest('.tab');
     if (t) setArea(t.dataset.area);
+  });
+  el.parts.addEventListener('click', (e) => {
+    const p = e.target.closest('.part');
+    if (p) setPlay(p.dataset.part === 'play');
   });
 
   for (const k in TOOL_BTNS) {

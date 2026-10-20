@@ -10,6 +10,7 @@ export function cleanGames(s) {
   const e = s.echo && typeof s.echo === 'object' ? s.echo : {}, q = s.quiz && typeof s.quiz === 'object' ? s.quiz : {};
   return {
     echo: {
+      meter: pickOf(e.meter, ['2/4', '3/4', '4/4', '6/8'], '4/4'), // Taktart
       bars: pickOf(e.bars, [1, 2, 3], 2), // Länge in Takten
       notes: pickOf(e.notes, [1, 2, 3], 1), // Notenwerte: leicht, mittel, schwer
       rests: pickOf(e.rests, [0, 1, 2, 3], 0), // Pausen: ohne, leicht, mittel, schwer

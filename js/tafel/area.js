@@ -4,7 +4,7 @@ import { beatsOf, startAt, cutAt } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
-import { S, persistBoard, useVariant } from './state.js';
+import { S, persistBoard, useVariant, startPractice, endPractice } from './state.js';
 import { loadBoard, stores } from './storage.js';
 import { render } from './render.js';
 import { markPlaying } from './board.js';
@@ -18,18 +18,21 @@ import { endGame } from '../core/game.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
 
-// Macht die Tafel des Bereichs v sichtbar. Die aktuelle Tafel ist schon gespeichert; Markierung und
+// Holt die Tafel des Bereichs v. Die aktuelle Tafel ist schon gespeichert; Markierung und
 // Rückgängig-Verlauf werden geparkt, die andere Tafel kommt aus dem Speicher.
+function useBoard(v) {
+  if (S.variant === v) return;
+  S.parked[S.variant] = { sel: S.sel, hist: S.hist };
+  useVariant(v);
+  const d = loadBoard(v), p = S.parked[v];
+  S.rows = d ? d.rows : emptyRows(v === 'rhy');
+  S.name = d ? d.name : '';
+  S.hist = p ? p.hist : [];
+  S.sel = p && p.sel.r < S.rows.length ? p.sel : appendPos(S.rows);
+}
+// Macht die Tafel des Bereichs v sichtbar
 function enter(v) {
-  if (S.variant !== v) {
-    S.parked[S.variant] = { sel: S.sel, hist: S.hist };
-    useVariant(v);
-    const d = loadBoard(v), p = S.parked[v];
-    S.rows = d ? d.rows : emptyRows(v === 'rhy');
-    S.name = d ? d.name : '';
-    S.hist = p ? p.hist : [];
-    S.sel = p && p.sel.r < S.rows.length ? p.sel : appendPos(S.rows);
-  }
+  useBoard(v);
   S.insertMode = false; S.countAt = null;
   render();
 }
@@ -68,12 +71,14 @@ const tools = {
   clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
 };
 
-function area(id, label, panel, texts) {
+function area(id, label, panel, write, texts) {
   return {
-    id, label, panel, board: el.grid, tools,
+    id, label, panel, board: el.grid, tools, write,
     enter: () => enter(id),
     // Rhythmus-Echo und Tonnamen-Quiz gehören zu ihrer Tafel und enden beim Wechsel
     leave: endGame,
+    // Üben und Spielen: eine neue Übungstafel für diesen Bereich, die geschriebene wartet so lange
+    play: { enter() { useBoard(id); startPractice(); }, leave: endPractice },
     receive: act.receiveRows,
     plan,
     mark: markPlaying,
@@ -100,6 +105,6 @@ export function registerTafel() {
   initEcho();
   initMelQuiz();
   // Reihenfolge der Reiter als Lernweg: erst Rhythmus, dann Farbnoten (danach das Notenblatt)
-  register(area('rhy', 'Rhythmus', el.panelRhy, { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
-  register(area('mel', 'Farbnoten', el.panelMel, { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
+  register(area('rhy', 'Rhythmus', el.panelRhy, 'Rhythmus schreiben', { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
+  register(area('mel', 'Farbnoten', el.panelMel, 'Melodie schreiben', { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));
 }

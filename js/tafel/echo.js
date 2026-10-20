@@ -1,23 +1,21 @@
 // Rhythmus-Echo (Rhythmus, „Üben und Spielen“): Die Tafel würfelt einen Rhythmus, legt ihn verdeckt in eine neue Zeile
 // und spielt ihn vor. Die Kinder klatschen nach, dann wird er aufgelöst. Bis dahin steht in der Zeile nur die leere
-// Notenlinie mit Taktart und Taktstrichen (row.hide, siehe board.js). Die Rhythmen sammeln sich auf einer eigenen
-// Tafel „Rhythmus-Echo“; die bisherige Tafel wandert beim ersten Mal unter „Zuletzt ersetzt“.
+// Notenlinie mit Taktart und Taktstrichen (row.hide, siehe board.js). Die Rhythmen sammeln sich auf der Übungstafel,
+// die geschriebene Tafel bleibt unberührt.
 import { MAX_ROWS } from './config.js';
-import { filled, isBeat, dur, newRow, hasNotes } from './model.js';
+import { filled, isBeat, dur, newRow } from './model.js';
 import { meterOf } from './theory.js';
 import { makeRhythm, meterParts } from './rhythms.js';
 import { games, persistGames } from './games.js';
-import { S, snap, stashBoard } from './state.js';
+import { S, snap } from './state.js';
 import { commit } from './render.js';
 import { markPlaying } from './board.js';
 import { playNow, stopPlay, previewTone } from '../core/player.js';
 import { beatsOf } from '../core/plan.js';
 import { openGame, endGame, gameOn, gameBtn, GAME_ICONS } from '../core/game.js';
 import { toast, delegate } from '../core/ui.js';
-import { blockSum } from '../core/blocks.js';
 import { el } from './dom.js';
 
-export const ECHO_NAME = 'Rhythmus-Echo';
 const ICONS = {
   dice: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor"/></svg>',
   again: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
@@ -32,18 +30,9 @@ const covered = () => !!(echoRow() && echoRow().hide);
 /* ---------- Würfeln, Vorspielen, Auflösen ---------- */
 function newRhythm() {
   stopPlay();
-  // Taktart der markierten Zeile (beim nächsten Echo also die des letzten), ohne Taktart 4/4
-  const meter = meterParts(meterOf(S.rows, S.sel.r)).meter;
-  const cells = makeRhythm({ meter, ...games.echo });
+  const meter = games.echo.meter;
+  const cells = makeRhythm(games.echo);
   snap();
-  if (S.name !== ECHO_NAME) {
-    if (hasNotes(S.rows)) {
-      stashBoard();
-      toast('Neue Tafel fürs Rhythmus-Echo. Die bisherige liegt in der Liedersammlung unter „Zuletzt ersetzt“.');
-    }
-    S.rows = [];
-    S.name = ECHO_NAME;
-  }
   while (S.rows.length && !S.rows[S.rows.length - 1].some(Boolean)) S.rows.pop();
   // Ist die Tafel voll, fällt der älteste Rhythmus weg
   if (S.rows.length >= MAX_ROWS) S.rows.splice(0, S.rows.length - MAX_ROWS + 1);
@@ -122,17 +111,15 @@ function startEcho() {
 
 /* ---------- Leiste rechts ---------- */
 const OPTS = [['echoBars', 'bars'], ['echoNotes', 'notes'], ['echoRests', 'rests']];
-const LEVEL = ['ohne Pausen', 'leicht', 'mittel', 'schwer'];
 function pressed(b, on) {
   b.classList.toggle('on', on);
   b.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
 function renderEchoSide() {
   OPTS.forEach(([id, k]) => el[id].querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === games.echo[k])));
+  el.echoMeter.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === games.echo.meter));
   el.echoSound.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === games.echo.sound));
   pressed(el.echoPulse, games.echo.pulse);
-  const e = games.echo;
-  blockSum('rhyGame', e.bars + (e.bars > 1 ? ' Takte' : ' Takt') + ' · ' + LEVEL[e.notes] + (e.rests ? ' · Pausen ' + LEVEL[e.rests] : ''));
 }
 export function initEcho() {
   OPTS.forEach(([id, k]) => delegate(el[id], '[data-v]', (b) => {
@@ -140,6 +127,7 @@ export function initEcho() {
     persistGames();
     renderEchoSide();
   }));
+  delegate(el.echoMeter, '[data-v]', (b) => { games.echo.meter = b.dataset.v; persistGames(); renderEchoSide(); });
   // Ein Tipp auf einen Klang wählt ihn und lässt ihn einmal hören
   delegate(el.echoSound, '[data-v]', (b) => {
     games.echo.sound = b.dataset.v;

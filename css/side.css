@@ -99,6 +99,24 @@
 .tools.three > .row2 { grid-column-start: 1; }
 
 /* ---------- Üben und Spielen ---------- */
+/* Umschalter unter den Reitern: „… schreiben“ oder „Üben und Spielen“; die gewählte Hälfte ist dunkel */
+.parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 3px; background: var(--panel); border-radius: 12px; }
+.parts[hidden] { display: none; }
+.part {
+  font: 800 .92rem var(--font-ui); color: var(--muted); background: none;
+  border: 0; border-radius: 9px; min-height: 40px; padding: 0 .4rem;
+  cursor: pointer; touch-action: manipulation;
+}
+.part[aria-pressed="true"] { background: var(--fg); color: var(--board); }
+/* Beim Üben zeigt die Leiste nur die Spiele: ohne Werkzeuge oben, ohne Blöcke zum Schreiben und ohne Knöpfe unten */
+.side[data-part="play"] .tools.toprow, .side[data-part="play"] .actions, .side[data-part="play"] .panel > .block { display: none; }
+.side:not([data-part="play"]) .panel > .game { display: none; }
+.panel .game { gap: 7px; padding: 12px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.gtitle { margin: 0 0 2px; font: 800 1.15rem var(--font-ui); color: var(--fg); }
+/* Leere Übungstafel: noch keine Zeilennummern */
+.grid.blankboard .rnum { visibility: hidden; }
+/* Auf der Übungstafel gibt es kein Schritt für Schritt (abgespielt wird nur das Spiel) */
+.app.practice .playfab [data-play="step"], .app.practice .playfab [data-play="stepSound"] { display: none; }
 .ghint { margin: 0; font-size: .82rem; font-weight: 700; line-height: 1.35; color: var(--muted); }
 /* Auswahl aus drei (two, four: zwei, vier) Möglichkeiten; die gewählte ist dunkel */
 .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }

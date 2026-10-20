@@ -211,7 +211,8 @@ export function renderBoard() {
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
   grid.classList.toggle('meters', hasMeter(S.rows));
   grid.classList.toggle('inserting', S.insertMode);
-  grid.classList.toggle('clean', sideCollapsed() || !!S.quiz); // eingeklappte Leiste, Quiz: ohne Markierung und leere Plätze
+  grid.classList.toggle('clean', sideCollapsed() || !!S.quiz || !!S.written); // eingeklappte Leiste, Quiz, Übungstafel: ohne Markierung und leere Plätze
+  grid.classList.toggle('blankboard', !!S.written && !S.rows.some((row) => row.some(Boolean))); // leere Übungstafel: ohne Zeilennummern
   grid.classList.toggle('nolen', !settings.lens && !(settings.syl && S.variant === 'rhy'));
   const auto = autoMarks(rows, settings.autoBar || settings.autoZ);
   // Platz für Zählzeiten nur, wenn welche zu sehen sind

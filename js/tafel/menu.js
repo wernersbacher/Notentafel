@@ -5,7 +5,7 @@ import { S, settings } from './state.js';
 import { setTempo } from '../core/settings.js';
 import { closeMenu, renderToggle, toggleSetting, sortAbc } from '../core/menu.js';
 import { esc, delegate, toast, groupedHTML } from '../core/ui.js';
-import { handOver } from '../core/shell.js';
+import { handOver, playing, setPlay } from '../core/shell.js';
 import { hasNotes, rowsToSong } from './model.js';
 import { render } from './render.js';
 import { loadSong } from './actions.js';
@@ -25,6 +25,7 @@ const TOGGLES = [
 export function openTafelMenu() {
   el.drawer.querySelectorAll('[data-area="tafel"]').forEach((sec) => { sec.hidden = false; });
   el.melodiesSec.hidden = S.variant !== 'mel';
+  el.btnToLied.closest('section').hidden = playing(); // die Übungstafel geht nicht ins Notenblatt
   renderMelodies();
   TOGGLES.forEach(renderToggle);
 }
@@ -34,6 +35,7 @@ export function initTafelMenu() {
     const m = MELODIES[+b.dataset.melody];
     if (!m) return;
     closeMenu();
+    setPlay(false);
     setTempo(m.tempo);
     loadSong({ name: m.name, rows: melodyRows(m) });
   });

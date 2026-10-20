@@ -1,5 +1,5 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
-import { register } from '../core/shell.js';
+import { register, setPlay } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js';
 import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
@@ -9,7 +9,7 @@ import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { printHTML } from './print.js';
-import { L, opts, persistOpts } from './state.js';
+import { L, opts, persistOpts, written, startPractice, endPractice } from './state.js';
 import { render, renderSheet, markPlaying, isFolded } from './render.js';
 import { buildPanel, buildSteps } from './sidebar.js';
 import { initSheetInput } from './input.js';
@@ -96,18 +96,21 @@ function renderSizes() {
 }
 
 // Lädt das Lied als MusicXML-Datei herunter
+// (auch beim Üben das geschriebene Lied, nicht die Übungstafel)
 function exportMusicXML() {
-  if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
-  const xml = songToMusicXML(L.song, { name: L.name, autoBar: opts.autoBar, tempo: settings.tempo });
-  downloadFile(fileNameOf(L.name), xml, 'application/vnd.recordare.musicxml+xml');
+  const { song, name } = written();
+  if (!song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
+  const xml = songToMusicXML(song, { name, autoBar: opts.autoBar, tempo: settings.tempo });
+  downloadFile(fileNameOf(name), xml, 'application/vnd.recordare.musicxml+xml');
   closeMenu();
   toast('Als MusicXML gespeichert.');
 }
 
 // Druckansicht füllen und den Druckdialog öffnen (dort „Als PDF speichern“)
 function printSheet() {
-  if (!L.song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
-  el.printOut.innerHTML = printHTML(L.song, { name: L.name, autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, wrap: opts.wrap, size: opts.size });
+  const { song, name } = written();
+  if (!song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
+  el.printOut.innerHTML = printHTML(song, { name,autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, wrap: opts.wrap, size: opts.size });
   closeMenu();
   window.print();
 }
@@ -127,6 +130,7 @@ export function registerLied() {
     const s = SONGS[+b.dataset.known];
     if (!s) return;
     closeMenu();
+    setPlay(false);
     setTempo(s.tempo);
     act.loadSong(songOf(s));
   });
@@ -138,6 +142,8 @@ export function registerLied() {
     enter() { L.insertMode = false; render(); },
     // Das Tonnamen-Quiz gehört zum Notenblatt und endet beim Wechsel
     leave: endGame,
+    write: 'Lied schreiben',
+    play: { enter: startPractice, leave: endPractice },
     tools: {
       insert: act.toggleInsert,
       gap: act.removeEv,

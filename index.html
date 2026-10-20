@@ -78,7 +78,11 @@
   <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
   <header class="topbar" id="topbar">
     <h1 class="title">Musiktafel</h1>
-    <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
+    <!-- Darunter für den offenen Bereich: schreiben oder Üben und Spielen (auf einer eigenen Übungstafel) -->
+    <div class="areanav">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
+      <div class="parts" id="parts" role="group" aria-label="Schreiben oder üben"></div>
+    </div>
     <div class="topright">
       <div class="headbtns">
         <!-- Speichern: das Feld für den Namen klappt darunter auf -->
@@ -230,9 +234,11 @@
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
       </section>
 
-      <section class="group block" id="melGame">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Üben und Spielen</span><span class="bhint">Tonnamen-Quiz</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+      <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben -->
+      <section class="group game" id="melGame">
+        <h2 class="gtitle">Tonnamen-Quiz</h2>
         <p class="ghint" id="melQuizHint"></p>
+        <button type="button" class="btn gamego" id="melQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
         <h2 class="glabel">Frage</h2>
         <div class="seg two" id="melQuizAsk">
           <button type="button" class="btn" data-v="color" aria-pressed="false">Wie heißt der Ton?</button>
@@ -252,7 +258,6 @@
           </div>
           <button type="button" class="btn wide" id="melQuizHigh" aria-pressed="false">auch die hohen Töne (hohes C bis hohes F)</button>
         </div>
-        <button type="button" class="btn gamego" id="melQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
       </section>
 
     </div>
@@ -323,9 +328,18 @@
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
       </section>
 
-      <section class="group block" id="rhyGame">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">6</span><span class="bname">Üben und Spielen</span><span class="bhint">Rhythmus-Echo</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+      <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben -->
+      <section class="group game" id="rhyGame">
+        <h2 class="gtitle">Rhythmus-Echo</h2>
         <p class="ghint">Die Tafel spielt einen Rhythmus vor, die Kinder klatschen ihn nach. Die Zeile bleibt leer, bis man ihn auflöst.</p>
+        <button type="button" class="btn gamego" id="echoGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Neuer Rhythmus</span></button>
+        <h2 class="glabel">Taktart</h2>
+        <div class="seg four" id="echoMeter">
+          <button type="button" class="btn" data-v="2/4" aria-pressed="false">2/4</button>
+          <button type="button" class="btn" data-v="3/4" aria-pressed="false">3/4</button>
+          <button type="button" class="btn" data-v="4/4" aria-pressed="false">4/4</button>
+          <button type="button" class="btn" data-v="6/8" aria-pressed="false">6/8</button>
+        </div>
         <h2 class="glabel">Länge</h2>
         <div class="seg" id="echoBars">
           <button type="button" class="btn" data-v="1" aria-pressed="false">1 Takt</button>
@@ -353,8 +367,7 @@
           <button type="button" class="btn" data-v="piano" aria-pressed="false">Klavier</button>
         </div>
         <button type="button" class="btn wide" id="echoPulse" aria-pressed="false">Grundschlag leise mitspielen</button>
-        <p class="ghint">Die Taktart kommt aus ① Einrichten, ohne Taktart ist es 4/4. Die Rhythmen sammeln sich auf einer eigenen Tafel.</p>
-        <button type="button" class="btn gamego" id="echoGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Neuer Rhythmus</span></button>
+        <p class="ghint">Die Rhythmen sammeln sich auf der Übungstafel. Was unter „Rhythmus schreiben“ steht, bleibt unberührt.</p>
       </section>
 
     </div>
@@ -461,9 +474,11 @@
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
       </section>
 
-      <section class="group block" id="liedGame">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">6</span><span class="bname">Üben und Spielen</span><span class="bhint">Tonnamen-Quiz</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+      <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben -->
+      <section class="group game" id="liedGame">
+        <h2 class="gtitle">Tonnamen-Quiz</h2>
         <p class="ghint">Eine Note erscheint, die Kinder tippen unten auf der Tafel ihren Namen – in der Farbe des Tons, mit Oktavstrichen.</p>
+        <button type="button" class="btn gamego" id="liedQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
         <h2 class="glabel">Welche Noten</h2>
         <div class="seg two" id="liedQuizMode">
           <button type="button" class="btn" data-v="rand" aria-pressed="false">Zufallsnote</button>
@@ -489,7 +504,6 @@
             <button type="button" class="btn" id="liedQuizFlat" aria-pressed="false"><span class="acc">♭</span> auch mit Be</button>
           </div>
         </div>
-        <button type="button" class="btn gamego" id="liedQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
       </section>
 
     </div>

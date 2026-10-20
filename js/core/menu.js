@@ -2,7 +2,7 @@
 // darunter seine Einstellungen), unten die Einstellungen für alle Bereiche (Tempo, Bildschirm anlassen).
 // Eigene Abschnitte eines Bereichs tragen im HTML data-area und werden von ihm selbst eingeblendet.
 import { settings, persistSettings, clampUi, setTempo } from './settings.js';
-import { current, saveAs, closeSavePop } from './shell.js';
+import { current, saveAs, closeSavePop, playing, setPlay } from './shell.js';
 import { stopPlay } from './player.js';
 import { esc, confirmTap, disarm, isArmed, delegate, onEnter } from './ui.js';
 import { el } from './dom.js';
@@ -121,6 +121,8 @@ function openMenu(mode) {
   el.menuSettingsTitle.textContent = 'Einstellungen für ' + a.label;
   el.menuSettings.hidden = !a.menu;
   el.saveSec.hidden = el.songsSec.hidden = !s;
+  // Die Übungstafel wird nicht gespeichert; Laden wechselt zurück zum Schreiben
+  if (playing()) el.saveSec.hidden = true;
   el.autoSec.hidden = true;
   if (s) {
     el.songName.value = s.name();
@@ -152,6 +154,7 @@ export function closeMenu() {
 }
 function loadFromMenu(song) {
   closeMenu();
+  setPlay(false);
   current().songs.load(song);
 }
 function saveSong() {

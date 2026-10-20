@@ -44,8 +44,8 @@ export function renderSheet() {
   lastFirst = lay.systems[lay.systems.length - 1].first;
   folded = new Set();
   lay.systems.forEach((s) => { if (foldedLine(L.song.ev, s)) for (let i = s.first; i < s.end; i++) folded.add(i); });
-  // Eingeklappte Leiste und Tonnamen-Quiz: Bearbeiten beendet, ohne Markierung und leeren Platz
-  const clean = sideCollapsed() || !!L.quiz;
+  // Eingeklappte Leiste, Tonnamen-Quiz und Übungstafel: Bearbeiten beendet, ohne Markierung und leeren Platz
+  const clean = sideCollapsed() || !!L.quiz || !!L.written;
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   // Hervorgehoben ist, was gerade klingt, sonst die Note, nach der das Tonnamen-Quiz fragt. Beim Quiz stehen die
   // Notennamen nur unter den Noten, die schon benannt sind.

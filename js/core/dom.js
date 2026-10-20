@@ -1,6 +1,6 @@
 // Gemeinsame Elemente aus index.html nach ihrer id: Rahmen, gemeinsame Knöpfe der Leiste und das Menü
 const ids = [
-  'toast', 'tabs', 'btnSongs', 'btnSettings', 'drawerTitle',
+  'toast', 'tabs', 'parts','btnSongs', 'btnSettings', 'drawerTitle',
   'btnIns', 'btnGap', 'btnDel', 'btnBreak', 'btnSide', 'btnTopHide', 'btnTopShow',
   'gameBar', 'quizView',
   'btnPlay', 'btnPresent', 'btnTempo', 'tempoNum', 'tempoPop', 'tempoPopOut', 'tempoRange', 'tempoMinus', 'tempoPlus', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',

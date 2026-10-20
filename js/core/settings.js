@@ -26,6 +26,8 @@ export function cleanCoreSettings(s) {
     stepSound: !!s.stepSound, // dabei die erreichte Note auch erklingen lassen
     stepHide: !!s.stepHide, // dabei nur bis zur aktuellen Note zeigen, der Rest ist ausgeblendet
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
+    // Bereiche, die „Üben und Spielen“ zeigen statt „schreiben“, z. B. { rhy: true }
+    play: Object.fromEntries(Object.entries(s.play && typeof s.play === 'object' && !Array.isArray(s.play) ? s.play : {}).filter(([, v]) => v === true)),
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
     open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+\d$/.test(k)) : OPEN_START.slice()
   };

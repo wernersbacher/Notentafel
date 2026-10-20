@@ -17,13 +17,33 @@ export const L = {
   insertMode: false,
   last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt
   pen: { v: 4, dot: 0 }, // vorgewählter Notenwert für die nächsten Töne und Pausen
-  quiz: null // Tonnamen-Quiz durch das Lied: { i (gefragte Note), done (benannte Noten) }, siehe quiz.js
+  quiz: null, // Tonnamen-Quiz durch das Lied: { i (gefragte Note), done (benannte Noten) }, siehe quiz.js
+  written: null // beim Üben und Spielen: das geschriebene Lied { song, name, sel, hist }, das so lange wartet
 };
 
-export const persistSong = () => store.saveBoard(L.song, L.name);
+// Die Übungstafel wird nie gespeichert
+export const persistSong = () => { if (!L.written) store.saveBoard(L.song, L.name); };
 // Das bisherige Lied wandert in den Autosave-Platz (nur, wenn etwas darin steht)
 export function stashSong() {
-  if (L.song.ev.length) store.saveAuto(L.song, L.name);
+  if (!L.written && L.song.ev.length) store.saveAuto(L.song, L.name);
+}
+
+/* ---------- Üben und Spielen ---------- */
+// Das geschriebene Lied, auch während geübt wird
+export const written = () => L.written || L;
+// Eine neue, leere Übungstafel; das geschriebene Lied bleibt unberührt liegen
+export function startPractice() {
+  if (L.written) return;
+  L.written = { song: L.song, name: L.name, sel: L.sel, hist: L.hist };
+  Object.assign(L, { song: emptySong(), name: '', sel: 0, hist: [], last: null });
+}
+// Legt eine Kopie des geschriebenen Lieds auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz)
+export function practiceWritten() {
+  if (L.written) Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(L.written.song))), sel: 0, last: null });
+}
+export function endPractice() {
+  if (!L.written) return;
+  Object.assign(L, L.written, { last: null, written: null });
 }
 
 export function snap() {

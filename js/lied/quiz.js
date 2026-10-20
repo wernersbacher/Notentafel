@@ -3,12 +3,11 @@
 // jeder in der Farbe seines Tons und mit seinem Namen samt Oktavstrichen (c', fis'', b).
 import { isNote, parsePitch, staffPos, noteName, midiOf, freq, tiedFrom, quizPitches, quizKeys, songRange, stepPitch, comparePitch, pitchLabel } from './model.js';
 import { clef, staffLines, accidental, yOf, head, stem, ledger } from './glyphs.js';
-import { L, opts, persistOpts } from './state.js';
+import { L, opts, persistOpts, practiceWritten } from './state.js';
 import { render, markPlaying } from './render.js';
 import { toneColor } from '../core/colors.js';
 import { startQuiz } from '../core/game.js';
 import { toast, delegate } from '../core/ui.js';
-import { blockSum } from '../core/blocks.js';
 import { el } from './dom.js';
 
 // Knöpfe aus quizKeys: Name (ein Halbton mit beiden Namen übereinander) auf der Farbe des Tons
@@ -66,6 +65,7 @@ function randomQuiz() {
 // Note für Note von vorn (die zweite Note eines Haltebogens zählt nicht mit); die gefragte leuchtet wie beim Abspielen,
 // ihr Name erscheint erst, wenn sie benannt ist (L.quiz, siehe render.js)
 function songQuiz() {
+  practiceWritten(); // das geschriebene Lied, als Kopie auf der Übungstafel
   const range = songRange(L.song);
   if (!range) { toast('Im Lied stehen noch keine Noten.', true); return null; }
   const ev = () => L.song.ev;
@@ -108,8 +108,6 @@ function renderQuizSide() {
   el.liedQuizHiUp.disabled = stepPitch(opts.quizHi, 1) === opts.quizHi;
   pressed(el.liedQuizSharp, opts.quizSharp);
   pressed(el.liedQuizFlat, opts.quizFlat);
-  const accs = (opts.quizSharp ? ' ♯' : '') + (opts.quizFlat ? ' ♭' : '');
-  blockSum('liedGame', opts.quizMode === 'song' ? 'Lied' : pitchLabel(opts.quizLo) + ' – ' + pitchLabel(opts.quizHi) + accs);
 }
 // Tonraum: unten und oben je eine Stufe weiter; der untere Ton bleibt unter dem oberen (er schiebt ihn notfalls mit)
 function moveRange(which, steps) {

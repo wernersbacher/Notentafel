@@ -25,6 +25,7 @@ export const S = {
   insertMode: false,
   countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
   quiz: null, // Tonnamen-Quiz durch die Melodie: { pos (gefragter Platz), done (benannte Plätze als 'r,c') }, siehe quiz.js
+  written: null, // beim Üben und Spielen: die geschriebene Tafel { rows, name, sel, hist }, die so lange wartet
   cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };
 // Zeilen werden automatisch umbrochen, wenn sie voll sind (Melodie: MAX_PER_ROW Plätze, Rhythmus: RHY_PER_ROW Schläge)
@@ -39,10 +40,34 @@ export function useVariant(v) {
 export const curCell = () => S.rows[S.sel.r][S.sel.c];
 export const curRow = () => S.rows[S.sel.r];
 
-export const persistBoard = () => saveBoard(S.variant, S.rows, S.name);
+// Die Übungstafel wird nie gespeichert
+export const persistBoard = () => { if (!S.written) saveBoard(S.variant, S.rows, S.name); };
 // Die bisherige Tafel wandert in den Autosave-Platz ihres Bereichs (nur, wenn etwas darauf steht)
 export function stashBoard() {
-  if (hasNotes(S.rows)) saveAuto(S.variant, S.rows, S.name);
+  if (!S.written && hasNotes(S.rows)) saveAuto(S.variant, S.rows, S.name);
+}
+
+/* ---------- Üben und Spielen ---------- */
+// Eine neue, leere Übungstafel; die geschriebene Tafel wartet so lange unberührt in S.written
+export function startPractice() {
+  if (S.written) return;
+  S.written = { rows: S.rows, name: S.name, sel: S.sel, hist: S.hist };
+  Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), name: '', sel: { r: 0, c: 0 }, hist: [], insertMode: false, countAt: null });
+}
+// Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten
+export function practiceWritten() {
+  if (!S.written) return;
+  const src = S.written.rows;
+  S.rows = attachLines(JSON.parse(JSON.stringify(src)), packLines(src));
+  S.rows.forEach((row) => {
+    delete row.cover; delete row.coverFrom; delete row.hide;
+    row.forEach((x) => { if (x) delete x.q; });
+  });
+  S.sel = { r: 0, c: 0 };
+}
+export function endPractice() {
+  if (!S.written) return;
+  Object.assign(S, S.written, { written: null, insertMode: false, countAt: null });
 }
 
 // Merkt sich den Stand vor einer Änderung für „Rückgängig“

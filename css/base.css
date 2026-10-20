@@ -63,6 +63,7 @@ body {
 .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr minmax(0, 520px) 1fr; align-items: center; gap: 12px; }
 .topbar .title { justify-self: start; padding-left: 6px; }
 .topbar .tabs { background: var(--panel); }
+.areanav { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .topright { justify-self: end; display: flex; align-items: center; gap: 6px; }
 .fab.topfold { width: 40px; height: 40px; box-shadow: none; }
 .fab.topfold .ico { width: 1.2rem; height: 1.2rem; }

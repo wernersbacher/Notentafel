@@ -3,13 +3,12 @@
 // der Name erscheint auf einem Punkt ohne Farbe, die Kinder tippen die Farbe.
 import { NOTE_BY, GROUPS } from './config.js';
 import { isNote } from './model.js';
-import { S } from './state.js';
+import { S, practiceWritten } from './state.js';
 import { render } from './render.js';
 import { games, persistGames } from './games.js';
 import { colorStyle, noteLabel, upArrow } from './symbols.js';
 import { startQuiz } from '../core/game.js';
 import { toast, delegate } from '../core/ui.js';
-import { blockSum } from '../core/blocks.js';
 import { el } from './dom.js';
 
 // Töne der Zufallspunkte: die Grundtöne, dazu nach Wahl die hohen Töne und Halbtöne
@@ -55,6 +54,7 @@ function randomQuiz() {
 // Melodie durchgehen: Punkt für Punkt (eingeklappte Zeilen nicht); die Buchstaben erscheinen erst, wenn der Punkt
 // benannt ist (S.quiz, siehe board.js), der gefragte Punkt leuchtet wie beim Abspielen
 function songQuiz() {
+  practiceWritten(); // die geschriebene Melodie, als Kopie auf der Übungstafel
   const order = [];
   S.rows.forEach((row, r) => { if (!row.fold) row.forEach((x, c) => { if (isNote(x)) order.push({ r, c }); }); });
   if (!order.length) { toast('Auf der Tafel stehen noch keine Farbpunkte.', true); return null; }
@@ -84,7 +84,6 @@ function startMelQuiz() {
 }
 
 /* ---------- Leiste rechts ---------- */
-const SEMIS = ['ohne Halbtöne', 'Fis und B', 'alle Halbtöne'];
 function pressed(b, on) {
   b.classList.toggle('on', on);
   b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -99,7 +98,6 @@ function renderQuizSide() {
   el.melQuizSemis.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === g.semis));
   pressed(el.melQuizHigh, g.high);
   el.melQuizRand.hidden = g.mode !== 'rand';
-  blockSum('melGame', (g.ask === 'name' ? 'Welche Farbe? · ' : '') + (g.mode === 'song' ? 'Melodie' : 'Zufall · ' + SEMIS[g.semis] + (g.high ? ' · hohe Töne' : '')));
 }
 export function initMelQuiz() {
   const set = (k, v) => { games.quiz[k] = v; persistGames(); renderQuizSide(); };

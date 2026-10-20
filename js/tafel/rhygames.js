@@ -7,8 +7,8 @@
 //   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
 //                       Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur.
 //   Fehler finden       Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn mit einem Fehler in einem Takt. Die Kinder
-//                       tippen den Takt (auf der Tafel oder unten). Auf der Tafel wird kein Takt hinterlegt, rot und
-//                       grün werden nur die Knöpfe unten.
+//                       tippen den Takt (auf der Tafel oder unten). Auf der Tafel leuchtet dabei nichts mit und kein
+//                       Takt wird hinterlegt; rot und grün werden nur die Knöpfe unten.
 //                       Rhythmus legen und Fehler finden: Nach dem Lösen spielt die Zeilennummer den Rhythmus richtig.
 import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
 import { games, persistGames } from './games.js';
@@ -167,8 +167,8 @@ function fixQuiz() {
   const o = { ...games.echo, bars: Math.max(2, games.echo.bars) }, len = meterParts(o.meter).len;
   const keys = Array.from({ length: o.bars }, (_, i) => ({ key: String(i), html: 'Takt ' + (i + 1), label: 'Takt ' + (i + 1) }));
   let played = [], bad = 0, barOf = [];
-  // Gespielt wird mit dem Fehler; die Zeichen der richtigen Takte leuchten mit, im falschen Takt leuchtet nichts
-  const play = () => playNow(planOf(played, o.meter), markPlaying);
+  // Gespielt wird mit dem Fehler, ohne Leuchten (sonst bliebe der falsche Takt dunkel und verriete sich)
+  const play = () => playNow(planOf(played, o.meter), quiet);
   return {
     layout: 'words', keys,
     next() {
@@ -179,11 +179,9 @@ function fixQuiz() {
       for (let t = 0; t < 40 && same(other, bars[bad]); t++) other = makeBlocks({ ...o, bars: 1 }).flat();
       played = [];
       barOf = [];
-      let c = 0;
       bars.forEach((bar, b) => {
         bar.forEach(() => barOf.push(b));
-        if (b === bad) { other.forEach((d) => played.push({ d })); c += bar.length; }
-        else bar.forEach((d) => played.push({ d, pos: { r: 0, c: c++ } }));
+        (b === bad ? other : bar).forEach((d) => played.push({ d }));
       });
       S.rows = [rhythmRow(bars.flat().map(cellOf), o.meter)];
       S.sel = { r: 0, c: 0 };

@@ -3,7 +3,7 @@
 // Es läuft immer nur ein Spiel; ein neues beendet das alte. Beim Wechsel des Bereichs endet es (endGame).
 import { previewTone, playNow, stopPlay } from './player.js';
 import { settings, persistSettings } from './settings.js';
-import { clearPractice } from './shell.js';
+import { clearPractice, playing, onShow } from './shell.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
 
@@ -13,6 +13,7 @@ let game = null; // { kind, tap, stop }
 // Knopf darin, stop() räumt beim Beenden auf
 export function openGame(kind, html, { tap, stop }) {
   endGame();
+  el.gameIntro.hidden = true;
   game = { kind, tap, stop };
   el.gameBar.className = 'gamebar ' + kind;
   el.gameBar.innerHTML = html;
@@ -27,6 +28,7 @@ export function endGame() {
   el.gameBar.innerHTML = '';
   el.gameBar.parentNode.classList.remove('game-' + g.kind);
   if (g.stop) g.stop();
+  showIntro(); // zurück auf die Startseite des Spiels
 }
 export const gameOn = (kind) => !!game && (!kind || game.kind === kind);
 el.gameBar.addEventListener('click', (e) => {
@@ -68,6 +70,22 @@ function showPick(box) {
   play.querySelectorAll('.game[data-game]').forEach((x) => { x.hidden = x.dataset.game !== g; });
   play.querySelectorAll('[data-for]').forEach((x) => { x.hidden = !x.dataset.for.split(' ').includes(g); });
 }
+// Startseite auf der Tafel, solange beim Üben kein Spiel läuft: Name des gewählten Spiels, eine kurze Erklärung für die
+// Kinder (data-intro an seinem Abschnitt) und „Los geht's!“, das wie der Startknopf in der Leiste wirkt (.gamego)
+const PLAY_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>';
+let introGo = null;
+function showIntro() {
+  const box = playing() && !game && document.querySelector('.gamepick[data-area="' + document.getElementById('side').dataset.area + '"]');
+  const tile = box && box.querySelector('[aria-pressed="true"]');
+  const sec = tile && box.closest('.play').querySelector('.game[data-game="' + tile.dataset.game + '"]');
+  introGo = sec && sec.querySelector('.gamego');
+  el.gameIntro.hidden = !introGo;
+  if (!introGo) { el.gameIntro.innerHTML = ''; return; }
+  el.gameIntro.innerHTML = '<div class="gintro"><h2>' + tile.textContent + '</h2><p>' + (sec.dataset.intro || '') + '</p>' +
+    '<button type="button" class="gbtn main big" data-act="go">' + PLAY_ICON + '<span>Los geht\'s!</span></button></div>';
+}
+el.gameIntro.addEventListener('click', (e) => { if (e.target.closest('[data-act="go"]') && introGo) introGo.click(); });
+
 export function initGamePicks() {
   document.querySelectorAll('.gamepick').forEach((box) => {
     showPick(box);
@@ -79,8 +97,11 @@ export function initGamePicks() {
       endGame();
       clearPractice(); // jedes Spiel beginnt auf einer leeren Tafel
       showPick(box);
+      showIntro();
     });
   });
+  onShow(showIntro); // beim Wechsel des Bereichs oder zwischen schreiben und üben
+  showIntro();
 }
 
 /* ---------- Ratespiele ---------- */
@@ -99,6 +120,7 @@ export function initGamePicks() {
 //   replay(key)  (optional) Tipp auf eine Antwort, wenn die Frage gelöst ist (z. B. diesen Rhythmus abspielen); sonst
 //            klingt der Ton des Knopfs, falls er einen hat
 //   row(r)   (optional, Tafel) Tipp auf die Zeilennummer r, wenn die Frage gelöst ist; die Zeile klappt dann nie ein
+//   cell(r, c)  (optional, Tafel) die Antwort, die ein Tipp auf den Platz (r, c) gibt, oder null
 //   stop()   räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
 //   rekey    die Antwortknöpfe ändern sich mit jeder Frage (next() setzt q.keys neu, z. B. Lied erraten)
 // Rückmeldung: Eine richtige Antwort wird grün, eine falsche rot (sie bleibt es bis zur nächsten Frage), über der Leiste
@@ -125,6 +147,14 @@ function feedback(kind) {
 function setMain(solved) {
   const b = el.gameBar.querySelector('.gbtn[data-act="solve"], .gbtn[data-act="next"]');
   if (b) b.outerHTML = solved ? gameBtn('next', GAME_ICONS.next, 'Weiter', 'main') : gameBtn('solve', GAME_ICONS.eye, 'Lösung');
+}
+// Tipp auf den Platz (r, c) der Tafel: true, wenn das Spiel ihn übernimmt (dann wird nichts markiert oder verschoben).
+// q.cell(r, c) liefert die Antwort dazu (wie ein Tipp auf ihren Knopf) oder null
+export function quizCell(r, c) {
+  if (!quiz || !quiz.q.cell) return false;
+  const key = quiz.q.cell(r, c);
+  if (key != null) answer(String(key), el.gameBar.querySelector('.qkey[data-key="' + key + '"]'));
+  return true;
 }
 // Tipp auf eine Zeilennummer der Tafel: true, wenn das Spiel ihn übernimmt (dann klappt die Zeile nicht ein)
 export function quizRow(r) {

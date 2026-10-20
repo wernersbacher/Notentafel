@@ -113,11 +113,12 @@
 .side:not([data-part="play"]) .panel > .play { display: none; }
 .panel .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
 .play .game { gap: 7px; margin-bottom: 4px; }
-/* Spielauswahl: große Kacheln, das gewählte Spiel ist dunkel */
-.gamepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+/* Spielauswahl: große Kacheln, das gewählte Spiel ist dunkel. Die Schrift wird in schmaler Leiste kleiner, damit jedes
+   Wort in eine Zeile passt (umbrochen wird nur zwischen Wörtern, nie mit Bindestrich) */
+.gamepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; container-type: inline-size; }
 .gtile {
-  min-height: 62px; padding: .3rem .35rem; border: 2px solid var(--btn-line); border-radius: 14px;
-  background: var(--btn); color: var(--fg); font: 800 .9rem/1.15 var(--font-ui); text-align: center; hyphens: auto;
+  min-height: 62px; padding: .3rem .2rem; border: 2px solid var(--btn-line); border-radius: 14px;
+  background: var(--btn); color: var(--fg); font: 800 min(.9rem, 4.3cqi)/1.15 var(--font-ui); text-align: center;
   cursor: pointer; touch-action: manipulation;
 }
 .gtile[aria-pressed="true"] { background: var(--fg); color: var(--board); border-color: var(--fg); }

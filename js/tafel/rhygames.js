@@ -7,7 +7,9 @@
 //   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
 //                       Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur.
 //   Fehler finden       Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn mit einem Fehler in einem Takt. Die Kinder
-//                       tippen den Takt; mit der Lösung wird er rot hinterlegt.
+//                       tippen den Takt (auf der Tafel oder unten). Ein falsch getippter Takt wird rot hinterlegt, der
+//                       gesuchte mit der Lösung grün.
+//                       Rhythmus legen und Fehler finden: Nach dem Lösen spielt die Zeilennummer den Rhythmus richtig.
 import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
 import { games, persistGames } from './games.js';
 import { S } from './state.js';
@@ -164,9 +166,14 @@ function fixQuiz() {
   // Mindestens zwei Takte, sonst gäbe es nichts zu suchen
   const o = { ...games.echo, bars: Math.max(2, games.echo.bars) }, len = meterParts(o.meter).len;
   const keys = Array.from({ length: o.bars }, (_, i) => ({ key: String(i), html: 'Takt ' + (i + 1), label: 'Takt ' + (i + 1) }));
-  let played = [], bad = 0, from = 0, count = 0;
+  let played = [], bad = 0, barOf = [];
   // Gespielt wird mit dem Fehler; die Zeichen der richtigen Takte leuchten mit, im falschen Takt leuchtet nichts
   const play = () => playNow(planOf(played, o.meter), markPlaying);
+  // Takt b auf der Tafel hinterlegen: rot (qbad) falsch getippt, grün (qok) der gesuchte – bis zum nächsten Zeichnen
+  const tint = (b, cls) => barOf.forEach((x, c) => {
+    const cell = x === b && el.grid.querySelector('.cell[data-r="0"][data-c="' + c + '"]');
+    if (cell) cell.classList.add(cls);
+  });
   return {
     layout: 'words', keys,
     next() {
@@ -176,9 +183,11 @@ function fixQuiz() {
       let other = bars[bad];
       for (let t = 0; t < 40 && same(other, bars[bad]); t++) other = makeBlocks({ ...o, bars: 1 }).flat();
       played = [];
+      barOf = [];
       let c = 0;
       bars.forEach((bar, b) => {
-        if (b === bad) { from = c; count = bar.length; other.forEach((d) => played.push({ d })); c += bar.length; }
+        bar.forEach(() => barOf.push(b));
+        if (b === bad) { other.forEach((d) => played.push({ d })); c += bar.length; }
         else bar.forEach((d) => played.push({ d, pos: { r: 0, c: c++ } }));
       });
       S.rows = [rhythmRow(bars.flat().map(cellOf), o.meter)];
@@ -188,11 +197,10 @@ function fixQuiz() {
       return { ok: new Set([String(bad)]) };
     },
     hear: play,
-    // Der falsche Takt wird rot hinterlegt (bis zum nächsten Zeichnen)
-    solved() {
-      for (let c = from; c < from + count; c++) { const x = el.grid.querySelector('.cell[data-r="0"][data-c="' + c + '"]'); if (x) x.classList.add('qbad'); }
-      play();
-    },
+    // Geantwortet wird auch mit einem Tipp in den Takt auf der Tafel
+    cell: (r, c) => (r === 0 && barOf[c] != null ? barOf[c] : null),
+    wrong: (key) => tint(+key, 'qbad'),
+    solved() { tint(bad, 'qok'); play(); },
     // Die Zeilennummer spielt den Rhythmus richtig, wie er dasteht
     row: playRow,
     stop() { render(); }

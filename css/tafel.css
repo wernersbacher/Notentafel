@@ -2,8 +2,9 @@
 /* Unter etwa 46px pro Platz wird nicht weiter geschrumpft, dann lässt sich die Tafel seitlich wischen */
 .grid {
   --g: 6px; /* Abstand zwischen zwei Plätzen */
+  --nw: 1.5rem; --mw: 2.7rem; /* Spalte vor den Plätzen: Breite der Zeilennummer, dazu die der Taktart */
   flex: 1; min-height: 0;
-  min-width: calc(1.5rem + var(--cols, 1) * 46px);
+  min-width: calc(var(--nw) + var(--cols, 1) * 46px);
   padding: 14px 12px;
   display: grid;
   gap: 6px;
@@ -15,7 +16,7 @@
 .grid.wide { touch-action: pan-x; }
 .row {
   display: grid;
-  grid-template-columns: 1.5rem repeat(var(--cols, 1), minmax(0, 7rem));
+  grid-template-columns: var(--nw) repeat(var(--cols, 1), minmax(0, 7rem));
   justify-content: start;
   grid-template-rows: minmax(0, 1fr);
   gap: var(--g);
@@ -25,10 +26,13 @@
    in dieser Spalte, auf Höhe der Kreismitte (wie die Taktart) */
 .rnum {
   position: absolute; right: calc(100% + var(--g)); top: calc(var(--d) / 2);
-  width: 1.5rem; transform: translateY(-50%); text-align: center;
+  width: var(--nw); transform: translateY(-50%); text-align: center;
   font: 700 .85rem var(--font-ui); color: var(--muted);
 }
-.grid.meters .rnum { right: calc(100% + var(--g) + 2.7rem); }
+.grid.meters .rnum { right: calc(100% + var(--g) + var(--mw)); }
+/* Üben und Spielen: große Nummern, damit man sie von weitem sieht und gut antippen kann (Welcher war's?) */
+.app.practice .grid { --nw: 3.2rem; }
+.app.practice .rnum { font-size: 1.9rem; font-weight: 800; color: var(--fg); }
 /* Ein Tipp auf die Nummer klappt die Zeile ein; der Tippbereich ist größer als die Ziffer */
 .rnum { cursor: pointer; }
 .rnum::after { content: ""; position: absolute; inset: -.9rem -.4rem; }
@@ -55,10 +59,10 @@
    Jede Zeile bekommt ihre Spalten als --tpl aus dem Skript; --fr ist die Breite der längsten Zeile in --L.
    --L ist für alle Zeilen gleich, damit alle Kreise gleich groß sind: höchstens 3.5rem + 3px (ein Kreis also so breit
    wie sonst ein Platz mit Abstand), weniger, wenn die längste Zeile sonst nicht passt. Das Zeichen steht vorn in seinem Platz. */
-.grid.prop { --g: 0px; min-width: calc(1.5rem + var(--fr, 2) * 15px); }
-.grid.prop .row { --L: min(3.5rem + 3px, (100% - 1.5rem) / var(--fr, 2)); grid-template-columns: 1.5rem var(--tpl); }
-.grid.prop.meters { min-width: calc(4.2rem + var(--fr, 2) * 15px); }
-.grid.prop.meters .row { --L: min(3.5rem + 3px, (100% - 4.2rem) / var(--fr, 2)); grid-template-columns: 4.2rem var(--tpl); }
+.grid.prop { --g: 0px; min-width: calc(var(--nw) + var(--fr, 2) * 15px); }
+.grid.prop .row { --L: min(3.5rem + 3px, (100% - var(--nw)) / var(--fr, 2)); grid-template-columns: var(--nw) var(--tpl); }
+.grid.prop.meters { min-width: calc(var(--nw) + var(--mw) + var(--fr, 2) * 15px); }
+.grid.prop.meters .row { --L: min(3.5rem + 3px, (100% - var(--nw) - var(--mw)) / var(--fr, 2)); grid-template-columns: calc(var(--nw) + var(--mw)) var(--tpl); }
 .grid.prop .cell { justify-items: start; }
 /* Achtel im geteilten Feld (Rhythmus): das Zeichen ist so groß wie sonst und steht mittig über seiner halben Spalte;
    der Balken reicht nur bis zur nächsten Achtel (eine halbe Stapelbreite) */
@@ -141,9 +145,9 @@
 .cell.line-one .stack::before { left: 10%; right: 10%; }
 /* Taktart: zwei Zahlen übereinander vor dem ersten Platz, die Notenlinie läuft zwischen ihnen hindurch.
    Steht irgendwo eine Taktart, wird die Spalte vor den Plätzen in allen Zeilen breiter, damit sie untereinander bleiben. */
-.grid.meters { min-width: calc(4.2rem + var(--cols, 1) * 46px); }
-.grid.meters .row { grid-template-columns: 4.2rem repeat(var(--cols, 1), minmax(0, 7rem)); }
-.grid.meters .rownum { justify-self: start; width: 1.5rem; }
+.grid.meters { min-width: calc(var(--nw) + var(--mw) + var(--cols, 1) * 46px); }
+.grid.meters .row { grid-template-columns: calc(var(--nw) + var(--mw)) repeat(var(--cols, 1), minmax(0, 7rem)); }
+.grid.meters .rownum { justify-self: start; width: var(--nw); }
 .meter {
   position: absolute; right: calc(100% + var(--g) + .35rem); top: calc(var(--d) / 2);
   transform: translateY(-50%); color: var(--fg);
@@ -282,8 +286,8 @@
 }
 .row.folded .rnum::before { content: "▸"; order: 1; }
 /* Der Knopf beginnt, wo sonst die Nummer steht, und wächst nach rechts über den (leeren) ersten Platz */
-.row.folded .rnum { right: auto; left: calc(var(--bx, 0px) - 1.5rem - var(--g)); }
-.grid.meters .row.folded .rnum { left: calc(var(--bx, 0px) - 4.2rem - var(--g)); }
+.row.folded .rnum { right: auto; left: calc(var(--bx, 0px) - var(--nw) - var(--g)); }
+.grid.meters .row.folded .rnum { left: calc(var(--bx, 0px) - var(--nw) - var(--mw) - var(--g)); }
 .row.folded .cell .stack::before {
   content: ""; visibility: visible; position: absolute; z-index: -1;
   top: calc(var(--d) / 2 - 1px); height: 2px; background: var(--btn-line);
@@ -334,9 +338,11 @@
 .qpair .qdot.on { transform: scale(1.12); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line), 0 0 0 12px var(--play-bg); }
 /* Spiele: Ist die Frage gelöst, spielen die Zeilennummern ihre Zeile ab (umrandet wie ein Knopf). Welcher war's?: die
    richtige Nummer grün, falsch getippte rot */
-.boardwrap.rowplay .rnum, .rnum.ok, .rnum.bad { width: 1.9rem; height: 1.9rem; line-height: 1.9rem; border-radius: 50%; }
-.boardwrap.rowplay .rnum { line-height: calc(1.9rem - 4px); border: 2px solid currentColor; color: var(--fg); }
+.boardwrap.rowplay .rnum, .rnum.ok, .rnum.bad { width: var(--nw); height: var(--nw); line-height: var(--nw); border-radius: 50%; }
+.boardwrap.rowplay .rnum { line-height: calc(var(--nw) - 6px); border: 3px solid currentColor; color: var(--fg); }
 .boardwrap .rnum.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
 .boardwrap .rnum.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
-/* Fehler finden: der falsche Takt mit der Lösung rot hinterlegt */
-.cell.qbad { background: rgba(209, 40, 31, .16); border-radius: 10px; }
+/* Fehler finden: ein falsch getippter Takt rot hinterlegt, der gesuchte mit der Lösung grün */
+.cell.qbad, .cell.qok { border-radius: 0; }
+.cell.qbad { background: color-mix(in srgb, var(--bad) 22%, transparent); }
+.cell.qok { background: color-mix(in srgb, var(--ok) 26%, transparent); }

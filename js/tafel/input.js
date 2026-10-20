@@ -4,7 +4,7 @@ import { S } from './state.js';
 import { render } from './render.js';
 import { cellEl } from './board.js';
 import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
-import { quizRow } from '../core/game.js';
+import { quizRow, quizCell } from '../core/game.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
@@ -36,6 +36,7 @@ function onDown(e) {
   if (e.target.closest('[data-fold]')) return; // Zeilennummer: klappt beim Tippen ein (siehe click)
   const cell = e.target.closest('.cell');
   if (!cell) return;
+  if (quizCell(+cell.dataset.r, +cell.dataset.c)) return; // im Spiel ist der Tipp eine Antwort (Fehler finden)
   drag = { r: +cell.dataset.r, c: +cell.dataset.c, id: e.pointerId, x: e.clientX, y: e.clientY, active: false, over: null };
   try { el.grid.setPointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
 }

@@ -28,6 +28,9 @@ let cur = null;
 let savePop;
 
 export const register = (area) => { areas.push(area); };
+// f() nach jedem Zeigen eines Bereichs (Wechsel des Bereichs, schreiben oder üben), z. B. für die Startseite der Spiele
+let afterShow = () => {};
+export const onShow = (f) => { afterShow = f; };
 export const current = () => cur;
 
 /* ---------- Bereiche ---------- */
@@ -50,6 +53,7 @@ function show(a) {
   side.dataset.area = a.id;
   side.dataset.part = play ? 'play' : 'write';
   document.querySelector('.app').classList.toggle('practice', play);
+  afterShow();
 }
 const partBtn = (part, text, on) =>
   '<button type="button" class="part" data-part="' + part + '" aria-pressed="' + on + '">' + text + '</button>';

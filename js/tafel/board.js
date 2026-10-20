@@ -139,12 +139,14 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
 /* ---------- Eine Zeile ---------- */
 // P: aufsummierte Spaltenbreiten, cols: Achtel-Spalten der Tafel
 function rowHTML(row, r, cols, P, marks) {
-  // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
+  // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht – oder eine
+  // eigene Taktart (z. B. Rhythmus legen: Linie und Taktart stehen schon, bevor der erste Baustein liegt)
   const full = row.line && S.variant === 'rhy';
   // Taktart vorn: die eigene der Zeile, sonst die geltende (aus einer Zeile darüber), sobald in der Zeile etwas steht –
   // so steht sie nach jedem Umbruch wieder am Zeilenanfang
   const meter = row.meter || (row.some(Boolean) ? meterOf(S.rows, r) : '');
-  const b = beams(row, meter === '6/8' ? 1.5 : 1), sub = subBeams(row, b), span = row.line ? lineSpan(row) : -1, last = full && span >= 0 ? Infinity : full ? -1 : span;
+  const b = beams(row, meter === '6/8' ? 1.5 : 1), sub = subBeams(row, b), span = row.line ? lineSpan(row) : -1;
+  const last = full && (span >= 0 || row.meter) ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
   // Erst alle Plätze ausmessen (Balken und Silbenfelder reichen bis zu einem späteren Platz).

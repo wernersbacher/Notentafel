@@ -14,6 +14,8 @@ export function clampUi(v) {
   return Math.round(Math.min(UI_SCALE.max, Math.max(UI_SCALE.min, n)) * 100) / 100;
 }
 
+const entriesOf = (o) => Object.entries(o && typeof o === 'object' && !Array.isArray(o) ? o : {});
+
 export function cleanCoreSettings(s) {
   return {
     tempo: (s.tempo >= TEMPO.min && s.tempo <= TEMPO.max) ? s.tempo : TEMPO.start,
@@ -27,7 +29,9 @@ export function cleanCoreSettings(s) {
     stepHide: !!s.stepHide, // dabei nur bis zur aktuellen Note zeigen, der Rest ist ausgeblendet
     topHidden: !!s.topHidden, // Leiste oben (die Tafeln) eingeklappt
     // Bereiche, die „Üben und Spielen“ zeigen statt „schreiben“, z. B. { rhy: true }
-    play: Object.fromEntries(Object.entries(s.play && typeof s.play === 'object' && !Array.isArray(s.play) ? s.play : {}).filter(([, v]) => v === true)),
+    play: Object.fromEntries(entriesOf(s.play).filter(([, v]) => v === true)),
+    // Gewähltes Spiel je Bereich, z. B. { rhy: 'which' }; ob es das Spiel gibt, prüft game.js
+    game: Object.fromEntries(entriesOf(s.game).filter(([, v]) => typeof v === 'string' && /^[a-z]+$/.test(v))),
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
     open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+\d$/.test(k)) : OPEN_START.slice()
   };

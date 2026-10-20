@@ -16,16 +16,42 @@ import { openGame, endGame, gameOn, gameBtn, GAME_ICONS } from '../core/game.js'
 import { toast, delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
-const ICONS = {
-  dice: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.7" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor"/></svg>',
-  again: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-};
+export const AGAIN_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let row = -1; // Zeile des zuletzt gewürfelten Rhythmus
 // Glockenspiel und Klavier spielen den Rhythmus auf einem Ton (g')
 const ECHO_F = 392;
 
 const echoRow = () => S.rows[row];
 const covered = () => !!(echoRow() && echoRow().hide);
+
+/* ---------- Für alle Rhythmus-Spiele ---------- */
+// Eine Zeile aus gewürfelten Plätzen (makeRhythm) mit Taktart, Taktstrichen (falls sie nicht automatisch kommen) und
+// Schlussstrich
+export function rhythmRow(cells, meter) {
+  const r = newRow(true), len = meterParts(meter).len;
+  r.meter = meter;
+  let pos = 0;
+  cells.forEach((c) => {
+    if (pos > 0 && pos % len === 0) c.bar = 1;
+    pos += c.d;
+    r.push(c);
+  });
+  r.push({ bar: 2 });
+  return r;
+}
+// Ablaufplan für die Zeile r im gewählten Klang, mit leisem Grundschlag nach Wahl; null, wenn darin nichts steht
+export function rowPlan(r) {
+  const x = S.rows[r];
+  if (!x || !x.some(filled)) return null;
+  const items = [];
+  let t = 0;
+  x.forEach((cell, c) => {
+    if (!filled(cell)) return;
+    items.push({ t, len: dur(cell), sound: isBeat(cell) ? games.echo.sound : '', f: ECHO_F, pos: { r, c } });
+    t += dur(cell);
+  });
+  return { items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, r)) };
+}
 
 /* ---------- Würfeln, Vorspielen, Auflösen ---------- */
 function newRhythm() {
@@ -37,16 +63,7 @@ function newRhythm() {
   // Ist die Tafel voll, fällt der älteste Rhythmus weg
   if (S.rows.length >= MAX_ROWS) S.rows.splice(0, S.rows.length - MAX_ROWS + 1);
   S.rows.forEach((x) => { delete x.cover; delete x.coverFrom; delete x.hide; });
-  // Jede Zeile mit Taktart, Taktstrichen (falls sie nicht automatisch kommen) und Schlussstrich
-  const r = newRow(true), len = meterParts(meter).len;
-  r.meter = meter;
-  let pos = 0;
-  cells.forEach((c) => {
-    if (pos > 0 && pos % len === 0) c.bar = 1;
-    pos += c.d;
-    r.push(c);
-  });
-  r.push({ bar: 2 });
+  const r = rhythmRow(cells, meter);
   r.hide = true;
   S.rows.push(r);
   row = S.rows.length - 1;
@@ -65,16 +82,9 @@ function pulse(pos) {
   line.classList.add('beat');
 }
 function playEcho() {
-  const x = echoRow();
-  if (!x || !x.some(filled)) { toast('Erst mit „Neuer Rhythmus“ einen Rhythmus würfeln.', true); return; }
-  const items = [];
-  let t = 0;
-  x.forEach((cell, c) => {
-    if (!filled(cell)) return;
-    items.push({ t, len: dur(cell), sound: isBeat(cell) ? games.echo.sound : '', f: ECHO_F, pos: { r: row, c } });
-    t += dur(cell);
-  });
-  playNow({ items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, row)) }, covered() ? pulse : markPlaying);
+  const plan = rowPlan(row);
+  if (!plan) { toast('Erst mit „Neuer Rhythmus“ einen Rhythmus würfeln.', true); return; }
+  playNow(plan, covered() ? pulse : markPlaying);
 }
 function reveal() {
   if (!covered()) return;
@@ -92,7 +102,7 @@ function updateBar() {
   const b = el.gameBar.querySelector('.gbtn[data-act="main"]');
   if (!gameOn('echo') || !b) return;
   const text = covered() ? 'Auflösen' : 'Neuer Rhythmus';
-  b.innerHTML = (covered() ? GAME_ICONS.eye : ICONS.dice) + '<span>' + text + '</span>';
+  b.innerHTML = (covered() ? GAME_ICONS.eye : GAME_ICONS.dice) + '<span>' + text + '</span>';
   b.setAttribute('aria-label', text);
 }
 function tap(b) {
@@ -101,10 +111,12 @@ function tap(b) {
   else if (act === 'again') playEcho();
   else if (act === 'end') endGame();
 }
+// Ein neues Echo beginnt auf einer leeren Übungstafel; läuft es schon, kommt nur ein neuer Rhythmus dazu
 function startEcho() {
   if (!gameOn('echo')) {
-    openGame('echo', gameBtn('again', ICONS.again, 'Nochmal hören') + gameBtn('main', GAME_ICONS.eye, 'Auflösen', 'main big') +
+    openGame('echo', gameBtn('again', AGAIN_ICON, 'Nochmal hören') + gameBtn('main', GAME_ICONS.eye, 'Auflösen', 'main big') +
       gameBtn('end', GAME_ICONS.close, 'Ende'), { tap, stop: stopPlay });
+    S.rows = [];
   }
   newRhythm();
 }

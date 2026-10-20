@@ -14,6 +14,7 @@ import { render, renderSheet, markPlaying, isFolded } from './render.js';
 import { buildPanel, buildSteps } from './sidebar.js';
 import { initSheetInput } from './input.js';
 import { initLiedQuiz } from './quiz.js';
+import { initLiedGames } from './games.js';
 import { endGame } from '../core/game.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
@@ -119,6 +120,7 @@ export function registerLied() {
   buildPanel();
   initControls();
   initLiedQuiz();
+  initLiedGames();
   toggleSetting(NAMES, render);
   toggleSetting(COLORS, render);
   toggleSetting(CHECK, render);

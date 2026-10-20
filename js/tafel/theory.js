@@ -78,3 +78,23 @@ export function barAt(cell, c, a, autoBar) {
   if (autoBar) return a && a.b[c] ? 1 : 0;
   return cell && cell.bar ? 1 : 0;
 }
+
+/* ---------- Melodie-Echo ---------- */
+// len Töne aus ids (aufsteigend sortiert): mit steps nur Schritte zum Nachbarton, sonst beliebig (aber nie zweimal
+// derselbe Ton hintereinander)
+export function makeMelody(ids, len, steps, random = Math.random) {
+  const pick = (n) => Math.floor(random() * n);
+  let k = pick(ids.length);
+  const out = [ids[k]];
+  while (out.length < len) {
+    if (steps) {
+      const next = [k - 1, k + 1].filter((x) => x >= 0 && x < ids.length);
+      k = next[pick(next.length)];
+    } else {
+      const j = pick(ids.length - 1);
+      k = j >= k ? j + 1 : j;
+    }
+    out.push(ids[k]);
+  }
+  return out;
+}

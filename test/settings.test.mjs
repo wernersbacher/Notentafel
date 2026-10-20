@@ -17,13 +17,13 @@ const TAFEL = { lens: false, autoBar: true, autoZ: true, syl: false };
 
 test('Einstellungen: ein bisheriger Stand wird gelesen, Melodie und Rhythmus übernehmen beide die alten Tafel-Einstellungen', () => {
   assert.equal(useSettings(cleanTafelSettings), settings);
-  assert.deepEqual(JSON.parse(JSON.stringify(settings)), { tempo: 120, mode: 'rhy', wake: false, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'], mel: TAFEL, rhy: TAFEL });
+  assert.deepEqual(JSON.parse(JSON.stringify(settings)), { tempo: 120, mode: 'rhy', wake: false, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, game: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'], mel: TAFEL, rhy: TAFEL });
   assert.notEqual(settings.mel, settings.rhy);
   settings.tempo = 100;
   settings.rhy.lens = true;
   persistSettings();
   const saved = JSON.parse(store.get('notentafel.settings.v1'));
-  assert.deepEqual(saved, { tempo: 100, mode: 'rhy', wake: false, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'], mel: TAFEL, rhy: { ...TAFEL, lens: true } });
+  assert.deepEqual(saved, { tempo: 100, mode: 'rhy', wake: false, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, game: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'], mel: TAFEL, rhy: { ...TAFEL, lens: true } });
 });
 
 test('Einstellungen: Melodie und Rhythmus behalten getrennt gespeicherte Werte', () => {
@@ -35,7 +35,7 @@ test('Einstellungen: Melodie und Rhythmus behalten getrennt gespeicherte Werte',
 test('Einstellungen: Standardwerte bei fehlenden oder defekten Daten', () => {
   for (const raw of [{}, { theme: 'gibtsnicht', tempo: 999, mode: 5 }]) {
     const c = cleanCoreSettings(raw), t = cleanTafelSettings(raw);
-    assert.deepEqual(c, { tempo: 90, mode: '', wake: true, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'] });
+    assert.deepEqual(c, { tempo: 90, mode: '', wake: true, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, game: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'] });
     const d = { lens: true, autoBar: false, autoZ: false, syl: false };
     assert.deepEqual(t, { mel: d, rhy: d });
   }
@@ -44,6 +44,7 @@ test('Einstellungen: Standardwerte bei fehlenden oder defekten Daten', () => {
 test('Einstellungen: welche Bereiche gerade üben (Üben und Spielen)', () => {
   assert.deepEqual(cleanCoreSettings({ play: { rhy: true, mel: 'ja', lied: false } }).play, { rhy: true });
   assert.deepEqual(cleanCoreSettings({ play: [true] }).play, {});
+  assert.deepEqual(cleanCoreSettings({ game: { rhy: 'which', mel: 5, lied: 'X!' } }).game, { rhy: 'which' });
 });
 
 test('Größe der Oberfläche: frei wählbar, gerundet und begrenzt', async () => {

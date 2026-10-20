@@ -44,9 +44,12 @@ function showButton(playing) {
   b.setAttribute('aria-label', playing ? 'Stopp' : 'Abspielen');
 }
 
-// again: Weiterspielen nach einer Tempoänderung, dann ohne Einzählen
+// again: Weiterspielen nach einer Tempoänderung, dann ohne Einzählen.
+// Für die Spiele kann der Plan mehr: bare spielt nur die Töne (ohne Einzählen und Metronom, z. B. das Melodie-Echo),
+// silent läuft ohne Töne nur mit Markierung, countIn zählt immer ein, metro klickt jeden Schlag deutlich
+// (Vom Blatt klatschen: die Kinder klatschen zum Grundschlag)
 function startPlay(plan, mark, again) {
-  if (!plan || !plan.items.some((s) => s.sound)) { toast('Noch keine Töne auf der Tafel.', true); return; }
+  if (!plan || !(plan.silent || plan.items.some((s) => s.sound))) { toast('Noch keine Töne auf der Tafel.', true); return; }
   const ctx = audioCtx();
   if (!ctx) { toast('Abspielen wird von diesem Browser nicht unterstützt.', true); return; }
   const out = ctx.createGain();
@@ -54,7 +57,8 @@ function startPlay(plan, mark, again) {
   out.connect(ctx.destination);
   const beat = plan.beat || 1, perBar = plan.perBar || 4, bar = beat * perBar;
   // Einzählen: ein ganzer Takt Klicks vorweg, danach beginnt das Stück
-  const pre = settings.countIn && !again ? bar : 0;
+  const pre = (settings.countIn || plan.countIn) && !plan.bare && !again ? bar : 0;
+  const metro = (settings.metro || plan.metro) && !plan.bare;
   const step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08 + pre * step;
   // Verzögerung bis Schlag t in Millisekunden
   const delay = (beats) => (t0 - ctx.currentTime + beats * step) * 1000;
@@ -63,11 +67,11 @@ function startPlay(plan, mark, again) {
   for (let k = 0; k < perBar && pre; k++) tick(out, t0 - pre * step + k * beat * step, k === 0);
   // Metronom: jeder Schlag des Stücks, betont am Taktanfang (gerechnet ab barStart). plan.pulse: leiser Grundschlag
   // unabhängig vom Metronom-Schalter (Rhythmus-Echo)
-  if (settings.metro || plan.pulse) {
+  if (metro || plan.pulse) {
     const first = ((plan.barStart || 0) % beat + beat) % beat;
     for (let t = first; t < plan.end - 1e-9; t += beat) {
       const inBar = ((t - (plan.barStart || 0)) % bar + bar) % bar;
-      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6, !settings.metro);
+      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6, !metro);
     }
   }
   plan.items.forEach((s, k) => {
@@ -76,6 +80,12 @@ function startPlay(plan, mark, again) {
   });
   play.timers.push(setTimeout(stopPlay, delay(plan.end)));
   showButton(true);
+}
+
+// So lange dauert ein Plan beim jetzigen Tempo in Millisekunden, mit Einzählen
+export function planMs(plan) {
+  const pre = (settings.countIn || plan.countIn) && !plan.bare ? (plan.beat || 1) * (plan.perBar || 4) : 0;
+  return (pre + plan.end) * 60000 / settings.tempo;
 }
 
 export function stopPlay() {

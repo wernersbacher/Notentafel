@@ -478,3 +478,18 @@ export function playPlan(song, autoBar = true) {
   });
   return { items: items.slice(0, last + 1), end };
 }
+
+/* ---------- Schritt oder Sprung? ---------- */
+// Zwei Stammtöne aus whites: etwa jedes fünfte Mal derselbe, sonst je zur Hälfte ein Schritt oder ein Sprung (bis zur
+// Oktave). Liefert [a, b, Art].
+export function makeInterval(whites, random = Math.random) {
+  const pick = (n) => Math.floor(random() * n);
+  const r = random(), want = r < 0.2 ? 'same' : r < 0.6 ? 'step' : 'leap';
+  for (let t = 0; t < 40; t++) {
+    const i = pick(whites.length);
+    const ds = want === 'same' ? [0] : want === 'step' ? [-1, 1] : [-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7];
+    const ok = ds.filter((d) => i + d >= 0 && i + d < whites.length);
+    if (ok.length) return [whites[i], whites[i + ok[pick(ok.length)]], want];
+  }
+  return [whites[0], whites[0], 'same'];
+}

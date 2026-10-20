@@ -4,10 +4,12 @@ import { initMenu } from './core/menu.js';
 import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
 import { initBlocks } from './core/blocks.js';
+import { initGamePicks } from './core/game.js';
 import { registerTafel } from './tafel/area.js';
 import { registerLied } from './lied/area.js';
 
 initBlocks();
+initGamePicks();
 initPlayer();
 registerTafel();
 registerLied();

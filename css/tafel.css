@@ -327,3 +327,8 @@
 /* Andersherum gefragt: der Buchstabe auf einem Punkt ohne Farbe */
 .dot.plain { background: var(--board); color: var(--fg); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line); }
 .qname { margin: 0; font: 700 2.4rem/1 var(--font-display); color: var(--fg); }
+/* Höher oder tiefer?: die Frage, darunter zwei Punkte nebeneinander; der klingende leuchtet */
+.qask { margin: 0; font: 800 1.5rem/1.2 var(--font-ui); color: var(--fg); text-align: center; }
+.qpair { display: flex; gap: min(8vw, 80px); }
+.qpair .qdot { --d: min(30vh, 190px); transition: transform .15s ease; }
+.qpair .qdot.on { transform: scale(1.12); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line), 0 0 0 12px var(--play-bg); }

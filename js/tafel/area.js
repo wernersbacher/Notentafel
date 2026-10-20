@@ -14,6 +14,8 @@ import { initBoardInput } from './input.js';
 import { initTafelMenu, openTafelMenu } from './menu.js';
 import { initEcho } from './echo.js';
 import { initMelQuiz } from './quiz.js';
+import { initRhyGames } from './rhygames.js';
+import { initMelGames } from './melgames.js';
 import { endGame } from '../core/game.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
@@ -104,6 +106,8 @@ export function registerTafel() {
   initTafelMenu();
   initEcho();
   initMelQuiz();
+  initRhyGames();
+  initMelGames();
   // Reihenfolge der Reiter als Lernweg: erst Rhythmus, dann Farbnoten (danach das Notenblatt)
   register(area('rhy', 'Rhythmus', el.panelRhy, 'Rhythmus schreiben', { save: 'Rhythmus speichern', songs: 'Gespeicherte Rhythmen' }));
   register(area('mel', 'Farbnoten', el.panelMel, 'Melodie schreiben', { save: 'Melodie speichern', songs: 'Gespeicherte Melodien' }));

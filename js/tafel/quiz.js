@@ -12,7 +12,7 @@ import { toast, delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
 // Töne der Zufallspunkte: die Grundtöne, dazu nach Wahl die hohen Töne und Halbtöne
-function pool() {
+export function pool() {
   const g = games.quiz, ids = GROUPS[0].slice();
   if (g.high) ids.push(...GROUPS[1]);
   if (g.semis >= 1) ids.push('Fis', 'B');
@@ -97,7 +97,8 @@ function renderQuizSide() {
   el.melQuizMode.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === g.mode));
   el.melQuizSemis.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === g.semis));
   pressed(el.melQuizHigh, g.high);
-  el.melQuizRand.hidden = g.mode !== 'rand';
+  // Die Töne gelten auch für die anderen Spiele; nur beim Durchgehen der Melodie im Quiz braucht es sie nicht
+  el.melQuizRand.classList.toggle('songmode', g.mode === 'song');
 }
 export function initMelQuiz() {
   const set = (k, v) => { games.quiz[k] = v; persistGames(); renderQuizSide(); };

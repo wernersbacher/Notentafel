@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeRhythm, meterParts } from '../js/tafel/rhythms.js';
-import { midiOf, whiteRange, quizPitches, quizKeys, songRange } from '../js/lied/model.js';
+import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../js/lied/model.js';
+import { makeMelody } from '../js/tafel/theory.js';
 
 // localStorage-Ersatz für die Einstellungen (vor dem Laden von games.js und lied/storage.js)
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -88,13 +89,42 @@ test('Tonnamen-Quiz: Tonraum eines Lieds, mit Tonart und Platz für die Halbtön
 });
 
 test('Einstellungen der Spiele: Standardwerte und Prüfung', () => {
-  assert.deepEqual(cleanGames(null), { echo: { meter: '4/4', bars: 2, notes: 1, rests: 0, pulse: true, sound: 'clap' }, quiz: { mode: 'rand', ask: 'color', high: false, semis: 0 } });
-  assert.deepEqual(cleanGames({ echo: { meter: '6/8', bars: 9, notes: 3, rests: 2, pulse: false, sound: 'wood' }, quiz: { mode: 'song', ask: 'name', high: 1, semis: 2 } }),
-    { echo: { meter: '6/8', bars: 2, notes: 3, rests: 2, pulse: false, sound: 'wood' }, quiz: { mode: 'song', ask: 'name', high: true, semis: 2 } });
+  assert.deepEqual(cleanGames(null), { which: { count: 3 }, melo: { len: 3, steps: true }, echo: { meter: '4/4', bars: 2, notes: 1, rests: 0, pulse: true, sound: 'clap' }, quiz: { mode: 'rand', ask: 'color', high: false, semis: 0 } });
+  assert.deepEqual(cleanGames({ which: { count: 4 }, melo: { len: 9, steps: false }, echo: { meter: '6/8', bars: 9, notes: 3, rests: 2, pulse: false, sound: 'wood' }, quiz: { mode: 'song', ask: 'name', high: 1, semis: 2 } }),
+    { which: { count: 4 }, melo: { len: 3, steps: false }, echo: { meter: '6/8', bars: 2, notes: 3, rests: 2, pulse: false, sound: 'wood' }, quiz: { mode: 'song', ask: 'name', high: true, semis: 2 } });
   assert.equal(cleanGames({ echo: { meter: '5/4' } }).echo.meter, '4/4');
   const l = cleanLiedSettings({});
   assert.deepEqual([l.quizMode, l.quizLo, l.quizHi, l.quizSharp, l.quizFlat], ['rand', 'c1', 'c3', false, false]);
   // Tonraum verkehrt herum oder kaputt: wieder c' bis c'''
   assert.deepEqual([cleanLiedSettings({ quizLo: 'g2', quizHi: 'c1' }).quizLo, cleanLiedSettings({ quizLo: 'x' }).quizHi], ['c1', 'c3']);
   assert.deepEqual([cleanLiedSettings({ quizLo: 'a0', quizHi: 'e2' }).quizLo, cleanLiedSettings({ quizLo: 'a0', quizHi: 'e2' }).quizHi], ['a0', 'e2']);
+});
+
+test('Melodie-Echo: so viele Töne wie gewählt, mit steps nur Nachbartöne, ohne steps nie zweimal derselbe', () => {
+  const rnd = seeded(3), ids = ['C', 'D', 'E', 'F', 'G', 'A', 'H'];
+  for (let len = 2; len <= 5; len++) {
+    for (let k = 0; k < 40; k++) {
+      const s = makeMelody(ids, len, true, rnd), w = makeMelody(ids, len, false, rnd);
+      assert.equal(s.length, len);
+      assert.equal(w.length, len);
+      for (let i = 1; i < len; i++) {
+        assert.equal(Math.abs(ids.indexOf(s[i]) - ids.indexOf(s[i - 1])), 1, s.join(' '));
+        assert.notEqual(w[i], w[i - 1], w.join(' '));
+      }
+    }
+  }
+});
+
+test('Schritt oder Sprung: die Art passt zum Abstand, beide Töne im Tonraum', () => {
+  const rnd = seeded(5), whites = whiteRange('c1', 'c3'), seen = new Set();
+  for (let k = 0; k < 300; k++) {
+    const [a, b, kind] = makeInterval(whites, rnd), d = Math.abs(comparePitch(a, b));
+    assert.ok(whites.includes(a) && whites.includes(b));
+    assert.equal(kind, d === 0 ? 'same' : d === 1 ? 'step' : 'leap', a + ' ' + b);
+    assert.ok(d <= 7);
+    seen.add(kind);
+  }
+  assert.deepEqual([...seen].sort(), ['leap', 'same', 'step']);
+  // Zu kleiner Tonraum für einen Sprung: dann derselbe Ton
+  assert.deepEqual(makeInterval(['c1', 'd1'], () => 0.9), ['c1', 'c1', 'same']);
 });

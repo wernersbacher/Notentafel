@@ -24,7 +24,7 @@ const question = (e, key = 0) => ({ ok: new Set([String(midiOf(e, key))]), f: fr
 // Die Note groß mit Violinschlüssel; darunter nach dem Lösen ihr Name. frame: Höhe von oben bis unten (in Linienabständen),
 // fest für den ganzen Tonraum, damit die Notenlinien nicht springen.
 const X = 10.5;
-function frameOf(lo, hi) {
+export function frameOf(lo, hi) {
   const a = staffPos(lo), b = staffPos(hi);
   // Hälse: unter der Mittellinie nach oben, sonst nach unten, je 3,5 Linienabstände (sie reichen also bis 7 Plätze weiter)
   const up = a < 4 ? Math.min(b, 3) + 7 : -99, down = b >= 4 ? Math.max(a, 4) - 7 : 99;
@@ -101,7 +101,9 @@ function pressed(b, on) {
 }
 function renderQuizSide() {
   el.liedQuizMode.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === opts.quizMode));
-  el.liedQuizRand.hidden = opts.quizMode !== 'rand';
+  // Der Tonraum gilt auch für die anderen Spiele; nur beim Durchgehen des Lieds im Quiz braucht es ihn und die
+  // Vorzeichen nicht
+  [el.liedQuizRange, el.liedQuizRand].forEach((x) => x.classList.toggle('songmode', opts.quizMode === 'song'));
   el.liedQuizLo.textContent = pitchLabel(opts.quizLo);
   el.liedQuizHi.textContent = pitchLabel(opts.quizHi);
   el.liedQuizLoDown.disabled = stepPitch(opts.quizLo, -1) === opts.quizLo;

@@ -110,9 +110,20 @@
 .part[aria-pressed="true"] { background: var(--fg); color: var(--board); }
 /* Beim Üben zeigt die Leiste nur die Spiele: ohne Werkzeuge oben, ohne Blöcke zum Schreiben und ohne Knöpfe unten */
 .side[data-part="play"] .tools.toprow, .side[data-part="play"] .actions, .side[data-part="play"] .panel > .block { display: none; }
-.side:not([data-part="play"]) .panel > .game { display: none; }
-.panel .game { gap: 7px; padding: 12px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
-.gtitle { margin: 0 0 2px; font: 800 1.15rem var(--font-ui); color: var(--fg); }
+.side:not([data-part="play"]) .panel > .play { display: none; }
+.panel .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.play .game { gap: 7px; margin-bottom: 4px; }
+/* Spielauswahl: große Kacheln, das gewählte Spiel ist dunkel */
+.gamepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+.gtile {
+  min-height: 62px; padding: .3rem .35rem; border: 2px solid var(--btn-line); border-radius: 14px;
+  background: var(--btn); color: var(--fg); font: 800 .9rem/1.15 var(--font-ui); text-align: center; hyphens: auto;
+  cursor: pointer; touch-action: manipulation;
+}
+.gtile[aria-pressed="true"] { background: var(--fg); color: var(--board); border-color: var(--fg); }
+.gtile:active { transform: scale(.97); }
+/* Beim Tonnamen-Quiz „Melodie/Lied durchgehen“ braucht es Töne, Tonraum und Vorzeichen nicht */
+.play[data-game="quiz"] .songmode { display: none; }
 /* Leere Übungstafel: noch keine Zeilennummern */
 .grid.blankboard .rnum { visibility: hidden; }
 /* Auf der Übungstafel gibt es kein Schritt für Schritt (abgespielt wird nur das Spiel) */

@@ -232,7 +232,12 @@
 
       <section class="group block" id="melGame">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Üben und Spielen</span><span class="bhint">Tonnamen-Quiz</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
-        <p class="ghint">Ein Farbpunkt erscheint ohne Buchstaben. Die Kinder sagen seinen Namen und tippen ihn unten auf der Tafel.</p>
+        <p class="ghint" id="melQuizHint"></p>
+        <h2 class="glabel">Was erscheint</h2>
+        <div class="seg two" id="melQuizAsk">
+          <button type="button" class="btn" data-v="color" aria-pressed="false">Farbe, Namen tippen</button>
+          <button type="button" class="btn" data-v="name" aria-pressed="false">Name, Farbe tippen</button>
+        </div>
         <h2 class="glabel">Welche Punkte</h2>
         <div class="seg two" id="melQuizMode">
           <button type="button" class="btn" data-v="rand" aria-pressed="false">Zufallspunkt</button>

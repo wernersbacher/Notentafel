@@ -85,10 +85,11 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
   let dot, label, len = '', stackCls = '';
   if (isNote(cell)) {
     const n = NOTE_BY[cell.n];
-    // Tonnamen-Quiz durch die Melodie: der Buchstabe erscheint erst, wenn der Punkt benannt ist
-    const ask = S.quiz && !S.quiz.done.has(r + ',' + c);
-    dot = '<div class="dot' + (n.up ? ' up' : '') + '" style="' + colorStyle(n) + '">' + (ask ? upArrow(n) : noteLabel(n)) + '</div>';
-    label = where + ': ' + (ask ? 'Farbpunkt' : n.n) + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
+    // Tonnamen-Quiz durch die Melodie: der Buchstabe erscheint erst, wenn der Punkt benannt ist; andersherum (Namen
+    // zeigen, Farbe tippen) steht der Buchstabe auf weißem Punkt, die Farbe erscheint erst mit der Antwort
+    const ask = S.quiz && !S.quiz.done.has(r + ',' + c), byName = ask && S.quiz.ask === 'name';
+    dot = '<div class="dot' + (n.up ? ' up' : '') + (byName ? ' plain' : '') + '" style="' + colorStyle(n) + '">' + (ask && !byName ? upArrow(n) : noteLabel(n)) + '</div>';
+    label = where + ': ' + (ask && !byName ? 'Farbpunkt' : n.n) + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
     if (cell.d) len = noteSym(cell.d, beam);
   } else if (isBeat(cell)) {
     dot = '<div class="dot beat' + (cell.d < 4 ? ' stem' : '') + '">' + noteSym(cell.d, beam) + '</div>';

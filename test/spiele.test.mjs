@@ -88,9 +88,9 @@ test('Tonnamen-Quiz: Tonraum eines Lieds, mit Tonart und Platz für die Halbtön
 });
 
 test('Einstellungen der Spiele: Standardwerte und Prüfung', () => {
-  assert.deepEqual(cleanGames(null), { echo: { bars: 2, notes: 1, rests: 0 }, quiz: { mode: 'rand', high: false, semis: 0 } });
-  assert.deepEqual(cleanGames({ echo: { bars: 9, notes: 3, rests: 2 }, quiz: { mode: 'song', high: 1, semis: 2 } }),
-    { echo: { bars: 2, notes: 3, rests: 2 }, quiz: { mode: 'song', high: true, semis: 2 } });
+  assert.deepEqual(cleanGames(null), { echo: { bars: 2, notes: 1, rests: 0 }, quiz: { mode: 'rand', ask: 'color', high: false, semis: 0 } });
+  assert.deepEqual(cleanGames({ echo: { bars: 9, notes: 3, rests: 2 }, quiz: { mode: 'song', ask: 'name', high: 1, semis: 2 } }),
+    { echo: { bars: 2, notes: 3, rests: 2 }, quiz: { mode: 'song', ask: 'name', high: true, semis: 2 } });
   const l = cleanLiedSettings({});
   assert.deepEqual([l.quizMode, l.quizLo, l.quizHi, l.quizSharp, l.quizFlat], ['rand', 'c1', 'c3', false, false]);
   // Tonraum verkehrt herum oder kaputt: wieder c' bis c'''

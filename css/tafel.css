@@ -317,4 +317,6 @@
 /* ---------- Tonnamen-Quiz: großer Farbpunkt über der Tafel ---------- */
 .qfarb { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .qdot { --d: min(38vh, 240px); }
+/* Andersherum gefragt: der Buchstabe auf einem Punkt ohne Farbe */
+.dot.plain { background: var(--board); color: var(--fg); box-shadow: inset 0 0 0 calc(var(--d) * .05) var(--btn-line); }
 .qname { margin: 0; font: 700 2.4rem/1 var(--font-display); color: var(--fg); }

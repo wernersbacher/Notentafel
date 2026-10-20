@@ -16,6 +16,7 @@ export function cleanGames(s) {
     },
     quiz: {
       mode: pickOf(q.mode, ['rand', 'song'], 'rand'), // Zufallspunkt oder Melodie durchgehen
+      ask: pickOf(q.ask, ['color', 'name'], 'color'), // Farbe zeigen, Namen tippen – oder Namen zeigen, Farbe tippen
       high: !!q.high, // auch die hohen Töne (hohes C bis hohes F)
       semis: pickOf(q.semis, [0, 1, 2], 0) // Halbtöne: keine, Fis und B, alle
     }

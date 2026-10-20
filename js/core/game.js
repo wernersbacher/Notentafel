@@ -42,7 +42,7 @@ export const gameBtn = (act, icon, text, cls = '') =>
 
 /* ---------- Tonnamen-Quiz ---------- */
 // q beschreibt, was gefragt wird:
-//   keys     Knöpfe unten: [{ key, html, label, style, f, black?, col? }]. layout 'piano': Stammtöne (col 0, 1, 2 …) unten,
+//   keys     Knöpfe unten: [{ key, html, label, style, f, black?, col?, cls? }]. layout 'piano': Stammtöne (col 0, 1, 2 …) unten,
 //            Halbtöne (black, col = der Stammton links daneben) darüber dazwischen; 'row': alle runden Knöpfe in einer Reihe
 //   next()   stellt die nächste Frage und liefert { ok: Set der richtigen keys, f } oder null, wenn es keine mehr gibt
 //   solved() zeigt die Lösung; stop() räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
@@ -54,7 +54,7 @@ function keysHTML(q) {
   const cols = q.layout === 'piano' ? ' style="grid-template-columns:repeat(' + 2 * n + ', minmax(0, 1fr))"' : '';
   return '<div class="qkeys ' + q.layout + '"' + cols + '>' + q.keys.map((k) => {
     const pos = q.layout === 'piano' ? ';grid-column:' + (2 * k.col + (k.black ? 2 : 1)) + ' / span 2;grid-row:' + (k.black ? 1 : 2) : '';
-    return '<button type="button" class="qkey' + (k.black ? ' black' : '') + '" data-key="' + k.key + '" style="' + k.style + pos +
+    return '<button type="button" class="qkey' + (k.black ? ' black' : '') + (k.cls ? ' ' + k.cls : '') + '" data-key="' + k.key + '" style="' + k.style + pos +
       '" aria-label="' + k.label + '">' + k.html + '</button>';
   }).join('') + '</div>';
 }

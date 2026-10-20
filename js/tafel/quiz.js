@@ -1,5 +1,6 @@
 // Tonnamen-Quiz der Farbnoten („Üben und Spielen“): Ein Farbpunkt erscheint ohne Buchstaben (groß über der Tafel oder
-// Punkt für Punkt in der Melodie), die Kinder sagen seinen Namen und tippen ihn unten auf der Tafel.
+// Punkt für Punkt in der Melodie), die Kinder sagen seinen Namen und tippen ihn unten auf der Tafel – oder andersherum:
+// der Name erscheint auf einem Punkt ohne Farbe, die Kinder tippen die Farbe.
 import { NOTE_BY, GROUPS } from './config.js';
 import { isNote } from './model.js';
 import { S } from './state.js';
@@ -19,19 +20,21 @@ function pool() {
   if (g.semis === 2) ids.push('Cis', 'Dis', 'Gis', ...(g.high ? ['Cis+', 'Dis+'] : []));
   return ids;
 }
-// Knöpfe unten auf der Tafel, von tief nach hoch, wie die Töne der Leiste
+// Knöpfe unten auf der Tafel, von tief nach hoch, wie die Töne der Leiste: Namen tippen ohne Farbe (plain, der richtige
+// färbt sich mit der Lösung), Farbe tippen ohne Buchstaben (nur der Pfeil der hohen Töne)
 const keysOf = (ids) => [...new Set(ids)].sort((a, b) => NOTE_BY[a].f - NOTE_BY[b].f).map((id) => {
-  const n = NOTE_BY[id];
-  return { key: id, html: noteLabel(n), label: n.n, style: colorStyle(n), f: n.f };
+  const n = NOTE_BY[id], byName = games.quiz.ask === 'name';
+  return { key: id, html: byName ? upArrow(n) : noteLabel(n), label: n.n, style: colorStyle(n), f: n.f, cls: byName ? '' : 'plain' };
 });
 const question = (id) => ({ ok: new Set([id]), f: NOTE_BY[id].f });
 
-// Großer Farbpunkt über der Tafel; ohne Lösung nur mit dem Pfeil der hohen Töne, mit Lösung mit Buchstabe und – wenn er
-// mehr sagt als der Buchstabe (hohes C, Fis) – darunter dem Namen
+// Großer Punkt über der Tafel. Farbe gefragt: ohne Lösung nur mit dem Pfeil der hohen Töne; Name gefragt: Buchstabe auf
+// einem Punkt ohne Farbe. Mit Lösung farbig mit Buchstabe. Darunter der Name, wenn er mehr sagt als der Buchstabe
+// (hohes C, Fis) und schon zu sehen sein soll
 function showDot(id, solved) {
-  const n = NOTE_BY[id];
-  el.quizView.innerHTML = '<div class="qfarb"><div class="dot qdot" style="' + colorStyle(n) + '">' + (solved ? noteLabel(n) : upArrow(n)) +
-    '</div><p class="qname">' + (solved && n.n !== n.l ? n.n : '&nbsp;') + '</p></div>';
+  const n = NOTE_BY[id], byName = games.quiz.ask === 'name';
+  el.quizView.innerHTML = '<div class="qfarb"><div class="dot qdot' + (byName && !solved ? ' plain' : '') + '" style="' + colorStyle(n) + '">' +
+    (solved || byName ? noteLabel(n) : upArrow(n)) + '</div><p class="qname">' + ((solved || byName) && n.n !== n.l ? n.n : '&nbsp;') + '</p></div>';
 }
 function randomQuiz() {
   let cur = null;
@@ -56,7 +59,7 @@ function songQuiz() {
   S.rows.forEach((row, r) => { if (!row.fold) row.forEach((x, c) => { if (isNote(x)) order.push({ r, c }); }); });
   if (!order.length) { toast('Auf der Tafel stehen noch keine Farbpunkte.', true); return null; }
   let k = -1;
-  S.quiz = { pos: null, done: new Set() };
+  S.quiz = { pos: null, done: new Set(), ask: games.quiz.ask };
   return {
     layout: 'row', sound: 'bell', keys: keysOf(GROUPS[0].concat(order.map((p) => S.rows[p.r][p.c].n))),
     done: 'Geschafft: Alle Farbpunkte sind benannt.',
@@ -88,14 +91,19 @@ function pressed(b, on) {
 }
 function renderQuizSide() {
   const g = games.quiz;
+  el.melQuizHint.textContent = g.ask === 'name'
+    ? 'Ein Tonname erscheint auf einem Punkt ohne Farbe. Die Kinder tippen unten auf der Tafel die passende Farbe.'
+    : 'Ein Farbpunkt erscheint ohne Buchstaben. Die Kinder sagen seinen Namen und tippen ihn unten auf der Tafel.';
+  el.melQuizAsk.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === g.ask));
   el.melQuizMode.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === g.mode));
   el.melQuizSemis.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === g.semis));
   pressed(el.melQuizHigh, g.high);
   el.melQuizRand.hidden = g.mode !== 'rand';
-  blockSum('melGame', g.mode === 'song' ? 'Melodie' : 'Zufall · ' + SEMIS[g.semis] + (g.high ? ' · hohe Töne' : ''));
+  blockSum('melGame', (g.ask === 'name' ? 'Farbe tippen · ' : '') + (g.mode === 'song' ? 'Melodie' : 'Zufall · ' + SEMIS[g.semis] + (g.high ? ' · hohe Töne' : '')));
 }
 export function initMelQuiz() {
   const set = (k, v) => { games.quiz[k] = v; persistGames(); renderQuizSide(); };
+  delegate(el.melQuizAsk, '[data-v]', (b) => set('ask', b.dataset.v));
   delegate(el.melQuizMode, '[data-v]', (b) => set('mode', b.dataset.v));
   delegate(el.melQuizSemis, '[data-v]', (b) => set('semis', +b.dataset.v));
   el.melQuizHigh.addEventListener('click', () => set('high', !games.quiz.high));

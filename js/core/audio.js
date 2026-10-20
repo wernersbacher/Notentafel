@@ -59,30 +59,21 @@ export function clave(out, t0) {
   src.stop(t0 + 0.03);
 }
 
-// Handtrommel fürs Rhythmus-Echo: kräftiger, tiefer Schlag (der Ton rutscht beim Ausklingen etwas nach unten) mit
-// hellem Anschlag, deutlich lauter als die Klanghölzer
-export function drum(out, t0) {
-  const o = audio.createOscillator(), g = audio.createGain();
-  o.type = 'sine';
-  o.frequency.setValueAtTime(190, t0);
-  o.frequency.exponentialRampToValueAtTime(120, t0 + 0.18);
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.linearRampToValueAtTime(1, t0 + 0.002);
-  g.gain.setTargetAtTime(0.0001, t0 + 0.002, 0.07);
-  o.connect(g);
-  g.connect(out);
-  o.start(t0);
-  o.stop(t0 + 0.5);
-  partial(out, 420, t0, 0.35, 0.001, 0.03, 0, t0 + 0.2);
-  const src = audio.createBufferSource(), bp = audio.createBiquadFilter(), n = audio.createGain();
+// Triangel fürs Rhythmus-Echo: heller, metallischer Klang aus unharmonischen Teiltönen mit kurzem, klirrendem
+// Anschlag. Er klingt lange nach und wird am Ende der Notenlänge abgedämpft (wie mit der Hand), so hört man, ob eine
+// Note kurz oder lang ist
+export function triangle(out, t0, len) {
+  const damp = t0 + len, stop = damp + 0.25;
+  [[1250, 0.5, 1.4], [3180, 0.3, 1], [5040, 0.18, 0.7], [7420, 0.1, 0.45]].forEach(([f, amp, tau]) =>
+    partial(out, f, t0, amp, 0.001, tau, damp, stop, 0.03));
+  const src = audio.createBufferSource(), hp = audio.createBiquadFilter(), n = audio.createGain();
   src.buffer = noise();
-  bp.type = 'bandpass';
-  bp.frequency.value = 1500;
-  bp.Q.value = 0.8;
-  n.gain.setValueAtTime(0.7, t0);
-  n.gain.setTargetAtTime(0.0001, t0, 0.008);
-  src.connect(bp);
-  bp.connect(n);
+  hp.type = 'highpass';
+  hp.frequency.value = 5000;
+  n.gain.setValueAtTime(0.35, t0);
+  n.gain.setTargetAtTime(0.0001, t0, 0.006);
+  src.connect(hp);
+  hp.connect(n);
   n.connect(out);
   src.start(t0);
   src.stop(t0 + 0.03);

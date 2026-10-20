@@ -80,7 +80,7 @@ function playEcho() {
   let t = 0;
   x.forEach((cell, c) => {
     if (!filled(cell)) return;
-    items.push({ t, len: dur(cell), sound: isBeat(cell) ? 'drum' : '', f: 0, pos: { r: row, c } });
+    items.push({ t, len: dur(cell), sound: isBeat(cell) ? 'triangle' : '', f: 0, pos: { r: row, c } });
     t += dur(cell);
   });
   playNow({ items, end: t, pulse: games.echo.pulse, ...beatsOf(meterOf(S.rows, row)) }, covered() ? pulse : markPlaying);

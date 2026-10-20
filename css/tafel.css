@@ -342,7 +342,3 @@
 .boardwrap.rowplay .rnum { line-height: calc(var(--nw) - 6px); border: 3px solid currentColor; color: var(--fg); }
 .boardwrap .rnum.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
 .boardwrap .rnum.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
-/* Fehler finden: ein falsch getippter Takt rot hinterlegt, der gesuchte mit der Lösung grün */
-.cell.qbad, .cell.qok { border-radius: 0; }
-.cell.qbad { background: color-mix(in srgb, var(--bad) 22%, transparent); }
-.cell.qok { background: color-mix(in srgb, var(--ok) 26%, transparent); }

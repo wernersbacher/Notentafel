@@ -7,8 +7,8 @@
 //   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
 //                       Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur.
 //   Fehler finden       Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn mit einem Fehler in einem Takt. Die Kinder
-//                       tippen den Takt (auf der Tafel oder unten). Ein falsch getippter Takt wird rot hinterlegt, der
-//                       gesuchte mit der Lösung grün.
+//                       tippen den Takt (auf der Tafel oder unten). Auf der Tafel wird kein Takt hinterlegt, rot und
+//                       grün werden nur die Knöpfe unten.
 //                       Rhythmus legen und Fehler finden: Nach dem Lösen spielt die Zeilennummer den Rhythmus richtig.
 import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
 import { games, persistGames } from './games.js';
@@ -169,11 +169,6 @@ function fixQuiz() {
   let played = [], bad = 0, barOf = [];
   // Gespielt wird mit dem Fehler; die Zeichen der richtigen Takte leuchten mit, im falschen Takt leuchtet nichts
   const play = () => playNow(planOf(played, o.meter), markPlaying);
-  // Takt b auf der Tafel hinterlegen: rot (qbad) falsch getippt, grün (qok) der gesuchte – bis zum nächsten Zeichnen
-  const tint = (b, cls) => barOf.forEach((x, c) => {
-    const cell = x === b && el.grid.querySelector('.cell[data-r="0"][data-c="' + c + '"]');
-    if (cell) cell.classList.add(cls);
-  });
   return {
     layout: 'words', keys,
     next() {
@@ -199,8 +194,7 @@ function fixQuiz() {
     hear: play,
     // Geantwortet wird auch mit einem Tipp in den Takt auf der Tafel
     cell: (r, c) => (r === 0 && barOf[c] != null ? barOf[c] : null),
-    wrong: (key) => tint(+key, 'qbad'),
-    solved() { tint(bad, 'qok'); play(); },
+    solved: play,
     // Die Zeilennummer spielt den Rhythmus richtig, wie er dasteht
     row: playRow,
     stop() { render(); }

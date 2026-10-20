@@ -1,5 +1,5 @@
 // Weitere Spiele im Notenblatt („Üben und Spielen“), im Tonraum des Tonnamen-Quiz und nur mit Stammtönen:
-//   Note setzen          Ein Notenname steht über leeren Notenlinien; die Kinder tippen die Linie oder den Zwischenraum.
+//   Note setzen          Ein Notenname steht unter leeren Notenlinien; die Kinder tippen die Linie oder den Zwischenraum.
 //                        Eine falsche Note bleibt kurz rot stehen und erklingt nicht.
 //   Schritt oder Sprung? Zwei Noten stehen nebeneinander und erklingen; die Kinder sagen, ob es ein Schritt zum
 //                        Nachbarton, ein Sprung oder derselbe Ton ist.
@@ -47,8 +47,8 @@ function placeQuiz() {
   let target = null, miss = null, solved = false, fade = null;
   const show = () => {
     const inner = (miss ? note(X, miss, 'miss') : '') + (solved ? note(X, target, 'hit', colorOf(target)) : '');
-    el.quizView.innerHTML = '<div class="qset"><p class="qname">' + pitchLabel(target) + '</p>' +
-      staffSVG(frame, inner, 'Notenlinien: Wo steht ' + pitchLabel(target) + '?') + '</div>';
+    el.quizView.innerHTML = '<div class="qset">' + staffSVG(frame, inner, 'Notenlinien: Wo steht ' + pitchLabel(target) + '?') +
+      '<p class="qname">' + pitchLabel(target) + '</p></div>';
   };
   onStaff = (y) => quizAnswer(pitchAt(Math.round(8 - 2 * y)));
   el.quizView.hidden = false;

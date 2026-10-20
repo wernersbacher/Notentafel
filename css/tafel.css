@@ -244,9 +244,9 @@
 /* Beim Abspielen: der klingende Platz leuchtet als farbiger Balken über die ganze Zeilenhöhe, das Zeichen wird größer */
 .cell.playing { background: var(--play-bg); box-shadow: 0 0 0 4px var(--play-bg); }
 .cell.playing .dot:not(.ghost) { transform: scale(1.22); }
-/* Achtel am Balken wachsen vom Halsende aus: der Hals bleibt am Balken, nur der Kopf wird größer */
-.cell.playing .dot.beat.beamed { transform-origin: calc(50% + var(--d) * .08) calc(var(--d) * -.088); }
-.grid.rhy .cell.playing .dot.beat.beamed { transform-origin: calc(50% + var(--d) * .12) calc(var(--d) * -.382); }
+/* Noten mit Hals wachsen vom Halsende aus (am Balken bleibt er so dran), nur der Kopf wird größer; die Ganze von der Mitte */
+.cell.playing .dot.beat.stem { transform-origin: calc(50% + var(--d) * .08) calc(var(--d) * -.088); }
+.grid.rhy .cell.playing .dot.beat.stem { transform-origin: calc(50% + var(--d) * .12) calc(var(--d) * -.382); }
 .cell.lifting { opacity: .3; }
 .cell.drop .dot { transform: scale(1.08); }
 .dot.dragging {

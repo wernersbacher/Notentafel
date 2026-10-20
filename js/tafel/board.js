@@ -125,9 +125,9 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
 /* ---------- Eine Zeile ---------- */
 // P: aufsummierte Spaltenbreiten, cols: Achtel-Spalten der Tafel
 function rowHTML(row, r, cols, P, marks) {
-  // Eingeklappt: nur ein Streifen mit der Nummer
+  // Eingeklappt: nur die Nummer und eine feine Linie
   if (row.fold) return '<div class="row folded" style="grid-area:' + (r + 1) + ' / 1" data-fold="' + r + '" role="button" tabindex="0" aria-label="Zeile ' + (r + 1) + ' eingeklappt. Antippen klappt sie auf.">' +
-    '<span class="fnum">' + (r + 1) + '</span><span class="ftip">▶ eingeklappt – antippen zum Aufklappen</span></div>';
+    '<span class="fnum">' + (r + 1) + '</span><span class="fline"></span></div>';
   // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
   const full = row.line && S.variant === 'rhy';
   // Taktart vorn: die eigene der Zeile, sonst die geltende (aus einer Zeile darüber), sobald in der Zeile etwas steht –

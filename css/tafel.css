@@ -260,15 +260,19 @@
 }
 
 /* ---------- Verdecken ---------- */
-/* Eingeklappte Zeile: nur ein schmaler Streifen mit ihrer Nummer; ein Tipp darauf klappt sie wieder auf */
+/* Eingeklappte Zeile: nur ihre Nummer als kleiner Knopf mit Pfeil und eine feine Linie, wo sie liegt; ein Tipp
+   irgendwo darauf klappt sie wieder auf */
 .row.folded {
-  display: flex; align-items: center; gap: 10px;
-  border: 2px dashed var(--btn-line); border-radius: 12px;
-  background: repeating-linear-gradient(135deg, var(--panel) 0 12px, var(--board) 12px 24px);
+  display: flex; align-items: center; gap: 8px;
   cursor: pointer; touch-action: manipulation;
 }
-.row.folded .fnum { width: 1.5rem; text-align: center; font: 700 .85rem var(--font-ui); color: var(--muted); }
-.row.folded .ftip { font: 800 .8rem var(--font-ui); color: var(--muted); white-space: nowrap; }
+.row.folded .fnum {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px 3px 9px; border-radius: 999px;
+  background: var(--btn); border: 2px solid var(--btn-line);
+  font: 700 .85rem var(--font-ui); color: var(--muted);
+}
+.row.folded .fnum::after { content: "▸"; font-size: .8em; }
+.row.folded .fline { flex: 1; border-top: 2px dashed var(--btn-line); }
 /* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
 .grid > .cloth { grid-column: 1; }
 /* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */

@@ -18,7 +18,7 @@ import { markPlaying } from './board.js';
 import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
 import { noteSym, restSym } from './symbols.js';
 import { playNow, stopPlay } from '../core/player.js';
-import { openGame, endGame, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
+import { openGame, endGame, gameGate, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
 import { delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
@@ -103,7 +103,7 @@ function readTap(b) {
 function startRead() {
   openGame('echo', gameBtn('clap', CLAP_ICON, 'Mitklatschen') + gameBtn('hear', AGAIN_ICON, 'Anhören') +
     gameBtn('main', GAME_ICONS.dice, 'Neuer Rhythmus', 'main big') + gameBtn('end', GAME_ICONS.close, 'Ende'), { tap: readTap, stop: stopPlay });
-  newSheet();
+  gameGate(newSheet);
 }
 
 /* ---------- Rhythmus legen ---------- */

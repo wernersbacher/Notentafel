@@ -33,8 +33,32 @@ export function endGame() {
 export const gameOn = (kind) => !!game && (!kind || game.kind === kind);
 el.gameBar.addEventListener('click', (e) => {
   const b = e.target.closest('button');
-  if (b && !b.disabled && game && game.tap) game.tap(b);
+  if (!b || b.disabled || !game) return;
+  if (game.gate) { if (b.dataset.act === 'end') endGame(); return; } // vor dem Start wirkt nur „Ende“
+  if (game.tap) game.tap(b);
 });
+// Nach dem Öffnen steht die Leiste schon da, auf der Tafel aber nur „Spiel starten“; erst dieser Knopf ruft start()
+// (z. B. die erste Frage, die gleich erklingt). Bis dahin ist die Leiste blass und nur „Ende“ wirkt.
+export function gameGate(start) {
+  game.gate = start;
+  el.gameBar.classList.add('gated');
+  showGate();
+}
+function showGate() {
+  el.gameIntro.hidden = false;
+  el.gameIntro.innerHTML = '<div class="gintro"><button type="button" class="gbtn main big" data-act="start">' + PLAY_ICON +
+    '<span>Spiel starten</span></button></div>';
+}
+// Startet das wartende Spiel; false, wenn keins wartet
+export function gameStart() {
+  if (!game || !game.gate) return false;
+  const start = game.gate;
+  game.gate = null;
+  el.gameBar.classList.remove('gated');
+  el.gameIntro.hidden = true;
+  start();
+  return true;
+}
 
 export const GAME_ICONS = {
   close: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>',
@@ -75,6 +99,7 @@ function showPick(box) {
 const PLAY_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>';
 let introGo = null;
 function showIntro() {
+  if (game && game.gate) { showGate(); return; }
   const box = playing() && !game && document.querySelector('.gamepick[data-area="' + document.getElementById('side').dataset.area + '"]');
   const tile = box && box.querySelector('[aria-pressed="true"]');
   const sec = tile && box.closest('.play').querySelector('.game[data-game="' + tile.dataset.game + '"]');
@@ -84,7 +109,10 @@ function showIntro() {
   el.gameIntro.innerHTML = '<div class="gintro"><h2>' + tile.textContent + '</h2><p>' + (sec.dataset.intro || '') + '</p>' +
     '<button type="button" class="gbtn main big" data-act="go">' + PLAY_ICON + '<span>Los geht\'s!</span></button></div>';
 }
-el.gameIntro.addEventListener('click', (e) => { if (e.target.closest('[data-act="go"]') && introGo) introGo.click(); });
+el.gameIntro.addEventListener('click', (e) => {
+  if (e.target.closest('[data-act="start"]')) gameStart();
+  else if (e.target.closest('[data-act="go"]') && introGo) introGo.click();
+});
 
 export function initGamePicks() {
   document.querySelectorAll('.gamepick').forEach((box) => {
@@ -182,7 +210,7 @@ export function startQuiz(q) {
     stop() { stopPlay(); el.gameBar.parentNode.classList.remove('rowplay'); const x = quiz; quiz = null; x.q.stop(); }
   });
   quiz = { q, cur: null, solved: false };
-  quizNext();
+  gameGate(quizNext);
 }
 function quizNext() {
   el.gameBar.querySelectorAll('.qkey').forEach((b) => b.classList.remove('right', 'wrong', 'shown'));

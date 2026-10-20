@@ -358,6 +358,14 @@ export function tapCell(r, c) {
   S.sel = { r, c };
   commit();
 }
+// Tipp auf eine Zeilennummer: die Zeile einklappen (nur noch ein Streifen mit ihrer Nummer) oder wieder aufklappen
+export function toggleFold(r) {
+  const row = S.rows[r];
+  if (!row) return;
+  snap();
+  if (row.fold) delete row.fold; else row.fold = true;
+  commit();
+}
 // Alles wieder wie am Anfang (z. B. für die nächste Klasse): Tuch an seinen Anfang, alle Karten zu
 export function resetCover() {
   snap();
@@ -367,12 +375,13 @@ export function resetCover() {
   });
   commit();
 }
-// Tuch und alle Karten weg
+// Tuch und alle Karten weg, alle Zeilen aufgeklappt
 export function clearCover() {
   snap();
   S.rows.forEach((row) => {
     delete row.cover;
     delete row.coverFrom;
+    delete row.fold;
     row.forEach((x) => { if (x) delete x.q; });
   });
   commit();

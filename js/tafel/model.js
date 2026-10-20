@@ -188,8 +188,8 @@ function cleanCell(c) {
   return o;
 }
 // Zeilen-Eigenschaften line, meter und das Tuch: cover (ab dieser Zeile ist jetzt abgedeckt) und coverFrom (hier lag
-// das Tuch am Anfang, dorthin kommt es mit „neu abdecken“). Gespeichert als lines: pro Zeile 0, 1 (nur Linie, älteres
-// Format) oder { l, m, c, f }.
+// das Tuch am Anfang, dorthin kommt es mit „neu abdecken“), dazu fold (eingeklappt). Gespeichert als lines: pro Zeile
+// 0, 1 (nur Linie, älteres Format) oder { l, m, c, f, k }.
 export function attachLines(rs, lines) {
   rs.forEach((row, r) => {
     const v = Array.isArray(lines) ? lines[r] : 0;
@@ -197,15 +197,17 @@ export function attachLines(rs, lines) {
     row.meter = v && METERS.includes(v.m) ? v.m : '';
     if (v && v.c) row.cover = true; else delete row.cover;
     if (v && v.f) row.coverFrom = true; else delete row.coverFrom;
+    if (v && v.k) row.fold = true; else delete row.fold;
   });
   return rs;
 }
 export function packLines(rs) {
   return rs.map((row) => {
-    if (!row.meter && !row.cover && !row.coverFrom) return row.line ? 1 : 0;
+    if (!row.meter && !row.cover && !row.coverFrom && !row.fold) return row.line ? 1 : 0;
     const o = { l: row.line ? 1 : 0, m: row.meter };
     if (row.cover) o.c = 1;
     if (row.coverFrom) o.f = 1;
+    if (row.fold) o.k = 1;
     return o;
   });
 }

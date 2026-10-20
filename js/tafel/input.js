@@ -3,7 +3,7 @@ import { filled } from './model.js';
 import { S } from './state.js';
 import { render } from './render.js';
 import { cellEl } from './board.js';
-import { tapCell, swapCells, deleteCell, revealRow } from './actions.js';
+import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
@@ -32,6 +32,7 @@ function beginDrag() {
 
 function onDown(e) {
   if (e.button > 0) return;
+  if (e.target.closest('[data-fold]')) return; // Zeilennummer: klappt beim Tippen ein (siehe click)
   const cell = e.target.closest('.cell');
   if (!cell) return;
   drag = { r: +cell.dataset.r, c: +cell.dataset.c, id: e.pointerId, x: e.clientX, y: e.clientY, active: false, over: null };
@@ -63,6 +64,8 @@ function onEnd(e, cancel) {
 }
 // Mit Tastatur: Eingabe/Leertaste markiert, Entfernen löscht
 function onKey(e) {
+  const f = e.target.closest ? e.target.closest('.row.folded') : null;
+  if (f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleFold(+f.dataset.fold); return; }
   const cell = e.target.closest ? e.target.closest('.cell') : null;
   if (!cell) return;
   const r = +cell.dataset.r, c = +cell.dataset.c;
@@ -80,6 +83,10 @@ export function initBoardInput() {
   el.grid.addEventListener('pointercancel', (e) => onEnd(e, true));
   el.grid.addEventListener('contextmenu', (e) => e.preventDefault());
   el.grid.addEventListener('keydown', onKey);
-  // Tipp auf das Tuch deckt die nächste Zeile auf
-  el.grid.addEventListener('click', (e) => { if (e.target.closest('.cloth')) revealRow(); });
+  // Tipp auf das Tuch deckt die nächste Zeile auf, Tipp auf eine Zeilennummer klappt die Zeile ein oder wieder auf
+  el.grid.addEventListener('click', (e) => {
+    const f = e.target.closest('[data-fold]');
+    if (f) toggleFold(+f.dataset.fold);
+    else if (e.target.closest('.cloth')) revealRow();
+  });
 }

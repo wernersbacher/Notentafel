@@ -7,8 +7,10 @@
   padding: 14px 12px;
   display: grid;
   gap: 6px;
-  /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter */
-  grid-template-rows: repeat(var(--rows, 3), minmax(0, 12rem));
+  /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter. --rowtpl kommt aus dem Skript, sobald eine
+     Zeile eingeklappt ist (die ist dann nur noch ein schmaler Streifen) */
+  --rowh: 12rem;
+  grid-template-rows: var(--rowtpl, repeat(var(--rows, 3), minmax(0, var(--rowh))));
   align-content: start;
   touch-action: none;
 }
@@ -29,6 +31,9 @@
   font: 700 .85rem var(--font-ui); color: var(--muted);
 }
 .grid.meters .rnum { right: calc(100% + var(--g) + 2.7rem); }
+/* Ein Tipp auf die Nummer klappt die Zeile ein; der Tippbereich ist größer als die Ziffer */
+.rnum { cursor: pointer; }
+.rnum::after { content: ""; position: absolute; inset: -.9rem -.4rem; }
 .cell {
   container-type: size;
   position: relative;
@@ -96,7 +101,7 @@
 /* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
 .len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */
-.grid.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem)); }
+.grid.nolen { --rowh: 8.75rem; }
 .grid.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc(100cqh - 2.6rem))); }
 .grid.nolen .len { display: none; }
 /* Zählzeiten unter dem Notenzeichen; gehaltene Zählzeiten blasser. Nur wenn es welche gibt, bekommt die Zeile Platz dafür. */
@@ -111,9 +116,9 @@
 /* Breite nach Notenlänge: gehaltene Zählzeiten stehen an ihrer Stelle, --t ist der Abstand als Anteil des Platzes */
 .zz .at { position: absolute; left: calc(50% + 100cqw * var(--t)); transform: translateX(-50%); }
 .grid.counts .zz { display: flex; }
-.grid.counts { grid-template-rows: repeat(var(--rows, 3), minmax(0, 13.5rem)); }
+.grid.counts { --rowh: 13.5rem; }
 .grid.counts .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 3.05rem) / 1.86))); }
-.grid.counts.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 10rem)); }
+.grid.counts.nolen { --rowh: 10rem; }
 .grid.counts.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 1.36))); }
 /* Notenlinie: läuft auf Höhe der Kreismitte vom ersten bis zum letzten Zeichen, hinter den Kreisen */
 .cell[class*="line-"] .stack::before {
@@ -255,6 +260,15 @@
 }
 
 /* ---------- Verdecken ---------- */
+/* Eingeklappte Zeile: nur ein schmaler Streifen mit ihrer Nummer; ein Tipp darauf klappt sie wieder auf */
+.row.folded {
+  display: flex; align-items: center; gap: 10px;
+  border: 2px dashed var(--btn-line); border-radius: 12px;
+  background: repeating-linear-gradient(135deg, var(--panel) 0 12px, var(--board) 12px 24px);
+  cursor: pointer; touch-action: manipulation;
+}
+.row.folded .fnum { width: 1.5rem; text-align: center; font: 700 .85rem var(--font-ui); color: var(--muted); }
+.row.folded .ftip { font: 800 .8rem var(--font-ui); color: var(--muted); white-space: nowrap; }
 /* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
 .grid > .cloth { grid-column: 1; }
 /* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */

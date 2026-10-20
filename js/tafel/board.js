@@ -125,9 +125,6 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
 /* ---------- Eine Zeile ---------- */
 // P: aufsummierte Spaltenbreiten, cols: Achtel-Spalten der Tafel
 function rowHTML(row, r, cols, P, marks) {
-  // Eingeklappt: nur die Nummer und eine feine Linie
-  if (row.fold) return '<div class="row folded" style="grid-area:' + (r + 1) + ' / 1" data-fold="' + r + '" role="button" tabindex="0" aria-label="Zeile ' + (r + 1) + ' eingeklappt. Antippen klappt sie auf.">' +
-    '<span class="fnum">' + (r + 1) + '</span><span class="fline"></span></div>';
   // Rhythmus: die Notenlinie läuft wie im Lied über die ganze Zeile, sobald das erste Zeichen darin steht
   const full = row.line && S.variant === 'rhy';
   // Taktart vorn: die eigene der Zeile, sonst die geltende (aus einer Zeile darüber), sobald in der Zeile etwas steht –
@@ -153,7 +150,9 @@ function rowHTML(row, r, cols, P, marks) {
   }
   // Feste Rasterzeile, damit das Tuch (das mehrere Zeilen überdeckt) die Zeilen nicht verschiebt
   const tpl = ' style="grid-area:' + (r + 1) + ' / 1;--tpl:' + P.slice(1).map((x, u) => 'calc(var(--L) * ' + (x - P[u]) + ')').join(' ') + '"';
-  return '<div class="row"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
+  // Eingeklappt: die Plätze bleiben (die Zeile behält ihre Höhe), zu sehen ist nur die Nummer; ein Tipp darauf klappt auf
+  const fold = row.fold ? ' folded" data-fold="' + r + '" role="button" aria-label="Zeile ' + (r + 1) + ' eingeklappt. Antippen klappt sie auf.' : '';
+  return '<div class="row' + fold + '"' + tpl + '><span class="rownum"></span>' + cells + '</div>';
 }
 
 export function renderBoard() {
@@ -164,9 +163,6 @@ export function renderBoard() {
   const Ps = S.rows.map((row) => colFrs(cols, row));
   grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
   grid.style.setProperty('--rows', S.rows.length);
-  // Eingeklappte Zeilen sind nur ein schmaler Streifen, die anderen behalten ihre Höhe
-  if (S.rows.some((row) => row.fold)) grid.style.setProperty('--rowtpl', S.rows.map((row) => row.fold ? '2.75rem' : 'minmax(0, var(--rowh))').join(' '));
-  else grid.style.removeProperty('--rowtpl');
   grid.style.setProperty('--cols', cols);
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür
   grid.classList.toggle('meters', hasMeter(S.rows));

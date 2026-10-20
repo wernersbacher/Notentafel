@@ -7,10 +7,8 @@
   padding: 14px 12px;
   display: grid;
   gap: 6px;
-  /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter. --rowtpl kommt aus dem Skript, sobald eine
-     Zeile eingeklappt ist (die ist dann nur noch ein schmaler Streifen) */
-  --rowh: 12rem;
-  grid-template-rows: var(--rowtpl, repeat(var(--rows, 3), minmax(0, var(--rowh))));
+  /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter */
+  grid-template-rows: repeat(var(--rows, 3), minmax(0, 12rem));
   align-content: start;
   touch-action: none;
 }
@@ -101,7 +99,7 @@
 /* auf die Schläge verteilt: --t ist der Abstand als Anteil des Platzes (wie bei den gehaltenen Zählzeiten) */
 .len .syl.at { position: absolute; top: 50%; left: calc(50% + 100cqw * var(--t)); transform: translate(-50%, -50%); }
 /* Notenzeichen im Menü ausgeschaltet: Zeile ausblenden, Kreise und Zeilen wieder wie ohne Zeichen */
-.grid.nolen { --rowh: 8.75rem; }
+.grid.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 8.75rem)); }
 .grid.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc(100cqh - 2.6rem))); }
 .grid.nolen .len { display: none; }
 /* Zählzeiten unter dem Notenzeichen; gehaltene Zählzeiten blasser. Nur wenn es welche gibt, bekommt die Zeile Platz dafür. */
@@ -116,9 +114,9 @@
 /* Breite nach Notenlänge: gehaltene Zählzeiten stehen an ihrer Stelle, --t ist der Abstand als Anteil des Platzes */
 .zz .at { position: absolute; left: calc(50% + 100cqw * var(--t)); transform: translateX(-50%); }
 .grid.counts .zz { display: flex; }
-.grid.counts { --rowh: 13.5rem; }
+.grid.counts { grid-template-rows: repeat(var(--rows, 3), minmax(0, 13.5rem)); }
 .grid.counts .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 3.05rem) / 1.86))); }
-.grid.counts.nolen { --rowh: 10rem; }
+.grid.counts.nolen { grid-template-rows: repeat(var(--rows, 3), minmax(0, 10rem)); }
 .grid.counts.nolen .stack { --dq: max(24px, min(calc(var(--sw) * .84), calc((100cqh - 2.8rem) / 1.36))); }
 /* Notenlinie: läuft auf Höhe der Kreismitte vom ersten bis zum letzten Zeichen, hinter den Kreisen */
 .cell[class*="line-"] .stack::before {
@@ -260,19 +258,26 @@
 }
 
 /* ---------- Verdecken ---------- */
-/* Eingeklappte Zeile: nur ihre Nummer als kleiner Knopf mit Pfeil und eine feine Linie, wo sie liegt; ein Tipp
-   irgendwo darauf klappt sie wieder auf */
-.row.folded {
-  display: flex; align-items: center; gap: 8px;
-  cursor: pointer; touch-action: manipulation;
+/* Eingeklappte Zeile: behält ihre Höhe, damit nichts verrutscht. Zu sehen ist nur ihre Nummer als kleiner Knopf mit
+   Pfeil und eine feine Linie auf Höhe der Kreise; ein Tipp irgendwo darauf klappt sie wieder auf */
+.row.folded { cursor: pointer; touch-action: manipulation; }
+.row.folded .stack, .row.folded .cell .qcard { visibility: hidden; }
+.row.folded .stack > .rnum { visibility: visible; }
+.row.folded .rnum {
+  display: inline-flex; align-items: center; gap: 2px;
+  width: auto; min-width: 1.5rem; padding: 2px 6px 2px 8px; border-radius: 999px;
+  background: var(--btn); border: 2px solid var(--btn-line); white-space: nowrap;
 }
-.row.folded .fnum {
-  display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px 3px 9px; border-radius: 999px;
-  background: var(--btn); border: 2px solid var(--btn-line);
-  font: 700 .85rem var(--font-ui); color: var(--muted);
+.row.folded .rnum::before { content: "▸"; order: 1; }
+/* Der Knopf beginnt, wo sonst die Nummer steht, und wächst nach rechts über den (leeren) ersten Platz */
+.row.folded .rnum { right: auto; left: calc(-1.5rem - var(--g)); }
+.grid.meters .row.folded .rnum { left: calc(-4.2rem - var(--g)); }
+.row.folded .cell .stack::before {
+  content: ""; visibility: visible; position: absolute; z-index: -1;
+  top: calc(var(--d) / 2 - 1px); height: 2px; background: var(--btn-line);
+  /* je 1px über die halbe Lücke hinaus, damit die Stücke ohne Spalt aneinanderstoßen (wie bei der Notenlinie) */
+  left: calc(var(--g) / -2 - 1px); right: calc(var(--g) / -2 - 1px - (100cqw - var(--sw)));
 }
-.row.folded .fnum::after { content: "▸"; font-size: .8em; }
-.row.folded .fline { flex: 1; border-top: 2px dashed var(--btn-line); }
 /* Das Tuch liegt in den Rasterzeilen ab seiner Zeile über allem */
 .grid > .cloth { grid-column: 1; }
 /* ?-Karte: verdeckt liegt sie über dem Kreis (Zeichen, Notenwert und Hand sind ausgeblendet) */

@@ -95,7 +95,7 @@ function stepQuiz() {
   const hear = () => playTones([{ f: freq({ p: a }) }, { f: freq({ p: b }) }], 'piano', mark, 0.3);
   el.quizView.hidden = false;
   return {
-    layout: 'words', sound: 'piano', keys: STEP_KEYS,
+    layout: 'words', sound: 'piano', keys: STEP_KEYS, look: true,
     next() {
       stopPlay();
       let kind;
@@ -141,7 +141,7 @@ function valuesQuiz() {
   // Die Note klingt so lange, wie sie dauert; dazu klickt jeder Schlag, damit man mitzählen kann
   const hear = () => playNow(plan, () => {});
   return {
-    layout: 'words', keys,
+    layout: 'words', keys, look: true,
     next() {
       stopPlay();
       const pick = vals.filter((x) => x[0] !== cur);

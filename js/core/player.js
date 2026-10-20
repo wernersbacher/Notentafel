@@ -133,9 +133,19 @@ export function togglePlay(getPlan, mark) {
   else if (play) stopPlay();
   else startPlay(getPlan(), mark);
 }
+// Zurückhalten (z. B. beim Aufbau der ersten Aufgabe eines Spiels): Was playNow und previewTone in der Zeit spielen
+// sollen, klingt noch nicht, sondern wird gemerkt. releaseSound() liefert es zum Nachholen (null, wenn nichts war)
+let held = null;
+export function holdSound() { held = []; }
+export function releaseSound() {
+  const h = held;
+  held = null;
+  return h && h.length ? () => h.forEach((f) => f()) : null;
+}
 // Spielt einen Plan gleich im Tempo ab, auch wenn Schritt für Schritt eingeschaltet ist (z. B. das Rhythmus-Echo);
 // was gerade läuft, endet. Einzählen und Metronom gelten wie sonst.
 export function playNow(plan, mark) {
+  if (held) { held.push(() => playNow(plan, mark)); return; }
   stopPlay();
   startPlay(plan, mark);
 }
@@ -201,6 +211,7 @@ export function initPlayer() {
 // sound: 'piano' (Notenblatt), 'bell' (Farbnoten) oder ein anderer Klang aus audio.js; len: Länge in Sekunden
 let preview = null;
 export function previewTone(f, sound = 'piano', len = 0.35) {
+  if (held) { held.push(() => previewTone(f, sound, len)); return; }
   const ctx = audioCtx();
   if (!ctx) return;
   if (preview) { try { preview.disconnect(); } catch (e) { /* schon getrennt */ } }

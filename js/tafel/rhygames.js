@@ -18,7 +18,7 @@ import { markPlaying } from './board.js';
 import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
 import { noteSym, restSym } from './symbols.js';
 import { playNow, stopPlay } from '../core/player.js';
-import { openGame, endGame, gameGate, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
+import { openGame, endGame, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
 import { delegate } from '../core/ui.js';
 import { el } from './dom.js';
 
@@ -53,7 +53,7 @@ function whichQuiz() {
   const keys = Array.from({ length: n }, (_, i) => ({ key: String(i), html: String(i + 1), label: 'Rhythmus ' + (i + 1) }));
   const play = (r, mark) => { const p = rowPlan(r); if (p) playNow(p, mark); };
   return {
-    layout: 'words', keys,
+    layout: 'words', keys, look: true,
     next() {
       stopPlay();
       solved = false;
@@ -103,7 +103,7 @@ function readTap(b) {
 function startRead() {
   openGame('echo', gameBtn('clap', CLAP_ICON, 'Mitklatschen') + gameBtn('hear', AGAIN_ICON, 'Anhören') +
     gameBtn('main', GAME_ICONS.dice, 'Neuer Rhythmus', 'main big') + gameBtn('end', GAME_ICONS.close, 'Ende'), { tap: readTap, stop: stopPlay });
-  gameGate(newSheet);
+  newSheet();
 }
 
 /* ---------- Rhythmus legen ---------- */
@@ -170,7 +170,7 @@ function fixQuiz() {
   // Gespielt wird mit dem Fehler, ohne Leuchten (sonst bliebe der falsche Takt dunkel und verriete sich)
   const play = () => playNow(planOf(played, o.meter), quiet);
   return {
-    layout: 'words', keys,
+    layout: 'words', keys, look: true,
     next() {
       stopPlay();
       const bars = byBar(makeBlocks(o).flat(), len);

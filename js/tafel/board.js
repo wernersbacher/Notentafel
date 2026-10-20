@@ -79,7 +79,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
     label = where + ': ' + n.n + (cell.d ? ', ' + DUR_BY[cell.d].n : '') + (cell.h === 'r' ? ', rechts' : cell.h === 'l' ? ', links' : '');
     if (cell.d) len = noteSym(cell.d, beam);
   } else if (isBeat(cell)) {
-    dot = '<div class="dot beat">' + noteSym(cell.d, beam) + '</div>';
+    dot = '<div class="dot beat' + (beam ? ' beamed' : '') + '">' + noteSym(cell.d, beam) + '</div>';
     label = where + ': ' + DUR_BY[cell.d].n;
     if (beam === 1) stackCls = ' bbeam' + (beamCut ? ' bhalf' : '');
     // Rhythmussprache steht in der Zeile unter dem Zeichen (die bei eigenständigen Notenzeichen sonst leer ist);

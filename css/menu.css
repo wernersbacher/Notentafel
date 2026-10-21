@@ -85,7 +85,9 @@
 .temporow input { width: 100%; min-height: 44px; accent-color: var(--fg); }
 .temporow output { font-weight: 800; min-width: 6.5em; text-align: right; }
 /* Ganz unten im Menü, auch wenn es kurz ist */
-.drawer .version { margin: auto 0 0; font-size: .75rem; font-weight: 700; color: var(--muted); text-align: center; }
+.drawer .legal { margin: auto 0 0; font-size: .8rem; font-weight: 700; color: var(--muted); text-align: center; }
+.drawer .version { margin: 0; font-size: .75rem; font-weight: 700; color: var(--muted); text-align: center; }
+.drawer a { color: inherit; font-weight: 800; }
 
 @media (prefers-reduced-motion: reduce) {
   .drawer, .drawer.open { transition: none; }
@@ -94,3 +96,14 @@
 /* Zwischenüberschriften der bekannten Lieder (Kinderlieder, Weihnachten …) */
 .sgroup { margin: 8px 0 -2px; font: 800 .74rem var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .sgroup:first-child { margin-top: 0; }
+
+/* Konto: E-Mail und Passwort untereinander, darunter Anmelden und Konto anlegen */
+.accform { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.accform input {
+  font: 700 16px var(--font-ui); color: var(--fg); background: var(--btn);
+  border: 2px solid var(--btn-line); border-radius: 12px;
+  min-height: 48px; padding: 0 .75rem; min-width: 0;
+  -webkit-user-select: text; user-select: text;
+}
+.sizes.accrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.accwho { margin: 0 0 4px; font-weight: 700; overflow-wrap: anywhere; }

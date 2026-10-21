@@ -6,7 +6,8 @@ const ids = [
   'btnPlay', 'btnPresent', 'btnTempo', 'tempoNum', 'tempoPop', 'tempoPopOut', 'tempoRange', 'tempoMinus', 'tempoPlus', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
-  'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs',
+  'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs', 'cloudHint',
+  'accountSec', 'accOut', 'accIn', 'accEmail', 'accPass', 'btnLogin', 'btnRegister', 'accHint', 'accWho', 'accState', 'btnLogout', 'btnDelAcc',
   'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut', 'uiScale', 'uiRange', 'uiNum', 'uiMinus', 'uiPlus'
 ];
 export const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));

@@ -19,7 +19,7 @@ function unpack(d) {
   const rows = d && cleanRows(d.rows, d.lines);
   return rows ? { rows, name: typeof d.name === 'string' ? d.name : '', savedAt: d.savedAt || 0 } : null;
 }
-export const stores = { mel: makeStore(KEYS.mel, { pack, unpack }), rhy: makeStore(KEYS.rhy, { pack, unpack }) };
+export const stores = { mel: makeStore(KEYS.mel, { pack, unpack, area: 'mel' }), rhy: makeStore(KEYS.rhy, { pack, unpack, area: 'rhy' }) };
 
 /* ---------- Aktuelle Tafel ---------- */
 export const loadBoard = (mode) => stores[mode].loadBoard();

@@ -9,7 +9,7 @@ ADD https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/po
 RUN unzip /tmp/pb.zip pocketbase -d /pb && rm /tmp/pb.zip
 COPY pb_hooks /pb/pb_hooks
 COPY pb_migrations /pb/pb_migrations
-COPY index.html /pb/pb_public/
+COPY index.html impressum.html datenschutz.html /pb/pb_public/
 COPY css /pb/pb_public/css
 COPY fonts /pb/pb_public/fonts
 COPY js /pb/pb_public/js

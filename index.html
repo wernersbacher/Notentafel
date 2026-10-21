@@ -14,8 +14,10 @@
 <link rel="stylesheet" href="css/menu.css?v=1.0.0">
 <script type="importmap">
 { "imports": {
+  "./js/core/account.js": "./js/core/account.js?v=1.0.0",
   "./js/core/audio.js": "./js/core/audio.js?v=1.0.0",
   "./js/core/blocks.js": "./js/core/blocks.js?v=1.0.0",
+  "./js/core/cloud.js": "./js/core/cloud.js?v=1.0.0",
   "./js/core/colors.js": "./js/core/colors.js?v=1.0.0",
   "./js/core/dom.js": "./js/core/dom.js?v=1.0.0",
   "./js/core/game.js": "./js/core/game.js?v=1.0.0",
@@ -648,6 +650,7 @@
     <section id="songsSec" data-part="songs">
       <h3 id="songsTitle">Gespeicherte Lieder</h3>
       <ul class="songs" id="songs"></ul>
+      <p class="hint" id="cloudHint" hidden></p>
     </section>
 
     <section id="autoSec" data-part="songs" hidden>
@@ -747,6 +750,32 @@
   <div class="mgroup global" aria-labelledby="menuGlobalTitle" role="group" data-part="settings">
     <h2 class="mtitle" id="menuGlobalTitle">Für alle Modi</h2>
 
+    <!-- Konto (freiwillig, nur mit Backend): gespeicherte Lieder auf allen Geräten -->
+    <section id="accountSec" hidden>
+      <h3>Konto</h3>
+      <div id="accOut">
+        <div class="accform">
+          <input id="accEmail" type="email" placeholder="E-Mail" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" aria-label="E-Mail">
+          <input id="accPass" type="password" placeholder="Passwort (mindestens 8 Zeichen)" autocomplete="current-password" enterkeyhint="go" aria-label="Passwort">
+        </div>
+        <div class="sizes accrow">
+          <button type="button" class="btn" id="btnLogin">Anmelden</button>
+          <button type="button" class="btn" id="btnRegister">Konto anlegen</button>
+        </div>
+        <p class="hint" id="accHint" aria-live="polite"></p>
+        <p class="hint">Freiwillig: Mit einem Konto liegen deine gespeicherten Lieder auch auf dem Server und sind auf jedem Gerät da, auf dem du dich anmeldest. Ohne Konto bleibt alles nur auf diesem Gerät. <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
+      </div>
+      <div id="accIn" hidden>
+        <p class="accwho">Angemeldet als <b id="accWho"></b></p>
+        <p class="hint" id="accState" aria-live="polite"></p>
+        <div class="sizes accrow">
+          <button type="button" class="btn" id="btnLogout">Abmelden</button>
+          <button type="button" class="btn danger" id="btnDelAcc">Konto löschen</button>
+        </div>
+        <p class="hint">Beim Abmelden bleiben die Lieder auf diesem Gerät. „Konto löschen“ löscht das Konto und alle Lieder darin auf dem Server, die Lieder auf diesem Gerät bleiben.</p>
+      </div>
+    </section>
+
     <section>
       <h3>Größe der Oberfläche</h3>
       <div class="uirow">
@@ -782,6 +811,7 @@
     </section>
   </div>
 
+  <p class="legal"><a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
   <p class="version">Version 1.0.0</p>
 </aside>
 

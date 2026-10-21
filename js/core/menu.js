@@ -34,6 +34,10 @@ function renderSongs() {
     '<button type="button" class="btn danger" data-del="' + i + '">Löschen</button></li>'
   ).join('');
 }
+// Lieder vom Server sind angekommen: die Liste neu zeichnen, falls sie gerade offen ist
+export function refreshSongs() {
+  if (el.drawer.classList.contains('open') && el.drawer.dataset.mode === 'songs' && current().songs) renderSongs();
+}
 function renderAuto() {
   const a = current().songs.store.loadAuto();
   el.autoSec.hidden = !a;

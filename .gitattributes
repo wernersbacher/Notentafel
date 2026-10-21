@@ -1,0 +1,3 @@
+# Läuft auf Linux (Server, Container): immer LF, auch im Windows-Checkout
+*.sh text eol=lf
+deploy/** text eol=lf

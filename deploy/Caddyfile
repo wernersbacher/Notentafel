@@ -1,0 +1,19 @@
+# Lokal: SITE_ADDRESS=:80 (nur HTTP). Auf dem Server: die Domain, dann holt Caddy das HTTPS-Zertifikat selbst.
+{$SITE_ADDRESS}
+
+encode zstd gzip
+
+# PocketBase: REST-API, eigene Routen (pb_hooks) und die Admin-Oberfläche unter /_/
+handle /api/* {
+	reverse_proxy pb:8090
+}
+handle /_/* {
+	reverse_proxy pb:8090
+}
+
+# Die App selbst. no-cache heißt: immer nachfragen, unveränderte Dateien kommen per ETag als 304 zurück.
+handle {
+	root * /srv
+	header Cache-Control "no-cache"
+	file_server
+}

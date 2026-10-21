@@ -1,0 +1,50 @@
+# Bei einem Versions-Tag (git tag v1.4.0 && git push --tags): testen, Images bauen, auf dem Server ausrollen.
+# Braucht die Secrets DEPLOY_HOST, DEPLOY_KEY und DEPLOY_KNOWN_HOSTS (siehe plan-saas.md, Abschnitt Deployment).
+name: deploy
+on:
+  push:
+    tags: ['v*']
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/web.Dockerfile
+          push: true
+          tags: ghcr.io/wernersbacher/notentafel-web:${{ github.sha }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/pb.Dockerfile
+          push: true
+          tags: ghcr.io/wernersbacher/notentafel-pb:${{ github.sha }}
+
+      - name: Auf dem Server ausrollen
+        env:
+          KEY: ${{ secrets.DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy
+          echo "$KEY" > ~/.ssh/deploy
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy "deploy@$HOST" "${{ github.sha }}"

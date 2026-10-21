@@ -27,15 +27,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          file: deploy/web.Dockerfile
+          file: deploy/Dockerfile
           push: true
-          tags: ghcr.io/wernersbacher/notentafel-web:${{ github.sha }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: deploy/pb.Dockerfile
-          push: true
-          tags: ghcr.io/wernersbacher/notentafel-pb:${{ github.sha }}
+          tags: ghcr.io/wernersbacher/musiktafel:${{ github.sha }}
 
       - name: Auf dem Server ausrollen
         env:

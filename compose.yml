@@ -1,14 +1,9 @@
-# Backend zum lokalen Ausprobieren: docker compose up --build, dann http://localhost:8080/
+# Backend zum lokalen Ausprobieren: docker compose up --build -d, dann http://localhost:8080/
 # Für die Entwicklung ohne Backend bleibt es bei npm start.
 services:
-  web:
-    build: { context: ., dockerfile: deploy/web.Dockerfile }
-    environment:
-      SITE_ADDRESS: ":80"
-    ports: ["8080:80"]
-    depends_on: [pb]
-  pb:
-    build: { context: ., dockerfile: deploy/pb.Dockerfile }
+  app:
+    build: { context: ., dockerfile: deploy/Dockerfile }
+    ports: ["8080:8090"]
     volumes:
       - ./pb_data:/pb/pb_data
       # Hooks und Migrationen direkt aus dem Repo, damit Änderungen ohne neuen Build greifen (Hooks lädt PocketBase bei Änderungen neu)

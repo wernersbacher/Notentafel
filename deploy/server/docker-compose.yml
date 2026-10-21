@@ -1,21 +1,9 @@
-# Liegt auf dem Server unter /opt/notentafel/. Die Images baut GitHub Actions, TAG setzt deploy.sh in .env.
+# Liegt auf dem Server unter /opt/musiktafel/. Das Image baut GitHub Actions, TAG setzt deploy.sh in .env.
+# Der Port ist nur lokal erreichbar; nach außen geht es über den Caddy auf dem Server (reverse_proxy 127.0.0.1:${PORT}).
 services:
-  web:
-    image: ghcr.io/wernersbacher/notentafel-web:${TAG}
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS}
-    ports: ["80:80", "443:443", "443:443/udp"]
-    volumes:
-      # Zertifikate behalten, sonst holt Caddy bei jedem Neustart neue (Let's Encrypt begrenzt das)
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on: [pb]
-    restart: unless-stopped
-  pb:
-    image: ghcr.io/wernersbacher/notentafel-pb:${TAG}
+  app:
+    image: ghcr.io/wernersbacher/musiktafel:${TAG}
     env_file: .env
+    ports: ["127.0.0.1:${PORT}:8090"]
     volumes: ["./pb_data:/pb/pb_data"]
     restart: unless-stopped
-volumes:
-  caddy_data: {}
-  caddy_config: {}

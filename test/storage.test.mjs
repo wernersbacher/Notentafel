@@ -38,10 +38,44 @@ test('saveSong: gleicher Name ohne Groß/klein ersetzt', () => {
   assert.equal(S.songExists('mel', 'lied'), true);
 });
 
-test('deleteSong entfernt ein Lied', () => {
+test('deleteSong entfernt ein Lied (über seine id)', () => {
   S.saveSong('mel', [tune('C')], 'Lied');
-  S.deleteSong('mel', 'Lied');
-  assert.deepEqual(S.loadSongs('mel'), []);
+  S.saveSong('mel', [tune('D')], 'Bleibt');
+  S.deleteSong('mel', S.loadSongs('mel').find((s) => s.name === 'Lied').id);
+  assert.deepEqual(S.loadSongs('mel').map((s) => s.name), ['Bleibt']);
+});
+
+test('jedes Lied hat eine id; Ersetzen unter gleichem Namen behält sie', () => {
+  S.saveSong('mel', [tune('C')], 'Lied');
+  S.saveSong('mel', [tune('D')], 'Anderes');
+  const [a, b] = S.loadSongs('mel');
+  assert.match(a.id, /^[0-9a-z]{17}$/);
+  assert.notEqual(a.id, b.id);
+  const id = S.loadSongs('mel').find((s) => s.name === 'Lied').id;
+  S.saveSong('mel', [tune('E')], 'LIED');
+  assert.equal(S.loadSongs('mel').find((s) => s.name === 'LIED').id, id);
+});
+
+test('renameSong: neuer Name, id, Inhalt und Datum bleiben; belegter Name geht nicht', () => {
+  S.saveSong('mel', [tune('C')], 'Lied');
+  S.saveSong('mel', [tune('D')], 'Anderes');
+  const before = S.loadSongs('mel').find((s) => s.name === 'Lied');
+  assert.equal(S.renameSong('mel', before.id, 'anderes'), 'taken');
+  assert.equal(S.renameSong('mel', before.id, 'LIED'), 'ok'); // nur Groß/klein geändert: erlaubt
+  assert.equal(S.renameSong('mel', before.id, 'Neu'), 'ok');
+  const after = S.loadSongs('mel').find((s) => s.id === before.id);
+  assert.equal(after.name, 'Neu');
+  assert.equal(after.savedAt, before.savedAt);
+  assert.deepEqual(after.rows, before.rows);
+  assert.equal(S.renameSong('mel', 'gibtesnicht0', 'X'), 'error');
+});
+
+test('Lieder von vor den ids bekommen beim ersten Lesen eine, die dann bleibt', () => {
+  store.set('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]] }, { name: 'Älter', savedAt: 2, rows: [[{ n: 'D' }]] }]));
+  const ids = S.loadSongs('mel').map((s) => s.id);
+  assert.ok(ids.every((id) => /^[0-9a-z]{17}$/.test(id)));
+  assert.ok(ids[1] < ids[0]); // das ältere sortiert vorn
+  assert.deepEqual(S.loadSongs('mel').map((s) => s.id), ids);
 });
 
 test('saveBoard/loadBoard und Autosave', () => {

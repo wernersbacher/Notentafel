@@ -18,25 +18,54 @@ const dateTimeOf = (t) => new Date(t).toLocaleString('de-DE', { dateStyle: 'shor
 /* ---------- Listen ---------- */
 // Die gespeicherten Lieder des offenen Bereichs, so wie sie gerade angezeigt werden
 let shown = [];
+let renaming = null; // id des Lieds, das gerade umbenannt wird: Statt Name und Knöpfen steht dort ein Feld
+const PENCIL = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+const CROSS = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>';
 function renderSongs() {
   disarm();
   const s = current().songs;
   shown = s.store.loadSongs();
+  if (!shown.some((x) => x.id === renaming)) renaming = null;
   if (!shown.length) {
     el.songs.innerHTML = '<li><p class="empty">Noch keine Lieder gespeichert.</p></li>';
     return;
   }
   const name = s.name();
-  el.songs.innerHTML = shown.map((x, i) =>
-    '<li class="song' + (x.name === name ? ' current' : '') + '">' +
-    '<span class="name">' + esc(x.name) + '<span class="date">' + (x.savedAt ? dateOf(x.savedAt) : '') + '</span></span>' +
-    '<button type="button" class="btn" data-load="' + i + '">Laden</button>' +
-    '<button type="button" class="btn danger" data-del="' + i + '">Löschen</button></li>'
+  el.songs.innerHTML = shown.map((x, i) => x.id === renaming
+    ? '<li class="song renaming"><input type="text" class="renamein" maxlength="40" autocomplete="off" enterkeyhint="done" aria-label="Neuer Name" value="' + esc(x.name) + '">' +
+      '<button type="button" class="btn" data-ren-ok>Umbenennen</button>' +
+      '<button type="button" class="btn icon" data-ren-no title="Abbrechen" aria-label="Abbrechen">' + CROSS + '</button></li>'
+    : '<li class="song' + (x.name === name ? ' current' : '') + '">' +
+      '<span class="name">' + esc(x.name) + '<span class="date">' + (x.savedAt ? dateOf(x.savedAt) : '') + '</span></span>' +
+      '<button type="button" class="btn icon" data-ren="' + i + '" title="Umbenennen" aria-label="„' + esc(x.name) + '“ umbenennen">' + PENCIL + '</button>' +
+      '<button type="button" class="btn" data-load="' + i + '">Laden</button>' +
+      '<button type="button" class="btn danger" data-del="' + i + '">Löschen</button></li>'
   ).join('');
+  const input = el.songs.querySelector('.renamein');
+  if (input) {
+    onEnter(input, rename);
+    input.focus();
+    input.select();
+  }
 }
-// Lieder vom Server sind angekommen: die Liste neu zeichnen, falls sie gerade offen ist
+// Lieder vom Server sind angekommen: die Liste neu zeichnen, falls sie gerade offen ist (nicht mitten im Umbenennen)
 export function refreshSongs() {
-  if (el.drawer.classList.contains('open') && el.drawer.dataset.mode === 'songs' && current().songs) renderSongs();
+  if (el.drawer.classList.contains('open') && el.drawer.dataset.mode === 'songs' && current().songs && !renaming) renderSongs();
+}
+// Umbenennen mit dem Namen aus dem Feld. Ist das Lied gerade auf der Tafel, heißt die Tafel danach auch so.
+function rename() {
+  const s = current().songs, song = shown.find((x) => x.id === renaming), input = el.songs.querySelector('.renamein');
+  if (!song || !input) return;
+  const n = input.value.trim();
+  if (!n) { hint('Bitte einen Namen eingeben.', true); input.focus(); return; }
+  if (n === song.name) { renaming = null; renderSongs(); return; }
+  const res = s.store.renameSong(song.id, n);
+  if (res === 'taken') { hint('Ein anderes Lied heißt schon „' + n + '“.', true); input.focus(); return; }
+  if (res !== 'ok') { hint('Umbenennen hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
+  if (s.name() === song.name) s.saved(n);
+  renaming = null;
+  renderSongs();
+  hint('Umbenannt in „' + n + '“.');
 }
 function renderAuto() {
   const a = current().songs.store.loadAuto();
@@ -121,6 +150,7 @@ function openMenu(mode) {
   stopPlay();
   closeSavePop();
   hint('');
+  renaming = null;
   el.menuAreaTitle.textContent = a.label;
   el.menuSettingsTitle.textContent = 'Einstellungen für ' + a.label;
   el.menuSettings.hidden = !a.menu;
@@ -181,11 +211,20 @@ export function initMenu() {
     const victim = shown[+b.dataset.del];
     if (!victim) return;
     confirmTap(b, 'Sicher?', () => {
-      current().songs.store.deleteSong(victim.name);
+      current().songs.store.deleteSong(victim.id);
       renderSongs();
       hint('„' + victim.name + '“ gelöscht.');
     });
   });
+  delegate(el.songs, '[data-ren]', (b) => {
+    const x = shown[+b.dataset.ren];
+    if (!x) return;
+    renaming = x.id;
+    hint('');
+    renderSongs();
+  });
+  delegate(el.songs, '[data-ren-ok]', rename);
+  delegate(el.songs, '[data-ren-no]', () => { renaming = null; hint(''); renderSongs(); });
   delegate(el.autosave, '[data-auto]', () => {
     const a = current().songs.store.loadAuto();
     if (a) loadFromMenu(a);

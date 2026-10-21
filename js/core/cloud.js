@@ -2,11 +2,11 @@
 // Ohne Backend (npm start) oder ohne Anmeldung passiert hier nichts, die App speichert wie immer nur im Browser.
 // Mit Konto bleibt der localStorage der Speicher, aus dem die App liest. Jedes Speichern und Löschen merkt sich
 // cloud.js (pending) und schickt es kurz danach an den Server; die Antwort bringt mit, was sich auf anderen Geräten
-// geändert hat. Je Lied gewinnt der neuere Stand.
+// geändert hat. Ein Lied erkennt der Abgleich an seiner id (siehe store.js); je Lied gewinnt der neuere Stand.
 import { readJSON, writeJSON, syncStores, onSongChange } from './store.js';
 
 const KEY = 'notentafel.konto.v1';
-// acc = { token, user: { id, email }, since, pending: [{ area, name, at }] }; leer, wenn niemand angemeldet ist
+// acc = { token, user: { id, email }, since, pending: [{ area, id, at }] }; leer, wenn niemand angemeldet ist
 let acc = {};
 let base = null; // Adresse der API, null ohne Backend
 let me = null; // Antwort von /api/me: { tier, features, … }
@@ -16,20 +16,6 @@ const listeners = new Set();
 
 const persist = () => writeJSON(KEY, acc);
 
-// Welcher Stand jedes Lieds zuletzt mit dem Konto übereinstimmte: { user, songs: { 'mel/name': savedAt } }.
-// Bleibt beim Abmelden liegen, damit beim erneuten Anmelden ein inzwischen woanders geänderter Stand nicht als
-// eigenes Lied gilt (siehe adoptSongs).
-const KNOWN = 'notentafel.konto.abgleich.v1';
-const knownKey = (area, name) => area + '/' + name.toLowerCase();
-function remember(songs) {
-  const k = readJSON(KNOWN);
-  const known = k && k.user === acc.user.id ? k : { user: acc.user.id, songs: {} };
-  for (const s of songs) {
-    if (s.deleted) delete known.songs[knownKey(s.area, s.name)];
-    else known.songs[knownKey(s.area, s.name)] = s.savedAt;
-  }
-  writeJSON(KNOWN, known);
-}
 // f(merged) nach jeder Änderung am Zustand; merged: Lieder vom Server sind hinzugekommen oder haben sich geändert
 export const onCloudChange = (f) => { listeners.add(f); };
 const emit = (merged) => listeners.forEach((f) => f(!!merged));
@@ -72,22 +58,18 @@ function dropLogin() {
 }
 
 /* ---------- Anmelden ---------- */
-// Nach dem Anmelden: erst holen, was im Konto liegt, dann die Lieder dieses Geräts dazulegen (adopt sorgt dafür,
-// dass dabei keins verloren geht) und alle hochschicken
+// Nach dem Anmelden: erst holen, was im Konto liegt, dann alle Lieder dieses Geräts hochschicken. Was der Server
+// schon im selben oder einem neueren Stand hat, lässt er liegen; verschiedene Lieder mit gleichem Namen bleiben beide
+// (siehe resolveNames in store.js).
 async function start(auth) {
   acc = { token: auth.token, user: { id: auth.record.id, email: auth.record.email }, since: '', pending: [] };
   persist();
   me = await api('/me');
   if (!canSync()) { emit(); return; }
   const res = await api('/songs/sync', { method: 'POST', body: { since: '', changes: [] } });
-  const now = Date.now(), k = readJSON(KNOWN), known = k && k.user === acc.user.id ? k.songs : {};
-  for (const area in syncStores) {
-    const store = syncStores[area], remote = res.songs.filter((s) => s.area === area);
-    store.adopt(remote, now, (name) => known[knownKey(area, name)]);
-    store.merge(remote);
-    store.songNames().forEach((name) => acc.pending.push({ area, name, at: now }));
-  }
-  remember(res.songs);
+  mergeAll(res.songs);
+  const now = Date.now();
+  for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, now));
   acc.since = res.now;
   persist();
   emit(true);
@@ -119,11 +101,14 @@ export async function deleteAccount() {
 }
 
 /* ---------- Abgleich ---------- */
-function queue(area, name) {
+// Merkt ein Lied für den nächsten Abgleich vor (at: wann, zählt beim Löschen)
+function mark(area, id, at) {
+  acc.pending = (acc.pending || []).filter((p) => p.area !== area || p.id !== id);
+  acc.pending.push({ area, id, at });
+}
+function queue(area, id) {
   if (!loggedIn()) return;
-  const key = name.toLowerCase();
-  acc.pending = (acc.pending || []).filter((p) => p.area !== area || p.name.toLowerCase() !== key);
-  acc.pending.push({ area, name, at: Date.now() });
+  mark(area, id, Date.now());
   persist();
   clearTimeout(timer);
   timer = setTimeout(sync, 800);
@@ -152,8 +137,10 @@ async function run() {
   const sent = acc.pending.slice();
   // Was gerade da ist, nicht was beim Speichern da war: ein inzwischen gelöschtes Lied geht als gelöscht raus
   const changes = sent.filter((p) => syncStores[p.area]).map((p) => {
-    const s = syncStores[p.area].rawSong(p.name);
-    return s ? { area: p.area, name: s.name, savedAt: s.savedAt, data: s } : { area: p.area, name: p.name, savedAt: p.at, deleted: true };
+    const s = syncStores[p.area].rawSong(p.id);
+    if (!s) return { area: p.area, id: p.id, changedAt: p.at, deleted: true };
+    const { id, name, savedAt, changedAt, ...data } = s;
+    return { area: p.area, id, name, savedAt, changedAt: changedAt || savedAt, data };
   });
   let res;
   try {
@@ -164,17 +151,26 @@ async function run() {
     emit();
     return;
   }
-  let merged = false;
-  for (const area in syncStores) {
-    if (syncStores[area].merge(res.songs.filter((s) => s.area === area))) merged = true;
-  }
-  remember(res.songs);
-  acc.since = res.now;
   acc.pending = acc.pending.filter((p) => !sent.includes(p));
+  const merged = mergeAll(res.songs);
+  acc.since = res.now;
   persist();
   lastSync = Date.now();
   error = '';
   emit(merged);
+}
+
+// Lieder vom Server in alle Bereiche einarbeiten. Was dabei umbenannt wurde oder wegfiel (gleicher Name), ist
+// vorgemerkt und geht gleich mit einem weiteren Abgleich raus. true, wenn sich hier etwas geändert hat.
+function mergeAll(songs) {
+  let merged = false;
+  for (const area in syncStores) {
+    const m = syncStores[area].merge(songs.filter((s) => s.area === area));
+    if (m.merged) merged = true;
+    m.touched.forEach((id) => mark(area, id, Date.now()));
+    if (m.touched.length && running) again = true;
+  }
+  return merged;
 }
 
 /* ---------- Start ---------- */

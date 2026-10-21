@@ -29,7 +29,8 @@ export const saveBoard = (mode, rows, name) => stores[mode].saveBoard(rows, name
 export const loadSongs = (mode) => stores[mode].loadSongs();
 export const songExists = (mode, name) => stores[mode].songExists(name);
 export const saveSong = (mode, rows, name) => stores[mode].saveSong(rows, name);
-export const deleteSong = (mode, name) => stores[mode].deleteSong(name);
+export const deleteSong = (mode, id) => stores[mode].deleteSong(id);
+export const renameSong = (mode, id, name) => stores[mode].renameSong(id, name);
 
 /* ---------- Autosave: die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde ---------- */
 export const loadAuto = (mode) => stores[mode].loadAuto();

@@ -9,7 +9,7 @@ globalThis.localStorage = {
   removeItem: (k) => { mem.delete(k); },
   clear: () => mem.clear()
 };
-// Zeit läuft bei jedem Aufruf weiter, damit jedes Speichern einen neueren Stand hat
+// Zeit läuft bei jedem Aufruf weiter, damit jede Änderung einen neueren Stand hat
 let clock = 1000;
 Date.now = () => ++clock;
 // Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
@@ -19,7 +19,7 @@ globalThis.setTimeout = (f, ms, ...a) => (ms === 800 ? 0 : realTimeout(f, ms, ..
 const T = await import('../js/tafel/storage.js');
 const L = await import('../js/lied/storage.js');
 const C = await import('../js/core/cloud.js');
-const { mergeSongs, adoptSongs, sameContent } = await import('../js/core/store.js');
+const { mergeSongs, newId } = await import('../js/core/store.js');
 
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
@@ -60,15 +60,18 @@ function handle(method, path, auth, body) {
   if (method === 'POST' && path === '/songs/sync') {
     const now = ++server.tick;
     for (const c of body.changes) {
-      const key = c.name.toLowerCase();
-      let rec = server.songs.find((s) => s.user === uid && s.area === c.area && s.key === key);
-      if (rec && rec.savedAt >= c.savedAt) continue;
-      if (!rec) server.songs.push(rec = { user: uid, area: c.area, key });
-      Object.assign(rec, { name: c.name, savedAt: c.savedAt, deleted: !!c.deleted, data: c.deleted ? null : resort(c.data), updated: ++server.tick });
+      let rec = server.songs.find((s) => s.user === uid && s.id === c.id);
+      if (rec && rec.changedAt >= c.changedAt) continue;
+      if (!rec) {
+        if (c.deleted) continue;
+        server.songs.push(rec = { user: uid, id: c.id });
+      }
+      Object.assign(rec, { area: c.area, changedAt: c.changedAt, deleted: !!c.deleted, updated: ++server.tick });
+      if (!c.deleted) Object.assign(rec, { name: c.name, savedAt: c.savedAt, data: resort(c.data) });
     }
     const since = body.since === '' ? 0 : +body.since;
     const songs = server.songs.filter((s) => s.user === uid && s.updated >= since)
-      .map(({ area, name, savedAt, deleted, data }) => ({ area, name, savedAt, deleted, data }));
+      .map(({ area, id, name, savedAt, changedAt, deleted, data }) => ({ area, id, name, savedAt, changedAt, deleted, data: deleted ? null : data }));
     return [200, { now: String(now), songs: JSON.parse(JSON.stringify(songs)) }];
   }
   return [404, { message: 'Not found' }];
@@ -93,6 +96,8 @@ const tune = (...ids) => { const r = ids.map((n) => ({ n, h: '' })); r.line = fa
 const notes = (s) => s.rows.flat().map((x) => x.n).join(' ');
 // Gespeicherte Melodien als { Name: 'Töne' }
 const mel = () => Object.fromEntries(T.loadSongs('mel').map((s) => [s.name, notes(s)]));
+const idOf = (name) => T.loadSongs('mel').find((s) => s.name === name).id;
+// Namen der Lieder im Konto, ohne gelöschte
 const account = (area = 'mel') => server.songs.filter((s) => s.area === area && !s.deleted).map((s) => s.name).sort();
 
 beforeEach(() => {
@@ -102,47 +107,53 @@ beforeEach(() => {
 });
 
 /* ---------- Zusammenführen (ohne Server) ---------- */
-test('mergeSongs: neuerer Stand gewinnt, älterer bleibt liegen', () => {
-  const ok = () => true;
-  const local = [{ name: 'A', savedAt: 5, rows: 1 }, { name: 'B', savedAt: 9, rows: 1 }];
-  const out = mergeSongs(local, [
-    { name: 'a', savedAt: 7, data: { rows: 2 } }, // neuer: ersetzt, Name wie vom Server
-    { name: 'B', savedAt: 3, data: { rows: 2 } }, // älter: bleibt
-    { name: 'C', savedAt: 1, data: { rows: 3 } } // neu
-  ], ok);
-  assert.deepEqual(out.map((s) => [s.name, s.rows]), [['a', 2], ['B', 1], ['C', 3]]);
-  assert.equal(mergeSongs(local, [{ name: 'A', savedAt: 5, data: { rows: 9 } }], ok), null);
+const ok = () => true;
+test('mergeSongs: je id gewinnt der neuere Stand, der Name kommt mit', () => {
+  const local = [{ id: 'a00000001', name: 'A', savedAt: 5, changedAt: 5, rows: 1 }, { id: 'b00000001', name: 'B', savedAt: 9, changedAt: 9, rows: 1 }];
+  const m = mergeSongs(local, [
+    { id: 'a00000001', name: 'A neu', savedAt: 5, changedAt: 7, data: { rows: 1 } }, // umbenannt
+    { id: 'b00000001', name: 'B', savedAt: 3, changedAt: 3, data: { rows: 2 } }, // älter: bleibt
+    { id: 'c00000001', name: 'C', savedAt: 1, changedAt: 1, data: { rows: 3 } } // neu
+  ], ok, 100);
+  assert.deepEqual(m.list.map((s) => [s.id, s.name, s.rows]), [['a00000001', 'A neu', 1], ['b00000001', 'B', 1], ['c00000001', 'C', 3]]);
+  assert.deepEqual(m.touched, []);
+  assert.equal(mergeSongs(local, [{ id: 'a00000001', name: 'X', savedAt: 5, changedAt: 5, data: { rows: 9 } }], ok, 100), null);
 });
 
-test('mergeSongs: Löschen nur, wenn das Lied hier nicht neuer ist; ungültige Stände werden übergangen', () => {
-  const local = [{ name: 'A', savedAt: 5 }, { name: 'B', savedAt: 9 }];
-  const out = mergeSongs(local, [{ name: 'A', savedAt: 6, deleted: true }, { name: 'B', savedAt: 8, deleted: true }], () => true);
-  assert.deepEqual(out.map((s) => s.name), ['B']);
-  assert.equal(mergeSongs([], [{ name: 'X', savedAt: 1, data: { kaputt: true } }], (s) => !s.kaputt), null);
+test('mergeSongs: Löschen nur, wenn das Lied hier nicht danach geändert wurde; ungültige Stände werden übergangen', () => {
+  const local = [{ id: 'a00000001', name: 'A', savedAt: 5 }, { id: 'b00000001', name: 'B', savedAt: 9 }];
+  const m = mergeSongs(local, [{ id: 'a00000001', changedAt: 6, deleted: true }, { id: 'b00000001', changedAt: 8, deleted: true }], ok, 100);
+  assert.deepEqual(m.list.map((s) => s.name), ['B']);
+  assert.equal(mergeSongs([], [{ id: 'x00000001', name: 'X', savedAt: 1, changedAt: 1, data: { kaputt: true } }], (s) => !s.kaputt, 100), null);
 });
 
-test('adoptSongs: gleicher Name mit anderem Inhalt wird umbenannt, gleicher Inhalt nicht', () => {
-  const local = [{ name: 'Lied', savedAt: 1, rows: [1] }, { name: 'Gleich', savedAt: 1, rows: [{ a: 1, b: 2 }] }];
-  const remote = [
-    { name: 'lied', savedAt: 2, data: { rows: [2] } },
-    { name: 'Lied (2)', savedAt: 2, data: { rows: [3] } }, // schon belegt: weiter mit (3)
-    { name: 'Gleich', savedAt: 2, data: { rows: [{ b: 2, a: 1 }], name: 'Gleich', savedAt: 2 } }
-  ];
-  const out = adoptSongs(local, remote, 50);
-  assert.deepEqual(out.map((s) => s.name), ['Lied (3)', 'Gleich']);
-  assert.equal(adoptSongs(local.slice(1), remote, 50), null);
-  assert.ok(sameContent({ rows: [{ a: 1, b: 2 }], name: 'x' }, { name: 'y', savedAt: 3, rows: [{ b: 2, a: 1 }] }));
+test('mergeSongs: zwei Lieder mit gleichem Namen – das ältere behält ihn, das jüngere wird umbenannt', () => {
+  const local = [{ id: 'b00000001', name: 'Lied', savedAt: 9, changedAt: 9, rows: [1] }];
+  const m = mergeSongs(local, [
+    { id: 'a00000001', name: 'LIED', savedAt: 5, changedAt: 5, data: { rows: [2] } },
+    { id: 'c00000001', name: 'Lied (2)', savedAt: 5, changedAt: 5, data: { rows: [3] } } // schon belegt: weiter mit (3)
+  ], ok, 100);
+  assert.deepEqual(m.list.map((s) => [s.id, s.name]).sort(), [['a00000001', 'LIED'], ['b00000001', 'Lied (3)'], ['c00000001', 'Lied (2)']]);
+  assert.equal(m.list.find((s) => s.id === 'b00000001').changedAt, 100);
+  assert.deepEqual(m.touched, ['b00000001']);
 });
 
-test('adoptSongs: lange Namen bleiben beim Umbenennen bei 40 Zeichen', () => {
+test('mergeSongs: gleicher Name und gleicher Inhalt – das jüngere fällt weg', () => {
+  const local = [{ id: 'b00000001', name: 'Gleich', savedAt: 9, rows: [{ a: 1, b: 2 }] }];
+  const m = mergeSongs(local, [{ id: 'a00000001', name: 'gleich', savedAt: 2, changedAt: 2, data: { rows: [{ b: 2, a: 1 }] } }], ok, 100);
+  assert.deepEqual(m.list.map((s) => s.id), ['a00000001']);
+  assert.deepEqual(m.touched, ['b00000001']);
+});
+
+test('mergeSongs: lange Namen bleiben beim Umbenennen bei 40 Zeichen', () => {
   const long = 'x'.repeat(40);
-  const out = adoptSongs([{ name: long, savedAt: 1, rows: 1 }], [{ name: long, savedAt: 2, data: { rows: 2 } }], 9);
-  assert.equal(out[0].name, 'x'.repeat(36) + ' (2)');
+  const m = mergeSongs([{ id: 'b00000001', name: long, savedAt: 1, rows: 1 }], [{ id: 'a00000001', name: long, savedAt: 2, changedAt: 2, data: { rows: 2 } }], ok, 9);
+  assert.equal(m.list.find((s) => s.id === 'b00000001').name, 'x'.repeat(36) + ' (2)');
 });
 
-test('adoptSongs: im Konto gelöschtes Lied gilt hier als neu gespeichert', () => {
-  const out = adoptSongs([{ name: 'A', savedAt: 3, rows: 1 }], [{ name: 'A', savedAt: 5, deleted: true }], 77);
-  assert.equal(out[0].savedAt, 77);
+test('newId: später angelegt sortiert weiter hinten', () => {
+  assert.ok(newId(1000) < newId(2000));
+  assert.ok(newId(35) < newId(36));
 });
 
 /* ---------- Mit Server: mehrere Geräte ---------- */
@@ -169,11 +180,12 @@ test('Konto anlegen: Fehler werden verständlich gemeldet', async () => {
   assert.equal(C.cloudInfo().user, null);
 });
 
-test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf einem neuen Gerät an', async () => {
+test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf einem neuen Gerät an, mit derselben id', async () => {
   await use('tablet');
   T.saveSong('mel', [tune('C', 'D')], 'Kuckuck');
   T.saveSong('rhy', [tune('D')], 'Rhythmus');
   L.store.saveSong({ meter: '4/4', pickup: 0, key: 0, ev: [] }, 'Notenblatt');
+  const id = idOf('Kuckuck');
   assert.equal(await C.register('a@b.de', 'geheim123'), '');
   assert.deepEqual(account('mel'), ['Kuckuck']);
   assert.deepEqual(account('rhy'), ['Rhythmus']);
@@ -183,18 +195,29 @@ test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf eine
   assert.deepEqual(mel(), {});
   assert.equal(await C.login('a@b.de', 'geheim123'), '');
   assert.deepEqual(mel(), { Kuckuck: 'C D' });
+  assert.equal(idOf('Kuckuck'), id);
   assert.deepEqual(T.loadSongs('rhy').map((s) => s.name), ['Rhythmus']);
   assert.deepEqual(L.store.loadSongs().map((s) => s.name), ['Notenblatt']);
 });
 
-test('erstes Anmelden: gleicher Name, anderer Inhalt hier und im Konto – beide bleiben erhalten', async () => {
+test('Lieder von vor den ids: bekommen beim Anmelden eine und gehen ins Konto', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  mem.set('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]], lines: [] }]));
+  await C.register('a@b.de', 'geheim123');
+  assert.deepEqual(account(), ['Alt']);
+  await use('laptop');
+  await C.login('a@b.de', 'geheim123');
+  assert.deepEqual(mel(), { Alt: 'C' });
+});
+
+test('erstes Anmelden: gleicher Name, anderer Inhalt hier und im Konto – beide bleiben, das ältere behält den Namen', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Lied'); // zuerst angelegt
   await C.register('a@b.de', 'geheim123');
   C.logout();
 
   await use('laptop');
-  T.saveSong('mel', [tune('G', 'A')], 'LIED'); // neuer als das im Konto, darf es trotzdem nicht überschreiben
+  T.saveSong('mel', [tune('G', 'A')], 'LIED');
   T.saveSong('mel', [tune('E')], 'Nur hier');
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C', 'LIED (2)': 'G A', 'Nur hier': 'E' });
@@ -216,21 +239,37 @@ test('erstes Anmelden: gleicher Name mit gleichem Inhalt wird nicht verdoppelt',
   assert.deepEqual(account(), ['Lied']);
 });
 
-test('erstes Anmelden: ein im Konto früher gelöschtes Lied nimmt das hiesige nicht mit', async () => {
+test('Umbenennen kommt auf dem anderen Gerät an: dasselbe Lied, kein Doppel', async () => {
   await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Alt');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  await C.sync();
-  T.deleteSong('mel', 'Lied');
-  await C.sync();
-  assert.deepEqual(account(), []);
-
   await use('laptop');
-  // Wird vor dem Löschen auf dem Tablet gespeichert, ist also älter als das Löschen im Konto
-  mem.set('notentafel.songs.v1', JSON.stringify([{ name: 'Lied', savedAt: 1, rows: [[{ n: 'G' }]], lines: [] }]));
   await C.login('a@b.de', 'geheim123');
-  assert.deepEqual(mel(), { Lied: 'G' });
-  assert.deepEqual(account(), ['Lied']);
+  const id = idOf('Alt');
+  assert.equal(T.renameSong('mel', id, 'Neu'), 'ok');
+  await C.sync();
+  await use('tablet');
+  assert.deepEqual(mel(), { Neu: 'C' });
+  assert.equal(idOf('Neu'), id);
+  assert.deepEqual(account(), ['Neu']);
+});
+
+test('umbenannt auf einem, offline geändert auf dem anderen: der neuere Stand des Lieds gewinnt ganz', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Alt');
+  await C.register('a@b.de', 'geheim123');
+  await use('laptop');
+  await C.login('a@b.de', 'geheim123');
+  server.online = false;
+  await use('tablet');
+  T.renameSong('mel', idOf('Alt'), 'Neu'); // früher
+  await use('laptop');
+  T.saveSong('mel', [tune('D')], 'Alt'); // später
+  server.online = true;
+  await use('tablet');
+  await use('laptop');
+  await use('tablet');
+  assert.deepEqual(mel(), { Alt: 'D' });
 });
 
 test('Ändern, Löschen und neu Speichern kommen auf dem anderen Gerät an', async () => {
@@ -247,15 +286,43 @@ test('Ändern, Löschen und neu Speichern kommen auf dem anderen Gerät an', asy
   assert.deepEqual(mel(), { Eins: 'C', Zwei: 'D' });
 
   T.saveSong('mel', [tune('E', 'F')], 'eins'); // ersetzt (ohne Groß/klein)
-  T.deleteSong('mel', 'Zwei');
+  T.deleteSong('mel', idOf('Zwei'));
   await C.sync();
   await use('tablet');
   assert.deepEqual(mel(), { eins: 'E F' });
 
-  T.saveSong('mel', [tune('A')], 'Zwei'); // nach dem Löschen wieder gespeichert
+  T.saveSong('mel', [tune('A')], 'Zwei'); // nach dem Löschen wieder gespeichert: ein neues Lied
   await C.sync();
   await use('laptop');
   assert.deepEqual(mel(), { eins: 'E F', Zwei: 'A' });
+});
+
+test('Löschen ist auf dem Server nur ein Vermerk: Name und Inhalt bleiben zum Wiederherstellen', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('C', 'D')], 'Weg');
+  await C.sync();
+  const id = idOf('Weg');
+  T.deleteSong('mel', id);
+  await C.sync();
+  const rec = server.songs.find((s) => s.id === id);
+  assert.equal(rec.deleted, true);
+  assert.equal(rec.name, 'Weg');
+  assert.deepEqual(rec.data.rows.flat().map((x) => x.n), ['C', 'D']);
+  assert.deepEqual(mel(), {});
+});
+
+test('Wiederherstellen auf dem Server (deleted aus) bringt das Lied auf die Geräte zurück', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('C')], 'Weg');
+  await C.sync();
+  T.deleteSong('mel', idOf('Weg'));
+  await C.sync();
+  const rec = server.songs.find((s) => s.name === 'Weg');
+  Object.assign(rec, { deleted: false, changedAt: Date.now(), updated: ++server.tick });
+  await C.sync();
+  assert.deepEqual(mel(), { Weg: 'C' });
 });
 
 test('beide Geräte ändern dasselbe Lied: der neuere Stand gewinnt, egal wer zuerst abgleicht', async () => {
@@ -289,7 +356,7 @@ test('Löschen auf einem Gerät nimmt ein danach geändertes Lied auf dem andere
 
   server.online = false;
   await use('tablet');
-  T.deleteSong('mel', 'Lied'); // früher
+  T.deleteSong('mel', idOf('Lied')); // früher
   await use('laptop');
   T.saveSong('mel', [tune('G')], 'Lied'); // später
   server.online = true;
@@ -334,6 +401,55 @@ test('abgemeldet: Lieder bleiben auf dem Gerät, gespeichert wird nur lokal, bei
   assert.deepEqual(mel(), { Vorher: 'C', 'Ohne Konto': 'D' });
 });
 
+test('wieder angemeldet: woanders geänderter Stand ersetzt den alten hier, ohne Doppel', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.register('a@b.de', 'geheim123');
+  C.logout();
+  await use('laptop');
+  await C.login('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('D')], 'Lied');
+  T.renameSong('mel', idOf('Lied'), 'Lied neu');
+  await C.sync();
+  await use('tablet');
+  await C.login('a@b.de', 'geheim123');
+  assert.deepEqual(mel(), { 'Lied neu': 'D' });
+  assert.deepEqual(account(), ['Lied neu']);
+});
+
+test('wieder angemeldet: woanders gelöscht, hier unverändert – ist auch hier weg', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.register('a@b.de', 'geheim123');
+  C.logout();
+  await use('laptop');
+  await C.login('a@b.de', 'geheim123');
+  T.deleteSong('mel', idOf('Lied'));
+  await C.sync();
+  await use('tablet');
+  await C.login('a@b.de', 'geheim123');
+  assert.deepEqual(mel(), {});
+  assert.deepEqual(account(), []);
+});
+
+test('anderes Konto auf demselben Gerät: Lieder beider Konten bleiben, gleiche Namen werden aufgelöst', async () => {
+  await use('tablet');
+  await C.register('b@b.de', 'geheim123');
+  T.saveSong('mel', [tune('G')], 'Lied'); // zuerst angelegt
+  await C.sync();
+  C.logout();
+  await use('laptop');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('D')], 'Lied');
+  await C.sync();
+  await use('tablet');
+  await C.login('a@b.de', 'geheim123');
+  assert.deepEqual(mel(), { Lied: 'G', 'Lied (2)': 'D' });
+  await use('laptop');
+  assert.deepEqual(mel(), { Lied: 'G', 'Lied (2)': 'D' });
+});
+
 test('ungültiges Token: abgemeldet, die Lieder bleiben', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
@@ -366,76 +482,4 @@ test('Bereiche bleiben getrennt: gleicher Name in Melodie und Rhythmus', async (
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C' });
   assert.deepEqual(T.loadSongs('rhy').map(notes), ['D']);
-});
-
-/* ---------- Wieder anmelden auf einem Gerät, das schon einmal mit dem Konto abgeglichen hat ---------- */
-test('adoptSongs: seit dem letzten Abgleich unverändert ist kein eigenes Lied', () => {
-  const local = [{ name: 'Lied', savedAt: 5, rows: 1 }, { name: 'Weg', savedAt: 6, rows: 1 }];
-  const remote = [{ name: 'Lied', savedAt: 9, data: { rows: 2 } }, { name: 'Weg', savedAt: 9, deleted: true }];
-  assert.equal(adoptSongs(local, remote, 50, (n) => ({ Lied: 5, Weg: 6 })[n]), null);
-  // hier nach dem Abgleich geändert: dann doch beide behalten bzw. nicht löschen lassen
-  const out = adoptSongs(local, remote, 50, () => 1);
-  assert.deepEqual(out.map((s) => [s.name, s.savedAt]), [['Lied (2)', 5], ['Weg', 50]]);
-});
-
-test('wieder angemeldet: woanders geänderter Stand ersetzt den alten hier, ohne Doppel', async () => {
-  await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  await C.register('a@b.de', 'geheim123');
-  C.logout();
-  await use('laptop');
-  await C.login('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('D')], 'Lied');
-  await C.sync();
-  await use('tablet');
-  await C.login('a@b.de', 'geheim123');
-  assert.deepEqual(mel(), { Lied: 'D' });
-  assert.deepEqual(account(), ['Lied']);
-});
-
-test('wieder angemeldet: woanders gelöscht, hier unverändert – ist auch hier weg', async () => {
-  await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  await C.register('a@b.de', 'geheim123');
-  C.logout();
-  await use('laptop');
-  await C.login('a@b.de', 'geheim123');
-  T.deleteSong('mel', 'Lied');
-  await C.sync();
-  await use('tablet');
-  await C.login('a@b.de', 'geheim123');
-  assert.deepEqual(mel(), {});
-  assert.deepEqual(account(), []);
-});
-
-test('wieder angemeldet: hier abgemeldet geändert und woanders auch – beide bleiben', async () => {
-  await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  await C.register('a@b.de', 'geheim123');
-  C.logout();
-  T.saveSong('mel', [tune('E')], 'Lied'); // abgemeldet geändert
-  await use('laptop');
-  await C.login('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('D')], 'Lied'); // später, im Konto
-  await C.sync();
-  await use('tablet');
-  await C.login('a@b.de', 'geheim123');
-  assert.deepEqual(mel(), { Lied: 'D', 'Lied (2)': 'E' });
-  assert.deepEqual(account(), ['Lied', 'Lied (2)']);
-});
-
-test('anderes Konto auf demselben Gerät: was zum ersten Konto abgeglichen war, zählt nicht', async () => {
-  await use('tablet');
-  await C.register('b@b.de', 'geheim123');
-  T.saveSong('mel', [tune('G')], 'Lied');
-  await C.sync();
-  C.logout();
-  await use('laptop');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('D')], 'Lied');
-  await C.sync();
-  await use('tablet');
-  await C.login('a@b.de', 'geheim123');
-  assert.deepEqual(mel(), { Lied: 'D', 'Lied (2)': 'G' });
 });

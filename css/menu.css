@@ -53,11 +53,20 @@
 .drawer .hint.warn { color: var(--danger); }
 .songs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .song {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 6px; align-items: center;
   background: var(--btn); border: 2px solid var(--btn-line); border-radius: 12px; padding: 6px 6px 6px 12px;
 }
 .song.current { border-color: var(--fg); }
 .song.one { grid-template-columns: minmax(0, 1fr) auto; }
+.song .btn.icon { width: 44px; padding: 0; }
+/* Umbenennen: das Feld nimmt den Platz von Name und Datum ein */
+.song.renaming { grid-template-columns: minmax(0, 1fr) auto auto; padding-left: 6px; }
+.renamein {
+  font: 700 16px var(--font-ui); color: var(--fg); background: var(--panel);
+  border: 2px solid var(--btn-line); border-radius: 10px;
+  min-height: 44px; padding: 0 .6rem; min-width: 0;
+  -webkit-user-select: text; user-select: text;
+}
 .song .name { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .song .date { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); }
 .song .btn { min-height: 44px; font-size: .85rem; }

@@ -11,109 +11,128 @@ export function writeJSON(key, value) {
 
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 
+// Jedes gespeicherte Lied hat eine id, die bleibt, auch wenn es umbenannt wird. Vorn steht der Zeitpunkt des Anlegens,
+// so sortieren ältere Lieder vor jüngeren (das ältere behält bei gleichem Namen seinen Namen, siehe resolveNames).
+const validId = (id) => typeof id === 'string' && /^[0-9a-z]{9,40}$/.test(id);
+export const newId = (t = Date.now()) => t.toString(36).padStart(9, '0') + Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+// Neben savedAt (wann der Inhalt gespeichert wurde, steht in der Liste) hat jedes Lied changedAt: wann es zuletzt
+// gespeichert, umbenannt oder gelöscht wurde. Beim Abgleich gewinnt der Stand mit dem neueren changedAt.
+const changedAt = (s) => s.changedAt || s.savedAt || 0;
+
 // Speicher mit area (Name beim Abgleich: 'mel', 'rhy', 'lied'), damit cloud.js sie alle findet
 export const syncStores = {};
-// Wird nach jedem Speichern oder Löschen eines Lieds aufgerufen: f(area, name)
+// Wird nach jedem Speichern, Umbenennen oder Löschen eines Lieds aufgerufen: f(area, id)
 let changed = () => {};
 export const onSongChange = (f) => { changed = f; };
 
-// Arbeitet Stände vom Server in die gespeicherten Lieder ein (list wie gespeichert, neueste zuerst egal).
-// remote: [{ name, savedAt, deleted, data }]. Je Name (ohne Groß/klein) gewinnt der neuere Stand; ein gelöschtes Lied
-// verschwindet nur, wenn es hier nicht nach dem Löschen noch einmal gespeichert wurde. ok(data) prüft einen Stand.
-// Liefert die neue Liste oder null, wenn sich nichts geändert hat.
-export function mergeSongs(list, remote, ok) {
-  let out = list.slice(), dirty = false;
+// Gleicher Inhalt, egal in welcher Reihenfolge die Schlüssel stehen (der Server sortiert sie um); id, Name und Zeiten zählen nicht
+const canon = (v) => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
+  : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
+  : JSON.stringify(v);
+const META = { id: 0, name: 0, savedAt: 0, changedAt: 0 };
+export const sameContent = (a, b) => canon({ ...a, ...META }) === canon({ ...b, ...META });
+
+// Freier Name: „Name (2)“, „Name (3)“ …, höchstens 40 Zeichen
+function freeName(name, taken) {
+  let i = 2, n;
+  do { const tail = ' (' + i++ + ')'; n = name.slice(0, 40 - tail.length) + tail; } while (taken(n));
+  return n;
+}
+// Nach dem Zusammenführen können zwei verschiedene Lieder gleich heißen (auf zwei Geräten unabhängig angelegt oder
+// umbenannt). Das ältere (kleinere id) behält den Namen; ein jüngeres mit gleichem Inhalt fällt weg, eins mit anderem
+// Inhalt heißt danach „Name (2)“. Jedes Gerät kommt so zum selben Ergebnis. Ändert list und liefert die ids der
+// geänderten oder weggefallenen Lieder (die gehen beim nächsten Abgleich an den Server).
+function resolveNames(list, now) {
+  const touched = [], kept = [];
+  for (const s of list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+    const first = kept.find((k) => sameName(k.name, s.name));
+    if (!first) { kept.push(s); continue; }
+    touched.push(s.id);
+    if (sameContent(first, s)) { list.splice(list.indexOf(s), 1); continue; }
+    s.name = freeName(s.name, (n) => list.some((x) => sameName(x.name, n)));
+    s.changedAt = now;
+    kept.push(s);
+  }
+  return touched;
+}
+
+// Arbeitet Stände vom Server in die gespeicherten Lieder ein (list wie gespeichert).
+// remote: [{ id, name, savedAt, changedAt, deleted, data }]. Je id gewinnt der neuere Stand (changedAt); ein gelöschtes
+// Lied verschwindet nur, wenn es hier nicht danach noch geändert wurde. ok(entry) prüft einen Stand.
+// Liefert { list, touched } (touched siehe resolveNames) oder null, wenn sich nichts geändert hat.
+export function mergeSongs(list, remote, ok, now) {
+  const out = list.map((s) => ({ ...s }));
+  let dirty = false;
   for (const r of remote) {
-    const i = out.findIndex((s) => sameName(s.name, r.name));
-    const mine = i < 0 ? -1 : out[i].savedAt || 0;
+    const i = out.findIndex((s) => s.id === r.id);
+    const mine = i < 0 ? -1 : changedAt(out[i]);
     if (r.deleted) {
-      if (i >= 0 && mine <= r.savedAt) { out.splice(i, 1); dirty = true; }
+      if (i >= 0 && mine <= r.changedAt) { out.splice(i, 1); dirty = true; }
       continue;
     }
-    if (mine >= r.savedAt) continue;
-    const s = { ...r.data, name: r.name, savedAt: r.savedAt };
+    if (mine >= r.changedAt) continue;
+    const s = { ...r.data, id: r.id, name: r.name, savedAt: r.savedAt, changedAt: r.changedAt };
     if (!ok(s)) continue;
     if (i >= 0) out[i] = s; else out.push(s);
     dirty = true;
   }
-  return dirty ? out : null;
-}
-
-// Gleicher Inhalt, egal in welcher Reihenfolge die Schlüssel stehen (der Server sortiert sie um); Name und savedAt zählen nicht
-const canon = (v) => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
-  : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
-  : JSON.stringify(v);
-export const sameContent = (a, b) => canon({ ...a, name: 0, savedAt: 0 }) === canon({ ...b, name: 0, savedAt: 0 });
-
-// Anmelden auf einem Gerät: Die Lieder hier und die im Konto können unabhängig voneinander entstanden sein.
-// Damit beim Zusammenführen nichts verloren geht, wird list (wie gespeichert) vorher angepasst:
-// - Liegt im Konto ein Lied mit gleichem Namen, aber anderem Inhalt, heißt das hiesige danach „Name (2)“ (oder 3 …).
-// - Wurde ein Lied gleichen Namens im Konto gelöscht, gilt das hiesige als neu gespeichert (savedAt = now),
-//   sonst würde das alte Löschen es mitnehmen.
-// Ausgenommen sind Lieder, die hier seit dem letzten Abgleich mit diesem Konto unverändert sind (known(name) liefert
-// das savedAt von damals): Das ist nur ein älterer Stand desselben Lieds, dort gewinnt einfach der neuere.
-// Liefert die neue Liste oder null, wenn sich nichts geändert hat.
-export function adoptSongs(list, remote, now, known = () => undefined) {
-  const out = list.map((s) => ({ ...s })), taken = (n) => out.some((s) => sameName(s.name, n)) || remote.some((r) => sameName(r.name, n));
-  let dirty = false;
-  for (const r of remote) {
-    const s = out.find((x) => sameName(x.name, r.name));
-    if (!s || known(s.name) === s.savedAt) continue;
-    if (r.deleted) {
-      if ((s.savedAt || 0) <= r.savedAt) { s.savedAt = now; dirty = true; }
-    } else if (!sameContent(s, r.data)) {
-      let i = 2, n;
-      do { const tail = ' (' + i++ + ')'; n = s.name.slice(0, 40 - tail.length) + tail; } while (taken(n));
-      s.name = n;
-      dirty = true;
-    }
-  }
-  return dirty ? out : null;
+  const touched = resolveNames(out, now);
+  return dirty || touched.length ? { list: out, touched } : null;
 }
 
 // Speicher eines Bereichs: aktuelle Tafel, gespeicherte Lieder (neueste zuerst) und ein Autosave-Platz.
 // keys = { board, songs, auto }. pack(data, name, savedAt) macht daraus einen speicherbaren Stand,
 // unpack(raw) prüft ihn und liefert { name, savedAt, … } oder null. Mit area nimmt der Speicher am Abgleich teil.
 export function makeStore(keys, { pack, unpack, area }) {
-  // Gültige Einträge so, wie sie gespeichert sind
+  // Gültige Einträge so, wie sie gespeichert sind. Lieder von vor den ids bekommen hier einmal eine.
   function readSongs() {
     const list = readJSON(keys.songs);
     if (!Array.isArray(list)) return [];
-    return list.filter((s) => s && typeof s.name === 'string' && unpack(s))
+    const out = list.filter((s) => s && typeof s.name === 'string' && unpack(s))
       .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+    if (out.some((s) => !validId(s.id))) {
+      out.forEach((s) => { if (!validId(s.id)) s.id = newId(s.savedAt || Date.now()); });
+      writeJSON(keys.songs, out);
+    }
+    return out;
   }
+  const notify = (ok, id) => { if (ok && area) changed(area, id); return ok; };
   const store = {
     loadBoard: () => unpack(readJSON(keys.board)),
     saveBoard: (data, name) => writeJSON(keys.board, pack(data, name)),
-    loadSongs: () => readSongs().map(unpack),
-    songExists: (name) => readSongs().some((s) => sameName(s.name, name)),
-    // Speichert unter name; ein Lied mit gleichem Namen (ohne Groß/klein) wird ersetzt
+    // Wie unpack, dazu die id
+    loadSongs: () => readSongs().map((s) => ({ ...unpack(s), id: s.id })),
+    // Gibt es den Namen schon (ohne Groß/klein)? exceptId: dieses Lied nicht mitzählen (beim Umbenennen)
+    songExists: (name, exceptId) => readSongs().some((s) => s.id !== exceptId && sameName(s.name, name)),
+    // Speichert unter name; ein Lied mit gleichem Namen (ohne Groß/klein) wird ersetzt und behält seine id
     saveSong(data, name) {
-      const rest = readSongs().filter((s) => !sameName(s.name, name));
-      rest.unshift(pack(data, name, Date.now()));
-      const ok = writeJSON(keys.songs, rest);
-      if (ok && area) changed(area, name);
-      return ok;
+      const list = readSongs(), old = list.find((s) => sameName(s.name, name)), now = Date.now();
+      const entry = { ...pack(data, name, now), id: old ? old.id : newId(now), changedAt: now };
+      const rest = list.filter((s) => s !== old);
+      rest.unshift(entry);
+      return notify(writeJSON(keys.songs, rest), entry.id);
     },
-    deleteSong(name) {
-      const ok = writeJSON(keys.songs, readSongs().filter((s) => s.name !== name));
-      if (ok && area) changed(area, name);
-      return ok;
+    deleteSong: (id) => notify(writeJSON(keys.songs, readSongs().filter((s) => s.id !== id)), id),
+    // Neuer Name, Inhalt und Datum bleiben. Liefert 'ok', 'taken' (ein anderes Lied heißt schon so) oder 'error'.
+    renameSong(id, name) {
+      const list = readSongs(), s = list.find((x) => x.id === id);
+      if (!s) return 'error';
+      if (list.some((x) => x !== s && sameName(x.name, name))) return 'taken';
+      s.name = name;
+      s.changedAt = Date.now();
+      return notify(writeJSON(keys.songs, list), id) ? 'ok' : 'error';
     },
     // Autosave: der Stand, der zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
     loadAuto: () => unpack(readJSON(keys.auto)),
     saveAuto: (data, name) => writeJSON(keys.auto, pack(data, name, Date.now())),
-    // Für den Abgleich: ein gespeichertes Lied so, wie es gespeichert ist (oder undefined), alle Namen,
-    // und Stände vom Server einarbeiten (true, wenn sich etwas geändert hat)
-    rawSong: (name) => readSongs().find((s) => sameName(s.name, name)),
-    songNames: () => readSongs().map((s) => s.name),
-    merge(remote) {
-      const list = mergeSongs(readSongs(), remote, unpack);
-      return !!list && writeJSON(keys.songs, list);
-    },
-    adopt(remote, now, known) {
-      const list = adoptSongs(readSongs(), remote, now, known);
-      return !!list && writeJSON(keys.songs, list);
+    // Für den Abgleich: ein gespeichertes Lied so, wie es gespeichert ist (oder undefined), alle ids,
+    // und Stände vom Server einarbeiten. merge liefert die ids, die danach an den Server müssen.
+    rawSong: (id) => readSongs().find((s) => s.id === id),
+    songIds: () => readSongs().map((s) => s.id),
+    merge(remote, now = Date.now()) {
+      const m = mergeSongs(readSongs(), remote, unpack, now);
+      if (!m || !writeJSON(keys.songs, m.list)) return { merged: false, touched: [] };
+      return { merged: true, touched: m.touched };
     }
   };
   if (area) syncStores[area] = store;

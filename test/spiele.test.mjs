@@ -5,6 +5,8 @@ import path from 'node:path';
 import { makeRhythm, meterParts } from '../js/tafel/rhythms.js';
 import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../js/lied/model.js';
 import { makeMelody } from '../js/tafel/theory.js';
+import { MEL_FRAMES, RHY_FRAMES } from '../js/tafel/gameFrames.js';
+import { LIED_FRAMES } from '../js/lied/gameFrames.js';
 import { fakeStorage } from './helpers.mjs';
 
 // localStorage-Ersatz für die Einstellungen (vor dem Laden von gameOptions.js und lied/storage.js)
@@ -152,4 +154,31 @@ test('Fehler finden: nach dem Lösen spielt die Tafel die richtige Zeile, nicht 
   const block = src.slice(from, src.indexOf('/* ----------', from));
   assert.match(block, /solved:\s*playRow/);
   assert.doesNotMatch(block, /solved:\s*play\b/);
+});
+
+// Die Beschreibungen (gameFrames.js) bauen Hinweis und Startknopf; danach liest dom.js deren ids. Deshalb muss jeder
+// Spielabschnitt des HTML genau eine Beschreibung haben (und umgekehrt) und jede go-id in der idliste seiner dom.js stehen.
+const planSrc = fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8');
+const gamesIn = (sectionId) => {
+  const m = planSrc.match(new RegExp('<section class="group play" id="' + sectionId + '">([\\s\\S]*?)<\\/section>'));
+  return [...m[1].matchAll(/<div class="group game" data-game="([^"]+)"/g)].map((x) => x[1]);
+};
+const AREAS = [['melPlay', MEL_FRAMES, 'js/tafel/dom.js'], ['rhyPlay', RHY_FRAMES, 'js/tafel/dom.js'], ['liedPlay', LIED_FRAMES, 'js/lied/dom.js']];
+
+test('Spielrahmen: jeder Abschnitt hat genau eine Beschreibung', () => {
+  for (const [id, frames] of AREAS) {
+    const games = frames.map((f) => f.game);
+    assert.equal(new Set(games).size, games.length, id + ': eine Beschreibung doppelt');
+    assert.deepEqual([...gamesIn(id)].sort(), [...games].sort(), id + ': Abschnitte und Beschreibungen decken sich nicht');
+  }
+});
+
+test('Spielrahmen: jeder Startknopf steht in der idliste seiner dom.js', () => {
+  for (const [id, frames, domFile] of AREAS) {
+    const src = fs.readFileSync(path.resolve(import.meta.dirname, '..', domFile), 'utf8');
+    for (const f of frames) {
+      assert.ok(src.includes("'" + f.go + "'"), id + ': ' + f.go + ' fehlt in ' + domFile);
+      assert.ok(f.go && f.label && f.intro, id + '/' + f.game + ': go, label und intro fehlen');
+    }
+  }
 });

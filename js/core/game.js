@@ -87,6 +87,23 @@ export function playTones(tones, sound, mark = () => {}, gap = 0.15) {
   playNow({ items, end: t - gap, bare: true }, mark);
 }
 
+/* ---------- Rahmen der Spielabschnitte ---------- */
+// Ein Bereich beschreibt seine Spiele selbst ({ game, intro, hint, hintId?, go, label }, siehe tafel/gameFrames.js);
+// daraus entstehen sein Hinweis und sein Startknopf. frameHTML liefert den Rahmen als String, fillGameFrames setzt
+// data-intro am Abschnitt und fügt ihn vorn ein – vor den Einstellungen, die im HTML stehen bleiben.
+export function frameHTML(f) {
+  return '<p class="ghint"' + (f.hintId ? ' id="' + f.hintId + '"' : '') + '>' + f.hint + '</p>' +
+    '<button type="button" class="btn gamego" id="' + f.go + '"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>' + f.label + '</span></button>';
+}
+export function fillGameFrames(sectionId, frames) {
+  const box = document.getElementById(sectionId);
+  frames.forEach((f) => {
+    const sec = box.querySelector('.game[data-game="' + f.game + '"]');
+    sec.dataset.intro = f.intro;
+    sec.insertAdjacentHTML('afterbegin', frameHTML(f));
+  });
+}
+
 /* ---------- Spielauswahl ---------- */
 // In der Leiste jedes Bereichs wählen Kacheln (.gamepick mit data-area, Knöpfe mit data-game) ein Spiel. Zu sehen ist
 // dann sein Abschnitt (.game mit data-game) und die Einstellungen, die es betreffen (data-for: Spiele, durch Leerzeichen

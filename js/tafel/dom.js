@@ -1,5 +1,11 @@
 // Elemente der Tafel (Melodie und Rhythmus) nach ihrer id, zusammen mit den gemeinsamen aus dem Kern
 import { el as core, byId } from '../core/dom.js';
+import { fillGameFrames } from '../core/game.js';
+import { MEL_FRAMES, RHY_FRAMES } from './gameFrames.js';
+
+// Hinweis und Startknopf der Spielabschnitte entstehen erst hier, deshalb vor dem Einlesen ihrer ids (melQuizGo, echoGo, …)
+fillGameFrames('melPlay', MEL_FRAMES);
+fillGameFrames('rhyPlay', RHY_FRAMES);
 
 const ids = [
   'grid', 'palette', 'values', 'rests', 'valuesMel', 'counts',

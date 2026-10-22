@@ -1,5 +1,10 @@
 // Elemente des Lieds nach ihrer id, zusammen mit den gemeinsamen aus dem Kern
 import { el as core, byId } from '../core/dom.js';
+import { fillGameFrames } from '../core/game.js';
+import { LIED_FRAMES } from './gameFrames.js';
+
+// Hinweis und Startknopf der Spielabschnitte entstehen erst hier, deshalb vor dem Einlesen ihrer ids (liedQuizGo, placeGo, …)
+fillGameFrames('liedPlay', LIED_FRAMES);
 
 const ids = [
   'sheet', 'panelLied', 'liedSteps', 'liedLyric', 'liedLyricNext', 'liedMore', 'liedMeters', 'liedKeyDown', 'liedKeyUp', 'liedKeyName', 'btnTransDown', 'btnTransUp', 'btnToMelody', 'liedSharp', 'liedFlat', 'liedNat',

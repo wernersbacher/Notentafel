@@ -19,6 +19,19 @@ jobs:
           node-version: 22
       - run: npm test
 
+      # Tag, package.json und der Versions-Text in index.html werden von tools/version.js gemeinsam gesetzt.
+      # Weichen sie voneinander ab, ist der Tag falsch gesetzt und es wird nicht gebaut.
+      - name: Versionen prüfen
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          HTML=$(sed -n 's/.*<p class="version">Version \([^<]*\)<\/p>.*/\1/p' index.html | head -n1)
+          echo "Tag: $TAG, package.json: $PKG, index.html: $HTML"
+          if [ "$TAG" != "$PKG" ] || [ "$TAG" != "$HTML" ]; then
+            echo "Versionen passen nicht zusammen (Tag $TAG, package.json $PKG, index.html $HTML)" >&2
+            exit 1
+          fi
+
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io

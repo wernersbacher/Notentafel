@@ -5,7 +5,12 @@ set -eu
 TAG="${SSH_ORIGINAL_COMMAND:-}"
 case "$TAG" in ""|*[!0-9a-f]*) echo "ungültiger Tag: $TAG" >&2; exit 1;; esac
 cd /opt/musiktafel
-sed -i "s/^TAG=.*/TAG=$TAG/" .env
+# Beim ersten Mal fehlt die TAG-Zeile noch, dann sed allein würde nichts schreiben; deshalb grep -q als Weiche.
+if grep -q '^TAG=' .env; then
+  sed -i "s/^TAG=.*/TAG=$TAG/" .env
+else
+  printf 'TAG=%s\n' "$TAG" >> .env
+fi
 docker compose pull
 docker compose up -d --remove-orphans
 docker image prune -f

@@ -1,18 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { changePitch } from '../js/lied/model.js';
+import { fakeStorage, n } from './helpers.mjs';
 
 // Einfacher localStorage-Ersatz; muss stehen, bevor state.js geladen wird
-const store = new Map();
-globalThis.localStorage = {
-  getItem: (k) => (store.has(k) ? store.get(k) : null),
-  setItem: (k, v) => store.set(k, String(v)),
-  removeItem: (k) => store.delete(k),
-  clear: () => store.clear()
-};
+globalThis.localStorage = fakeStorage();
 const { L, snap, restore } = await import('../js/lied/state.js');
 
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
+// Mit Tonart, anders als in den übrigen Lied-Tests
 const song = (ev) => ({ meter: '4/4', pickup: 0, key: 0, ev });
 // Wie dragPitch: beim ersten echten Schritt den Stand für „Rückgängig“ merken, dann die Tonhöhe ändern
 const drag = (i, p) => {

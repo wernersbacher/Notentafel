@@ -1,28 +1,24 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { fakeStorage } from './helpers.mjs';
 
 // Mehrere Geräte: jedes hat seinen eigenen localStorage, use(dev) schaltet um. Muss stehen, bevor storage.js geladen wird.
 // failKey: dieser Schlüssel scheitert beim Schreiben (Speicher voll oder gesperrt), bis der Test es zurücksetzt.
-let mem = new Map();
-globalThis.localStorage = {
-  getItem: (k) => (mem.has(k) ? mem.get(k) : null),
-  setItem: (k, v) => { if (k === mem.failKey) throw new Error('voll'); mem.set(k, String(v)); },
-  removeItem: (k) => { mem.delete(k); },
-  clear: () => mem.clear()
-};
+let mem = fakeStorage();
+globalThis.localStorage = mem;
 // Zeit läuft bei jedem Aufruf weiter, damit jede Änderung einen neueren Stand hat. skew: wie weit die Uhr des
 // gerade benutzten Geräts falsch geht; der Server hat immer die richtige Zeit.
 let clock = 1000, skew = 0;
 Date.now = () => ++clock + skew;
 const serverNow = () => ++clock;
 const YEAR = 365 * 24 * 3600 * 1000;
-// Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
-const realTimeout = setTimeout;
-globalThis.setTimeout = (f, ms, ...a) => (ms === 800 ? 0 : realTimeout(f, ms, ...a));
 
 const T = await import('../js/tafel/storage.js');
 const L = await import('../js/lied/storage.js');
 const C = await import('../js/core/cloud.js');
+// Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
+const realTimeout = setTimeout;
+globalThis.setTimeout = (f, ms, ...a) => (ms === C.SYNC_DELAY ? 0 : realTimeout(f, ms, ...a));
 const { mergeSongs, newId } = await import('../js/core/store.js');
 const LIMIT = 50;
 
@@ -120,8 +116,9 @@ const devices = new Map();
 // Wechselt auf das Gerät name (neu: leerer Speicher) und startet die App dort wie nach dem Laden der Seite
 async function use(name, deviceSkew = 0) {
   skew = deviceSkew;
-  if (!devices.has(name)) devices.set(name, new Map());
+  if (!devices.has(name)) devices.set(name, fakeStorage());
   mem = devices.get(name);
+  globalThis.localStorage = mem;
   await C.initCloud('/api');
 }
 const tune = (...ids) => { const r = ids.map((n) => ({ n, h: '' })); r.line = false; r.meter = ''; return r; };
@@ -136,7 +133,8 @@ beforeEach(() => {
   skew = 0;
   resetServer();
   devices.clear();
-  mem = new Map();
+  mem = fakeStorage();
+  globalThis.localStorage = mem;
 });
 
 /* ---------- Zusammenführen (ohne Server) ---------- */
@@ -191,7 +189,8 @@ test('newId: später angelegt sortiert weiter hinten', () => {
 
 /* ---------- Mit Server: mehrere Geräte ---------- */
 test('ohne Backend passiert nichts, gespeichert wird wie immer', async () => {
-  mem = new Map();
+  mem = fakeStorage();
+  globalThis.localStorage = mem;
   await C.initCloud(null);
   T.saveSong('mel', [tune('C')], 'Lied');
   await C.sync();
@@ -235,7 +234,7 @@ test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf eine
 
 test('Lieder von vor den ids: bekommen beim Anmelden eine und gehen ins Konto', async () => {
   await use('tablet');
-  mem.set('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]], lines: [] }]));
+  mem.setItem('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]], lines: [] }]));
   await C.register('a@b.de', 'geheim123');
   assert.deepEqual(account(), ['Alt']);
   await use('laptop');
@@ -576,12 +575,12 @@ test('halbe Anmeldung: scheitert /me, bleibt kein Token gespeichert und die Ansi
   assert.equal(await C.login('a@b.de', 'geheim123'), 'Das hat nicht geklappt (500).');
   assert.equal(C.cloudInfo().user, null);
   assert.ok(emitted > 0); // die Kontoansicht wird sofort aktualisiert
-  assert.equal(mem.get('notentafel.konto.v1').includes('token'), false);
+  assert.equal(mem.getItem('notentafel.konto.v1').includes('token'), false);
 
   server.meFails = false;
   assert.equal(await C.login('a@b.de', 'geheim123'), '');
   assert.equal(C.cloudInfo().user.email, 'a@b.de');
-  assert.ok(mem.get('notentafel.konto.v1').includes('token'));
+  assert.ok(mem.getItem('notentafel.konto.v1').includes('token'));
 });
 
 test('Abmelden nach einem Abgleichfehler räumt error und lastSync auf', async () => {
@@ -688,7 +687,7 @@ const longName = (id, name, savedAt) => ({ id, name, savedAt, changedAt: savedAt
 
 test('ungültiges Lied: bleibt lokal, wird als solches gemeldet und nicht noch einmal geschickt', async () => {
   await use('tablet');
-  mem.set('notentafel.songs.v1', JSON.stringify([longName('aaaaaaaab', 'x'.repeat(45), 5)]));
+  mem.setItem('notentafel.songs.v1', JSON.stringify([longName('aaaaaaaab', 'x'.repeat(45), 5)]));
   assert.equal(await C.register('a@b.de', 'geheim123'), '');
   assert.deepEqual(account(), []);
   assert.equal(C.localOnly('mel', 'aaaaaaaab'), true);
@@ -703,7 +702,7 @@ test('ungültiges Lied: bleibt lokal, wird als solches gemeldet und nicht noch e
 
 test('eine ungültige Änderung hält die übrigen nicht auf', async () => {
   await use('tablet');
-  mem.set('notentafel.songs.v1', JSON.stringify([
+  mem.setItem('notentafel.songs.v1', JSON.stringify([
     longName('aaaaaaaab', 'x'.repeat(45), 5),
     longName('aaaaaaaac', 'Gut', 6)
   ]));

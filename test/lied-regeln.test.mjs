@@ -3,10 +3,7 @@ import assert from 'node:assert/strict';
 import { shownAccidentals, badMeasures } from '../js/lied/model.js';
 import { layout } from '../js/lied/layout.js';
 import { sheetSVG } from '../js/lied/sheet.js';
-
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
-const r = (v = 4, x = {}) => ({ v, ...x });
-const song = (ev, meter = '4/4', pickup = 0) => ({ meter, pickup, ev });
+import { n, r, song } from './helpers.mjs';
 const shown = (ev, autoBar = false, meter = '4/4') => shownAccidentals(song(ev, meter), autoBar);
 
 /* ---------- Vorzeichen ---------- */

@@ -2,10 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { layout, beamGroups, spacing, G } from '../js/lied/layout.js';
 import { barsAfter } from '../js/lied/model.js';
-
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
-const r = (v = 4, x = {}) => ({ v, ...x });
-const song = (ev, meter = '4/4') => ({ meter, ev });
+import { n, r, song } from './helpers.mjs';
 
 test('spacing: längere Werte bekommen mehr Platz', () => {
   assert.deepEqual([2, 4, 8, 16, 32].map((t) => +spacing(t).toFixed(2)), [1.6, 2.5, 3.4, 4.3, 5.2]);

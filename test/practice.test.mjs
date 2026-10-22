@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fakeStorage } from './helpers.mjs';
 
 // Die beiden Bereiche nutzen dieselben core-Bausteine (practice.js, undo.js) – hier einmal für beide geprüft.
 // localStorage-Ersatz; muss stehen, bevor die Zustände (über settings.js und storage.js) geladen werden
-globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+globalThis.localStorage = fakeStorage();
 const lied = await import('../js/lied/state.js');
 const tafel = await import('../js/tafel/state.js');
 

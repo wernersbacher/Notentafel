@@ -2,9 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { countsOf, tiedFrom, playPlan } from '../js/lied/model.js';
 import { layout } from '../js/lied/layout.js';
-
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
-const r = (v = 4, x = {}) => ({ v, ...x });
+import { n, r } from './helpers.mjs';
 // Zählzeiten kurz: gehaltene in Klammern
 const show = (zz) => zz.map((cs) => cs.map((c) => (c.held ? '(' + c.t + ')' : c.t)).join(' '));
 

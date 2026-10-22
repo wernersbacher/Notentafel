@@ -1,20 +1,13 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { fakeStorage } from './helpers.mjs';
 
 // Einfacher localStorage-Ersatz; muss stehen, bevor storage.js geladen wird
-const store = new Map();
-// Schlüssel, deren Schreiben gerade scheitern soll (Speicher voll oder gesperrt)
-let failKey = null;
-globalThis.localStorage = {
-  getItem: (k) => (store.has(k) ? store.get(k) : null),
-  setItem: (k, v) => { if (k === failKey) throw new Error('voll'); store.set(k, String(v)); },
-  removeItem: (k) => { store.delete(k); },
-  clear: () => store.clear()
-};
+globalThis.localStorage = fakeStorage();
 const S = await import('../js/tafel/storage.js');
 const { setWriteError } = await import('../js/core/store.js');
 
-beforeEach(() => store.clear());
+beforeEach(() => globalThis.localStorage.clear());
 
 const tune = (...ids) => { const r = ids.map((n) => ({ n, h: '' })); r.line = false; r.meter = ''; return r; };
 
@@ -74,7 +67,7 @@ test('renameSong: neuer Name, id, Inhalt und Datum bleiben; belegter Name geht n
 });
 
 test('Lieder von vor den ids bekommen beim ersten Lesen eine, die dann bleibt', () => {
-  store.set('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]] }, { name: 'Älter', savedAt: 2, rows: [[{ n: 'D' }]] }]));
+  globalThis.localStorage.setItem('notentafel.songs.v1', JSON.stringify([{ name: 'Alt', savedAt: 5, rows: [[{ n: 'C' }]] }, { name: 'Älter', savedAt: 2, rows: [[{ n: 'D' }]] }]));
   const ids = S.loadSongs('mel').map((s) => s.id);
   assert.ok(ids.every((id) => /^[0-9a-z]{17}$/.test(id)));
   assert.ok(ids[1] < ids[0]); // das ältere sortiert vorn
@@ -90,13 +83,13 @@ test('saveBoard/loadBoard und Autosave', () => {
 });
 
 test('defekte Daten ergeben leere Liste bzw. nichts', () => {
-  store.set('notentafel.songs.v1', '{kaputt');
+  globalThis.localStorage.setItem('notentafel.songs.v1', '{kaputt');
   assert.deepEqual(S.loadSongs('mel'), []);
-  store.set('notentafel.songs.v1', '{"a":1}');
+  globalThis.localStorage.setItem('notentafel.songs.v1', '{"a":1}');
   assert.deepEqual(S.loadSongs('mel'), []);
-  store.set('notentafel.songs.v1', JSON.stringify([null, { name: 'x', rows: 'nein' }, { name: 'ok', rows: [[{ n: 'C' }]] }]));
+  globalThis.localStorage.setItem('notentafel.songs.v1', JSON.stringify([null, { name: 'x', rows: 'nein' }, { name: 'ok', rows: [[{ n: 'C' }]] }]));
   assert.deepEqual(S.loadSongs('mel').map((s) => s.name), ['ok']);
-  store.set('notentafel.v1', 'nicht json');
+  globalThis.localStorage.setItem('notentafel.v1', 'nicht json');
   assert.equal(S.loadBoard('mel'), null);
 });
 
@@ -115,13 +108,13 @@ test('Verdecken: Tuch an der Zeile, eingeklappte Zeilen und ?-Karten bleiben bei
 
 test('merge: Schreibfehler meldet failed, die gespeicherte Liste bleibt unverändert', () => {
   S.saveSong('mel', [tune('C')], 'Lied');
-  const key = 'notentafel.songs.v1', before = store.get(key);
+  const key = 'notentafel.songs.v1', before = globalThis.localStorage.getItem(key);
   const remote = [{ id: 'a00000001', name: 'Vom Server', format: 'tafel.1', savedAt: 9, changedAt: 9, data: { rows: [[{ n: 'D', h: '' }]], lines: [], name: 'Vom Server', savedAt: 9 } }];
-  failKey = key;
+  globalThis.localStorage.failKey = key;
   try {
     assert.deepEqual(S.stores.mel.merge(remote), { merged: false, touched: [], failed: true });
-  } finally { failKey = null; }
-  assert.equal(store.get(key), before);
+  } finally { globalThis.localStorage.failKey = null; }
+  assert.equal(globalThis.localStorage.getItem(key), before);
   assert.deepEqual(S.loadSongs('mel').map((s) => s.name), ['Lied']);
   // Nichts zu ändern ist kein Fehler
   assert.deepEqual(S.stores.mel.merge([]), { merged: false, touched: [], failed: false });
@@ -137,15 +130,15 @@ test('importSongs: ein zu langer Name wird auf 40 Zeichen gekürzt', () => {
 test('setWriteError: wird bei fehlgeschlagenem Speichern aufgerufen, ein werfender Listener bricht nichts', () => {
   const seen = [];
   setWriteError((e) => { seen.push(e); });
-  failKey = 'notentafel.songs.v1';
+  globalThis.localStorage.failKey = 'notentafel.songs.v1';
   try {
     assert.equal(S.saveSong('mel', [tune('C')], 'Lied'), false);
-  } finally { failKey = null; }
+  } finally { globalThis.localStorage.failKey = null; }
   assert.equal(seen.length, 1);
 
   setWriteError(() => { throw new Error('kaputt'); });
-  failKey = 'notentafel.songs.v1';
+  globalThis.localStorage.failKey = 'notentafel.songs.v1';
   try {
     assert.equal(S.saveSong('mel', [tune('C')], 'Lied'), false); // der Wurf kommt nicht an
-  } finally { failKey = null; setWriteError(() => {}); }
+  } finally { globalThis.localStorage.failKey = null; setWriteError(() => {}); }
 });

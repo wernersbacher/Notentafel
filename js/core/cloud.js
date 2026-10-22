@@ -10,6 +10,8 @@ import { readJSON, writeJSON, syncStores, onSongChange, setClock } from './store
 import { makeSignal } from './signal.js';
 
 const KEY = 'notentafel.konto.v1';
+// So viel später nach dem Speichern läuft der Abgleich (mehrere Änderungen kurz hintereinander gehen mit)
+export const SYNC_DELAY = 800;
 // acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id, why? }], limit, offset }
 // rejected: Lieder nur auf diesem Gerät; why 'refused' = nimmt der Server nicht an, sonst (auch alte Einträge ohne why)
 // über dem Limit und rücken beim Löschen nach.
@@ -206,7 +208,7 @@ function queue(area, id) {
   mark(area, id, now());
   persist();
   clearTimeout(timer);
-  timer = setTimeout(sync, 800);
+  timer = setTimeout(sync, SYNC_DELAY);
 }
 // Schickt, was noch aussteht, und arbeitet ein, was vom Server kommt. Läuft schon ein Abgleich, folgt gleich danach ein weiterer.
 export function sync() {

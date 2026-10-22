@@ -1,14 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fakeStorage } from './helpers.mjs';
 
 // Einfacher localStorage-Ersatz mit einem Stand aus der Zeit vor der Aufteilung in Kern und Bereiche.
 // Er muss stehen, bevor settings.js geladen wird, denn das liest die Einstellungen beim Laden.
 const OLD = { theme: 'original', tempo: 120, lens: false, mode: 'rhy', autoBar: true, autoZ: true, prop: true, wake: false };
-const store = new Map([['notentafel.settings.v1', JSON.stringify(OLD)]]);
-globalThis.localStorage = {
-  getItem: (k) => (store.has(k) ? store.get(k) : null),
-  setItem: (k, v) => { store.set(k, String(v)); }
-};
+globalThis.localStorage = fakeStorage();
+globalThis.localStorage.setItem('notentafel.settings.v1', JSON.stringify(OLD));
 const { settings, useSettings, persistSettings, cleanCoreSettings } = await import('../js/core/settings.js');
 const { cleanTafelSettings } = await import('../js/tafel/storage.js');
 
@@ -22,7 +20,7 @@ test('Einstellungen: ein bisheriger Stand wird gelesen, Melodie und Rhythmus üb
   settings.tempo = 100;
   settings.rhy.lens = true;
   persistSettings();
-  const saved = JSON.parse(store.get('notentafel.settings.v1'));
+  const saved = JSON.parse(globalThis.localStorage.getItem('notentafel.settings.v1'));
   assert.deepEqual(saved, { tempo: 100, mode: 'rhy', wake: false, countIn: false, metro: false, songSort: 'group', step: false, stepSound: false, stepHide: false, topHidden: false, play: {}, game: {}, ui: 1, open: ['mel2', 'rhy2', 'lied2'], mel: TAFEL, rhy: { ...TAFEL, lens: true } });
 });
 

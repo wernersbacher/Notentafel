@@ -3,10 +3,7 @@ import assert from 'node:assert/strict';
 import { songToMusicXML, fileNameOf } from '../js/lied/musicxml.js';
 import { measureTicks } from '../js/lied/model.js';
 import { SONGS, songOf } from '../js/lied/songs.js';
-
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
-const r = (v = 4, x = {}) => ({ v, ...x });
-const song = (ev, meter = '4/4', pickup = 0) => ({ meter, pickup, ev });
+import { n, r, song } from './helpers.mjs';
 
 // Prüft, ob jedes geöffnete Element wieder geschlossen wird (ein kleiner Ersatz für einen XML-Parser)
 function wellFormed(xml) {

@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fakeStorage } from './helpers.mjs';
 
 // localStorage-Ersatz; muss stehen, bevor state.js (über settings.js und storage.js) geladen wird
-globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+globalThis.localStorage = fakeStorage();
 const { S, practiceWritten } = await import('../js/tafel/state.js');
 
 // Zeile mit den Eigenschaften line/meter, wie sie die Tafel am Array trägt

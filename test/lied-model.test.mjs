@@ -5,9 +5,7 @@ import {
   pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody,
   canTie, tieValidAt, toggleTieAt, changePitch, swapEvents
 } from '../js/lied/model.js';
-
-const n = (p, v = 4, x = {}) => ({ p, v, ...x });
-const r = (v = 4, x = {}) => ({ v, ...x });
+import { n, r } from './helpers.mjs';
 
 test('drawnBars: mit Automatik und Taktart am Ende ein Schlussstrich', () => {
   assert.deepEqual(drawnBars({ meter: '2/4', ev: [n('c1'), n('d1'), r(2)] }, true), [0, 1, 2]);

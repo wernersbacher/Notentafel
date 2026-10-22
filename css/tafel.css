@@ -14,6 +14,11 @@
   touch-action: none;
 }
 .grid.wide { touch-action: pan-x; }
+/* Beginnt die Geste auf einem belegten Platz, gehört sie dem Ziehen (Noten verschieben und tauschen): Ohne das übernähme
+   der Browser sie als Wischen und bräche das Ziehen mit pointercancel ab. touch-action wird vom Ziel bis zum scrollenden
+   Element verschränkt, ein none hier hebt also das pan-x der Tafel auf. Wie beim Griff im Lied (.grabber) gilt das nur
+   für die bedienbaren Stellen: In den Lücken und auf leeren Plätzen lässt sich die breite Tafel weiter seitlich wischen. */
+.grid.wide .cell:has(> .stack > .dot:not(.ghost)) { touch-action: none; }
 .row {
   display: grid;
   grid-template-columns: var(--nw) repeat(var(--cols, 1), minmax(0, 7rem));

@@ -185,28 +185,48 @@ export function initLiedGames() {
   renderValSide();
   // Finger auf den Notenlinien bei „Note setzen“: Die Note folgt ihm, das Loslassen zählt. Höhe in den Maßen des Bilds
   let held = null;
+  // Höhe unter dem Finger in den Maßen des Bilds; null, wenn das Bild gerade nicht messbar ist (noch nicht im Layout,
+  // bereits ausgeblendet oder die Matrix nicht umkehrbar) – dann bleibt der Zeiger wirkungslos, statt zu stören
   const yAt = (e) => {
     const svg = el.quizView.querySelector('.qstaff') || held; // das Bild kann inzwischen neu gezeichnet sein
+    if (!svg) return null;
+    const m = svg.getScreenCTM();
+    if (!m) return null;
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
-    return pt.matrixTransform(svg.getScreenCTM().inverse()).y;
+    try { return pt.matrixTransform(m.inverse()).y; } catch (_) { return null; }
+  };
+  // Zeiger freigeben (er kann schon weg sein); die Aufgabe bleibt in jedem Fall wieder bedienbar
+  const release = (e) => {
+    if (!held) return;
+    try { held.releasePointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
+    held = null;
   };
   el.quizView.addEventListener('pointerdown', (e) => {
-    const svg = onStaff && e.target.closest && e.target.closest('.qstaff');
+    if (!onStaff) { held = null; return; } // kein „Note setzen“ (mehr): einen alten Zeiger nicht mitschleppen
+    const svg = e.target.closest && e.target.closest('.qstaff');
     if (!svg || held) return;
+    try { svg.setPointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
     held = svg;
-    svg.setPointerCapture(e.pointerId);
-    onStaff.move(yAt(e));
+    const y = yAt(e);
+    if (y == null) { release(e); return; }
+    onStaff.move(y);
   });
-  el.quizView.addEventListener('pointermove', (e) => { if (held && onStaff) onStaff.move(yAt(e)); });
+  el.quizView.addEventListener('pointermove', (e) => {
+    if (!held || !onStaff) return;
+    const y = yAt(e);
+    if (y != null) onStaff.move(y);
+  });
   el.quizView.addEventListener('pointerup', (e) => {
     if (!held) return;
     const y = yAt(e);
-    held = null;
-    if (onStaff) onStaff.up(y);
+    release(e);
+    if (!onStaff) return;
+    if (y == null) onStaff.move(null); // nicht messbar: wie ein Abbruch, keine Antwort
+    else onStaff.up(y);
   });
-  el.quizView.addEventListener('pointercancel', () => { if (held && onStaff) onStaff.move(null); held = null; });
+  el.quizView.addEventListener('pointercancel', (e) => { if (held && onStaff) onStaff.move(null); release(e); });
   el.placeGo.addEventListener('click', () => startQuiz(placeQuiz()));
   el.stepGo.addEventListener('click', () => startQuiz(stepQuiz()));
 }

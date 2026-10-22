@@ -83,6 +83,9 @@ export function initBoardInput() {
   el.grid.addEventListener('pointermove', onMove);
   el.grid.addEventListener('pointerup', (e) => onEnd(e, false));
   el.grid.addEventListener('pointercancel', (e) => onEnd(e, true));
+  // Während eines Ziehens nicht scrollen (für Browser, die touch-action auf den Plätzen nicht beachten): Nur eine Geste,
+  // die auf einem belegten Platz begann, gehört dem Ziehen; von leeren Plätzen und aus den Lücken wischt man weiter.
+  el.grid.addEventListener('touchmove', (e) => { if (drag && filled(S.rows[drag.r][drag.c])) e.preventDefault(); }, { passive: false });
   el.grid.addEventListener('contextmenu', (e) => e.preventDefault());
   el.grid.addEventListener('keydown', onKey);
   // Tipp auf das Tuch deckt die nächste Zeile auf, Tipp auf eine Zeilennummer klappt die Zeile ein oder wieder auf

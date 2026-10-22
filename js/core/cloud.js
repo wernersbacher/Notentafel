@@ -120,9 +120,17 @@ async function start(auth) {
   if (my !== session) return;
   setOffset(res.nowMs);
   acc.limit = res.limit;
-  mergeAll(res.songs);
+  const { failed } = mergeAll(res.songs);
   const t = now();
   for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, t));
+  if (failed) {
+    // Nicht alles ließ sich speichern: since bleibt leer, der nächste Abgleich holt die Lieder des Servers erneut.
+    // Angemeldet bleibt man, der Aufrufer bekommt '' (die Anmeldung selbst hat geklappt).
+    persist();
+    error = 'Auf dem Gerät ist kein Platz mehr für die Lieder vom Server.';
+    emit();
+    return;
+  }
   acc.since = res.now;
   persist();
   emit(true);
@@ -226,13 +234,21 @@ async function run() {
   const no = new Set(res.rejected || []);
   acc.rejected = (acc.rejected || []).concat(sent.filter((p) => no.has(p.id)).map(({ area, id }) => ({ area, id })));
   const before = localCount();
-  const merged = mergeAll(res.songs);
+  const { merged, failed } = mergeAll(res.songs);
   // Woanders gelöscht: Platz für Lieder, die nur hier liegen
   if (localCount() < before && acc.rejected.length) { retryRejected(); again = true; }
   // Was es hier nicht mehr gibt oder was der Server inzwischen hat, liegt nicht mehr nur hier
   const there = new Set(res.songs.filter((s) => !s.deleted).map((s) => s.id));
   acc.rejected = [...new Map(acc.rejected.map((r) => [r.area + '/' + r.id, r])).values()]
     .filter((r) => !there.has(r.id) && syncStores[r.area] && syncStores[r.area].rawSong(r.id));
+  if (failed) {
+    // Lieder des Servers ließen sich nicht speichern: since nicht vorrücken (sonst kämen sie nie wieder),
+    // lastSync und error stehen lassen. Was der Server angenommen hat (sent), ist trotzdem raus.
+    persist();
+    error = 'Auf dem Gerät ist kein Platz mehr für die Lieder vom Server.';
+    emit();
+    return;
+  }
   acc.since = res.now;
   persist();
   lastSync = Date.now();
@@ -241,16 +257,18 @@ async function run() {
 }
 
 // Lieder vom Server in alle Bereiche einarbeiten. Was dabei umbenannt wurde oder wegfiel (gleicher Name), ist
-// vorgemerkt und geht gleich mit einem weiteren Abgleich raus. true, wenn sich hier etwas geändert hat.
+// vorgemerkt und geht gleich mit einem weiteren Abgleich raus. merged: true, wenn sich hier etwas geändert hat;
+// failed: true, wenn ein Bereich das Ergebnis nicht speichern konnte (dann fehlt es hier bis zum nächsten Abgleich).
 function mergeAll(songs) {
-  let merged = false;
+  let merged = false, failed = false;
   for (const area in syncStores) {
     const m = syncStores[area].merge(songs.filter((s) => s.area === area), now());
     if (m.merged) merged = true;
+    if (m.failed) failed = true;
     m.touched.forEach((id) => mark(area, id, now()));
     if (m.touched.length && running) again = true;
   }
-  return merged;
+  return { merged, failed };
 }
 
 /* ---------- Start ---------- */

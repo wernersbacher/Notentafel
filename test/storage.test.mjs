@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 
 // Einfacher localStorage-Ersatz; muss stehen, bevor storage.js geladen wird
 const store = new Map();
+// Schlüssel, deren Schreiben gerade scheitern soll (Speicher voll oder gesperrt)
+let failKey = null;
 globalThis.localStorage = {
   getItem: (k) => (store.has(k) ? store.get(k) : null),
-  setItem: (k, v) => { store.set(k, String(v)); },
+  setItem: (k, v) => { if (k === failKey) throw new Error('voll'); store.set(k, String(v)); },
   removeItem: (k) => { store.delete(k); },
   clear: () => store.clear()
 };
 const S = await import('../js/tafel/storage.js');
+const { setWriteError } = await import('../js/core/store.js');
 
 beforeEach(() => store.clear());
 
@@ -108,4 +111,34 @@ test('Verdecken: Tuch an der Zeile, eingeklappte Zeilen und ?-Karten bleiben bei
   assert.equal(s.rows[2].cover, true);
   assert.equal(s.rows[1].coverFrom, true);
   assert.equal(s.rows[0].fold, true);
+});
+
+test('merge: Schreibfehler meldet failed, die gespeicherte Liste bleibt unverändert', () => {
+  S.saveSong('mel', [tune('C')], 'Lied');
+  const key = 'notentafel.songs.v1', before = store.get(key);
+  const remote = [{ id: 'a00000001', name: 'Vom Server', format: 'tafel.1', savedAt: 9, changedAt: 9, data: { rows: [[{ n: 'D', h: '' }]], lines: [], name: 'Vom Server', savedAt: 9 } }];
+  failKey = key;
+  try {
+    assert.deepEqual(S.stores.mel.merge(remote), { merged: false, touched: [], failed: true });
+  } finally { failKey = null; }
+  assert.equal(store.get(key), before);
+  assert.deepEqual(S.loadSongs('mel').map((s) => s.name), ['Lied']);
+  // Nichts zu ändern ist kein Fehler
+  assert.deepEqual(S.stores.mel.merge([]), { merged: false, touched: [], failed: false });
+});
+
+test('setWriteError: wird bei fehlgeschlagenem Speichern aufgerufen, ein werfender Listener bricht nichts', () => {
+  const seen = [];
+  setWriteError((e) => { seen.push(e); });
+  failKey = 'notentafel.songs.v1';
+  try {
+    assert.equal(S.saveSong('mel', [tune('C')], 'Lied'), false);
+  } finally { failKey = null; }
+  assert.equal(seen.length, 1);
+
+  setWriteError(() => { throw new Error('kaputt'); });
+  failKey = 'notentafel.songs.v1';
+  try {
+    assert.equal(S.saveSong('mel', [tune('C')], 'Lied'), false); // der Wurf kommt nicht an
+  } finally { failKey = null; setWriteError(() => {}); }
 });

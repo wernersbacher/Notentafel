@@ -7,8 +7,18 @@ import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
 import { initBlocks } from './core/blocks.js';
 import { initGamePicks } from './core/game.js';
+import { setWriteError } from './core/store.js';
+import { toast } from './core/ui.js';
 import { registerTafel } from './tafel/area.js';
 import { registerLied } from './lied/area.js';
+
+// Speicher voll oder gesperrt: einmal pro Seitenaufruf sagen, dass neue Lieder verloren gehen können
+let writeErrorShown = false;
+setWriteError(() => {
+  if (writeErrorShown) return;
+  writeErrorShown = true;
+  toast('Der Speicher des Geräts ist voll. Neue Lieder können verloren gehen.', true);
+});
 
 initBlocks();
 initGamePicks();

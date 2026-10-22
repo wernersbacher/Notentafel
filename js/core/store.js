@@ -5,8 +5,15 @@
 export function readJSON(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
 }
+// Schreibfehler (Speicher voll oder gesperrt) gehen an einen Listener, damit die App es sagen kann; gespeichert
+// wird trotzdem nichts, writeJSON liefert weiterhin false.
+let onWriteError = () => {};
+export const setWriteError = (f) => { onWriteError = f; };
 export function writeJSON(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) {
+    try { onWriteError(e); } catch (x) { /* ein werfender Listener darf das Speichern nicht abbrechen */ }
+    return false;
+  }
 }
 
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
@@ -160,7 +167,8 @@ export function makeStore(keys, { pack, unpack, area, format }) {
     loadAuto: () => unpack(readJSON(keys.auto)),
     saveAuto: (data, name) => writeJSON(keys.auto, pack(data, name, clock())),
     // Für den Abgleich: ein gespeichertes Lied so, wie es gespeichert ist (oder undefined), alle ids,
-    // und Stände vom Server einarbeiten. merge liefert die ids, die danach an den Server müssen.
+    // und Stände vom Server einarbeiten. merge liefert die ids, die danach an den Server müssen, und failed,
+    // wenn das Schreiben nicht geklappt hat (dann hat sich hier nichts geändert).
     rawSong: (id) => readSongs().find((s) => s.id === id),
     songIds: () => readSongs().map((s) => s.id),
     // Alle gespeicherten Lieder so, wie sie gespeichert sind (zum Exportieren)
@@ -168,8 +176,9 @@ export function makeStore(keys, { pack, unpack, area, format }) {
     merge(remote, now = clock()) {
       const known = remote.filter((r) => r.deleted || !r.format || r.format === format);
       const m = mergeSongs(readSongs(), known, unpack, now);
-      if (!m || !writeJSON(keys.songs, m.list)) return { merged: false, touched: [] };
-      return { merged: true, touched: m.touched };
+      if (!m) return { merged: false, touched: [], failed: false }; // nichts zu ändern
+      if (!writeJSON(keys.songs, m.list)) return { merged: false, touched: [], failed: true };
+      return { merged: true, touched: m.touched, failed: false };
     },
     // Lieder aus einer exportierten Datei (wie rawSongs) dazulegen: wie beim Abgleich je id der neuere Stand,
     // gleiche Namen werden aufgelöst. Liefert, wie viele Lieder dazugekommen oder neuer geworden sind.

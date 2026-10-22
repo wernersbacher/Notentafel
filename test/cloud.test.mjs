@@ -2,10 +2,11 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 // Mehrere Geräte: jedes hat seinen eigenen localStorage, use(dev) schaltet um. Muss stehen, bevor storage.js geladen wird.
+// failKey: dieser Schlüssel scheitert beim Schreiben (Speicher voll oder gesperrt), bis der Test es zurücksetzt.
 let mem = new Map();
 globalThis.localStorage = {
   getItem: (k) => (mem.has(k) ? mem.get(k) : null),
-  setItem: (k, v) => { mem.set(k, String(v)); },
+  setItem: (k, v) => { if (k === mem.failKey) throw new Error('voll'); mem.set(k, String(v)); },
   removeItem: (k) => { mem.delete(k); },
   clear: () => mem.clear()
 };
@@ -28,7 +29,7 @@ const LIMIT = 50;
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
 function resetServer() {
-  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], limit: LIMIT, meFails: false };
+  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], since: [], limit: LIMIT, meFails: false };
 }
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
@@ -92,7 +93,9 @@ globalThis.fetch = async (url, opts = {}) => {
   if (!server.online) throw new TypeError('Failed to fetch');
   const path = url.replace(/^\/api/, '');
   server.calls.push(path);
-  const [status, data] = handle(opts.method || 'GET', path, opts.headers && opts.headers.Authorization, opts.body ? JSON.parse(opts.body) : null);
+  const body = opts.body ? JSON.parse(opts.body) : null;
+  if (path === '/songs/sync') server.since.push(body.since); // welchen since der Abgleich mitgeschickt hat
+  const [status, data] = handle(opts.method || 'GET', path, opts.headers && opts.headers.Authorization, body);
   return { ok: status < 300, status, json: async () => data };
 };
 
@@ -710,6 +713,50 @@ test('Uhr geht ein Jahr nach: Änderungen des Geräts gehen trotzdem nicht verlo
   await use('nachgehend', -YEAR);
   await use('tablet');
   assert.deepEqual(mel(), { Lied: 'E' });
+});
+
+/* ---------- Kein Platz im Speicher des Geräts ---------- */
+const VOLL = 'Auf dem Gerät ist kein Platz mehr für die Lieder vom Server.';
+
+test('Abgleich ohne Platz im Gerät: since rückt nicht vor, das Lied kommt beim nächsten Mal an', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  await use('laptop');
+  assert.equal(await C.login('a@b.de', 'geheim123'), '');
+  await use('tablet');
+  T.saveSong('mel', [tune('G')], 'Vom Tablet');
+  await C.sync();
+  const last = C.cloudInfo().lastSync;
+  devices.get('laptop').failKey = 'notentafel.songs.v1';
+  await use('laptop'); // der Abgleich scheitert beim Schreiben des Liedspeichers
+  assert.equal(C.cloudInfo().error, VOLL);
+  assert.equal(C.cloudInfo().lastSync, last); // nicht gesetzt
+  assert.deepEqual(mel(), {});
+  const n = server.since.length, alt = server.since[n - 1];
+  mem.failKey = null;
+  await C.sync();
+  assert.equal(server.since[n], alt); // mit demselben alten since noch einmal geholt
+  assert.deepEqual(mel(), { 'Vom Tablet': 'G' });
+  assert.equal(C.cloudInfo().error, '');
+});
+
+test('Anmelden ohne Platz im Gerät: angemeldet, aber since bleibt leer und lastSync 0', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('G')], 'Vom Tablet');
+  await C.sync();
+  await use('laptop');
+  C.logout(); // frisch: kein Konto, lastSync 0
+  mem.failKey = 'notentafel.songs.v1';
+  assert.equal(await C.login('a@b.de', 'geheim123'), ''); // die Anmeldung selbst klappt
+  assert.equal(C.cloudInfo().user.email, 'a@b.de');
+  assert.equal(C.cloudInfo().error, VOLL);
+  assert.equal(C.cloudInfo().lastSync, 0);
+  assert.deepEqual(mel(), {});
+  mem.failKey = null;
+  await C.sync();
+  assert.deepEqual(mel(), { 'Vom Tablet': 'G' });
+  assert.equal(C.cloudInfo().error, '');
 });
 
 /* ---------- Format ---------- */

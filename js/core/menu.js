@@ -234,7 +234,8 @@ export function initMenu() {
     const victim = shown[+b.dataset.del];
     if (!victim) return;
     confirmTap(b, 'Sicher?', () => {
-      current().songs.store.deleteSong(victim.id);
+      // Konnte nicht geschrieben werden, ist das Lied noch da; nicht „gelöscht“ melden
+      if (!current().songs.store.deleteSong(victim.id)) { hint('Löschen hat nicht geklappt (Speicher gesperrt).', true); renderSongs(); return; }
       renderSongs();
       hint('„' + victim.name + '“ gelöscht.');
     });

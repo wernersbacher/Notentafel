@@ -114,9 +114,10 @@
 </svg>
 
 <!-- Verdecken: dieser Block sieht in Farbnoten und Rhythmus gleich aus und steht deshalb hier einmal.
-     Die Nummer setzt die Leiste beim Einsetzen in die Slots .cover-slot (siehe js/core/parts.js). -->
+     Die Nummer setzt die Leiste beim Einsetzen in die Slots .cover-slot (siehe js/core/parts.js).
+     data-block nennt hier nur die Rolle; blocks.js stellt den Bereich davor (mel-cover, rhy-cover). -->
 <template id="tplCover">
-  <section class="group block">
+  <section class="group block" data-block="cover">
     <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num"></span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
     <div class="tools covers">
       <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
@@ -235,7 +236,7 @@
     </div>
 
     <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tab-mel">
-      <section class="group block" id="melSetup">
+      <section class="group block" id="melSetup" data-block="mel-setup">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="melMeters"></div>
@@ -246,7 +247,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="mel-notes">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Töne</h2>
         <div class="palette" id="palette"></div>
@@ -261,7 +262,7 @@
         <div class="values v6" id="restsMel"></div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="mel-symbols">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
           <button type="button" class="btn" id="btnBarMel" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
@@ -339,7 +340,7 @@
     </div>
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
-      <section class="group block" id="rhySetup">
+      <section class="group block" id="rhySetup" data-block="rhy-setup">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="rhyMeters"></div>
@@ -351,7 +352,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="rhy-notes">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Rhythmus schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Notenwert</h2>
         <div class="values v6" id="values"></div>
@@ -359,7 +360,7 @@
         <div class="values v6" id="rests"></div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="rhy-symbols">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
           <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
@@ -380,7 +381,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="rhy-counts">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="zbtns" id="counts"></div>
       </section>
@@ -450,7 +451,7 @@
     </div>
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
-      <section class="group block" id="liedSetup">
+      <section class="group block" id="liedSetup" data-block="lied-setup">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart</h2>
         <div class="meterrow" id="liedMeters"></div>
@@ -478,7 +479,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="lied-notes">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Noten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
@@ -494,7 +495,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="lied-symbols">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
         <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
@@ -518,7 +519,7 @@
       </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="lied-lyrics">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Liedtext</span><span class="bhint">Note antippen, Silbe schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="lyrow">
           <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
@@ -526,7 +527,7 @@
         </div>
       </section>
 
-      <section class="group block">
+      <section class="group block" data-block="lied-cover">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools covers three">
           <button type="button" class="btn" data-cover="from" title="Ab der markierten Note alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">

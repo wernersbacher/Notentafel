@@ -6,8 +6,22 @@ import { makeSignal } from './signal.js';
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
 export const UI_SCALE = { min: 0.5, max: 2 };
-// Aufgeklappte Blöcke der Leiste (Bereich + Nummer); am Anfang je Bereich „schreiben“
-export const OPEN_START = ['mel2', 'rhy2', 'lied2'];
+// Aufgeklappte Blöcke der Leiste, über ihren stabilen Namen aus data-block (früher Bereich + Nummer, z. B. 'mel2');
+// am Anfang je Bereich „schreiben“
+export const OPEN_START = ['mel-notes', 'rhy-notes', 'lied-notes'];
+// Schlüssel aus der Zeit vor data-block (Bereich + Position im HTML, z. B. 'mel2') auf die stabilen Namen. Beim
+// Einlesen wird der gespeicherte Stand einmal abgebildet, damit nach dem Update dieselben Blöcke offen sind; ein
+// solcher Schlüssel wird nicht erneut gespeichert. Die Zuordnung steht fest (Stand beim Wechsel), damit auch ein
+// späteres Umsortieren der Blöcke alte Stände nicht falsch deutet. Unbekannte Schlüssel in alter Form bleiben, wie
+// sie sind (sie öffnen nichts, bis ein Block so heißt), neue Namen werden unverändert übernommen.
+const OLD_BLOCK_KEYS = {
+  mel1: 'mel-setup', mel2: 'mel-notes', mel3: 'mel-symbols', mel4: 'mel-cover',
+  rhy1: 'rhy-setup', rhy2: 'rhy-notes', rhy3: 'rhy-symbols', rhy4: 'rhy-counts', rhy5: 'rhy-cover',
+  lied1: 'lied-setup', lied2: 'lied-notes', lied3: 'lied-symbols', lied4: 'lied-lyrics', lied5: 'lied-cover'
+};
+// Alte Form (Bereich + Nummer) und neuer Name (Bereich + sprechender Name, z. B. 'mel-notes' oder 'mel-3')
+const isBlockKey = (k) => /^[a-z]+\d$/.test(k) || /^[a-z]+-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(k);
+const openKey = (k) => OLD_BLOCK_KEYS[k] || k;
 // Größe der Oberfläche: auf ganze Prozent gerundet und begrenzt, Unbrauchbares wird 100 %
 export function clampUi(v) {
   const n = Number(v);
@@ -34,7 +48,7 @@ export function cleanCoreSettings(s) {
     // Gewähltes Spiel je Bereich, z. B. { rhy: 'which' }; ob es das Spiel gibt, prüft game.js
     game: Object.fromEntries(entriesOf(s.game).filter(([, v]) => typeof v === 'string' && /^[a-z]+$/.test(v))),
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
-    open: Array.isArray(s.open) ? s.open.filter((k) => typeof k === 'string' && /^[a-z]+\d$/.test(k)) : OPEN_START.slice()
+    open: Array.isArray(s.open) ? [...new Set(s.open.filter((k) => typeof k === 'string' && isBlockKey(k)).map(openKey))] : OPEN_START.slice()
   };
 }
 

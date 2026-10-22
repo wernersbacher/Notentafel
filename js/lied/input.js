@@ -3,6 +3,7 @@
 // (man hört den neuen Ton), zur Seite auf ein anderes Zeichen tauscht beide. Nur die markierte Note ist ziehbar,
 // damit sich das Notenblatt sonst wie gewohnt mit dem Finger scrollen lässt.
 import { previewTone } from '../core/player.js';
+import { pointerDrag } from '../core/pointer.js';
 import { isNote, stepPitch, freq } from './model.js';
 import { L } from './state.js';
 import { render, spPx } from './render.js';
@@ -12,7 +13,6 @@ import { el } from './dom.js';
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
 const DRAG_START = 10;
 
-let drag = null;
 let justDragged = false; // nach dem Ziehen kein Klick hinterher
 
 const hitAt = (x, y) => {
@@ -23,19 +23,16 @@ const hitAt = (x, y) => {
 const evEl = (i) => el.sheet.querySelector('.ev[data-i="' + i + '"]');
 
 function onDown(e) {
-  if (e.button > 0 || drag) return;
   const h = e.target.closest('.grabber');
   if (!h) return;
   const i = +h.dataset.i, ev = L.song.ev[i];
   if (!ev) return;
-  drag = { i, id: e.pointerId, x: e.clientX, y: e.clientY, mode: null, p0: ev.p, steps: 0, over: null };
-  try { el.sheet.setPointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
+  return { i, mode: null, p0: ev.p, steps: 0, over: null };
 }
-function onMove(e) {
-  if (!drag || e.pointerId !== drag.id) return;
+function onMove(e, drag, dragging) {
+  if (!dragging) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   if (!drag.mode) {
-    if (Math.hypot(dx, dy) < DRAG_START) return;
     // Senkrecht: Tonhöhe (nur bei Noten); waagerecht: tauschen
     drag.mode = Math.abs(dy) > Math.abs(dx) ? (isNote(L.song.ev[drag.i]) ? 'pitch' : 'none') : 'move';
     if (drag.mode === 'move') { const g = evEl(drag.i); if (g) g.classList.add('lifting'); }
@@ -57,11 +54,7 @@ function onMove(e) {
     if (target != null) { const g = evEl(target); if (g) g.classList.add('drop'); }
   }
 }
-function onEnd(e, cancel) {
-  if (!drag || e.pointerId !== drag.id) return;
-  const d = drag;
-  drag = null;
-  try { el.sheet.releasePointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
+function onEnd(e, d, cancel) {
   if (!d.mode) return; // ein Tipp: das erledigt der Klick
   justDragged = true;
   setTimeout(() => { justDragged = false; }, 0);
@@ -72,13 +65,13 @@ function onEnd(e, cancel) {
 }
 
 export function initSheetInput() {
-  el.sheet.addEventListener('pointerdown', onDown);
-  el.sheet.addEventListener('pointermove', onMove);
-  el.sheet.addEventListener('pointerup', (e) => onEnd(e, false));
-  el.sheet.addEventListener('pointercancel', (e) => onEnd(e, true));
-  // Während des Ziehens nicht scrollen (für Browser, die touch-action auf SVG-Elementen nicht beachten)
-  el.sheet.addEventListener('touchmove', (e) => { if (drag) e.preventDefault(); }, { passive: false });
-  el.sheet.addEventListener('contextmenu', (e) => e.preventDefault());
+  pointerDrag(el.sheet, {
+    threshold: DRAG_START,
+    start: onDown,
+    move: onMove,
+    end: onEnd,
+    scroll: () => true // eine Geste am Griff gehört dem Ziehen, nicht dem Scrollen
+  });
   // Antippen markiert den Platz darunter
   el.sheet.addEventListener('click', (e) => {
     if (justDragged) return;

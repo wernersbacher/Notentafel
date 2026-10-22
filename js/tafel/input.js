@@ -5,12 +5,11 @@ import { render } from './redraw.js';
 import { cellEl } from './board.js';
 import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
 import { quizRow, quizCell } from '../core/quiz.js';
+import { pointerDrag } from '../core/pointer.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen
 const DRAG_START = 12;
-
-let drag = null;
 
 function cellAt(x, y) {
   const t = document.elementFromPoint(x, y);
@@ -19,8 +18,8 @@ function cellAt(x, y) {
   return { r: +cell.dataset.r, c: +cell.dataset.c, el: cell };
 }
 // Hebt den Kreis an: eine Kopie folgt dem Finger, der Platz selbst wird blass
-function beginDrag() {
-  const src = cellEl(drag.r, drag.c);
+function beginDrag(d) {
+  const src = cellEl(d.r, d.c);
   const dotEl = src.querySelector('.dot');
   const rect = dotEl.getBoundingClientRect();
   const ghost = dotEl.cloneNode(true);
@@ -28,35 +27,28 @@ function beginDrag() {
   ghost.style.setProperty('--d', rect.width + 'px');
   document.body.appendChild(ghost);
   src.classList.add('lifting');
-  Object.assign(drag, { src, ghost, w: rect.width, active: true });
+  Object.assign(d, { src, ghost, w: rect.width, active: true });
 }
 
 function onDown(e) {
-  if (e.button > 0) return;
   if (e.target.closest('[data-fold]')) return; // Zeilennummer: klappt beim Tippen ein (siehe click)
   const cell = e.target.closest('.cell');
   if (!cell) return;
   if (quizCell(+cell.dataset.r, +cell.dataset.c)) return; // im Spiel ist der Tipp eine Antwort (Fehler finden)
-  drag = { r: +cell.dataset.r, c: +cell.dataset.c, id: e.pointerId, x: e.clientX, y: e.clientY, active: false, over: null };
-  try { el.grid.setPointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
+  return { r: +cell.dataset.r, c: +cell.dataset.c, active: false, over: null };
 }
-function onMove(e) {
-  if (!drag || e.pointerId !== drag.id) return;
-  if (!drag.active) {
-    if (!filled(S.rows[drag.r][drag.c])) return;
-    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < DRAG_START) return;
-    beginDrag();
+function onMove(e, d, dragging) {
+  if (!dragging) return;
+  if (!d.active) {
+    if (!filled(S.rows[d.r][d.c])) return; // leere Plätze lassen sich nicht ziehen
+    beginDrag(d);
   }
-  drag.ghost.style.transform = 'translate(' + (e.clientX - drag.w / 2) + 'px,' + (e.clientY - drag.w / 2) + 'px) scale(1.1)';
+  d.ghost.style.transform = 'translate(' + (e.clientX - d.w / 2) + 'px,' + (e.clientY - d.w / 2) + 'px) scale(1.1)';
   const t = cellAt(e.clientX, e.clientY), over = t ? t.el : null;
-  if (drag.over && drag.over !== over) drag.over.classList.remove('drop');
-  if (over && over !== drag.src) { over.classList.add('drop'); drag.over = over; } else { drag.over = null; }
+  if (d.over && d.over !== over) d.over.classList.remove('drop');
+  if (over && over !== d.src) { over.classList.add('drop'); d.over = over; } else { d.over = null; }
 }
-function onEnd(e, cancel) {
-  if (!drag || e.pointerId !== drag.id) return;
-  const d = drag;
-  drag = null;
-  try { el.grid.releasePointerCapture(e.pointerId); } catch (_) { /* Zeiger schon weg */ }
+function onEnd(e, d, cancel) {
   if (d.active) {
     d.ghost.remove();
     const t = cancel ? null : cellAt(e.clientX, e.clientY);
@@ -79,14 +71,15 @@ function onKey(e) {
 }
 
 export function initBoardInput() {
-  el.grid.addEventListener('pointerdown', onDown);
-  el.grid.addEventListener('pointermove', onMove);
-  el.grid.addEventListener('pointerup', (e) => onEnd(e, false));
-  el.grid.addEventListener('pointercancel', (e) => onEnd(e, true));
-  // Während eines Ziehens nicht scrollen (für Browser, die touch-action auf den Plätzen nicht beachten): Nur eine Geste,
-  // die auf einem belegten Platz begann, gehört dem Ziehen; von leeren Plätzen und aus den Lücken wischt man weiter.
-  el.grid.addEventListener('touchmove', (e) => { if (drag && filled(S.rows[drag.r][drag.c])) e.preventDefault(); }, { passive: false });
-  el.grid.addEventListener('contextmenu', (e) => e.preventDefault());
+  pointerDrag(el.grid, {
+    threshold: DRAG_START,
+    start: onDown,
+    move: onMove,
+    end: onEnd,
+    // Nur eine Geste, die auf einem belegten Platz begann, gehört dem Ziehen; von leeren Plätzen und aus den Lücken
+    // wischt man weiter. Der Schutz greift für Browser, die touch-action auf den Plätzen nicht beachten.
+    scroll: (d) => filled(S.rows[d.r][d.c])
+  });
   el.grid.addEventListener('keydown', onKey);
   // Tipp auf das Tuch deckt die nächste Zeile auf, Tipp auf eine Zeilennummer klappt die Zeile ein oder wieder auf
   // (in manchen Spielen spielt er stattdessen die Zeile ab)

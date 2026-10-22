@@ -6,11 +6,12 @@ import { clef, staffLines, accidental, yOf, head, stem, ledger } from './glyphs.
 import { L, opts, persistOpts, practiceWritten } from './state.js';
 import { render, markPlaying } from './render.js';
 import { toneColor } from '../core/colors.js';
-import { startQuiz } from '../core/quiz.js';
+import { startQuiz, answerOf, randomQuiz as coreRandomQuiz, songQuiz as coreSongQuiz } from '../core/quiz.js';
 import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
-// Knöpfe aus quizKeys: Name (ein Halbton mit beiden Namen übereinander) auf der Farbe des Tons
+// Knöpfe aus quizKeys: Name (ein Halbton mit beiden Namen übereinander) auf der Farbe des Tons. Sie bleiben hier und
+// nicht im Kern: das Lied baut sie aus Tonhöhen (quizKeys, mit Oktavstrichen), die Tafel aus Punkt-ids (NOTE_BY).
 const keysOf = (lo, hi, sharp, flat) => quizKeys(lo, hi, sharp, flat).map((k) => ({
   ...k,
   html: k.names.map((n) => '<span>' + n + '</span>').join(''),
@@ -18,7 +19,7 @@ const keysOf = (lo, hi, sharp, flat) => quizKeys(lo, hi, sharp, flat).map((k) =>
   style: '--c:' + toneColor(parsePitch(k.p).step, k.acc),
   f: freq({ p: k.p, acc: k.acc })
 }));
-const question = (e, key = 0) => ({ ok: new Set([String(midiOf(e, key))]), f: freq(e, key) });
+const question = (e, key = 0) => answerOf(midiOf(e, key), freq(e, key));
 
 /* ---------- Zufallsnote ---------- */
 // Die Note groß mit Violinschlüssel; darunter nach dem Lösen ihr Name. frame: Höhe von oben bis unten (in Linienabständen),
@@ -46,19 +47,15 @@ function noteView(e, frame, solved) {
 }
 function randomQuiz() {
   const { quizLo: lo, quizHi: hi, quizSharp: sharp, quizFlat: flat } = opts, frame = frameOf(lo, hi);
-  let cur = null;
   el.quizView.hidden = false;
-  return {
+  return coreRandomQuiz({
     layout: 'piano', sound: 'piano', keys: keysOf(lo, hi, sharp, flat),
-    next() {
-      const all = quizPitches(lo, hi, sharp, flat).filter((x) => !cur || x.p !== cur.p || x.acc !== cur.acc);
-      cur = all[Math.floor(Math.random() * all.length)];
-      noteView(cur, frame, false);
-      return question(cur);
-    },
-    solved() { noteView(cur, frame, true); },
+    candidates: () => quizPitches(lo, hi, sharp, flat),
+    same: (a, b) => a.p === b.p && a.acc === b.acc,
+    draw: (x, solved) => noteView(x, frame, solved),
+    answer: question,
     stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
-  };
+  });
 }
 
 /* ---------- Lied durchgehen ---------- */
@@ -68,25 +65,18 @@ function songQuiz() {
   practiceWritten(); // das geschriebene Lied, als Kopie auf der Übungstafel
   const range = songRange(L.song);
   if (!range) { toast('Im Lied stehen noch keine Noten.', true); return null; }
-  const ev = () => L.song.ev;
   L.quiz = { i: -1, done: new Set() };
-  return {
+  return coreSongQuiz({
     layout: 'piano', sound: 'piano', keys: keysOf(range.lo, range.hi, range.sharp, range.flat),
     done: 'Geschafft: Alle Noten des Lieds sind benannt.',
-    next() {
-      for (let i = L.quiz.i + 1; i < ev().length; i++) {
-        const e = ev()[i];
-        if (!isNote(e) || (i > 0 && tiedFrom(ev()[i - 1], e))) continue;
-        L.quiz.i = i;
-        render();
-        markPlaying(i);
-        return question(e, L.song.key || 0);
-      }
-      return null;
-    },
-    solved() { L.quiz.done.add(L.quiz.i); render(); },
+    // Jede Stelle ist Ereignis und Index zugleich: den Index braucht render (L.quiz.i) und die Lösung (L.quiz.done)
+    items: () => L.song.ev.map((e, i) => ({ e, i })),
+    step: ({ e, i }) => isNote(e) && !(i > 0 && tiedFrom(L.song.ev[i - 1], e)), // keine Pausen, keine zweite Note eines Haltebogens
+    draw: ({ i }) => { L.quiz.i = i; render(); markPlaying(i); },
+    answer: ({ e }) => question(e, L.song.key || 0),
+    solve: ({ i }) => { L.quiz.done.add(i); render(); },
     stop() { L.quiz = null; render(); }
-  };
+  });
 }
 
 function startLiedQuiz() {

@@ -28,6 +28,52 @@ import { openGame, endGame, gameFirst, gameBtn, GAME_ICONS, gameGated } from './
 // steht dazu ein Hinweis. Ist die Frage gelöst (richtig getippt oder „Lösung“), geht es erst mit „Weiter“ weiter.
 let quiz = null; // { q, cur, solved: false, 'right' (richtig getippt) oder 'shown' (Lösung gezeigt) }
 
+/* ---------- Fragen bauen ---------- */
+// Die Antwort einer Frage: richtiger Schlüssel als String und der Ton, der dazu klingt
+export const answerOf = (key, f) => ({ ok: new Set([String(key)]), f });
+
+// Zufallsfragen für ein q: candidates() liefert alle möglichen Fragen (bei jedem next() neu, sie hängen an den
+// Einstellungen), same(a, b) erkennt dieselbe Frage (sie kommt nicht zweimal hintereinander), draw(x, solved) zeichnet
+// die Frage ungelöst bzw. mit Lösung, answer(x) liefert ihre Antwort, stop() räumt die Ansicht auf
+export function randomQuiz({ layout, sound, keys, candidates, same, draw, answer, stop }) {
+  let cur = null;
+  return {
+    layout, sound, keys,
+    next() {
+      const all = candidates().filter((x) => !cur || !same(x, cur));
+      cur = all[Math.floor(Math.random() * all.length)];
+      draw(cur, false);
+      return answer(cur);
+    },
+    solved() { draw(cur, true); },
+    stop
+  };
+}
+
+// Fragen der Reihe nach für ein q: items() liefert die Stellen in Fragefolge, step(item) sagt, ob eine Stelle noch zählt
+// (Lied und Tafel können sich inzwischen geändert haben), draw(item) zeigt sie als aktuelle Frage, answer(item) liefert
+// ihre Antwort, solve(item) merkt sie als benannt, stop() räumt auf. draw läuft vor answer: die Antwort wird erst nach
+// dem Zeichnen gelesen.
+export function songQuiz({ layout, sound, keys, done, items, step, draw, answer, solve, stop }) {
+  let k = -1, cur = null;
+  return {
+    layout, sound, keys, done,
+    next() {
+      const all = items();
+      for (k++; k < all.length; k++) {
+        const item = all[k];
+        if (!step(item)) continue;
+        cur = item;
+        draw(item);
+        return answer(item);
+      }
+      return null;
+    },
+    solved() { solve(cur); },
+    stop
+  };
+}
+
 const FEED = {
   right: ['check', 'Richtig!'],
   wrong: ['close', 'Leider falsch – probier es nochmal'],

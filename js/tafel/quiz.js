@@ -7,7 +7,7 @@ import { S, practiceWritten } from './state.js';
 import { render } from './redraw.js';
 import { games, persistGames } from './gameOptions.js';
 import { colorStyle, noteLabel, upArrow } from './symbols.js';
-import { startQuiz } from '../core/quiz.js';
+import { startQuiz, answerOf, randomQuiz as coreRandomQuiz, songQuiz as coreSongQuiz } from '../core/quiz.js';
 import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
@@ -20,12 +20,13 @@ export function pool() {
   return ids;
 }
 // Knöpfe unten auf der Tafel, von tief nach hoch, wie die Töne der Leiste: Namen tippen ohne Farbe (plain, der richtige
-// färbt sich mit der Lösung), Farbe tippen ohne Buchstaben (nur der Pfeil der hohen Töne)
+// färbt sich mit der Lösung), Farbe tippen ohne Buchstaben (nur der Pfeil der hohen Töne). Sie bleiben hier und nicht im
+// Kern: die Tafel baut sie aus Punkt-ids (NOTE_BY), das Lied aus Tonhöhen (quizKeys, mit Oktavstrichen).
 const keysOf = (ids) => [...new Set(ids)].sort((a, b) => NOTE_BY[a].f - NOTE_BY[b].f).map((id) => {
   const n = NOTE_BY[id], byName = games.quiz.ask === 'name';
   return { key: id, html: byName ? upArrow(n) : noteLabel(n), label: n.n, style: colorStyle(n), f: n.f, cls: byName ? '' : 'plain' };
 });
-const question = (id) => ({ ok: new Set([id]), f: NOTE_BY[id].f });
+const question = (id) => answerOf(id, NOTE_BY[id].f);
 
 // Großer Punkt über der Tafel. Farbe gefragt: ohne Lösung nur mit dem Pfeil der hohen Töne; Name gefragt: Buchstabe auf
 // einem Punkt ohne Farbe. Mit Lösung farbig mit Buchstabe. Darunter der Name, wenn er mehr sagt als der Buchstabe
@@ -36,19 +37,15 @@ function showDot(id, solved) {
     (solved || byName ? noteLabel(n) : upArrow(n)) + '</div><p class="qname">' + ((solved || byName) && n.n !== n.l ? n.n : '&nbsp;') + '</p></div>';
 }
 function randomQuiz() {
-  let cur = null;
   el.quizView.hidden = false;
-  return {
+  return coreRandomQuiz({
     layout: 'row', sound: 'bell', keys: keysOf(pool()),
-    next() {
-      const ids = pool().filter((x) => x !== cur);
-      cur = ids[Math.floor(Math.random() * ids.length)];
-      showDot(cur, false);
-      return question(cur);
-    },
-    solved() { showDot(cur, true); },
+    candidates: pool,
+    same: (a, b) => a === b,
+    draw: (x, solved) => showDot(x, solved),
+    answer: question,
     stop() { el.quizView.hidden = true; el.quizView.innerHTML = ''; }
-  };
+  });
 }
 
 // Melodie durchgehen: Punkt für Punkt (eingeklappte Zeilen nicht); die Buchstaben erscheinen erst, wenn der Punkt
@@ -59,24 +56,17 @@ function songQuiz() {
   const order = [];
   S.rows.forEach((row, r) => { if (!row.fold) row.forEach((x, c) => { if (isNote(x)) order.push({ r, c }); }); });
   if (!order.length) { toast('Auf der Tafel stehen noch keine Farbpunkte.', true); return null; }
-  let k = -1;
   S.quiz = { pos: null, done: new Set(), ask: games.quiz.ask };
-  return {
+  return coreSongQuiz({
     layout: 'row', sound: 'bell', keys: keysOf(GROUPS[0].concat(order.map((p) => S.rows[p.r][p.c].n))),
     done: 'Geschafft: Alle Farbpunkte sind benannt.',
-    next() {
-      for (k++; k < order.length; k++) {
-        const p = order[k], cell = S.rows[p.r] && S.rows[p.r][p.c];
-        if (!isNote(cell)) continue; // inzwischen geändert
-        S.quiz.pos = p;
-        render();
-        return question(cell.n);
-      }
-      return null;
-    },
-    solved() { S.quiz.done.add(S.quiz.pos.r + ',' + S.quiz.pos.c); render(); },
+    items: () => order,
+    step: (p) => isNote(S.rows[p.r] && S.rows[p.r][p.c]), // inzwischen geändert
+    draw: (p) => { S.quiz.pos = p; render(); },
+    answer: (p) => question(S.rows[p.r][p.c].n), // gelesen nach dem Zeichnen, also wie die Frage jetzt steht
+    solve: (p) => { S.quiz.done.add(p.r + ',' + p.c); render(); },
     stop() { S.quiz = null; render(); }
-  };
+  });
 }
 
 function startMelQuiz() {

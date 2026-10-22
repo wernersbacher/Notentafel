@@ -11,7 +11,8 @@ import { clef, staffLines, yOf, head, stem, ledger, flags, dot, rest } from './g
 import { frameOf } from './quiz.js';
 import { opts, persistOpts } from './state.js';
 import { toneColor } from '../core/colors.js';
-import { startQuiz, quizAnswer, playTones } from '../core/game.js';
+import { playTones } from '../core/game.js';
+import { startQuiz, quizAnswer } from '../core/quiz.js';
 import { previewTone, stopPlay, playNow } from '../core/player.js';
 import { delegate, setPressed } from '../core/ui.js';
 import { el } from './dom.js';

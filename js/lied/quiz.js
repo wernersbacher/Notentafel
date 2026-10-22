@@ -6,7 +6,7 @@ import { clef, staffLines, accidental, yOf, head, stem, ledger } from './glyphs.
 import { L, opts, persistOpts, practiceWritten } from './state.js';
 import { render, markPlaying } from './render.js';
 import { toneColor } from '../core/colors.js';
-import { startQuiz } from '../core/game.js';
+import { startQuiz } from '../core/quiz.js';
 import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 

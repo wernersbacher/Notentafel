@@ -4,7 +4,7 @@ import { S } from './state.js';
 import { render } from './redraw.js';
 import { cellEl } from './board.js';
 import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
-import { quizRow, quizCell } from '../core/game.js';
+import { quizRow, quizCell } from '../core/quiz.js';
 import { el } from './dom.js';
 
 // Ab dieser Strecke in Pixeln wird aus einem Tipp ein Ziehen

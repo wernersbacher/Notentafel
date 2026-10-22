@@ -18,7 +18,8 @@ import { render } from './redraw.js';
 import { markPlaying } from './board.js';
 import { colorStyle, noteLabel } from './symbols.js';
 import { previewTone, stopPlay, playNow } from '../core/player.js';
-import { startQuiz, playTones } from '../core/game.js';
+import { playTones } from '../core/game.js';
+import { startQuiz } from '../core/quiz.js';
 import { delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 

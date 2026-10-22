@@ -7,7 +7,7 @@ import { S, practiceWritten } from './state.js';
 import { render } from './redraw.js';
 import { games, persistGames } from './gameOptions.js';
 import { colorStyle, noteLabel, upArrow } from './symbols.js';
-import { startQuiz } from '../core/game.js';
+import { startQuiz } from '../core/quiz.js';
 import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 

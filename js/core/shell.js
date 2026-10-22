@@ -1,4 +1,5 @@
 // Rahmen der App: Reiter der Bereiche, Wechsel zwischen ihnen, gemeinsame Knöpfe und das Speichern-Feld der Leiste.
+// Die Verdrahtung der Leiste liegt in shell-bar.js, Einklappen und Vorführen in present.js.
 //
 // Ein Bereich meldet sich mit register(area) an:
 //   id, label        Schlüssel (auch in den Einstellungen) und Name auf dem Reiter
@@ -19,23 +20,25 @@
 //                    gespeichert. Ob ein Bereich gerade übt, bleibt gemerkt (settings.play). clear() macht die
 //                    Übungstafel wieder leer (beim Wählen eines Spiels).
 import { settings, persistSettings } from './settings.js';
-import { stopPlay, togglePlay } from './player.js';
-import { toast, confirmTap, disarm, isArmed, popover, onEnter, setPressed } from './ui.js';
+import { stopPlay } from './player.js';
+import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
 import { el } from './dom.js';
 import { accountFull, cloudInfo } from './cloud.js';
+import { shellState } from './shell-state.js';
+import { initBar, TOOL_BTNS } from './shell-bar.js';
+import { initPresent } from './present.js';
+// Einklappen und Vorführen liegen in present.js, sind aber wie bisher über shell.js erreichbar
+export { sideCollapsed } from './present.js';
 
 const areas = [];
-let cur = null;
-let savePop;
 
 export const register = (area) => { areas.push(area); };
 // f() nach jedem Zeigen eines Bereichs (Wechsel des Bereichs, schreiben oder üben), z. B. für die Startseite der Spiele
 let afterShow = () => {};
 export const onShow = (f) => { afterShow = f; };
-export const current = () => cur;
+export const current = () => shellState.area;
 
 /* ---------- Bereiche ---------- */
-const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
 
 function show(a) {
   areas.forEach((x) => { x.panel.hidden = x !== a; });
@@ -59,20 +62,20 @@ function show(a) {
 const partBtn = (part, text, on) =>
   '<button type="button" class="part" data-part="' + part + '" aria-pressed="' + on + '">' + text + '</button>';
 // Übt der offene Bereich gerade (Üben und Spielen)?
-export const playing = () => !!(cur && cur.play && settings.play[cur.id]);
+export const playing = () => !!(shellState.area && shellState.area.play && settings.play[shellState.area.id]);
 
 // Zwischen schreiben (play false) und Üben und Spielen umschalten. Üben beginnt immer auf einer neuen Übungstafel.
 export function setPlay(play) {
-  if (!cur || !cur.play || playing() === play) return;
-  savePop.close();
+  if (!shellState.area || !shellState.area.play || playing() === play) return;
+  shellState.savePop.close();
   stopPlay();
   disarm();
-  if (cur.leave) cur.leave();
-  if (play) settings.play[cur.id] = true; else delete settings.play[cur.id];
+  if (shellState.area.leave) shellState.area.leave();
+  if (play) settings.play[shellState.area.id] = true; else delete settings.play[shellState.area.id];
   persistSettings();
-  if (play) cur.play.enter(); else cur.play.leave();
-  show(cur);
-  cur.enter();
+  if (play) shellState.area.play.enter(); else shellState.area.play.leave();
+  show(shellState.area);
+  shellState.area.enter();
 }
 // Der Knopf „Umbruch“ wird zu „verbinden“, wenn die Markierung am Anfang einer Zeile steht, die man selbst umbrochen
 // hat: Dann nimmt er den Umbruch wieder weg und die Zeile rückt an die vorige an.
@@ -101,79 +104,32 @@ export function handOver(id, data) {
 export function clearPractice() {
   if (!playing()) return;
   stopPlay();
-  cur.play.clear();
-  cur.enter();
-}
-/* ---------- Leiste ein- und ausklappen ---------- */
-// Eingeklappt nutzt die Tafel die ganze Breite und das Bearbeiten ist beendet: Die Bereiche zeichnen dann ohne Markierung
-// und ohne leere Plätze (sideCollapsed() beim Zeichnen abfragen). Ausgeklappt erscheint die Markierung wieder.
-let collapsed = false;
-export const sideCollapsed = () => collapsed;
-// keepPlay: Abspielen läuft weiter (beim Vorführen ändert sich nur, was zu sehen ist)
-function setCollapsed(on, keepPlay) {
-  collapsed = on;
-  if (!keepPlay) stopPlay();
-  savePop.close();
-  document.querySelector('.app').classList.toggle('collapsed', on);
-  el.btnSide.setAttribute('aria-expanded', on ? 'false' : 'true');
-  el.btnSide.title = on ? 'Leiste ausklappen (bearbeiten)' : 'Leiste einklappen (Bearbeiten beenden)';
-  el.btnSide.setAttribute('aria-label', on ? 'Leiste ausklappen' : 'Leiste einklappen');
-  if (cur) cur.enter();
-}
-
-/* ---------- Vorführen ---------- */
-// Blendet Leiste oben und Werkzeuge rechts aus (das Bearbeiten ist beendet wie beim Einklappen), die Tafel füllt den
-// Bildschirm, wo der Browser es kann im Vollbild. Ein Tipp auf denselben Knopf holt alles zurück, wie es vorher war.
-// Wird nicht gemerkt: Nach dem Neuladen ist man wieder im Bearbeiten.
-const PRESENT_ICONS = {
-  on: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  off: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-};
-let present = null; // während des Vorführens: { collapsed } von vorher
-function showPresent() {
-  const on = !!present, b = el.btnPresent;
-  b.innerHTML = on ? PRESENT_ICONS.off : PRESENT_ICONS.on;
-  setPressed(b, on);
-  b.title = on ? 'Vorführen beenden: Leisten wieder einblenden' : 'Vorführen: nur die Tafel, über den ganzen Bildschirm';
-}
-function setPresent(on) {
-  if (!!present === on) return;
-  const before = present;
-  present = on ? { collapsed } : null;
-  document.body.classList.toggle('present', on);
-  showPresent();
-  if (on && !collapsed) setCollapsed(true, true);
-  else if (!on && !before.collapsed) setCollapsed(false, true);
-  else if (cur) cur.enter(); // die Tafel ist größer oder kleiner geworden
-  const d = document;
-  try {
-    if (on && d.fullscreenEnabled && !d.fullscreenElement) d.documentElement.requestFullscreen().catch(() => {});
-    else if (!on && d.fullscreenElement) d.exitFullscreen().catch(() => {});
-  } catch (e) { /* kein Vollbild möglich: dann nur ohne Leisten */ }
+  shellState.area.play.clear();
+  shellState.area.enter();
 }
 
 function setArea(id) {
-  savePop.close();
-  if (cur && cur.id === id) return;
+  shellState.savePop.close();
+  if (shellState.area && shellState.area.id === id) return;
   const next = areas.find((a) => a.id === id);
   if (!next) return;
   stopPlay();
   disarm();
-  if (cur && cur.leave) cur.leave();
-  if (playing()) cur.play.leave();
-  cur = next;
+  if (shellState.area && shellState.area.leave) shellState.area.leave();
+  if (playing()) shellState.area.play.leave();
+  shellState.area = next;
   settings.mode = id;
   persistSettings();
-  if (playing()) cur.play.enter();
-  show(cur);
-  cur.enter();
+  if (playing()) shellState.area.play.enter();
+  show(shellState.area);
+  shellState.area.enter();
 }
 
 /* ---------- Speichern ---------- */
 // Speichert den offenen Bereich unter dem Namen aus input (im Menü oder in der Leiste). Gleicher Name heißt ersetzen,
 // dafür muss btn ein zweites Mal getippt werden. report(text, warn) meldet das Ergebnis.
 export function saveAs(input, btn, report) {
-  const s = cur.songs, n = input.value.trim();
+  const s = shellState.area.songs, n = input.value.trim();
   if (!n) { report('Bitte zuerst einen Namen eingeben.', true); input.focus(); return; }
   const exists = s.store.songExists(n);
   const doSave = () => {
@@ -189,7 +145,7 @@ export function saveAs(input, btn, report) {
 }
 function prepareSavePop() {
   stopPlay();
-  el.saveName.value = cur.songs.name();
+  el.saveName.value = shellState.area.songs.name();
   el.saveHintSide.textContent = '';
   el.saveHintSide.classList.remove('warn');
   el.saveName.focus();
@@ -201,57 +157,19 @@ function leaveSavePop() {
 function saveFromSide() {
   saveAs(el.saveName, el.btnSaveOk, (text, warn) => {
     if (warn) { el.saveHintSide.textContent = text; el.saveHintSide.classList.add('warn'); return; }
-    savePop.close();
+    shellState.savePop.close();
     toast(text);
   });
 }
-export const closeSavePop = () => savePop.close();
+export const closeSavePop = () => shellState.savePop.close();
 
 /* ---------- Start ---------- */
 // Nach dem Anmelden aller Bereiche: Reiter bauen, Knöpfe verdrahten, den zuletzt offenen Bereich zeigen
 export function startShell() {
-  el.sharedTools = el.btnIns.parentNode;
-  el.tabs.innerHTML = areas.map((a) =>
-    '<button type="button" class="tab" role="tab" id="tab-' + a.id + '" data-area="' + a.id + '" aria-controls="' + a.panel.id + '">' + a.label + '</button>'
-  ).join('');
-  el.tabs.style.setProperty('--n', areas.length);
-  el.tabs.addEventListener('click', (e) => {
-    const t = e.target.closest('.tab');
-    if (t) setArea(t.dataset.area);
-  });
-  el.parts.addEventListener('click', (e) => {
-    const p = e.target.closest('.part');
-    if (p) setPlay(p.dataset.part === 'play');
-  });
+  initBar(areas, setArea, setPlay);
+  initPresent();
 
-  for (const k in TOOL_BTNS) {
-    const btn = el[TOOL_BTNS[k]];
-    btn.addEventListener('click', () => { const f = cur.tools && cur.tools[k]; if (f) f(btn); });
-  }
-  el.btnPlay.addEventListener('click', () => togglePlay(cur.plan, cur.mark));
-  // Verdecken: dieselben Knöpfe in der Leiste jedes Bereichs
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest && e.target.closest('[data-cover]');
-    const f = b && cur.cover && cur.cover[b.dataset.cover];
-    if (f) f();
-  });
-  el.btnSide.addEventListener('click', () => setCollapsed(!collapsed));
-  showPresent();
-  el.btnPresent.addEventListener('click', () => setPresent(!present));
-  // Vollbild vom Gerät aus beendet (z. B. Wischgeste): dann auch das Vorführen
-  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) setPresent(false); });
-  // Leiste oben mit den Tafeln ein- und ausklappen (bleibt gemerkt)
-  const setTop = (hide) => {
-    document.querySelector('.app').classList.toggle('notop', hide);
-    el.btnTopShow.hidden = !hide;
-    settings.topHidden = hide;
-    persistSettings();
-  };
-  el.btnTopHide.addEventListener('click', () => setTop(true));
-  el.btnTopShow.addEventListener('click', () => setTop(false));
-  if (settings.topHidden) setTop(true);
-
-  savePop = popover(el.savePop, el.btnSaveSide, { onOpen: prepareSavePop, onClose: leaveSavePop });
+  shellState.savePop = popover(el.savePop, el.btnSaveSide, { onOpen: prepareSavePop, onClose: leaveSavePop });
   el.btnSaveOk.addEventListener('click', saveFromSide);
   onEnter(el.saveName, saveFromSide);
   el.saveName.addEventListener('input', () => { if (isArmed(el.btnSaveOk)) disarm(); });

@@ -7,6 +7,7 @@
 // bleibt nur auf diesem Gerät (rejected), bis wieder Platz ist. Was der Server gar nicht annimmt (refused, z. B. Name
 // zu lang oder Inhalt zu groß), bleibt ebenfalls hier, geht aber nicht von selbst wieder raus.
 import { readJSON, writeJSON, syncStores, onSongChange, setClock } from './store.js';
+import { makeSignal } from './signal.js';
 
 const KEY = 'notentafel.konto.v1';
 // acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id, why? }], limit, offset }
@@ -21,7 +22,7 @@ let lastSync = 0, error = '';
 // Sitzungsgeneration: Abmelden, Anmelden und Neuladen machen laufende Abgleiche ungültig. Eine Antwort, die erst
 // danach ankommt, darf nichts mehr in den Zustand schreiben (siehe run und start).
 let session = 0;
-const listeners = new Set();
+const changes = makeSignal();
 
 const persist = () => writeJSON(KEY, acc);
 
@@ -33,9 +34,10 @@ function setOffset(serverMs) {
   setClock(now);
 }
 
-// f(merged) nach jeder Änderung am Zustand; merged: Lieder vom Server sind hinzugekommen oder haben sich geändert
-export const onCloudChange = (f) => { listeners.add(f); };
-const emit = (merged) => listeners.forEach((f) => f(!!merged));
+// f(merged) nach jeder Änderung am Zustand; merged: Lieder vom Server sind hinzugekommen oder haben sich geändert.
+// Liefert eine Funktion zum Abmelden.
+export const onCloudChange = (f) => changes(f);
+const emit = (merged) => changes.emit(!!merged);
 
 const loggedIn = () => !!acc.token;
 const canSync = () => loggedIn() && !!me && me.features.includes('cloud');
@@ -293,6 +295,9 @@ function mergeAll(songs) {
 /* ---------- Start ---------- */
 // backend: Adresse der API (aus js/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
 let wired = false;
+// initCloud läuft bei jedem Neuladen erneut (auch in den Tests je Gerät). onSongChange meldet im Signal jedes Mal
+// einen weiteren Abonnenten an, darum wird queue nur einmal angemeldet und die Anmeldung gemerkt.
+let unwireQueue = null;
 export async function initCloud(backend) {
   const my = ++session; // ein Neuladen macht laufende Abgleiche ungültig
   base = backend || null;
@@ -300,7 +305,7 @@ export async function initCloud(backend) {
   me = null;
   setClock(now);
   if (!base) { emit(); return; }
-  onSongChange(queue);
+  if (!unwireQueue) unwireQueue = onSongChange(queue);
   if (!wired && typeof window !== 'undefined') {
     wired = true;
     // Wieder online oder zurück in der App: holen, was andere Geräte inzwischen gespeichert haben

@@ -1,6 +1,7 @@
 // Einstellungen. Alle stehen zusammen unter einem Schlüssel; der Kern prüft seine eigenen Felder,
 // ein Bereich ergänzt seine mit useSettings.
 import { readJSON, writeJSON } from './store.js';
+import { makeSignal } from './signal.js';
 
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
@@ -49,10 +50,11 @@ export const persistSettings = () => writeJSON(KEY, settings);
 
 // Tempo setzen, begrenzt und in Fünferschritten wie der Regler (z. B. das eigene Tempo eines bekannten Lieds).
 // watchTempo(f): f wird danach aufgerufen, damit jede Anzeige des Tempos (Menü, Knopf auf der Tafel) mitgeht.
-const tempoWatchers = [];
-export const watchTempo = (f) => { tempoWatchers.push(f); };
+// Liefert eine Funktion zum Abmelden.
+const tempoChanged = makeSignal();
+export const watchTempo = (f) => tempoChanged(f);
 export function setTempo(v) {
   settings.tempo = Math.min(TEMPO.max, Math.max(TEMPO.min, Math.round(v / 5) * 5));
   persistSettings();
-  tempoWatchers.forEach((f) => f());
+  tempoChanged.emit();
 }

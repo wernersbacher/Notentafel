@@ -1,6 +1,7 @@
 // Alles liegt im localStorage des Browsers. Der Kern kennt nur JSON; was in einem Stand steht, weiß der Bereich.
 // Mit Konto gleicht cloud.js die gespeicherten Lieder zusätzlich mit dem Server ab; der localStorage bleibt der
 // Speicher, aus dem die App liest.
+import { makeSignal } from './signal.js';
 
 export function readJSON(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
@@ -33,9 +34,10 @@ export const setClock = (f) => { clock = f; };
 
 // Speicher mit area (Name beim Abgleich: 'mel', 'rhy', 'lied'), damit cloud.js sie alle findet
 export const syncStores = {};
-// Wird nach jedem Speichern, Umbenennen oder Löschen eines Lieds aufgerufen: f(area, id)
-let changed = () => {};
-export const onSongChange = (f) => { changed = f; };
+// Wird nach jedem Speichern, Umbenennen oder Löschen eines Lieds aufgerufen: f(area, id). Liefert eine Funktion
+// zum Abmelden.
+const changed = makeSignal();
+export const onSongChange = (f) => changed(f);
 
 // Gleicher Inhalt, egal in welcher Reihenfolge die Schlüssel stehen (der Server sortiert sie um); id, Name und Zeiten zählen nicht
 const canon = (v) => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
@@ -135,7 +137,7 @@ export function makeStore(keys, { pack, unpack, area, format }) {
     }
     return out;
   }
-  const notify = (ok, id) => { if (ok && area) changed(area, id); return ok; };
+  const notify = (ok, id) => { if (ok && area) changed.emit(area, id); return ok; };
   const store = {
     area,
     format,

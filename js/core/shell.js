@@ -27,15 +27,17 @@ import { accountFull, cloudInfo } from './cloud.js';
 import { shellState } from './shell-state.js';
 import { initBar, TOOL_BTNS } from './shell-bar.js';
 import { initPresent } from './present.js';
+import { makeSignal } from './signal.js';
 // Einklappen und Vorführen liegen in present.js, sind aber wie bisher über shell.js erreichbar
 export { sideCollapsed } from './present.js';
 
 const areas = [];
 
 export const register = (area) => { areas.push(area); };
-// f() nach jedem Zeigen eines Bereichs (Wechsel des Bereichs, schreiben oder üben), z. B. für die Startseite der Spiele
-let afterShow = () => {};
-export const onShow = (f) => { afterShow = f; };
+// f() nach jedem Zeigen eines Bereichs (Wechsel des Bereichs, schreiben oder üben), z. B. für die Startseite der Spiele.
+// Liefert eine Funktion zum Abmelden.
+const shown = makeSignal();
+export const onShow = (f) => shown(f);
 export const current = () => shellState.area;
 
 /* ---------- Bereiche ---------- */
@@ -57,7 +59,7 @@ function show(a) {
   side.dataset.area = a.id;
   side.dataset.part = play ? 'play' : 'write';
   document.querySelector('.app').classList.toggle('practice', play);
-  afterShow();
+  shown.emit();
 }
 const partBtn = (part, text, on) =>
   '<button type="button" class="part" data-part="' + part + '" aria-pressed="' + on + '">' + text + '</button>';

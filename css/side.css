@@ -24,7 +24,6 @@
 .tab[aria-selected="true"] { background: var(--btn); color: var(--fg); box-shadow: 0 1px 4px var(--shadow); }
 .panel { display: flex; flex-direction: column; gap: 10px; }
 .tools { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.tools.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 /* Werkzeugreihe oben: alle sichtbaren Knöpfe in einer Zeile (bei Melodie und Rhythmus mit + Zeile / − Zeile), etwas kleiner */
 /* Jeder Knopf mindestens so breit wie seine Beschriftung, der Rest verteilt sich gleich (mit „zurück“ sind es bis zu
    sieben); passt es auf einer sehr schmalen Leiste nicht, bricht die Reihe um statt Knöpfe abzuschneiden */

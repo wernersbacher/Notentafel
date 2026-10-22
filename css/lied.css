@@ -30,7 +30,8 @@
 
 /* ---------- Leiste des Lieds ---------- */
 .steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
-.steps .btn { padding: 0; min-height: 40px; font: 700 1.2rem/1 var(--font-display); }
+/* Tonnamen auf den Knöpfen in der Schrift der Überschriften der Leiste */
+.steps .btn { padding: 0; min-height: 58px; font: 800 1.65rem/1 var(--font-ui); }
 .meterrow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
 .meterrow .btn { min-height: 48px; padding: 0; }
 .meterrow .mtr { font-size: 1.05rem; }
@@ -39,12 +40,10 @@
 .lyrow input { min-width: 0; min-height: 42px; padding: 0 .6rem; border: 2px solid var(--line); border-radius: 10px; font: 600 1.05rem var(--font-ui); color: var(--fg); background: var(--btn); }
 .lyrow input:disabled { opacity: .5; }
 .lyrow .btn { min-height: 42px; padding: 0 .7rem; font: 800 .85rem var(--font-ui); }
-.keyrow { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 5px; align-items: center; }
-.keyrow .btn { min-height: 42px; font: 800 .95rem var(--font-ui); }
+.keyrow { display: grid; grid-template-columns: 1fr 1.3fr 1fr .85fr .85fr; gap: 4px; align-items: center; }
+.keyrow .btn { min-height: 52px; padding: 0 .15rem; font: 800 .95rem var(--font-ui); }
 .keyrow .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-size: 1.2rem; font-weight: 400; }
-.transrow { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.transrow .btn { min-height: 42px; font: 800 .85rem var(--font-ui); }
-.keyname { text-align: center; font: 800 .95rem var(--font-ui); }
+.keyname { text-align: center; font: 800 .82rem/1.15 var(--font-ui); }
 .tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tools.three .btn { min-height: 52px; }
 .btn .volta { font: 800 1rem/1 var(--font-ui); letter-spacing: .02em; }
@@ -53,14 +52,10 @@
 .btn.tomel { width: 100%; min-height: 46px; gap: .5rem; font: 800 .92rem var(--font-ui); }
 .btn.tomel .dots, .shows .dots { display: inline-flex; gap: 2px; }
 .btn.tomel .dots i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); }
-.shows .btn { min-height: 40px; font: 800 .85rem var(--font-ui); }
-.shows .dots { display: inline-flex; gap: 2px; }
+/* Die Anzeige-Knöpfe sind so hoch wie die übrigen Werkzeugknöpfe in der Leiste */
+.shows .btn { min-height: 58px; font: 800 .85rem var(--font-ui); }
 .shows .dots i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); }
-.tools.accs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.tools.accs .btn { min-height: 44px; }
 .btn .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-weight: 400; }
-.values.v6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.values.v6 .sym { height: 1.9rem; }
 #liedRests .sym, #rests .sym, #restsMel .sym { height: 2.2rem; }
 
 /* ---------- Ziehen auf dem Notenblatt ---------- */
@@ -88,7 +83,7 @@
 
 /* ---------- Leiste des Lieds in Blöcken: einrichten, Noten schreiben, Liedtext, abspielen ---------- */
 .panel .block {
-  gap: 7px; padding: 10px 10px 12px; border-radius: 14px;
+  gap: 7px; padding: 10px 8px 12px; border-radius: 14px;
   background: color-mix(in srgb, var(--fg) 4%, transparent);
 }
 .panel .block > .glabel { margin-top: 1px; }
@@ -109,45 +104,36 @@
 .bhead .chev { flex: none; margin-left: auto; width: 1.25rem; height: 1.25rem; color: var(--muted); transition: transform .18s ease; }
 .block.open .bhead .chev { transform: rotate(180deg); }
 .block.open .bhead .bsum, .block:not(.open) .bhead .bhint { display: none; }
-.panel .block:not(.open) { padding-bottom: 10px; }
+.panel .block:not(.open) { padding-top: 6px; padding-bottom: 6px; }
 .panel .block:not(.open) > :not(.btitle) { display: none !important; }
 .panel .block:not(.open) > .btitle { margin-bottom: 0; }
 
 /* Tonart und Transponieren in einer Reihe */
-.keyrow { grid-template-columns: 1fr 1.3fr 1fr .85fr .85fr; gap: 4px; }
-.keyrow .btn { padding: 0 .15rem; }
 .keyrow .btn.trans { flex-direction: column; gap: 0; line-height: 1; }
 .keyrow .trans .big { font-size: .9rem; }
 .keyrow .trans .small { font-size: .62rem; }
-.keyname { font-size: .82rem; line-height: 1.15; text-align: center; }
 /* Vorzeichen und „alle Töne“ in einer Reihe */
 .tools.accs { grid-template-columns: 1fr 1fr 1fr 1.5fr; }
-.tools.accs .btn.more { width: auto; min-height: 44px; margin: 0; }
+.tools.accs .btn.more { width: auto; min-height: 54px; margin: 0; }
 /* Als Melodie übernehmen: unten neben Speichern, nur im Bereich Lied */
 .side:not([data-area="lied"]) #btnToMelody { display: none; }
 /* Ins Notenblatt: das Gegenstück in Farbnoten und Rhythmus */
 .side[data-area="lied"] #btnToLiedSide { display: none; }
 .actions > .btn.tolied { gap: .4rem; }
 .actions > .btn.tomel { width: auto; min-height: 0; flex-direction: column; gap: .2rem; font: inherit; font-size: .88rem; }
-/* eingeklappte Blöcke flacher */
-.panel .block:not(.open) { padding-top: 6px; padding-bottom: 6px; }
 
 /* ---------- Leiste: mittlerer Teil scrollt, Werkzeugreihe oben und Knöpfe unten bleiben stehen ---------- */
 aside.side { padding: 12px; overflow: hidden; }
 .side > .panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px 4px; }
-.panel .block { padding-left: 8px; padding-right: 8px; }
 .side .actions { margin-top: 0; }
 
 /* ---------- Große Knöpfe zum Schreiben (darf scrollen) ---------- */
 /* Lied */
-.steps { gap: 5px; }
-.steps .btn { min-height: 58px; font-size: 1.65rem; }
 .values.v6 .btn { min-height: 62px; }
+/* gilt für alle drei Bereiche (Lied, Farbnoten, Rhythmus) */
 .values.v6 .sym { height: 2.3rem; }
-.tools.accs .btn, .tools.accs .btn.more { min-height: 54px; }
+.tools.accs .btn { min-height: 54px; }
 .meterrow .btn { min-height: 56px; }
-.keyrow .btn { min-height: 52px; }
-.shows .btn { min-height: 50px; }
 /* Melodie: Farbpunkte 5 pro Reihe (Stammtöne, dann die hohen Töne mit Fis und B), groß */
 .side .palette { display: flex; flex-direction: column; gap: 8px; }
 .side .pal { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
@@ -156,8 +142,6 @@ aside.side { padding: 12px; overflow: hidden; }
 /* Rhythmus */
 #panelRhy .values .btn { min-height: 76px; }
 #panelRhy .values .sym { height: 2.7rem; }
-#panelRhy .tools.five .btn { min-height: 72px; }
-#panelRhy .tools.five .big .ico { width: 1.7rem; height: 1.7rem; }
 #panelRhy .zbtns .btn { min-height: 60px; font-size: 1.7rem; }
 
 /* Hochformat: Werkzeugreihe oben schmaler beschriftet */
@@ -174,8 +158,6 @@ aside.side { padding: 12px; overflow: hidden; }
 /* Lied: Taktstriche automatisch oder von Hand */
 .tools.barmode { grid-template-columns: 1fr 1fr; }
 .tools.barmode .btn { min-height: 50px; font: 800 .9rem var(--font-ui); }
-/* Lied: Tonnamen auf den Knöpfen in der Schrift der Überschriften der Leiste */
-.side .steps .btn { font-family: var(--font-ui); font-weight: 800; }
 @media (orientation: portrait) and (min-width: 601px) {
   .side .steps .btn { font-size: 1.35rem; }
 }

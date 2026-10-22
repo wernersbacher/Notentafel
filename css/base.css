@@ -48,7 +48,6 @@ body {
   border: 2px solid var(--btn-line); border-top: 0; border-radius: 0 0 12px 12px;
   background: var(--btn); color: var(--muted); font: 800 .72rem var(--font-ui); cursor: pointer;
 }
-.topshow[hidden] { display: none; }
 .topshow .ico { width: 1rem; height: 1rem; }
 /* Leiste eingeklappt: die Tafel nimmt die ganze Breite */
 .app.collapsed { grid-template-columns: minmax(0, 1fr); }

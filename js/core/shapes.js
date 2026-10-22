@@ -1,6 +1,6 @@
 // Gemeinsame Formen der Notenschrift für Tafel und Lied.
 
-// Viertelpause, nachgezeichnet aus Viertelpause.png: gefüllter Umriss im Rahmen 64 × 64 (y nach unten).
+// Viertelpause, nachgezeichnet aus assets/Viertelpause.png: gefüllter Umriss im Rahmen 64 × 64 (y nach unten).
 // Sie reicht von y = 0.6 bis 62.4 (Mitte 31.5) und von x = 20 bis 42 (Mitte 31).
 export const QUARTER_REST = 'M24.6 0.6C25.6 0.4 26.6 1 27.4 2.2C28.8 4.4 30 6.6 31.6 8.6C33.4 10.8 35.2 13 37 15.2' +
   'C38.4 16.9 39.7 18.4 40.4 20C39.2 22.2 37.2 24 35.8 26.4C34.4 28.6 33.2 30.6 33.2 33C33.2 35.6 34.6 37.6 36.2 39.6' +

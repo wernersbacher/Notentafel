@@ -1,4 +1,4 @@
-// Zeichen der Notenschrift als SVG, selbst gezeichnet (keine Notenschrift aus dem Netz); der Violinschlüssel kommt aus Violinschlüssel.svg, die Viertelpause aus Viertelpause.png (core/shapes.js).
+// Zeichen der Notenschrift als SVG, selbst gezeichnet (keine Notenschrift aus dem Netz); der Violinschlüssel kommt aus assets/Violinschlüssel.svg, die Viertelpause aus assets/Viertelpause.png (core/shapes.js).
 // Maße in Linienabständen (sp); y wächst nach unten. Linien und Flächen nehmen die Textfarbe (currentColor).
 
 import { f, line, yOf } from '../core/glyphs.js';

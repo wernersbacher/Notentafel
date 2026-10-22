@@ -1,0 +1,32 @@
+/* Farben und Schriften für alle Seiten der Musiktafel: einmal hier, hell und dunkel */
+:root {
+  --play-bg: rgba(255, 196, 0, .42); /* Balken hinter der Stelle, die beim Abspielen klingt */
+  --bg: #dfe5e1;
+  --board: #fbfcfa;
+  --frame: #aab5af;
+  --frame-edge: #8d9993;
+  --panel: #eef2ef;
+  --fg: #18211d;
+  --muted: #586861;
+  --line: #bcc7c1;
+  --btn: #ffffff;
+  --btn-line: #c3cdc7;
+  --ring: #18211d;
+  --danger: #b3261e;
+  --ok: #1e8449; --bad: #c62828; /* Spiele: richtig, falsch */
+  --shadow: rgba(24, 33, 29, .18);
+  /* Playwrite DE Grund ist die Deutschland-Grundschrift für die Grundschule; die Schrift hat nur Stärken bis 400, fett wird vom Browser verstärkt */
+  --font-display: "Playwrite DE Grund", "Andika", "Trebuchet MS", system-ui, sans-serif;
+  --font-ui: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --play-bg: rgba(255, 196, 0, .3);
+    --bg: #101614; --board: #1c2925; --frame: #46524d; --frame-edge: #33403a;
+    --panel: #17201d; --fg: #eaf1ed; --muted: #9aaba3; --line: #41504a;
+    --btn: #22302b; --btn-line: #3a4943; --ring: #eaf1ed; --danger: #ff8f86; --ok: #2e9d5b; --bad: #e0483e;
+    --shadow: rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}

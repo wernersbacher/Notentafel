@@ -1,12 +1,4 @@
 /* Impressum und Datenschutz: einfache Textseiten in den Farben der App */
-:root {
-  --bg: #dfe5e1; --panel: #fbfcfa; --fg: #18211d; --muted: #586861; --line: #bcc7c1;
-  --font-ui: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #101614; --panel: #1c2925; --fg: #eaf1ed; --muted: #9aaba3; --line: #41504a; color-scheme: dark; }
-}
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 var(--font-ui); padding: 24px 16px; }
 main { max-width: 46rem; margin: 0 auto; background: var(--panel); border-radius: 16px; padding: 24px clamp(16px, 4vw, 36px); }

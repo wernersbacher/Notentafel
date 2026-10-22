@@ -93,6 +93,19 @@ test('Umbruch: neues System; mitten im Takt mit unsichtbarem Strich', () => {
   assert.match(ms[2].body, /^<print new-system="yes"\/>/);
 });
 
+test('Mehrere Umbrüche ohne Taktstrich: fortlaufende Buchstaben statt doppelter Taktnummern', () => {
+  // Ohne Taktart und Strich trennen nur die Umbrüche; die Stücke gehören alle zu Takt 1
+  const xml = songToMusicXML(song([n('c1', 2, { brk: 1 }), n('d1', 2, { brk: 1 }), n('e1', 2)], ''));
+  wellFormed(xml);
+  const ms = measures(xml);
+  assert.deepEqual(ms.map((m) => /number="([^"]+)"/.exec(m.attrs)[1]), ['1', '1a', '1b']);
+  assert.match(ms[1].attrs, /implicit="yes"/);
+  assert.match(ms[2].attrs, /implicit="yes"/);
+  // Ein richtiger Taktstrich fängt wieder mit der nächsten Zahl an
+  const more = songToMusicXML(song([n('c1', 2, { brk: 1 }), n('d1', 2, { brk: 1 }), n('e1', 2, { bar: 1 }), n('f1', 2)], ''), { autoBar: false });
+  assert.deepEqual(measures(more).map((m) => /number="([^"]+)"/.exec(m.attrs)[1]), ['1', '1a', '1b', '2']);
+});
+
 test('Haltebogen nur zwischen gleichen Tönen', () => {
   const xml = songToMusicXML(song([n('g1', 2, { tie: 1 }), n('g1', 2), n('a1', 2, { tie: 1 }), n('h1', 2)]));
   const ns = notes(xml);

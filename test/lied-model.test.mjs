@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, drawnBars, cleanSong, parsePitch,
-  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody
+  pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody,
+  canTie, tieValidAt, toggleTieAt, changePitch, swapEvents
 } from '../js/lied/model.js';
 
 const n = (p, v = 4, x = {}) => ({ p, v, ...x });
@@ -113,11 +114,12 @@ test('cleanSong: prüft und säubert', () => {
   assert.deepEqual(cleanSong({ meter: '6/8', ev: [] }), { meter: '6/8', pickup: 0, key: 0, ev: [] });
   assert.equal(cleanSong({ key: 2, ev: [] }).key, 2);
   assert.equal(cleanSong({ key: 9, ev: [] }).key, 0);
-  // Auftakt nur, wenn er kürzer als ein Takt ist; Haltebogen nur an Noten
+  // Auftakt nur, wenn er kürzer als ein Takt ist; Haltebogen nur an Noten und nur, wenn er klingen würde
   assert.equal(cleanSong({ meter: '3/4', pickup: 8, ev: [] }).pickup, 8);
   assert.equal(cleanSong({ meter: '3/4', pickup: 24, ev: [] }).pickup, 0);
   assert.equal(cleanSong({ meter: '', pickup: 8, ev: [] }).pickup, 0);
-  assert.deepEqual(cleanSong({ ev: [n('c1', 4, { tie: 1 }), r(4, { tie: 1 })] }).ev, [{ p: 'c1', v: 4, tie: 1 }, { v: 4 }]);
+  assert.deepEqual(cleanSong({ ev: [n('c1', 4, { tie: 1 }), r(4, { tie: 1 })] }).ev, [{ p: 'c1', v: 4 }, { v: 4 }]);
+  assert.deepEqual(cleanSong({ ev: [n('c1', 4, { tie: 1 }), n('c1', 4), n('d1', 4, { tie: 1 }), n('e1', 4)] }).ev.map((e) => !!e.tie), [true, false, false, false]);
   assert.deepEqual(parsePitch('h3'), { step: 6, oct: 3 });
   assert.equal(parsePitch('c4'), null);
 });
@@ -222,6 +224,79 @@ test('songToMelody: Noten werden Farbpunkte, Takte bleiben in einer Zeile', () =
   // Zehn Schläge pro Zeile: drei 4/4-Takte verteilen sich auf zwei Zeilen (2 + 1)
   const long = { meter: '4/4', pickup: 0, key: 0, ev: Array.from({ length: 12 }, () => n('g1')) };
   assert.deepEqual(songToMelody(long, true).rows.map((r) => r.length), [8, 4]);
+});
+
+test('Haltebogen: gültig nur mit Folgenote gleicher Tonhöhe und gleichen Vorzeichens', () => {
+  assert.equal(canTie(n('c1'), n('c1')), true);
+  assert.equal(canTie(n('c1'), n('d1')), false);
+  assert.equal(canTie(n('c1'), r()), false);
+  assert.equal(canTie(r(), n('c1')), false);
+  assert.equal(canTie(n('f1', 4, { acc: 1 }), n('f1')), false);
+  assert.equal(canTie(n('f1', 4, { acc: 1 }), n('f1', 4, { acc: 1 })), true);
+  assert.equal(tieValidAt([n('c1', 4, { tie: 1 }), n('c1')], 0), true);
+  assert.equal(tieValidAt([n('c1', 4, { tie: 1 }), n('d1')], 0), false);
+  assert.equal(tieValidAt([n('c1'), n('c1')], 0), false);
+});
+
+test('toggleTieAt: einen Bogen nur setzen, wenn er klingen würde', () => {
+  // Letzte Note, Pause danach und ein anders klingender Folgeton bekommen keinen Bogen
+  const last = [n('c1')];
+  assert.equal(toggleTieAt(last, 0), false);
+  assert.equal(last[0].tie, undefined);
+  const rest = [n('c1'), r()];
+  assert.equal(toggleTieAt(rest, 0), false);
+  assert.equal(rest[0].tie, undefined);
+  const other = [n('c1'), n('d1')];
+  assert.equal(toggleTieAt(other, 0), false);
+  assert.equal(other[0].tie, undefined);
+  // Gleicher Ton: setzen und wieder wegnehmen
+  const ok = [n('c1'), n('c1')];
+  assert.equal(toggleTieAt(ok, 0), true);
+  assert.equal(ok[0].tie, 1);
+  assert.equal(toggleTieAt(ok, 0), true);
+  assert.equal(ok[0].tie, undefined);
+  // Ein (alter) ungültiger Bogen lässt sich wegnehmen
+  const stale = [n('c1', 4, { tie: 1 }), n('d1')];
+  assert.equal(tieValidAt(stale, 0), false);
+  assert.equal(toggleTieAt(stale, 0), true);
+  assert.equal(stale[0].tie, undefined);
+});
+
+test('changePitch: Ziehen lässt keinen ungültigen Bogen zurück', () => {
+  const ev = [n('c1', 4, { tie: 1 }), n('c1'), n('e1', 4, { tie: 1 }), n('e1')];
+  // Die Note davor war an c' gebunden; d' passt nicht mehr
+  assert.equal(changePitch(ev, 1, 'd1'), true);
+  assert.equal(ev[1].p, 'd1');
+  assert.equal(ev[0].tie, undefined);
+  // Der Bogen der gezogenen Note selbst fällt weg, wenn die Folgenote anders klingt
+  const own = [n('c1'), n('e1', 4, { tie: 1 }), n('e1')];
+  assert.equal(changePitch(own, 1, 'f1'), true);
+  assert.equal(own[1].tie, undefined);
+  // Ziehen auf denselben Ton ändert nichts
+  assert.equal(changePitch(own, 0, 'c1'), false);
+});
+
+test('swapEvents: Tauschen lässt keinen ungültigen Bogen zurück, Marken bleiben', () => {
+  const ev = [n('c1', 4, { tie: 1 }), n('c1'), n('d1')];
+  assert.equal(swapEvents(ev, 1, 2), true);
+  assert.deepEqual(ev.map((e) => e.p), ['c1', 'd1', 'c1']);
+  assert.equal(ev[0].tie, undefined); // c' vor d' klingt nicht zusammen
+  // Bogen an der tauschenden Note selbst wird geprüft
+  const own = [n('c1'), n('e1', 4, { tie: 1 }), n('e1')];
+  swapEvents(own, 0, 1);
+  assert.deepEqual(own.map((e) => e.p), ['e1', 'c1', 'e1']);
+  assert.equal(own[0].tie, undefined);
+  // Taktstrich und Umbruch bleiben an ihrer Stelle; der Bogen der getauschten Note passt danach nicht mehr
+  const marks = [n('c1', 4, { bar: 1, brk: 1 }), n('d1', 4, { tie: 1 }), n('d1')];
+  swapEvents(marks, 0, 1);
+  assert.deepEqual(marks[0], { p: 'd1', v: 4, bar: 1, brk: 1 });
+  assert.deepEqual(marks[1], { p: 'c1', v: 4 });
+});
+
+test('Abspielen: ein ungültiger Bogen verlängert nichts, die Note schlägt neu an', () => {
+  // Bogen steht vor einer Pause bzw. vor einem anderen Ton
+  const p = playPlan({ meter: '4/4', ev: [n('c1', 4, { tie: 1 }), r(), n('c1'), n('d1', 4, { tie: 1 }), n('e1')] });
+  assert.deepEqual(p.items.map((s) => s.sound), ['piano', '', 'piano', 'piano', 'piano']);
 });
 
 test('cleanSong: Tuch (cv, cf) und ?-Karten (q) bleiben erhalten, Unsinn fällt weg', () => {

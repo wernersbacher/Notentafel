@@ -147,6 +147,14 @@ test('Taktstriche: automatisch nach der Taktart', () => {
   assert.deepEqual(systems[0].bars.map((b) => b.k), [1, 2]);
 });
 
+test('Haltebögen: nur ein gültiger Bogen wird gezeichnet', () => {
+  // Künstlich gesetzte Bögen, die nicht klingen würden: vor einem anderen Ton, vor einer Pause und am Ende
+  const { systems, at } = layout(song([n('c1', 4, { tie: 1 }), n('d1', 4, { tie: 1 }), r(4), n('e1', 4, { tie: 1 }), n('e1', 4)]));
+  const ties = systems.flatMap((s) => s.ties);
+  assert.equal(ties.length, 1);
+  assert.deepEqual(ties[0], { x1: at[3].x + 0.5, x2: at[4].x - 0.5, pos: at[3].pos, down: at[3].stem.up });
+});
+
 test('Platz über und unter dem System wächst mit hohen und tiefen Tönen', () => {
   const lo = layout(song([n('a0')])).systems[0], hi = layout(song([n('c3', 8)])).systems[0], mid = layout(song([n('h1')])).systems[0];
   assert.equal(mid.top, 2.5);

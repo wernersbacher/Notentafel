@@ -1,6 +1,6 @@
 // Notensatz: berechnet aus dem Lied die Lage aller Zeichen, ohne DOM. Gezeichnet wird in sheet.js.
 // Waagerecht zählt alles in Linienabständen (sp), senkrecht in Plätzen (pos, halbe Linienabstände, unterste Linie = 0).
-import { isNote, ticks, staffPos, drawnBars, gridStarts, countsOf, shownAccidentals, badMeasures } from './model.js';
+import { isNote, ticks, staffPos, drawnBars, gridStarts, countsOf, shownAccidentals, badMeasures, tieValidAt } from './model.js';
 
 export const G = {
   left: 0.8,   // Rand vor dem Schlüssel
@@ -356,18 +356,17 @@ function addVoltas(ev, systems, bars, at, barX) {
   systems.forEach((s) => { if (s.voltas.length) s.top += 1.8; });
 }
 
-// Haltebögen: von einer Note mit tie zur nächsten. Sie liegen gegenüber dem Hals (bei Hälsen nach oben unter den Köpfen).
-// Steht die nächste Note in der nächsten Zeile, läuft der Bogen bis zum Zeilenende und beginnt dort neu vor der Note;
-// ohne nächste Note ist er ein kurzer Ansatz.
+// Haltebögen: von einer Note mit tie zur nächsten. Gezeichnet wird nur, was auch klingt (tieValidAt, dieselbe Prüfung
+// wie beim Setzen und Abspielen). Sie liegen gegenüber dem Hals (bei Hälsen nach oben unter den Köpfen). Steht die
+// nächste Note in der nächsten Zeile, läuft der Bogen bis zum Zeilenende und beginnt dort neu vor der Note.
 function addTies(ev, systems, at) {
   const sysOf = (i) => systems.find((s) => i < s.end);
   systems.forEach((s) => { s.ties = []; });
   ev.forEach((e, i) => {
-    if (!e.tie) return;
+    if (!tieValidAt(ev, i)) return;
     const a = at[i], b = at[i + 1], s = sysOf(i);
     const down = a.stem ? a.stem.up : a.pos < 4;
-    if (!b) { s.ties.push({ x1: a.x + 0.5, x2: a.x + 2.2, pos: a.pos, down }); return; }
-    const t = sysOf(i + 1), pos = b.rest ? a.pos : b.pos;
+    const t = sysOf(i + 1), pos = b.pos;
     if (t === s) { s.ties.push({ x1: a.x + 0.5, x2: b.x - 0.5, pos: a.pos, down }); return; }
     s.ties.push({ x1: a.x + 0.5, x2: null, pos: a.pos, down }); // x2 null: bis zum Zeilenende
     t.ties.push({ x1: Math.max(b.x - 2.6, G.left + G.clef + 0.6), x2: b.x - 0.5, pos, down });

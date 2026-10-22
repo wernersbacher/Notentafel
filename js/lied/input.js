@@ -65,7 +65,8 @@ function onEnd(e, cancel) {
   if (!d.mode) return; // ein Tipp: das erledigt der Klick
   justDragged = true;
   setTimeout(() => { justDragged = false; }, 0);
-  if (d.mode === 'pitch') act.endDrag();
+  // Abbruch (pointercancel): Die Tonhöhe kommt auf den Stand vor dem Ziehen zurück, getauscht wird nicht
+  if (d.mode === 'pitch') { if (cancel) act.cancelDrag(); else act.endDrag(); }
   else if (d.mode === 'move' && !cancel && d.over != null) act.swap(d.i, d.over);
   else render();
 }

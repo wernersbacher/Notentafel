@@ -66,7 +66,7 @@ export function songToMusicXML(song, { name = '', autoBar = true, tempo = 0 } = 
   const ev = song.ev, bars = drawnBars(song, autoBar);
   const shown = shownAccidentals(song, autoBar), beams = beamsOf(song, bars);
   const measures = measuresOf(song, bars);
-  let body = '', num = song.pickup ? 0 : 1, lastLy = '';
+  let body = '', num = song.pickup ? 0 : 1, part = 0, lastLy = '';
 
   // Wiederholungen: ‖: steht links im Takt nach dem Strich, :‖ rechts; die 1. Klammer über dem Takt vor einem :‖ mit
   // volta, die 2. über dem Takt danach
@@ -74,9 +74,12 @@ export function songToMusicXML(song, { name = '', autoBar = true, tempo = 0 } = 
   const endsRep = (m) => m.bar === 3 || m.bar === 5;
   const volta1 = (m) => endsRep(m) && ev[m.end - 1].volta;
   measures.forEach((m, k) => {
-    // Der Auftakt ist ein unvollständiger Takt mit der Nummer 0; ebenso ein Stück, das ein Umbruch ohne Strich abtrennt
+    // Der Auftakt ist ein unvollständiger Takt mit der Nummer 0; ebenso ein Stück, das ein Umbruch ohne Strich abtrennt.
+    // Mehrere Umbrüche hintereinander bekommen fortlaufende Buchstaben (1a, 1b …), sonst gäbe es doppelte Nummern.
     const implicit = (k === 0 && song.pickup > 0) || (k > 0 && !measures[k - 1].bar);
-    const n = implicit && k > 0 ? (num - 1) + 'a' : String(num++);
+    let n;
+    if (implicit && k > 0) n = (num - 1) + String.fromCharCode(97 + part++);
+    else { n = String(num++); part = 0; }
     body += '<measure number="' + n + '"' + (implicit ? ' implicit="yes"' : '') + '>';
     if (k > 0 && measures[k - 1].brk) body += '<print new-system="yes"/>';
     const v1 = volta1(m), v2 = k > 0 && volta1(measures[k - 1]);

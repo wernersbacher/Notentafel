@@ -356,8 +356,60 @@ export function countsOf(song) {
     return out;
   });
 }
+// Können zwei aufeinanderfolgende Ereignisse überhaupt durch einen Haltebogen verbunden werden? Nur dann klingt die
+// zweite Note als Fortsetzung der ersten: Beide müssen Noten sein und gleich hoch klingen (Tonhöhe und Vorzeichen gleich).
+export const canTie = (a, b) => !!(isNote(a) && isNote(b) && a.p === b.p && (a.acc ?? null) === (b.acc ?? null));
 // Hängt Note e mit einem Haltebogen an prev (gleiche Tonhöhe samt Vorzeichen)? Nur dann klingt sie nicht neu.
-export const tiedFrom = (prev, e) => !!(prev && prev.tie && isNote(e) && prev.p === e.p && (prev.acc ?? null) === (e.acc ?? null));
+export const tiedFrom = (prev, e) => !!(prev && prev.tie && canTie(prev, e));
+// Gültiger Haltebogen an Ereignis i (zum Zeichnen): dieselbe Prüfung wie beim Abspielen, nur mit Index.
+export const tieValidAt = (ev, i) => tiedFrom(ev[i], ev[i + 1]);
+
+/* ---------- Änderungen, die Haltebögen betreffen ---------- */
+// Haltebogen an Note i an- oder abschalten. Gesetzt wird er nur, wenn er gültig wäre (sonst stünde ein Bogen da, der
+// nicht klingt); ein vorhandener fällt immer weg. Liefert, ob sich etwas geändert hat.
+export function toggleTieAt(ev, i) {
+  const a = ev[i];
+  if (!isNote(a)) return false;
+  if (a.tie) { delete a.tie; return true; }
+  if (!canTie(a, ev[i + 1])) return false;
+  a.tie = 1;
+  return true;
+}
+// Bogen an Note i und an der Note davor entfernen, wenn er nach einer Änderung nicht mehr passt
+function pruneTies(ev, i) {
+  for (const k of [i - 1, i]) if (ev[k] && ev[k].tie && !canTie(ev[k], ev[k + 1])) delete ev[k].tie;
+}
+// Tonhöhe der Note i ändern (beim Ziehen): Das Vorzeichen gehörte zum alten Ton und fällt weg, ebenso Haltebögen, die
+// danach nicht mehr passen. Liefert false, wenn sich nichts ändert.
+export function changePitch(ev, i, p) {
+  const e = ev[i];
+  if (!isNote(e) || e.p === p) return false;
+  e.p = p;
+  delete e.acc;
+  pruneTies(ev, i);
+  return true;
+}
+// Takt- und Schlussstrich, Umbruch, Tuch und Einklappen bleiben stehen, wenn das Zeichen ersetzt wird
+export function keepMarks(prev, o) {
+  if (prev.bar) o.bar = prev.bar;
+  if (prev.brk) o.brk = 1;
+  if (prev.cv) o.cv = 1;
+  if (prev.cf) o.cf = 1;
+  if (prev.fd) o.fd = 1;
+  return o;
+}
+// Zwei Ereignisse tauschen (Ziehen zur Seite); Takte und Umbrüche bleiben an ihrer Stelle. Haltebögen, die danach
+// nicht mehr passen, fallen weg.
+export function swapEvents(ev, i, j) {
+  const a = ev[i], b = ev[j];
+  if (!a || !b || i === j) return false;
+  const content = (e) => { const o = { ...e }; delete o.bar; delete o.brk; return o; };
+  ev[i] = keepMarks(a, content(b));
+  ev[j] = keepMarks(b, content(a));
+  pruneTies(ev, i);
+  pruneTies(ev, j);
+  return true;
+}
 
 /* ---------- Gespeicherte Stände prüfen ---------- */
 function cleanEvent(e) {
@@ -388,11 +440,14 @@ function cleanEvent(e) {
 export function cleanSong(raw) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.ev) || raw.ev.length > MAX_EV) return null;
   const meter = METERS.includes(raw.meter) ? raw.meter : '';
+  const ev = raw.ev.map(cleanEvent).filter(Boolean);
+  // Haltebögen ohne passende Folgenote bleiben nicht stehen: Sie würden gezeichnet, aber nicht klingen
+  ev.forEach((e, i) => { if (e.tie && !canTie(e, ev[i + 1])) delete e.tie; });
   return {
     meter,
     pickup: pickupsFor(meter).includes(raw.pickup) ? raw.pickup : 0,
     key: Number.isInteger(raw.key) && raw.key >= KEY_MIN && raw.key <= KEY_MAX ? raw.key : 0,
-    ev: raw.ev.map(cleanEvent).filter(Boolean)
+    ev
   };
 }
 

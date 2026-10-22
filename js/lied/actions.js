@@ -2,7 +2,7 @@
 import { toast } from '../core/ui.js';
 import { stopPlay } from '../core/player.js';
 import { handOver } from '../core/shell.js';
-import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, hasLyrics, KEY_MIN, KEY_MAX } from './model.js';
+import { MAX_EV, emptySong, MAX_LY, isNote, canDot, pickupsFor, splitAtBar, splitAll, cleanSong, songToMelody, transpose, keyName, tiedFrom, hasLyrics, KEY_MIN, KEY_MAX, canTie, toggleTieAt, changePitch, swapEvents, keepMarks } from './model.js';
 import { L, opts, persistOpts, persistSong, snap, restore, stashSong } from './state.js';
 import { render, renderSheet, commit, lineStartAfter, scrollTop, lastLineStart } from './render.js';
 
@@ -13,15 +13,6 @@ function fresh(o) {
   if (o.v) return o;
   o.v = L.pen.v;
   if (L.pen.dot && canDot(L.pen.v)) o.dot = 1;
-  return o;
-}
-// Takt- und Schlussstrich, Umbruch, Tuch und Einklappen bleiben stehen, wenn das Zeichen ersetzt wird
-function keepMarks(prev, o) {
-  if (prev.bar) o.bar = prev.bar;
-  if (prev.brk) o.brk = 1;
-  if (prev.cv) o.cv = 1;
-  if (prev.cf) o.cf = 1;
-  if (prev.fd) o.fd = 1;
   return o;
 }
 function full() {
@@ -124,13 +115,15 @@ export function setAcc(a) {
   for (let k = i; k <= j; k++) { if (off) delete ev()[k].acc; else ev()[k].acc = a; }
   commit();
 }
-// Haltebogen von der Note zur nächsten an- oder abschalten (zwei gleiche Töne werden ein langer)
+// Haltebogen von der Note zur nächsten an- oder abschalten (zwei gleiche Töne werden ein langer). Gesetzt wird er nur,
+// wenn die Folgenote vorhanden ist und gleich klingt; sonst passiert nichts.
 export function toggleTie() {
   const t = target();
   if (t == null) return;
-  snap();
   const e = ev()[t];
-  if (e.tie) delete e.tie; else e.tie = 1;
+  if (!e.tie && !canTie(e, ev()[t + 1])) return; // würde nicht klingen
+  snap();
+  toggleTieAt(ev(), t);
   commit();
 }
 
@@ -142,8 +135,7 @@ export function dragPitch(i, p) {
   const e = ev()[i];
   if (!isNote(e) || e.p === p) return;
   if (!dragged) { snap(); dragged = true; }
-  e.p = p;
-  delete e.acc;
+  changePitch(ev(), i, p); // räumt auch Haltebögen ab, die zum neuen Ton nicht mehr passen
   L.last = null;
   render();
 }
@@ -152,14 +144,20 @@ export function endDrag() {
   dragged = false;
   commit();
 }
+// Ziehen abgebrochen (pointercancel: der Browser übernimmt die Geste, z. B. zum Scrollen): Der beim ersten Schritt
+// gemerkte Stand kommt zurück, statt dass die ungewollte Tonänderung gespeichert wird.
+export function cancelDrag() {
+  if (!dragged) return;
+  dragged = false;
+  restore();
+  render();
+}
 // Tauscht zwei Zeichen (Ziehen zur Seite). Takt-, Schlussstrich und Umbruch bleiben an ihrer Stelle.
 export function swap(i, j) {
   const a = ev()[i], b = ev()[j];
   if (!a || !b || i === j) return;
   snap();
-  const content = (e) => { const o = { ...e }; delete o.bar; delete o.brk; return o; };
-  ev()[i] = keepMarks(a, content(b));
-  ev()[j] = keepMarks(b, content(a));
+  swapEvents(ev(), i, j); // lässt keine Haltebögen stehen, die nach dem Tausch nicht mehr passen
   L.sel = j;
   L.last = null;
   commit();

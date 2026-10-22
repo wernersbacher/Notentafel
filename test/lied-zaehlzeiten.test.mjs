@@ -44,14 +44,13 @@ test('Layout: Zählzeiten stehen unter dem Kopf bzw. an ihrer Stelle danach', ()
   assert.equal(layout({ meter: '4/4', ev: [n('c1')] }).at[0].counts, undefined);
 });
 
-test('Layout: Haltebögen in einer Zeile, über den Umbruch und am Ende', () => {
-  const { systems, at } = layout({ meter: '4/4', ev: [n('g1', 4, { tie: 1 }), n('g1', 4, { tie: 1, brk: 1 }), n('g1', 4, { tie: 1 })] });
+test('Layout: Haltebögen in einer Zeile und über den Umbruch', () => {
+  const { systems, at } = layout({ meter: '4/4', ev: [n('g1', 4, { tie: 1 }), n('g1', 4, { tie: 1, brk: 1 }), n('g1', 4)] });
   const [a, b] = systems[0].ties;
   assert.deepEqual(a, { x1: at[0].x + 0.5, x2: at[1].x - 0.5, pos: 2, down: true });
   assert.equal(b.x2, null); // bis zum Zeilenende
-  assert.equal(systems[1].ties.length, 2); // Fortsetzung vor der Note und kurzer Ansatz am Ende
+  assert.equal(systems[1].ties.length, 1); // Fortsetzung vor der Note
   assert.equal(systems[1].ties[0].x2, at[2].x - 0.5);
-  assert.ok(systems[1].ties[1].x2 > at[2].x);
   // Hälse nach unten: Bogen oben
   assert.equal(layout({ meter: '', ev: [n('d2', 4, { tie: 1 }), n('d2')] }).systems[0].ties[0].down, false);
 });

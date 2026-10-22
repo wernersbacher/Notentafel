@@ -10,6 +10,10 @@ const ids = [
   'accountSec', 'accOut', 'accIn', 'accEmail', 'accPass', 'btnLogin', 'btnRegister', 'accHint', 'accWho', 'accState', 'btnLogout', 'btnDelAcc',
   'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut', 'uiScale', 'uiRange', 'uiNum', 'uiMinus', 'uiPlus'
 ];
-export const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+// Zu einer Liste von ids das Objekt id → Element; das Einlesen steht so nur einmal da
+export function byId(ids) {
+  return Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+}
+export const el = byId(ids);
 // Der Rahmen um die Tafel, in dem jeder Bereich seine eigene Fläche hat
 el.board = document.querySelector('.board');

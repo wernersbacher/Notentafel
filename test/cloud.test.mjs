@@ -29,11 +29,25 @@ const LIMIT = 50;
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
 function resetServer() {
-  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], since: [], limit: LIMIT, meFails: false };
+  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], since: [], changes: [], limit: LIMIT, meFails: false };
 }
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
   : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, resort(v[k])])) : v;
+// Warum der Server eine Änderung nicht annimmt (null: gültig), wie refusal in pb_hooks/songs.pb.js
+const AREAS = ['mel', 'rhy', 'lied'], MAX_DATA = 200000;
+function refusal(c) {
+  if (!c || typeof c !== 'object' || !AREAS.includes(c.area)) return 'area';
+  if (typeof c.id !== 'string' || !/^[0-9a-z]{9,40}$/.test(c.id)) return 'id';
+  if (!Number.isInteger(c.changedAt)) return 'changedAt';
+  if (c.deleted) return null;
+  if (typeof c.name !== 'string' || !c.name.trim() || c.name.length > 40) return 'name';
+  if (!Number.isInteger(c.savedAt)) return 'savedAt';
+  if (typeof c.format !== 'string' || c.format.length > 20) return 'format';
+  if (!c.data || typeof c.data !== 'object') return 'data';
+  if (JSON.stringify(c.data).length > MAX_DATA) return 'size';
+  return null;
+}
 function handle(method, path, auth, body) {
   const uid = server.tokens.get(auth);
   if (method === 'POST' && path === '/collections/users/records') {
@@ -66,10 +80,12 @@ function handle(method, path, auth, body) {
     return [204, null];
   }
   if (method === 'POST' && path === '/songs/sync') {
-    const now = ++server.tick, nowMs = serverNow(), rejected = [];
+    const now = ++server.tick, nowMs = serverNow(), rejected = [], refused = [];
     const clamp = (t) => Math.min(t, nowMs);
     let active = server.songs.filter((s) => s.user === uid && !s.deleted).length;
     for (const c of body.changes) {
+      const reason = refusal(c);
+      if (reason) { refused.push(c && c.id !== undefined ? { id: String(c.id), reason } : { reason }); continue; }
       const changedAt = clamp(c.changedAt);
       let rec = server.songs.find((s) => s.user === uid && s.id === c.id);
       if (rec && rec.changedAt >= changedAt) continue;
@@ -85,7 +101,7 @@ function handle(method, path, auth, body) {
     const since = body.since === '' ? 0 : +body.since;
     const songs = server.songs.filter((s) => s.user === uid && s.updated >= since)
       .map(({ area, id, format, name, savedAt, changedAt, deleted, data }) => ({ area, id, format, name, savedAt, changedAt, deleted, data: deleted ? null : data }));
-    return [200, { now: String(now), nowMs, limit: server.limit, rejected, songs: JSON.parse(JSON.stringify(songs)) }];
+    return [200, { now: String(now), nowMs, limit: server.limit, rejected, refused, songs: JSON.parse(JSON.stringify(songs)) }];
   }
   return [404, { message: 'Not found' }];
 }
@@ -94,7 +110,7 @@ globalThis.fetch = async (url, opts = {}) => {
   const path = url.replace(/^\/api/, '');
   server.calls.push(path);
   const body = opts.body ? JSON.parse(opts.body) : null;
-  if (path === '/songs/sync') server.since.push(body.since); // welchen since der Abgleich mitgeschickt hat
+  if (path === '/songs/sync') { server.since.push(body.since); server.changes.push(body.changes); } // was der Abgleich mitgeschickt hat
   const [status, data] = handle(opts.method || 'GET', path, opts.headers && opts.headers.Authorization, body);
   return { ok: status < 300, status, json: async () => data };
 };
@@ -664,6 +680,39 @@ test('erstes Anmelden mit mehr Liedern, als ins Konto passen: die übrigen bleib
   // auf dem Tablet kommen nur die an, die ins Konto gepasst haben
   await use('tablet');
   assert.equal(T.loadSongs('mel').length, LIMIT);
+});
+
+/* ---------- Der Server nimmt ein Lied nicht an (refused) ---------- */
+// Ein Lied, wie es nur über eine kaputte Sicherungsdatei hereinkäme: Name über 40 Zeichen
+const longName = (id, name, savedAt) => ({ id, name, savedAt, changedAt: savedAt, rows: [[{ n: 'C', h: '' }]], lines: [] });
+
+test('ungültiges Lied: bleibt lokal, wird als solches gemeldet und nicht noch einmal geschickt', async () => {
+  await use('tablet');
+  mem.set('notentafel.songs.v1', JSON.stringify([longName('aaaaaaaab', 'x'.repeat(45), 5)]));
+  assert.equal(await C.register('a@b.de', 'geheim123'), '');
+  assert.deepEqual(account(), []);
+  assert.equal(C.localOnly('mel', 'aaaaaaaab'), true);
+  assert.equal(C.cloudInfo().invalid, 1);
+  assert.equal(C.cloudInfo().rejected, 0);
+  const n = server.changes.length;
+  await C.sync();
+  assert.deepEqual(server.changes[n], []); // nicht wieder als pending vorgemerkt
+  assert.equal(C.cloudInfo().invalid, 1);
+  assert.equal(C.localOnly('mel', 'aaaaaaaab'), true);
+});
+
+test('eine ungültige Änderung hält die übrigen nicht auf', async () => {
+  await use('tablet');
+  mem.set('notentafel.songs.v1', JSON.stringify([
+    longName('aaaaaaaab', 'x'.repeat(45), 5),
+    longName('aaaaaaaac', 'Gut', 6)
+  ]));
+  assert.equal(await C.register('a@b.de', 'geheim123'), '');
+  assert.deepEqual(account(), ['Gut']); // das gültige Lied ist trotzdem im Konto
+  assert.equal(C.localOnly('mel', 'aaaaaaaab'), true);
+  assert.equal(C.localOnly('mel', 'aaaaaaaac'), false);
+  assert.equal(C.cloudInfo().invalid, 1);
+  assert.equal(C.cloudInfo().rejected, 0);
 });
 
 /* ---------- Geräte mit falsch gehender Uhr ---------- */

@@ -183,8 +183,9 @@ export function makeStore(keys, { pack, unpack, area, format }) {
     // Lieder aus einer exportierten Datei (wie rawSongs) dazulegen: wie beim Abgleich je id der neuere Stand,
     // gleiche Namen werden aufgelöst. Liefert, wie viele Lieder dazugekommen oder neuer geworden sind.
     importSongs(list) {
+      // Name höchstens 40 Zeichen wie im Eingabefeld (Grenze des Servers), sonst nähme er das Lied nicht an
       const remote = list.filter((s) => s && validId(s.id) && typeof s.name === 'string')
-        .map((s) => ({ id: s.id, name: s.name, savedAt: s.savedAt || 0, changedAt: changedAt(s), data: s }));
+        .map((s) => ({ id: s.id, name: s.name.slice(0, 40), savedAt: s.savedAt || 0, changedAt: changedAt(s), data: s }));
       const before = new Map(readSongs().map((s) => [s.id, changedAt(s)]));
       const m = mergeSongs(readSongs(), remote, unpack, clock());
       if (!m || !writeJSON(keys.songs, m.list)) return 0;

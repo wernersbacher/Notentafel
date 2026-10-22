@@ -127,6 +127,13 @@ test('merge: Schreibfehler meldet failed, die gespeicherte Liste bleibt unverän
   assert.deepEqual(S.stores.mel.merge([]), { merged: false, touched: [], failed: false });
 });
 
+test('importSongs: ein zu langer Name wird auf 40 Zeichen gekürzt', () => {
+  const name = 'ä'.repeat(45);
+  const file = [{ id: 'a00000001', name, savedAt: 5, changedAt: 5, rows: [[{ n: 'C', h: '' }]], lines: [] }];
+  assert.equal(S.stores.mel.importSongs(file), 1);
+  assert.equal(S.loadSongs('mel')[0].name, 'ä'.repeat(40));
+});
+
 test('setWriteError: wird bei fehlgeschlagenem Speichern aufgerufen, ein werfender Listener bricht nichts', () => {
   const seen = [];
   setWriteError((e) => { seen.push(e); });

@@ -4,11 +4,14 @@
 // cloud.js (pending) und schickt es kurz danach an den Server; die Antwort bringt mit, was sich auf anderen Geräten
 // geändert hat. Ein Lied erkennt der Abgleich an seiner id (siehe store.js); je Lied gewinnt der neuere Stand.
 // Ins Konto passen nur so viele Lieder, wie der Server sagt (limit); was darüber hinausgeht, lehnt er ab, und es
-// bleibt nur auf diesem Gerät (rejected), bis wieder Platz ist.
+// bleibt nur auf diesem Gerät (rejected), bis wieder Platz ist. Was der Server gar nicht annimmt (refused, z. B. Name
+// zu lang oder Inhalt zu groß), bleibt ebenfalls hier, geht aber nicht von selbst wieder raus.
 import { readJSON, writeJSON, syncStores, onSongChange, setClock } from './store.js';
 
 const KEY = 'notentafel.konto.v1';
-// acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id }], limit, offset };
+// acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id, why? }], limit, offset }
+// rejected: Lieder nur auf diesem Gerät; why 'refused' = nimmt der Server nicht an, sonst (auch alte Einträge ohne why)
+// über dem Limit und rücken beim Löschen nach.
 // ohne Anmeldung steht nur offset darin
 let acc = {};
 let base = null; // Adresse der API, null ohne Backend
@@ -43,11 +46,16 @@ function limit() {
 const localCount = () => Object.values(syncStores).reduce((n, s) => n + s.songIds().length, 0);
 // Lieder im Konto: alle hier, außer denen, die nicht mehr hineingepasst haben
 const accountCount = () => localCount() - (acc.rejected || []).length;
-export const cloudInfo = () => ({
-  available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, busy: !!running, lastSync, error,
-  limit: canSync() ? limit() : null, rejected: canSync() ? (acc.rejected || []).length : 0
-});
-// Liegt das Lied nur auf diesem Gerät, weil es nicht mehr ins Konto gepasst hat?
+export const cloudInfo = () => {
+  const rej = canSync() ? acc.rejected || [] : [];
+  return {
+    available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, busy: !!running, lastSync, error,
+    limit: canSync() ? limit() : null,
+    rejected: rej.filter((r) => r.why !== 'refused').length, // über dem Limit: rücken beim Löschen nach
+    invalid: rej.filter((r) => r.why === 'refused').length // nimmt der Server nicht an
+  };
+};
+// Liegt das Lied nur auf diesem Gerät (weil es nicht mehr ins Konto gepasst hat oder der Server es nicht annimmt)?
 export const localOnly = (area, id) => canSync() && (acc.rejected || []).some((r) => r.area === area && r.id === id);
 // Ist das Konto voll? Dann landet ein neues Lied nur auf diesem Gerät.
 export const accountFull = () => canSync() && limit() !== null && accountCount() >= limit();
@@ -120,6 +128,8 @@ async function start(auth) {
   if (my !== session) return;
   setOffset(res.nowMs);
   acc.limit = res.limit;
+  // Diese Anfrage schickt keine Änderungen, es kann also nichts abgelehnt werden; dieselbe Auswertung wie in run()
+  keepLocal([], res);
   const { failed } = mergeAll(res.songs);
   const t = now();
   for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, t));
@@ -167,10 +177,21 @@ function mark(area, id, at) {
   acc.pending = (acc.pending || []).filter((p) => p.area !== area || p.id !== id);
   acc.pending.push({ area, id, at });
 }
-// Lieder, die nicht ins Konto gepasst haben, beim nächsten Abgleich noch einmal versuchen (es ist Platz geworden)
+// Lieder, die nicht ins Konto gepasst haben, beim nächsten Abgleich noch einmal versuchen (es ist Platz geworden).
+// Ungültige (refused) nicht: die nimmt der Server nicht an, bis das Lied geändert oder gelöscht wird.
 function retryRejected() {
-  (acc.rejected || []).forEach((r) => mark(r.area, r.id, now()));
-  acc.rejected = [];
+  (acc.rejected || []).filter((r) => r.why !== 'refused').forEach((r) => mark(r.area, r.id, now()));
+  acc.rejected = (acc.rejected || []).filter((r) => r.why === 'refused');
+}
+// Was der Server abgelehnt hat, ist nicht im Konto und bleibt hier: rejected (über dem Limit, rückt nach) und
+// refused (nimmt er nicht an, z. B. Name zu lang oder Inhalt zu groß). sent ist, was mit dieser Anfrage rausging.
+function keepLocal(sent, res) {
+  const over = new Set(res.rejected || []);
+  const bad = new Set((res.refused || []).map((r) => r.id));
+  acc.pending = (acc.pending || []).filter((p) => !sent.includes(p));
+  acc.rejected = (acc.rejected || [])
+    .concat(sent.filter((p) => over.has(p.id)).map(({ area, id }) => ({ area, id })))
+    .concat(sent.filter((p) => bad.has(p.id)).map(({ area, id }) => ({ area, id, why: 'refused' })));
 }
 function queue(area, id) {
   if (!loggedIn()) return;
@@ -230,13 +251,11 @@ async function run() {
   if (my !== session) return;
   setOffset(res.nowMs);
   acc.limit = res.limit;
-  acc.pending = acc.pending.filter((p) => !sent.includes(p));
-  const no = new Set(res.rejected || []);
-  acc.rejected = (acc.rejected || []).concat(sent.filter((p) => no.has(p.id)).map(({ area, id }) => ({ area, id })));
+  keepLocal(sent, res);
   const before = localCount();
   const { merged, failed } = mergeAll(res.songs);
-  // Woanders gelöscht: Platz für Lieder, die nur hier liegen
-  if (localCount() < before && acc.rejected.length) { retryRejected(); again = true; }
+  // Woanders gelöscht: Platz für Lieder, die nur hier liegen (ungültige rücken nicht nach)
+  if (localCount() < before && (acc.rejected || []).some((r) => r.why !== 'refused')) { retryRejected(); again = true; }
   // Was es hier nicht mehr gibt oder was der Server inzwischen hat, liegt nicht mehr nur hier
   const there = new Set(res.songs.filter((s) => !s.deleted).map((s) => s.id));
   acc.rejected = [...new Map(acc.rejected.map((r) => [r.area + '/' + r.id, r])).values()]

@@ -15,6 +15,9 @@ let base = null; // Adresse der API, null ohne Backend
 let me = null; // Antwort von /api/me: { tier, features, limits, … }
 let running = null, again = false, timer = null;
 let lastSync = 0, error = '';
+// Sitzungsgeneration: Abmelden, Anmelden und Neuladen machen laufende Abgleiche ungültig. Eine Antwort, die erst
+// danach ankommt, darf nichts mehr in den Zustand schreiben (siehe run und start).
+let session = 0;
 const listeners = new Set();
 
 const persist = () => writeJSON(KEY, acc);
@@ -75,8 +78,11 @@ function message(err) {
 }
 // Token abgelaufen oder Konto weg: abmelden, die Lieder auf dem Gerät bleiben
 function dropLogin() {
+  session++; // laufende Abgleiche dürfen nichts mehr schreiben
   acc = { offset: acc.offset };
   me = null;
+  error = '';
+  lastSync = 0;
   persist();
 }
 
@@ -85,11 +91,33 @@ function dropLogin() {
 // schon im selben oder einem neueren Stand hat, lässt er liegen; verschiedene Lieder mit gleichem Namen bleiben beide
 // (siehe resolveNames in store.js).
 async function start(auth) {
+  const my = ++session; // ein Abgleich für ein anderes Konto ist ab jetzt ungültig
   acc = { token: auth.token, user: { id: auth.record.id, email: auth.record.email }, since: '', pending: [], rejected: [], offset: acc.offset };
+  me = null;
+  // Das Token wird erst gespeichert, wenn der Server das Konto bestätigt. Sonst bliebe nach einem Fehler ein
+  // gültiges Token gespeichert, die App zeigte aber kein Konto (und nach dem Neuladen wäre man still angemeldet).
+  try {
+    me = await api('/me');
+  } catch (err) {
+    if (my !== session) return;
+    dropLogin();
+    emit();
+    throw err;
+  }
+  if (my !== session) return;
   persist();
-  me = await api('/me');
   if (!canSync()) { emit(); return; }
-  const res = await api('/songs/sync', { method: 'POST', body: { since: '', changes: [] } });
+  let res;
+  try {
+    res = await api('/songs/sync', { method: 'POST', body: { since: '', changes: [] } });
+  } catch (err) {
+    if (my !== session) return;
+    // Angemeldet bleiben; was hier liegt, geht beim nächsten Abgleich mit
+    error = message(err);
+    emit();
+    return;
+  }
+  if (my !== session) return;
   setOffset(res.nowMs);
   acc.limit = res.limit;
   mergeAll(res.songs);
@@ -160,15 +188,18 @@ export function sync() {
   return running;
 }
 async function run() {
+  const my = session; // nach jedem await: wurde inzwischen ab- oder umgemeldet?
   try {
     // Beim Start offline gewesen: Stufe jetzt holen
     if (!me) me = await api('/me');
   } catch (err) {
+    if (my !== session) return;
     if (err.status === 401) dropLogin();
-    error = message(err);
+    else error = message(err);
     emit();
     return;
   }
+  if (my !== session) return;
   if (!canSync()) return;
   const sent = acc.pending.slice();
   // Was gerade da ist, nicht was beim Speichern da war: ein inzwischen gelöschtes Lied geht als gelöscht raus
@@ -182,11 +213,13 @@ async function run() {
   try {
     res = await api('/songs/sync', { method: 'POST', body: { since: acc.since || '', changes } });
   } catch (err) {
+    if (my !== session) return;
     if (err.status === 401) dropLogin();
-    error = message(err);
+    else error = message(err);
     emit();
     return;
   }
+  if (my !== session) return;
   setOffset(res.nowMs);
   acc.limit = res.limit;
   acc.pending = acc.pending.filter((p) => !sent.includes(p));
@@ -224,6 +257,7 @@ function mergeAll(songs) {
 // backend: Adresse der API (aus js/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
 let wired = false;
 export async function initCloud(backend) {
+  const my = ++session; // ein Neuladen macht laufende Abgleiche ungültig
   base = backend || null;
   acc = readJSON(KEY) || {};
   me = null;
@@ -239,14 +273,19 @@ export async function initCloud(backend) {
   if (loggedIn()) {
     try {
       const auth = await api('/collections/users/auth-refresh', { method: 'POST' });
+      if (my !== session) return;
       acc.token = auth.token;
       persist();
       me = await api('/me');
+      if (my !== session) return;
     } catch (err) {
-      if (err.status === 401 || err.status === 404) dropLogin();
-      else error = message(err); // offline: angemeldet bleiben, später noch einmal
+      if (my !== session) return;
+      // Token abgelaufen oder Konto weg: abmelden, die Ansicht sofort aktualisieren
+      if (err.status === 401 || err.status === 404) { dropLogin(); emit(); return; }
+      error = message(err); // offline: angemeldet bleiben, später noch einmal
     }
   }
+  if (my !== session) return;
   emit();
   await sync();
 }

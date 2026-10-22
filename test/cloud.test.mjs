@@ -28,7 +28,7 @@ const LIMIT = 50;
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
 function resetServer() {
-  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], limit: LIMIT };
+  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], limit: LIMIT, meFails: false };
 }
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
@@ -53,7 +53,10 @@ function handle(method, path, auth, body) {
     const u = [...server.users.values()].find((x) => x.id === uid);
     return [200, { token: auth, record: { id: u.id, email: u.email } }];
   }
-  if (method === 'GET' && path === '/me') return [200, { tier: 'pro', features: ['lied', 'cloud'], limits: {} }];
+  if (method === 'GET' && path === '/me') {
+    if (server.meFails) return [500, { message: 'Kaputt' }]; // Anmeldung gelingt, das Konto ist aber nicht erreichbar
+    return [200, { tier: 'pro', features: ['lied', 'cloud'], limits: {} }];
+  }
   if (method === 'DELETE' && path.startsWith('/collections/users/records/')) {
     const id = path.split('/').pop();
     for (const [k, u] of server.users) if (u.id === id) server.users.delete(k);
@@ -481,6 +484,99 @@ test('Konto löschen: Lieder im Konto weg, auf dem Gerät bleiben sie', async ()
   assert.equal(C.cloudInfo().user, null);
   assert.deepEqual(server.songs, []);
   assert.deepEqual(mel(), { Lied: 'C' });
+});
+
+/* ---------- Abmelden und Ummelden während eines laufenden Abgleichs ---------- */
+// Liefert die Antwort des nächsten POST /songs/sync erst nach release() aus (die Anfrage selbst geht sofort raus)
+function holdSync() {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  let armed = true;
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    const res = await realFetch(url, opts);
+    if (armed && url.endsWith('/songs/sync')) { armed = false; await gate; }
+    return res;
+  };
+  return { release, restore: () => { globalThis.fetch = realFetch; } };
+}
+
+test('Abmelden während eines laufenden Abgleichs: die Antwort danach ändert nichts mehr und wirft nicht', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.sync();
+  const hold = holdSync();
+  try {
+    const p = C.sync();
+    C.logout();
+    hold.release();
+    await p; // vor dem Fix: TypeError, weil acc kein pending mehr hat
+  } finally {
+    hold.restore();
+  }
+  assert.equal(C.cloudInfo().user, null);
+  assert.deepEqual(mel(), { Lied: 'C' });
+  assert.deepEqual(server.songs.filter((s) => !s.deleted).map((s) => s.name), ['Lied']);
+});
+
+test('Ummelden während eines laufenden Abgleichs: die Antwort des alten Kontos landet nicht im neuen Zustand', async () => {
+  await use('laptop');
+  await C.register('b@b.de', 'geheim123'); // Konto B (u0)
+  C.logout();
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123'); // Konto A (u1)
+  T.saveSong('mel', [tune('C')], 'Hier');
+  await C.sync();
+  // Ein Lied, das nur im Konto A liegt (von einem anderen Gerät) – es steht in der nächsten Antwort
+  server.songs.push({ user: 'u1', id: newId(), area: 'mel', format: 'tafel.1', name: 'Nur A', savedAt: 1, changedAt: 1, deleted: false, data: { rows: [[{ n: 'G', h: '' }]], lines: [] }, updated: ++server.tick });
+  const hold = holdSync();
+  try {
+    const p = C.sync(); // Antwort kommt erst nach der Ummeldung an
+    C.logout();
+    const loginP = C.login('b@b.de', 'geheim123');
+    hold.release();
+    assert.equal(await loginP, '');
+    await p;
+  } finally {
+    hold.restore();
+  }
+  assert.equal(C.cloudInfo().user.email, 'b@b.de');
+  assert.deepEqual(mel(), { Hier: 'C' }); // „Nur A“ gehört zu A und bleibt draußen
+  assert.deepEqual(server.songs.filter((s) => s.user === 'u0' && !s.deleted).map((s) => s.name), ['Hier']);
+});
+
+/* ---------- Anmelden und Abmelden mit halbem Erfolg ---------- */
+test('halbe Anmeldung: scheitert /me, bleibt kein Token gespeichert und die Ansicht zeigt das Abmelden', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  C.logout();
+  let emitted = 0;
+  C.onCloudChange(() => emitted++);
+  server.meFails = true;
+  assert.equal(await C.login('a@b.de', 'geheim123'), 'Das hat nicht geklappt (500).');
+  assert.equal(C.cloudInfo().user, null);
+  assert.ok(emitted > 0); // die Kontoansicht wird sofort aktualisiert
+  assert.equal(mem.get('notentafel.konto.v1').includes('token'), false);
+
+  server.meFails = false;
+  assert.equal(await C.login('a@b.de', 'geheim123'), '');
+  assert.equal(C.cloudInfo().user.email, 'a@b.de');
+  assert.ok(mem.get('notentafel.konto.v1').includes('token'));
+});
+
+test('Abmelden nach einem Abgleichfehler räumt error und lastSync auf', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.register('a@b.de', 'geheim123');
+  assert.ok(C.cloudInfo().lastSync > 0);
+  server.online = false;
+  T.saveSong('mel', [tune('D')], 'Neu');
+  await C.sync();
+  assert.equal(C.cloudInfo().error, 'Keine Verbindung zum Server.');
+  C.logout();
+  assert.equal(C.cloudInfo().error, '');
+  assert.equal(C.cloudInfo().lastSync, 0);
 });
 
 test('Bereiche bleiben getrennt: gleicher Name in Melodie und Rhythmus', async () => {

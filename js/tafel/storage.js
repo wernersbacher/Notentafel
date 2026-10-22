@@ -25,15 +25,7 @@ export const stores = { mel: makeStore(KEYS.mel, { pack, unpack, area: 'mel', fo
 export const loadBoard = (mode) => stores[mode].loadBoard();
 export const saveBoard = (mode, rows, name) => stores[mode].saveBoard(rows, name);
 
-/* ---------- Gespeicherte Lieder, neueste zuerst ---------- */
-export const loadSongs = (mode) => stores[mode].loadSongs();
-export const songExists = (mode, name) => stores[mode].songExists(name);
-export const saveSong = (mode, rows, name) => stores[mode].saveSong(rows, name);
-export const deleteSong = (mode, id) => stores[mode].deleteSong(id);
-export const renameSong = (mode, id, name) => stores[mode].renameSong(id, name);
-
 /* ---------- Autosave: die Tafel, die zuletzt durch Laden oder „Alles löschen“ ersetzt wurde ---------- */
-export const loadAuto = (mode) => stores[mode].loadAuto();
 export const saveAuto = (mode, rows, name) => stores[mode].saveAuto(rows, name);
 
 /* ---------- Einstellungen der Tafel (im gemeinsamen Speicherplatz der Einstellungen) ---------- */

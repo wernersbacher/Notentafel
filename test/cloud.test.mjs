@@ -106,8 +106,8 @@ async function use(name, deviceSkew = 0) {
 const tune = (...ids) => { const r = ids.map((n) => ({ n, h: '' })); r.line = false; r.meter = ''; return r; };
 const notes = (s) => s.rows.flat().map((x) => x.n).join(' ');
 // Gespeicherte Melodien als { Name: 'Töne' }
-const mel = () => Object.fromEntries(T.loadSongs('mel').map((s) => [s.name, notes(s)]));
-const idOf = (name) => T.loadSongs('mel').find((s) => s.name === name).id;
+const mel = () => Object.fromEntries(T.stores.mel.loadSongs().map((s) => [s.name, notes(s)]));
+const idOf = (name) => T.stores.mel.loadSongs().find((s) => s.name === name).id;
 // Namen der Lieder im Konto, ohne gelöschte
 const account = (area = 'mel') => server.songs.filter((s) => s.area === area && !s.deleted).map((s) => s.name).sort();
 
@@ -174,7 +174,7 @@ test('ohne Backend passiert nichts, gespeichert wird wie immer', async () => {
   mem = fakeStorage();
   globalThis.localStorage = mem;
   await C.initCloud(null);
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   assert.deepEqual(server.calls, []);
   assert.deepEqual(mel(), { Lied: 'C' });
@@ -196,8 +196,8 @@ test('Konto anlegen: Fehler werden verständlich gemeldet', async () => {
 
 test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf einem neuen Gerät an, mit derselben id', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C', 'D')], 'Kuckuck');
-  T.saveSong('rhy', [tune('D')], 'Rhythmus');
+  T.stores.mel.saveSong([tune('C', 'D')], 'Kuckuck');
+  T.stores.rhy.saveSong([tune('D')], 'Rhythmus');
   L.store.saveSong({ meter: '4/4', pickup: 0, key: 0, ev: [] }, 'Notenblatt');
   const id = idOf('Kuckuck');
   assert.equal(await C.register('a@b.de', 'geheim123'), '');
@@ -210,7 +210,7 @@ test('Lieder vom Gerät landen beim ersten Anmelden im Konto und kommen auf eine
   assert.equal(await C.login('a@b.de', 'geheim123'), '');
   assert.deepEqual(mel(), { Kuckuck: 'C D' });
   assert.equal(idOf('Kuckuck'), id);
-  assert.deepEqual(T.loadSongs('rhy').map((s) => s.name), ['Rhythmus']);
+  assert.deepEqual(T.stores.rhy.loadSongs().map((s) => s.name), ['Rhythmus']);
   assert.deepEqual(L.store.loadSongs().map((s) => s.name), ['Notenblatt']);
 });
 
@@ -226,13 +226,13 @@ test('Lieder von vor den ids: bekommen beim Anmelden eine und gehen ins Konto', 
 
 test('erstes Anmelden: gleicher Name, anderer Inhalt hier und im Konto – beide bleiben, das ältere behält den Namen', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied'); // zuerst angelegt
+  T.stores.mel.saveSong([tune('C')], 'Lied'); // zuerst angelegt
   await C.register('a@b.de', 'geheim123');
   C.logout();
 
   await use('laptop');
-  T.saveSong('mel', [tune('G', 'A')], 'LIED');
-  T.saveSong('mel', [tune('E')], 'Nur hier');
+  T.stores.mel.saveSong([tune('G', 'A')], 'LIED');
+  T.stores.mel.saveSong([tune('E')], 'Nur hier');
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C', 'LIED (2)': 'G A', 'Nur hier': 'E' });
   assert.deepEqual(account(), ['LIED (2)', 'Lied', 'Nur hier']);
@@ -244,10 +244,10 @@ test('erstes Anmelden: gleicher Name, anderer Inhalt hier und im Konto – beide
 
 test('erstes Anmelden: gleicher Name mit gleichem Inhalt wird nicht verdoppelt', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C', 'D')], 'Lied');
+  T.stores.mel.saveSong([tune('C', 'D')], 'Lied');
   await C.register('a@b.de', 'geheim123');
   await use('laptop');
-  T.saveSong('mel', [tune('C', 'D')], 'Lied');
+  T.stores.mel.saveSong([tune('C', 'D')], 'Lied');
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C D' });
   assert.deepEqual(account(), ['Lied']);
@@ -255,12 +255,12 @@ test('erstes Anmelden: gleicher Name mit gleichem Inhalt wird nicht verdoppelt',
 
 test('Umbenennen kommt auf dem anderen Gerät an: dasselbe Lied, kein Doppel', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Alt');
+  T.stores.mel.saveSong([tune('C')], 'Alt');
   await C.register('a@b.de', 'geheim123');
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
   const id = idOf('Alt');
-  assert.equal(T.renameSong('mel', id, 'Neu'), 'ok');
+  assert.equal(T.stores.mel.renameSong(id, 'Neu'), 'ok');
   await C.sync();
   await use('tablet');
   assert.deepEqual(mel(), { Neu: 'C' });
@@ -270,15 +270,15 @@ test('Umbenennen kommt auf dem anderen Gerät an: dasselbe Lied, kein Doppel', a
 
 test('umbenannt auf einem, offline geändert auf dem anderen: der neuere Stand des Lieds gewinnt ganz', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Alt');
+  T.stores.mel.saveSong([tune('C')], 'Alt');
   await C.register('a@b.de', 'geheim123');
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
   server.online = false;
   await use('tablet');
-  T.renameSong('mel', idOf('Alt'), 'Neu'); // früher
+  T.stores.mel.renameSong(idOf('Alt'), 'Neu'); // früher
   await use('laptop');
-  T.saveSong('mel', [tune('D')], 'Alt'); // später
+  T.stores.mel.saveSong([tune('D')], 'Alt'); // später
   server.online = true;
   await use('tablet');
   await use('laptop');
@@ -293,19 +293,19 @@ test('Ändern, Löschen und neu Speichern kommen auf dem anderen Gerät an', asy
   await C.login('a@b.de', 'geheim123');
 
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Eins');
-  T.saveSong('mel', [tune('D')], 'Zwei');
+  T.stores.mel.saveSong([tune('C')], 'Eins');
+  T.stores.mel.saveSong([tune('D')], 'Zwei');
   await C.sync();
   await use('laptop');
   assert.deepEqual(mel(), { Eins: 'C', Zwei: 'D' });
 
-  T.saveSong('mel', [tune('E', 'F')], 'eins'); // ersetzt (ohne Groß/klein)
-  T.deleteSong('mel', idOf('Zwei'));
+  T.stores.mel.saveSong([tune('E', 'F')], 'eins'); // ersetzt (ohne Groß/klein)
+  T.stores.mel.deleteSong(idOf('Zwei'));
   await C.sync();
   await use('tablet');
   assert.deepEqual(mel(), { eins: 'E F' });
 
-  T.saveSong('mel', [tune('A')], 'Zwei'); // nach dem Löschen wieder gespeichert: ein neues Lied
+  T.stores.mel.saveSong([tune('A')], 'Zwei'); // nach dem Löschen wieder gespeichert: ein neues Lied
   await C.sync();
   await use('laptop');
   assert.deepEqual(mel(), { eins: 'E F', Zwei: 'A' });
@@ -314,10 +314,10 @@ test('Ändern, Löschen und neu Speichern kommen auf dem anderen Gerät an', asy
 test('Löschen ist auf dem Server nur ein Vermerk: Name und Inhalt bleiben zum Wiederherstellen', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C', 'D')], 'Weg');
+  T.stores.mel.saveSong([tune('C', 'D')], 'Weg');
   await C.sync();
   const id = idOf('Weg');
-  T.deleteSong('mel', id);
+  T.stores.mel.deleteSong(id);
   await C.sync();
   const rec = server.songs.find((s) => s.id === id);
   assert.equal(rec.deleted, true);
@@ -329,9 +329,9 @@ test('Löschen ist auf dem Server nur ein Vermerk: Name und Inhalt bleiben zum W
 test('Wiederherstellen auf dem Server (deleted aus) bringt das Lied auf die Geräte zurück', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Weg');
+  T.stores.mel.saveSong([tune('C')], 'Weg');
   await C.sync();
-  T.deleteSong('mel', idOf('Weg'));
+  T.stores.mel.deleteSong(idOf('Weg'));
   await C.sync();
   const rec = server.songs.find((s) => s.name === 'Weg');
   Object.assign(rec, { deleted: false, changedAt: Date.now(), updated: ++server.tick });
@@ -342,16 +342,16 @@ test('Wiederherstellen auf dem Server (deleted aus) bringt das Lied auf die Ger�
 test('beide Geräte ändern dasselbe Lied: der neuere Stand gewinnt, egal wer zuerst abgleicht', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
 
   server.online = false; // beide offline
   await use('tablet');
-  T.saveSong('mel', [tune('D')], 'Lied'); // älter
+  T.stores.mel.saveSong([tune('D')], 'Lied'); // älter
   await use('laptop');
-  T.saveSong('mel', [tune('E')], 'Lied'); // neuer
+  T.stores.mel.saveSong([tune('E')], 'Lied'); // neuer
   server.online = true;
   await C.sync(); // der neuere zuerst
   await use('tablet'); // der ältere danach: wird vom Server abgelehnt und durch den neueren ersetzt
@@ -363,16 +363,16 @@ test('beide Geräte ändern dasselbe Lied: der neuere Stand gewinnt, egal wer zu
 test('Löschen auf einem Gerät nimmt ein danach geändertes Lied auf dem anderen nicht mit', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
 
   server.online = false;
   await use('tablet');
-  T.deleteSong('mel', idOf('Lied')); // früher
+  T.stores.mel.deleteSong(idOf('Lied')); // früher
   await use('laptop');
-  T.saveSong('mel', [tune('G')], 'Lied'); // später
+  T.stores.mel.saveSong([tune('G')], 'Lied'); // später
   server.online = true;
   await use('tablet'); // das Löschen kommt zuerst an
   assert.deepEqual(mel(), {});
@@ -388,7 +388,7 @@ test('offline gespeichert: bleibt vorgemerkt, auch über ein Neuladen, und geht 
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
   server.online = false;
-  T.saveSong('mel', [tune('C')], 'Offline');
+  T.stores.mel.saveSong([tune('C')], 'Offline');
   await C.sync();
   assert.equal(C.cloudInfo().error, 'Keine Verbindung zum Server.');
   assert.deepEqual(account(), []);
@@ -403,11 +403,11 @@ test('offline gespeichert: bleibt vorgemerkt, auch über ein Neuladen, und geht 
 test('abgemeldet: Lieder bleiben auf dem Gerät, gespeichert wird nur lokal, beim Anmelden kommt alles nach', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Vorher');
+  T.stores.mel.saveSong([tune('C')], 'Vorher');
   await C.sync();
   C.logout();
   assert.deepEqual(mel(), { Vorher: 'C' });
-  T.saveSong('mel', [tune('D')], 'Ohne Konto');
+  T.stores.mel.saveSong([tune('D')], 'Ohne Konto');
   await C.sync();
   assert.deepEqual(account(), ['Vorher']);
   await C.login('a@b.de', 'geheim123');
@@ -417,13 +417,13 @@ test('abgemeldet: Lieder bleiben auf dem Gerät, gespeichert wird nur lokal, bei
 
 test('wieder angemeldet: woanders geänderter Stand ersetzt den alten hier, ohne Doppel', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.register('a@b.de', 'geheim123');
   C.logout();
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('D')], 'Lied');
-  T.renameSong('mel', idOf('Lied'), 'Lied neu');
+  T.stores.mel.saveSong([tune('D')], 'Lied');
+  T.stores.mel.renameSong(idOf('Lied'), 'Lied neu');
   await C.sync();
   await use('tablet');
   await C.login('a@b.de', 'geheim123');
@@ -433,12 +433,12 @@ test('wieder angemeldet: woanders geänderter Stand ersetzt den alten hier, ohne
 
 test('wieder angemeldet: woanders gelöscht, hier unverändert – ist auch hier weg', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.register('a@b.de', 'geheim123');
   C.logout();
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
-  T.deleteSong('mel', idOf('Lied'));
+  T.stores.mel.deleteSong(idOf('Lied'));
   await C.sync();
   await use('tablet');
   await C.login('a@b.de', 'geheim123');
@@ -449,13 +449,13 @@ test('wieder angemeldet: woanders gelöscht, hier unverändert – ist auch hier
 test('anderes Konto auf demselben Gerät: Lieder beider Konten bleiben, gleiche Namen werden aufgelöst', async () => {
   await use('tablet');
   await C.register('b@b.de', 'geheim123');
-  T.saveSong('mel', [tune('G')], 'Lied'); // zuerst angelegt
+  T.stores.mel.saveSong([tune('G')], 'Lied'); // zuerst angelegt
   await C.sync();
   C.logout();
   await use('laptop');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('D')], 'Lied');
+  T.stores.mel.saveSong([tune('D')], 'Lied');
   await C.sync();
   await use('tablet');
   await C.login('a@b.de', 'geheim123');
@@ -467,7 +467,7 @@ test('anderes Konto auf demselben Gerät: Lieder beider Konten bleiben, gleiche 
 test('ungültiges Token: abgemeldet, die Lieder bleiben', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   server.tokens.clear();
   await use('tablet');
@@ -478,7 +478,7 @@ test('ungültiges Token: abgemeldet, die Lieder bleiben', async () => {
 test('Konto löschen: Lieder im Konto weg, auf dem Gerät bleiben sie', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   assert.equal(await C.deleteAccount(), '');
   assert.equal(C.cloudInfo().user, null);
@@ -504,7 +504,7 @@ function holdSync() {
 test('Abmelden während eines laufenden Abgleichs: die Antwort danach ändert nichts mehr und wirft nicht', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   const hold = holdSync();
   try {
@@ -526,7 +526,7 @@ test('Ummelden während eines laufenden Abgleichs: die Antwort des alten Kontos 
   C.logout();
   await use('tablet');
   await C.register('a@b.de', 'geheim123'); // Konto A (u1)
-  T.saveSong('mel', [tune('C')], 'Hier');
+  T.stores.mel.saveSong([tune('C')], 'Hier');
   await C.sync();
   // Ein Lied, das nur im Konto A liegt (von einem anderen Gerät) – es steht in der nächsten Antwort
   server.songs.push({ user: 'u1', id: newId(), area: 'mel', format: 'tafel.1', name: 'Nur A', savedAt: 1, changedAt: 1, deleted: false, data: { rows: [[{ n: 'G', h: '' }]], lines: [] }, updated: ++server.tick });
@@ -567,11 +567,11 @@ test('halbe Anmeldung: scheitert /me, bleibt kein Token gespeichert und die Ansi
 
 test('Abmelden nach einem Abgleichfehler räumt error und lastSync auf', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.register('a@b.de', 'geheim123');
   assert.ok(C.cloudInfo().lastSync > 0);
   server.online = false;
-  T.saveSong('mel', [tune('D')], 'Neu');
+  T.stores.mel.saveSong([tune('D')], 'Neu');
   await C.sync();
   assert.equal(C.cloudInfo().error, 'Keine Verbindung zum Server.');
   C.logout();
@@ -582,18 +582,18 @@ test('Abmelden nach einem Abgleichfehler räumt error und lastSync auf', async (
 test('Bereiche bleiben getrennt: gleicher Name in Melodie und Rhythmus', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
-  T.saveSong('rhy', [tune('D')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
+  T.stores.rhy.saveSong([tune('D')], 'Lied');
   await C.sync();
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C' });
-  assert.deepEqual(T.loadSongs('rhy').map(notes), ['D']);
+  assert.deepEqual(T.stores.rhy.loadSongs().map(notes), ['D']);
 });
 
 /* ---------- Grenze: höchstens LIMIT Lieder im Konto ---------- */
 // n Melodien „Lied 0“ … auf dem gerade benutzten Gerät
-const fill = (n, prefix = 'Lied ') => { for (let i = 0; i < n; i++) T.saveSong('mel', [tune('C')], prefix + i); };
+const fill = (n, prefix = 'Lied ') => { for (let i = 0; i < n; i++) T.stores.mel.saveSong([tune('C')], prefix + i); };
 
 test('Konto voll: was nicht mehr passt, bleibt auf dem Gerät und ist als solches erkennbar', async () => {
   await use('tablet');
@@ -601,10 +601,10 @@ test('Konto voll: was nicht mehr passt, bleibt auf dem Gerät und ist als solche
   await C.register('a@b.de', 'geheim123');
   assert.equal(account().length, LIMIT - 1);
   assert.equal(C.accountFull(), false);
-  T.saveSong('mel', [tune('D')], 'Passt noch');
+  T.stores.mel.saveSong([tune('D')], 'Passt noch');
   await C.sync();
   assert.equal(C.accountFull(), true);
-  T.saveSong('mel', [tune('E')], 'Zu viel');
+  T.stores.mel.saveSong([tune('E')], 'Zu viel');
   await C.sync();
   assert.equal(account().length, LIMIT);
   assert.ok(!account().includes('Zu viel'));
@@ -619,10 +619,10 @@ test('Konto voll: nach dem Löschen eines Lieds rückt das liegengebliebene nach
   await use('tablet');
   fill(LIMIT);
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('E')], 'Zu viel');
+  T.stores.mel.saveSong([tune('E')], 'Zu viel');
   await C.sync();
   assert.equal(C.cloudInfo().rejected, 1);
-  T.deleteSong('mel', idOf('Lied 0'));
+  T.stores.mel.deleteSong(idOf('Lied 0'));
   await C.sync();
   assert.ok(account().includes('Zu viel'));
   assert.equal(C.cloudInfo().rejected, 0);
@@ -636,11 +636,11 @@ test('Konto voll: Löschen auf einem anderen Gerät schafft auch hier Platz', as
   await use('laptop');
   await C.login('a@b.de', 'geheim123');
   await use('tablet');
-  T.saveSong('mel', [tune('E')], 'Zu viel');
+  T.stores.mel.saveSong([tune('E')], 'Zu viel');
   await C.sync();
   assert.equal(C.cloudInfo().rejected, 1);
   await use('laptop');
-  T.deleteSong('mel', idOf('Lied 3'));
+  T.stores.mel.deleteSong(idOf('Lied 3'));
   await C.sync();
   await use('tablet');
   assert.ok(account().includes('Zu viel'));
@@ -656,11 +656,11 @@ test('erstes Anmelden mit mehr Liedern, als ins Konto passen: die übrigen bleib
   fill(25, 'Laptop ');
   await C.login('a@b.de', 'geheim123');
   assert.equal(account().length, LIMIT);
-  assert.equal(T.loadSongs('mel').length, 55);
+  assert.equal(T.stores.mel.loadSongs().length, 55);
   assert.equal(C.cloudInfo().rejected, 5);
   // auf dem Tablet kommen nur die an, die ins Konto gepasst haben
   await use('tablet');
-  assert.equal(T.loadSongs('mel').length, LIMIT);
+  assert.equal(T.stores.mel.loadSongs().length, LIMIT);
 });
 
 /* ---------- Der Server nimmt ein Lied nicht an (refused) ---------- */
@@ -700,15 +700,15 @@ test('eine ungültige Änderung hält die übrigen nicht auf', async () => {
 test('Uhr geht ein Jahr vor: das Gerät gewinnt nicht für immer', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   await use('vorgehend', YEAR);
   await C.login('a@b.de', 'geheim123'); // lernt die Uhr des Servers
-  T.saveSong('mel', [tune('D')], 'Lied');
+  T.stores.mel.saveSong([tune('D')], 'Lied');
   await C.sync();
   await use('tablet');
   assert.deepEqual(mel(), { Lied: 'D' });
-  T.saveSong('mel', [tune('E')], 'Lied'); // später, mit richtiger Uhr
+  T.stores.mel.saveSong([tune('E')], 'Lied'); // später, mit richtiger Uhr
   await C.sync();
   await use('vorgehend', YEAR);
   assert.deepEqual(mel(), { Lied: 'E' });
@@ -716,11 +716,11 @@ test('Uhr geht ein Jahr vor: das Gerät gewinnt nicht für immer', async () => {
 
 test('Uhr ging vor, bevor das Gerät den Server kannte: der Server kappt, das Gerät übernimmt die Zeit', async () => {
   await use('vorgehend', YEAR);
-  T.saveSong('mel', [tune('C')], 'Lied'); // Zeitstempel ein Jahr in der Zukunft
+  T.stores.mel.saveSong([tune('C')], 'Lied'); // Zeitstempel ein Jahr in der Zukunft
   await C.register('a@b.de', 'geheim123');
   await use('tablet');
   await C.login('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('E')], 'Lied');
+  T.stores.mel.saveSong([tune('E')], 'Lied');
   await C.sync();
   await use('vorgehend', YEAR);
   assert.deepEqual(mel(), { Lied: 'E' });
@@ -729,15 +729,15 @@ test('Uhr ging vor, bevor das Gerät den Server kannte: der Server kappt, das Ge
 test('Uhr geht ein Jahr nach: Änderungen des Geräts gehen trotzdem nicht verloren', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('C')], 'Lied');
+  T.stores.mel.saveSong([tune('C')], 'Lied');
   await C.sync();
   await use('nachgehend', -YEAR);
   await C.login('a@b.de', 'geheim123');
   server.online = false;
   await use('tablet');
-  T.saveSong('mel', [tune('D')], 'Lied'); // früher
+  T.stores.mel.saveSong([tune('D')], 'Lied'); // früher
   await use('nachgehend', -YEAR);
-  T.saveSong('mel', [tune('E')], 'Lied'); // später, aber nach der eigenen Uhr ein Jahr früher
+  T.stores.mel.saveSong([tune('E')], 'Lied'); // später, aber nach der eigenen Uhr ein Jahr früher
   server.online = true;
   await use('tablet');
   await use('nachgehend', -YEAR);
@@ -754,7 +754,7 @@ test('Abgleich ohne Platz im Gerät: since rückt nicht vor, das Lied kommt beim
   await use('laptop');
   assert.equal(await C.login('a@b.de', 'geheim123'), '');
   await use('tablet');
-  T.saveSong('mel', [tune('G')], 'Vom Tablet');
+  T.stores.mel.saveSong([tune('G')], 'Vom Tablet');
   await C.sync();
   const last = C.cloudInfo().lastSync;
   devices.get('laptop').failKey = 'notentafel.songs.v1';
@@ -773,7 +773,7 @@ test('Abgleich ohne Platz im Gerät: since rückt nicht vor, das Lied kommt beim
 test('Anmelden ohne Platz im Gerät: angemeldet, aber since bleibt leer und lastSync 0', async () => {
   await use('tablet');
   await C.register('a@b.de', 'geheim123');
-  T.saveSong('mel', [tune('G')], 'Vom Tablet');
+  T.stores.mel.saveSong([tune('G')], 'Vom Tablet');
   await C.sync();
   await use('laptop');
   C.logout(); // frisch: kein Konto, lastSync 0
@@ -801,7 +801,7 @@ test('Lieder in einem Format, das diese Version nicht kennt, bleiben liegen', as
 
 test('beim Hochladen geht das Format jedes Bereichs mit', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'M');
+  T.stores.mel.saveSong([tune('C')], 'M');
   L.store.saveSong({ meter: '4/4', pickup: 0, key: 0, ev: [] }, 'N');
   await C.register('a@b.de', 'geheim123');
   assert.equal(server.songs.find((s) => s.name === 'M').format, 'tafel.1');
@@ -811,11 +811,11 @@ test('beim Hochladen geht das Format jedes Bereichs mit', async () => {
 /* ---------- Exportieren und Importieren ---------- */
 test('Import: Lieder aus einer exportierten Datei kommen dazu, ohne Doppel, und gehen ins Konto', async () => {
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'Eins');
-  T.saveSong('mel', [tune('D')], 'Zwei');
+  T.stores.mel.saveSong([tune('C')], 'Eins');
+  T.stores.mel.saveSong([tune('D')], 'Zwei');
   const file = T.stores.mel.rawSongs();
   await use('laptop');
-  T.saveSong('mel', [tune('G')], 'Zwei'); // anderes Lied, gleicher Name, später angelegt
+  T.stores.mel.saveSong([tune('G')], 'Zwei'); // anderes Lied, gleicher Name, später angelegt
   await C.register('a@b.de', 'geheim123');
   assert.equal(T.stores.mel.importSongs(file), 2);
   assert.deepEqual(mel(), { Eins: 'C', Zwei: 'D', 'Zwei (2)': 'G' });
@@ -827,19 +827,19 @@ test('Import: Lieder aus einer exportierten Datei kommen dazu, ohne Doppel, und 
 test('Sicherungsdatei: alle Bereiche hin und zurück, fremde Dateien werden abgelehnt', async () => {
   const { exportAll, importAll } = await import('../js/core/store.js');
   await use('tablet');
-  T.saveSong('mel', [tune('C')], 'M');
-  T.saveSong('rhy', [tune('D')], 'R');
+  T.stores.mel.saveSong([tune('C')], 'M');
+  T.stores.rhy.saveSong([tune('D')], 'R');
   L.store.saveSong({ meter: '3/4', pickup: 0, key: 0, ev: [] }, 'N');
   const file = JSON.parse(JSON.stringify(exportAll()));
   assert.equal(file.kind, 'musiktafel-lieder');
   await use('neu');
   assert.equal(importAll(file), 3);
   assert.deepEqual(mel(), { M: 'C' });
-  assert.deepEqual(T.loadSongs('rhy').map((s) => s.name), ['R']);
+  assert.deepEqual(T.stores.rhy.loadSongs().map((s) => s.name), ['R']);
   assert.equal(L.store.loadSongs()[0].song.meter, '3/4');
   assert.equal(importAll(file), 0);
   assert.equal(importAll({ irgendwas: 1 }), -1);
   file.areas.mel.format = 'tafel.9';
-  T.deleteSong('mel', idOf('M'));
+  T.stores.mel.deleteSong(idOf('M'));
   assert.equal(importAll(file), 0); // Format unbekannt: Melodien bleiben liegen
 });

@@ -53,7 +53,7 @@ const accountCount = () => localCount() - (acc.rejected || []).length;
 export const cloudInfo = () => {
   const rej = canSync() ? acc.rejected || [] : [];
   return {
-    available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, busy: !!running, lastSync, error,
+    available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, lastSync, error,
     limit: canSync() ? limit() : null,
     rejected: rej.filter((r) => r.why !== 'refused').length, // über dem Limit: rücken beim Löschen nach
     invalid: rej.filter((r) => r.why === 'refused').length // nimmt der Server nicht an

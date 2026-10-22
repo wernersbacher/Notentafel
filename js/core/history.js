@@ -1,7 +1,7 @@
 // Rückgängig-Verlauf: ein Stapel von Ständen als JSON. Was ein Stand enthält, bestimmt der Bereich.
 
 // So viele Schritte nimmt „Rückgängig“ zurück
-export const HISTORY = 60;
+const HISTORY = 60;
 
 export function pushState(stack, state) {
   stack.push(JSON.stringify(state));

@@ -9,7 +9,7 @@
 //   tools            gemeinsame Knöpfe: insert, gap, del, brk, undo, addRow, delRow(btn), clear(btn);
 //                    fehlt einer, ist der Knopf ausgeblendet. Ihren Zustand zeichnet der Bereich selbst.
 //   plan(), mark(pos)  Abspielen (siehe player.js); ohne plan kein Abspielen-Knopf
-//   songs            Speichern und Laden (optional): store (aus makeStore), texts { menu, save, songs },
+//   songs            Speichern und Laden (optional): store (aus makeStore), texts { save, songs },
 //                    name(), data(), saved(name) nach dem Speichern, load(song) aus der Liste oder dem Autosave
 //   menu             eigene Abschnitte im Menü (optional): open() blendet sie ein (sie tragen data-area im HTML)
 //   receive(data)    nimmt etwas aus einem anderen Bereich entgegen (optional, siehe handOver)

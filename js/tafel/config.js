@@ -11,7 +11,7 @@ export const RHY_PER_ROW = 12;
 
 // f = Frequenz in Hz (C = c', hohe Töne eine Oktave darüber).
 // Farben aus core/colors.js (dort auch die Regel für den Kontrast); hohe Töne in der Farbe ihres Grundtons, mit Pfeil.
-export const NOTES = [
+const NOTES = [
   { id: 'C',   l: 'C',   bg: T.C, n: 'C',  f: 261.63 },
   { id: 'D',   l: 'D',   bg: T.D, n: 'D',  f: 293.66 },
   { id: 'E',   l: 'E',   bg: T.E, n: 'E',  f: 329.63 },
@@ -40,7 +40,7 @@ export const MORE_SEMIS = ['Cis', 'Dis', 'Gis', 'Cis+', 'Dis+'];
 
 
 // Tonlängen in Schlägen; Viertel (1) ist der Normalfall. Punktierte Werte entstehen mit dem Punkt (DOTTED).
-export const DURS = [
+const DURS = [
   { d: 0.25, l: '¼', n: 'Sechzehntel', p: 'Sechzehntelpause' },
   { d: 0.5, l: '½', n: 'Achtel', p: 'Achtelpause' },
   { d: 1,   l: '1', n: 'Viertel', p: 'Viertelpause' },

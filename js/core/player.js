@@ -13,7 +13,7 @@ import { toast, popover, setPressed, tempoText } from './ui.js';
 import { el } from './dom.js';
 import { PLAY, EAR } from './icons.js';
 
-export const ICONS = {
+const ICONS = {
   play: PLAY,
   stop: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
   sound: EAR,
@@ -81,12 +81,6 @@ function startPlay(plan, mark, again) {
   });
   play.timers.push(setTimeout(stopPlay, delay(plan.end)));
   showButton(true);
-}
-
-// So lange dauert ein Plan beim jetzigen Tempo in Millisekunden, mit Einzählen
-export function planMs(plan) {
-  const pre = (settings.countIn || plan.countIn) && !plan.bare ? (plan.beat || 1) * (plan.perBar || 4) : 0;
-  return (pre + plan.end) * 60000 / settings.tempo;
 }
 
 export function stopPlay() {

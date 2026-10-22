@@ -80,6 +80,38 @@
 <script type="module" src="js/main.js?v=1.0.0"></script>
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <!-- Die Zeichnungen der Knöpfe stehen hier einmal; index.html bindet sie mit <use> ein. -->
+  <symbol id="speichern" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="lieder" viewBox="0 0 24 24"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="einstellungen" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="hoch" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="runter" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="rechts" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="metronom" viewBox="0 0 24 24"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="schritt" viewBox="0 0 24 24"><path d="M3 19h5v-4.5h5V10h5V5.5h3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+  <symbol id="zurueck" viewBox="0 0 24 24"><path d="M9 7 4.5 11.5 9 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="einfuegen" viewBox="0 0 24 24"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="loeschen" viewBox="0 0 24 24"><path d="M6 4v16M20 12h-9M15 8l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+  <symbol id="umbruch" viewBox="0 0 24 24"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="zeile-plus" viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M19 13v7M15.5 16.5h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="zeile-minus" viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M15.5 16.5h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="taktstrich" viewBox="0 0 24 24"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="schluss" viewBox="0 0 24 24"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></symbol>
+  <symbol id="wdh-anfang" viewBox="0 0 24 24"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></symbol>
+  <symbol id="wdh-ende" viewBox="0 0 24 24"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></symbol>
+  <symbol id="tuch" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></symbol>
+  <symbol id="tuch-neu" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="auge" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></symbol>
+  <symbol id="linie" viewBox="0 0 24 24"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></symbol>
+  <symbol id="bogen" viewBox="0 0 24 24"><path d="M3 10c4 6 14 6 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="notenblatt" viewBox="0 0 24 24"><path d="M3 6h18M3 10h18M3 14h18M3 18h18" fill="none" stroke="currentColor" stroke-width="1.4"/><ellipse cx="9" cy="16" rx="2.6" ry="2" fill="currentColor"/><path d="M11.4 16V5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
 
 <div class="app">
   <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
@@ -95,7 +127,7 @@
         <!-- Speichern: das Feld für den Namen klappt darunter auf -->
         <div class="savewrap">
           <button type="button" class="btn" id="btnSaveSide" aria-haspopup="true" aria-expanded="false" aria-controls="savePop" title="Unter einem Namen in der Liedersammlung speichern">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>Speichern</span>
+            <svg class="ico" aria-hidden="true"><use href="#speichern"/></svg><span>Speichern</span>
           </button>
           <div class="savepop" id="savePop" role="group" aria-label="Tafel speichern" hidden>
             <div class="saverow">
@@ -106,16 +138,16 @@
           </div>
         </div>
         <button type="button" class="btn" id="btnSongs" aria-haspopup="dialog" aria-controls="drawer" title="Liedersammlung: speichern, laden, bekannte Lieder, exportieren">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>Lieder</span>
+          <svg class="ico" aria-hidden="true"><use href="#lieder"/></svg><span>Lieder</span>
         </button>
         <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Einstellungen</span>
+          <svg class="ico" aria-hidden="true"><use href="#einstellungen"/></svg><span>Einstellungen</span>
         </button>
       </div>
-      <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" aria-hidden="true"><use href="#hoch"/></svg></button>
     </div>
   </header>
-  <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rhythmus · Farbnoten · Notenblatt</span></button>
+  <button type="button" class="topshow" id="btnTopShow" aria-controls="topbar" title="Leiste oben ausklappen" aria-label="Leiste oben ausklappen" hidden><svg class="ico" aria-hidden="true"><use href="#runter"/></svg><span>Rhythmus · Farbnoten · Notenblatt</span></button>
   <div class="boardwrap">
     <div class="board">
       <div class="grid" id="grid" aria-label="Musiktafel"></div>
@@ -124,14 +156,14 @@
     <!-- Runde Knöpfe unten rechts auf der Tafel (für alle Bereiche): Vorführen, Metronom, Einzählen, Tempo, Schritt für Schritt, Ton dabei, Abspielen -->
     <!-- Leiste ein- und ausklappen; eingeklappt ist das Bearbeiten beendet (keine Markierung, keine leeren Plätze) -->
     <button type="button" class="fab sidetoggle" id="btnSide" aria-expanded="true" aria-controls="side" title="Leiste einklappen (Bearbeiten beenden)" aria-label="Leiste einklappen">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg class="ico" aria-hidden="true"><use href="#rechts"/></svg>
     </button>
     <div class="playfab" role="group" aria-label="Abspielen">
       <button type="button" class="fab" id="btnPresent" aria-pressed="false" title="Vorführen: nur die Tafel, über den ganzen Bildschirm" aria-label="Vorführen"></button>
-      <button type="button" class="fab" data-play="metro" aria-pressed="false" title="Metronom: jeden Schlag mitklicken" aria-label="Metronom"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7l4 18h-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 16h13M12 16l5-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button type="button" class="fab" data-play="metro" aria-pressed="false" title="Metronom: jeden Schlag mitklicken" aria-label="Metronom"><svg class="ico" aria-hidden="true"><use href="#metronom"/></svg></button>
       <button type="button" class="fab" data-play="countIn" aria-pressed="false" title="Einzählen: vor dem Abspielen einen Takt vorweg" aria-label="Einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span></button>
       <button type="button" class="fab tempo" id="btnTempo" aria-haspopup="true" aria-expanded="false" aria-controls="tempoPop" title="Tempo ändern"><span class="tnum" id="tempoNum"></span><span class="tlbl">Tempo</span></button>
-      <button type="button" class="fab" data-play="step" aria-pressed="false" title="Schritt für Schritt: jeder Tipp auf den großen Knopf zeigt die nächste Note" aria-label="Schritt für Schritt"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h5v-4.5h5V10h5V5.5h3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="fab" data-play="step" aria-pressed="false" title="Schritt für Schritt: jeder Tipp auf den großen Knopf zeigt die nächste Note" aria-label="Schritt für Schritt"><svg class="ico" aria-hidden="true"><use href="#schritt"/></svg></button>
       <button type="button" class="fab" data-play="stepSound" aria-pressed="false" aria-label="Ton bei Schritt für Schritt" hidden></button>
       <button type="button" class="fab play" id="btnPlay"></button>
       <!-- Tempo direkt auf der Tafel: kleines Feld über den Knöpfen, ein Tipp daneben schließt es -->
@@ -139,11 +171,11 @@
         <div class="tphead"><span>Tempo</span><output id="tempoPopOut"></output></div>
         <div class="tprow">
           <button type="button" class="btn" id="tempoMinus" aria-label="Langsamer">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+            <svg class="ico" aria-hidden="true"><use href="#minus"/></svg>
           </button>
           <input type="range" id="tempoRange" min="50" max="160" step="5" aria-label="Tempo in Schlägen pro Minute">
           <button type="button" class="btn" id="tempoPlus" aria-label="Schneller">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+            <svg class="ico" aria-hidden="true"><use href="#plus"/></svg>
           </button>
         </div>
         <div class="tpscale" aria-hidden="true"><span>langsam</span><span>schnell</span></div>
@@ -161,27 +193,27 @@
   <aside class="side" id="side" aria-label="Werkzeuge">
     <div class="tools toprow">
       <button type="button" class="btn" id="btnUndo" title="Den letzten Schritt zurücknehmen">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4.5 11.5 9 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span class="small">zurück</span>
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#zurueck"/></svg></span><span class="small">zurück</span>
       </button>
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M11 12h9M16 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">einfügen</span>
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#einfuegen"/></svg></span><span class="small">einfügen</span>
       </button>
       <button type="button" class="btn" id="btnGap" title="Zeichen löschen, der Rest rückt nach vorn">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M20 12h-9M15 8l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">löschen</span>
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#loeschen"/></svg></span><span class="small">löschen</span>
       </button>
       <button type="button" class="btn" id="btnDel" title="Zeichen entfernen, der Platz bleibt (eine Note wird zur Pause)">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></span><span class="small">entfernen</span>
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#close"/></svg></span><span class="small">entfernen</span>
       </button>
       <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
-        <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v6a3 3 0 0 1-3 3H6M10 10l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">Umbruch</span>
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#umbruch"/></svg></span><span class="small">Umbruch</span>
       </button>
-      <button type="button" class="btn" id="btnAddRow" title="Eine leere Zeile unten anfügen"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M19 13v7M15.5 16.5h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="small">+ Zeile</span></button>
-      <button type="button" class="btn" id="btnDelRow" title="Die letzte Zeile entfernen"><span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M15.5 16.5h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="small">− Zeile</span></button>
+      <button type="button" class="btn" id="btnAddRow" title="Eine leere Zeile unten anfügen"><span class="big"><svg class="ico" aria-hidden="true"><use href="#zeile-plus"/></svg></span><span class="small">+ Zeile</span></button>
+      <button type="button" class="btn" id="btnDelRow" title="Die letzte Zeile entfernen"><span class="big"><svg class="ico" aria-hidden="true"><use href="#zeile-minus"/></svg></span><span class="small">− Zeile</span></button>
     </div>
 
     <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tab-mel">
       <section class="group block" id="melSetup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="melMeters"></div>
         <h2 class="glabel">Automatisch</h2>
@@ -192,7 +224,7 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Töne</h2>
         <div class="palette" id="palette"></div>
         <h2 class="glabel">Hand</h2>
@@ -207,37 +239,37 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
           <button type="button" class="btn" id="btnBarMel" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#taktstrich"/></svg></span><span class="small">Taktstrich</span>
           </button>
           <button type="button" class="btn" id="btnEndMel" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#schluss"/></svg></span><span class="small">Schluss</span>
           </button>
           <button type="button" class="btn row2" id="btnRepStartMel" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-anfang"/></svg></span><span class="small">Wdh. Anfang</span>
           </button>
           <button type="button" class="btn" id="btnRepEndMel" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-ende"/></svg></span><span class="small">Wdh. Ende</span>
           </button>
         </div>
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools covers">
           <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
           </button>
           <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
             <span class="big">?</span><span class="small">Karte</span>
           </button>
           <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
           </button>
           <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
           </button>
         </div>
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
@@ -254,7 +286,7 @@
         </div>
         <div class="group game" data-game="quiz" data-intro="Ein Ton erscheint auf einem großen Punkt. Weißt du, welcher es ist? Tippe unten den passenden Knopf.">
           <p class="ghint" id="melQuizHint"></p>
-          <button type="button" class="btn gamego" id="melQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
+          <button type="button" class="btn gamego" id="melQuizGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Quiz starten</span></button>
           <h2 class="glabel">Frage</h2>
           <div class="seg two" id="melQuizAsk">
             <button type="button" class="btn" data-v="color" aria-pressed="false">Wie heißt der Ton?</button>
@@ -268,7 +300,7 @@
         </div>
         <div class="group game" data-game="melo" data-intro="Hör gut zu: Die Tafel spielt eine kleine Melodie. Tippe die Töne unten in der richtigen Reihenfolge nach.">
           <p class="ghint">Die Tafel spielt eine kurze Melodie vor, sie liegt verdeckt auf der Tafel. Die Kinder tippen die Töne unten der Reihe nach – jeder richtige Ton deckt seine Karte auf.</p>
-          <button type="button" class="btn gamego" id="meloGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Melodie-Echo starten</span></button>
+          <button type="button" class="btn gamego" id="meloGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Melodie-Echo starten</span></button>
           <h2 class="glabel">Länge</h2>
           <div class="seg four" id="meloLen">
             <button type="button" class="btn" data-v="2" aria-pressed="false">2 Töne</button>
@@ -284,11 +316,11 @@
         </div>
         <div class="group game" data-game="updown" data-intro="Zwei Töne erklingen nacheinander. Ist der zweite höher, tiefer oder gleich? Tippe unten deine Antwort.">
           <p class="ghint">Zwei Töne erklingen nacheinander. Die Kinder sagen, ob der zweite höher, tiefer oder gleich ist, und tippen es unten. Mit der Lösung bekommen die beiden Punkte ihre Farbe.</p>
-          <button type="button" class="btn gamego" id="updownGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="updownGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <div class="group game" data-game="guess" data-intro="Hör dir den Anfang eines Lieds an. Welches Lied ist es? Wähle unten den richtigen Namen.">
           <p class="ghint">Der Anfang eines bekannten Lieds erklingt, die Kinder wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel.</p>
-          <button type="button" class="btn gamego" id="guessGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="guessGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
           <h2 class="glabel">Vorspielen</h2>
           <div class="seg two" id="guessLen">
             <button type="button" class="btn" data-v="short" aria-pressed="false">die ersten fünf Töne</button>
@@ -310,7 +342,7 @@
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
       <section class="group block" id="rhySetup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="rhyMeters"></div>
         <h2 class="glabel">Automatisch</h2>
@@ -322,7 +354,7 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Rhythmus schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Rhythmus schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Notenwert</h2>
         <div class="values v6" id="values"></div>
         <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
@@ -330,45 +362,45 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
           <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#taktstrich"/></svg></span><span class="small">Taktstrich</span>
           </button>
           <button type="button" class="btn" id="btnEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#schluss"/></svg></span><span class="small">Schluss</span>
           </button>
           <button type="button" class="btn" id="btnLine" aria-pressed="false" title="Notenlinie durch die markierte Zeile">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="7" cy="12" r="3.2" fill="currentColor"/><circle cx="17" cy="12" r="3.2" fill="currentColor"/></svg></span><span class="small">Linie</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#linie"/></svg></span><span class="small">Linie</span>
           </button>
           <button type="button" class="btn row2" id="btnRepStart" aria-pressed="false" title="Wiederholung beginnt vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-anfang"/></svg></span><span class="small">Wdh. Anfang</span>
           </button>
           <button type="button" class="btn" id="btnRepEnd" aria-pressed="false" title="Wiederholung endet vor dem markierten Platz">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-ende"/></svg></span><span class="small">Wdh. Ende</span>
           </button>
         </div>
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="zbtns" id="counts"></div>
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools covers">
           <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
           </button>
           <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
             <span class="big">?</span><span class="small">Karte</span>
           </button>
           <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
           </button>
           <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
           </button>
         </div>
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
@@ -386,11 +418,11 @@
         </div>
         <div class="group game" data-game="echo" data-intro="Die Tafel spielt einen Rhythmus vor. Hör gut zu und klatsche ihn nach! Danach könnt ihr ihn euch auf der Tafel ansehen.">
           <p class="ghint">Die Tafel spielt einen Rhythmus vor, die Kinder klatschen ihn nach. Die Zeile bleibt leer, bis man ihn auflöst.</p>
-          <button type="button" class="btn gamego" id="echoGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Neuer Rhythmus</span></button>
+          <button type="button" class="btn gamego" id="echoGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Neuer Rhythmus</span></button>
         </div>
         <div class="group game" data-game="which" data-intro="Auf der Tafel stehen mehrere Rhythmen, aber nur einer erklingt. Welcher war's? Tippe unten seine Nummer.">
           <p class="ghint">Auf der Tafel stehen mehrere Rhythmen, einer davon erklingt. Die Kinder tippen unten seine Nummer – eine falsche wird rot, die richtige grün. Danach spielt ein Tipp auf eine Zeilennummer diesen Rhythmus ab.</p>
-          <button type="button" class="btn gamego" id="whichGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="whichGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
           <h2 class="glabel">Zur Auswahl</h2>
           <div class="seg" id="whichCount">
             <button type="button" class="btn" data-v="2" aria-pressed="false">2 Rhythmen</button>
@@ -400,15 +432,15 @@
         </div>
         <div class="group game" data-game="read" data-intro="Auf der Tafel steht ein Rhythmus. Kannst du ihn vom Blatt klatschen? „Mitklatschen“ gibt dir den Grundschlag.">
           <p class="ghint">Ein Rhythmus steht auf der Tafel, die Kinder klatschen ihn vom Blatt. „Mitklatschen“ zählt ein und gibt den Grundschlag, die Noten leuchten mit. „Anhören“ spielt ihn zur Kontrolle.</p>
-          <button type="button" class="btn gamego" id="readGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="readGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <div class="group game" data-game="build" data-intro="Ein Rhythmus erklingt. Lege ihn unten Stück für Stück aus Bausteinen nach.">
           <p class="ghint">Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen nach. Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur. Je schwerer die Notenwerte, desto mehr Bausteine.</p>
-          <button type="button" class="btn gamego" id="buildGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="buildGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <div class="group game" data-game="fix" data-intro="Die Tafel spielt den Rhythmus – aber in einem Takt ist ein Fehler versteckt. Tippe auf den Takt, der anders klingt.">
           <p class="ghint">Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn aber mit einem Fehler in einem Takt. Die Kinder tippen den Takt auf der Tafel oder unten – unten wird ein falscher rot, mit der Lösung der gesuchte grün. Es sind immer mindestens zwei Takte.</p>
-          <button type="button" class="btn gamego" id="fixGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="fixGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <h2 class="glabel">Taktart</h2>
         <div class="seg four" id="echoMeter">
@@ -451,7 +483,7 @@
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
       <section class="group block" id="liedSetup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Taktart</h2>
         <div class="meterrow" id="liedMeters"></div>
         <h2 class="glabel">Taktstriche <span>von Hand: unter ③ Weitere Symbole</span></h2>
@@ -479,7 +511,7 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Noten schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Noten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
         <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
@@ -495,22 +527,22 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools three">
         <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
-          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10c4 6 14 6 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><span class="small">Bogen</span>
+          <span class="big"><svg class="ico" aria-hidden="true"><use href="#bogen"/></svg></span><span class="small">Bogen</span>
         </button>
         <button type="button" class="btn" id="liedBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
-          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span class="small">Taktstrich</span>
+          <span class="big"><svg class="ico" aria-hidden="true"><use href="#taktstrich"/></svg></span><span class="small">Taktstrich</span>
         </button>
         <button type="button" class="btn" id="liedEnd" aria-pressed="false" title="Schlussstrich vor dem markierten Platz">
-          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3v18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="13" y="3" width="5" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Schluss</span>
+          <span class="big"><svg class="ico" aria-hidden="true"><use href="#schluss"/></svg></span><span class="small">Schluss</span>
         </button>
         <button type="button" class="btn" id="liedRepStart" aria-pressed="false" title="Wiederholung beginnt hier (vor dem markierten Platz)">
-          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="4" height="18" rx="1" fill="currentColor"/><path d="M11.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="9" r="2" fill="currentColor"/><circle cx="17" cy="15" r="2" fill="currentColor"/></svg></span><span class="small">Wdh. Anfang</span>
+          <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-anfang"/></svg></span><span class="small">Wdh. Anfang</span>
         </button>
         <button type="button" class="btn" id="liedRepEnd" aria-pressed="false" title="Wiederholung endet hier (vor dem markierten Platz)">
-          <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="9" r="2" fill="currentColor"/><circle cx="7" cy="15" r="2" fill="currentColor"/><path d="M12.5 3v18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="16" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg></span><span class="small">Wdh. Ende</span>
+          <span class="big"><svg class="ico" aria-hidden="true"><use href="#wdh-ende"/></svg></span><span class="small">Wdh. Ende</span>
         </button>
         <button type="button" class="btn" id="liedVolta" aria-pressed="false" title="1. und 2. Klammer: beim zweiten Mal wird der Takt vor dem Wiederholungsende übersprungen">
           <span class="big volta">1.|2.</span><span class="small">Klammer</span>
@@ -519,7 +551,7 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Liedtext</span><span class="bhint">Note antippen, Silbe schreiben</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Liedtext</span><span class="bhint">Note antippen, Silbe schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="lyrow">
           <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
           <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
@@ -527,10 +559,10 @@
       </section>
 
       <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
         <div class="tools covers three">
           <button type="button" class="btn" data-cover="from" title="Ab der markierten Note alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="currentColor"/></svg></span><span class="small">ab hier</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
           </button>
           <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken, ihr Notenname bleibt zu sehen (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
             <span class="big">?</span><span class="small">Note</span>
@@ -542,10 +574,10 @@
             <span class="big">???</span><span class="small">alle Namen</span>
           </button>
           <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="small">neu abdecken</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
           </button>
           <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
-            <span class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></span><span class="small">alles zeigen</span>
+            <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
           </button>
         </div>
         <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
@@ -562,7 +594,7 @@
         </div>
         <div class="group game" data-game="quiz" data-intro="Eine Note erscheint auf den Notenlinien. Wie heißt sie? Tippe unten ihren Namen.">
           <p class="ghint">Eine Note erscheint, die Kinder tippen unten auf der Tafel ihren Namen – in der Farbe des Tons, mit Oktavstrichen.</p>
-          <button type="button" class="btn gamego" id="liedQuizGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Quiz starten</span></button>
+          <button type="button" class="btn gamego" id="liedQuizGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Quiz starten</span></button>
           <h2 class="glabel">Welche Noten</h2>
           <div class="seg two" id="liedQuizMode">
             <button type="button" class="btn" data-v="rand" aria-pressed="false">Zufallsnote</button>
@@ -578,15 +610,15 @@
         </div>
         <div class="group game" data-game="place" data-intro="Unten steht ein Notenname. Schiebe die Note mit dem Finger auf die Linie oder in den Zwischenraum, wo sie hingehört, und lass los.">
           <p class="ghint">Ein Notenname erscheint unter den Notenlinien. Die Kinder schieben mit dem Finger eine Note auf die Linie oder in den Zwischenraum, sie rastet ein; erst das Loslassen zählt – eine falsche Note wird kurz rot.</p>
-          <button type="button" class="btn gamego" id="placeGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="placeGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <div class="group game" data-game="step" data-intro="Zwei Noten erklingen nacheinander. Ist es ein Schritt, ein Sprung oder derselbe Ton? Tippe unten deine Antwort.">
           <p class="ghint">Zwei Noten stehen nebeneinander und erklingen. Die Kinder sagen, ob es ein Schritt (zum Nachbarton), ein Sprung oder derselbe Ton ist.</p>
-          <button type="button" class="btn gamego" id="stepGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="stepGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
         </div>
         <div class="group game" data-game="values" data-intro="Eine Note oder Pause erscheint und erklingt. Wie heißt sie? Tippe unten ihren Namen.">
           <p class="ghint">Eine Note oder Pause steht auf der Tafel und erklingt, jeder Schlag klickt dabei. Die Kinder tippen unten, wie sie heißt.</p>
-          <button type="button" class="btn gamego" id="valuesGo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg><span>Spiel starten</span></button>
+          <button type="button" class="btn gamego" id="valuesGo"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>Spiel starten</span></button>
           <h2 class="glabel">Notenwerte</h2>
           <div class="seg" id="valLevel">
             <button type="button" class="btn" data-v="1" aria-pressed="false"><span>leicht</span><span class="small">Ganze, Halbe, Viertel</span></button>
@@ -617,7 +649,7 @@
     <!-- Unten: von einem Bereich in den anderen und Alles löschen -->
     <div class="actions">
       <button type="button" class="btn tolied" id="btnToLiedSide" title="Macht aus der Tafel echte Noten im Bereich Notenblatt – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 10h18M3 14h18M3 18h18" fill="none" stroke="currentColor" stroke-width="1.4"/><ellipse cx="9" cy="16" rx="2.6" ry="2" fill="currentColor"/><path d="M11.4 16V5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Ins Notenblatt</span>
+        <svg class="ico" aria-hidden="true"><use href="#notenblatt"/></svg><span>Ins Notenblatt</span>
       </button>
       <button type="button" class="btn tomel" id="btnToMelody" title="Macht aus dem Lied Farbnoten im Bereich Farbnoten (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.">
         <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span><span>Als Farbnoten</span>
@@ -632,7 +664,7 @@
   <div class="head">
     <h2 id="drawerTitle">Liedersammlung</h2>
     <button type="button" class="btn" id="btnClose" aria-label="Schließen">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <svg class="ico" aria-hidden="true"><use href="#close"/></svg>
     </button>
   </div>
 

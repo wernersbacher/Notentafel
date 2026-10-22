@@ -4,9 +4,11 @@
 import { settings, persistSettings, clampUi, setTempo } from './settings.js';
 import { current, saveAs, closeSavePop, playing, setPlay } from './shell.js';
 import { stopPlay } from './player.js';
-import { esc, confirmTap, disarm, isArmed, delegate, onEnter } from './ui.js';
+import { esc, confirmTap, disarm, isArmed, delegate, onEnter, downloadFile } from './ui.js';
+import { exportAll, importAll } from './store.js';
 import { el } from './dom.js';
 import { updateWake } from './wake.js';
+import { localOnly } from './cloud.js';
 
 function hint(text, warn) {
   el.saveHint.textContent = text;
@@ -36,7 +38,8 @@ function renderSongs() {
       '<button type="button" class="btn" data-ren-ok>Umbenennen</button>' +
       '<button type="button" class="btn icon" data-ren-no title="Abbrechen" aria-label="Abbrechen">' + CROSS + '</button></li>'
     : '<li class="song' + (x.name === name ? ' current' : '') + '">' +
-      '<span class="name">' + esc(x.name) + '<span class="date">' + (x.savedAt ? dateOf(x.savedAt) : '') + '</span></span>' +
+      '<span class="name">' + esc(x.name) + '<span class="date">' + (x.savedAt ? dateOf(x.savedAt) : '') + '</span>' +
+      (localOnly(s.store.area, x.id) ? '<span class="here">nur auf diesem Gerät</span>' : '') + '</span>' +
       '<button type="button" class="btn icon" data-ren="' + i + '" title="Umbenennen" aria-label="„' + esc(x.name) + '“ umbenennen">' + PENCIL + '</button>' +
       '<button type="button" class="btn" data-load="' + i + '">Laden</button>' +
       '<button type="button" class="btn danger" data-del="' + i + '">Löschen</button></li>'
@@ -150,6 +153,7 @@ function openMenu(mode) {
   stopPlay();
   closeSavePop();
   hint('');
+  backupHint('');
   renaming = null;
   el.menuAreaTitle.textContent = a.label;
   el.menuSettingsTitle.textContent = 'Einstellungen für ' + a.label;
@@ -191,6 +195,25 @@ function loadFromMenu(song) {
   setPlay(false);
   current().songs.load(song);
 }
+/* ---------- Alle Lieder sichern ---------- */
+function backupHint(text, warn) {
+  el.backupHint.textContent = text;
+  el.backupHint.classList.toggle('warn', !!warn);
+}
+function exportSongs() {
+  const file = exportAll(), n = Object.values(file.areas).reduce((k, a) => k + a.songs.length, 0);
+  if (!n) { backupHint('Es sind noch keine Lieder gespeichert.', true); return; }
+  downloadFile('musiktafel-lieder-' + file.exportedAt.slice(0, 10) + '.json', JSON.stringify(file), 'application/json');
+  backupHint(n === 1 ? 'Ein Lied exportiert.' : n + ' Lieder exportiert.');
+}
+async function importSongs(f) {
+  let n;
+  try { n = importAll(JSON.parse(await f.text())); } catch (e) { n = -1; }
+  if (n < 0) { backupHint('Das ist keine Sicherungsdatei der Musiktafel.', true); return; }
+  renderSongs();
+  backupHint(!n ? 'Alle Lieder aus der Datei waren schon da.' : n === 1 ? 'Ein Lied importiert.' : n + ' Lieder importiert.');
+}
+
 function saveSong() {
   saveAs(el.songName, el.btnSave, (text, warn) => { if (!warn) renderSongs(); hint(text, warn); });
 }
@@ -225,6 +248,13 @@ export function initMenu() {
   });
   delegate(el.songs, '[data-ren-ok]', rename);
   delegate(el.songs, '[data-ren-no]', () => { renaming = null; hint(''); renderSongs(); });
+  el.btnExportAll.addEventListener('click', exportSongs);
+  el.btnImportAll.addEventListener('click', () => el.importFile.click());
+  el.importFile.addEventListener('change', () => {
+    const f = el.importFile.files[0];
+    el.importFile.value = ''; // dieselbe Datei noch einmal wählen geht so auch
+    if (f) importSongs(f);
+  });
   delegate(el.autosave, '[data-auto]', () => {
     const a = current().songs.store.loadAuto();
     if (a) loadFromMenu(a);

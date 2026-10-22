@@ -9,9 +9,12 @@ globalThis.localStorage = {
   removeItem: (k) => { mem.delete(k); },
   clear: () => mem.clear()
 };
-// Zeit läuft bei jedem Aufruf weiter, damit jede Änderung einen neueren Stand hat
-let clock = 1000;
-Date.now = () => ++clock;
+// Zeit läuft bei jedem Aufruf weiter, damit jede Änderung einen neueren Stand hat. skew: wie weit die Uhr des
+// gerade benutzten Geräts falsch geht; der Server hat immer die richtige Zeit.
+let clock = 1000, skew = 0;
+Date.now = () => ++clock + skew;
+const serverNow = () => ++clock;
+const YEAR = 365 * 24 * 3600 * 1000;
 // Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
 const realTimeout = setTimeout;
 globalThis.setTimeout = (f, ms, ...a) => (ms === 800 ? 0 : realTimeout(f, ms, ...a));
@@ -20,11 +23,12 @@ const T = await import('../js/tafel/storage.js');
 const L = await import('../js/lied/storage.js');
 const C = await import('../js/core/cloud.js');
 const { mergeSongs, newId } = await import('../js/core/store.js');
+const LIMIT = 50;
 
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
 function resetServer() {
-  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [] };
+  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], limit: LIMIT };
 }
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
@@ -58,21 +62,26 @@ function handle(method, path, auth, body) {
     return [204, null];
   }
   if (method === 'POST' && path === '/songs/sync') {
-    const now = ++server.tick;
+    const now = ++server.tick, nowMs = serverNow(), rejected = [];
+    const clamp = (t) => Math.min(t, nowMs);
+    let active = server.songs.filter((s) => s.user === uid && !s.deleted).length;
     for (const c of body.changes) {
+      const changedAt = clamp(c.changedAt);
       let rec = server.songs.find((s) => s.user === uid && s.id === c.id);
-      if (rec && rec.changedAt >= c.changedAt) continue;
-      if (!rec) {
-        if (c.deleted) continue;
-        server.songs.push(rec = { user: uid, id: c.id });
-      }
-      Object.assign(rec, { area: c.area, changedAt: c.changedAt, deleted: !!c.deleted, updated: ++server.tick });
-      if (!c.deleted) Object.assign(rec, { name: c.name, savedAt: c.savedAt, data: resort(c.data) });
+      if (rec && rec.changedAt >= changedAt) continue;
+      if (!rec && c.deleted) continue;
+      const adds = !c.deleted && (!rec || rec.deleted);
+      if (adds && active >= server.limit) { rejected.push(c.id); continue; }
+      if (adds) active++;
+      else if (c.deleted && !rec.deleted) active--;
+      if (!rec) server.songs.push(rec = { user: uid, id: c.id });
+      Object.assign(rec, { area: c.area, changedAt, deleted: !!c.deleted, updated: ++server.tick });
+      if (!c.deleted) Object.assign(rec, { format: c.format, name: c.name, savedAt: clamp(c.savedAt), data: resort(c.data) });
     }
     const since = body.since === '' ? 0 : +body.since;
     const songs = server.songs.filter((s) => s.user === uid && s.updated >= since)
-      .map(({ area, id, name, savedAt, changedAt, deleted, data }) => ({ area, id, name, savedAt, changedAt, deleted, data: deleted ? null : data }));
-    return [200, { now: String(now), songs: JSON.parse(JSON.stringify(songs)) }];
+      .map(({ area, id, format, name, savedAt, changedAt, deleted, data }) => ({ area, id, format, name, savedAt, changedAt, deleted, data: deleted ? null : data }));
+    return [200, { now: String(now), nowMs, limit: server.limit, rejected, songs: JSON.parse(JSON.stringify(songs)) }];
   }
   return [404, { message: 'Not found' }];
 }
@@ -87,7 +96,8 @@ globalThis.fetch = async (url, opts = {}) => {
 /* ---------- Geräte ---------- */
 const devices = new Map();
 // Wechselt auf das Gerät name (neu: leerer Speicher) und startet die App dort wie nach dem Laden der Seite
-async function use(name) {
+async function use(name, deviceSkew = 0) {
+  skew = deviceSkew;
   if (!devices.has(name)) devices.set(name, new Map());
   mem = devices.get(name);
   await C.initCloud('/api');
@@ -101,6 +111,7 @@ const idOf = (name) => T.loadSongs('mel').find((s) => s.name === name).id;
 const account = (area = 'mel') => server.songs.filter((s) => s.area === area && !s.deleted).map((s) => s.name).sort();
 
 beforeEach(() => {
+  skew = 0;
   resetServer();
   devices.clear();
   mem = new Map();
@@ -482,4 +493,180 @@ test('Bereiche bleiben getrennt: gleicher Name in Melodie und Rhythmus', async (
   await C.login('a@b.de', 'geheim123');
   assert.deepEqual(mel(), { Lied: 'C' });
   assert.deepEqual(T.loadSongs('rhy').map(notes), ['D']);
+});
+
+/* ---------- Grenze: höchstens LIMIT Lieder im Konto ---------- */
+// n Melodien „Lied 0“ … auf dem gerade benutzten Gerät
+const fill = (n, prefix = 'Lied ') => { for (let i = 0; i < n; i++) T.saveSong('mel', [tune('C')], prefix + i); };
+
+test('Konto voll: was nicht mehr passt, bleibt auf dem Gerät und ist als solches erkennbar', async () => {
+  await use('tablet');
+  fill(LIMIT - 1);
+  await C.register('a@b.de', 'geheim123');
+  assert.equal(account().length, LIMIT - 1);
+  assert.equal(C.accountFull(), false);
+  T.saveSong('mel', [tune('D')], 'Passt noch');
+  await C.sync();
+  assert.equal(C.accountFull(), true);
+  T.saveSong('mel', [tune('E')], 'Zu viel');
+  await C.sync();
+  assert.equal(account().length, LIMIT);
+  assert.ok(!account().includes('Zu viel'));
+  assert.equal(mel()['Zu viel'], 'E'); // auf dem Gerät ist es da
+  assert.equal(C.localOnly('mel', idOf('Zu viel')), true);
+  assert.equal(C.localOnly('mel', idOf('Passt noch')), false);
+  assert.equal(C.cloudInfo().rejected, 1);
+  assert.equal(C.cloudInfo().limit, LIMIT);
+});
+
+test('Konto voll: nach dem Löschen eines Lieds rückt das liegengebliebene nach', async () => {
+  await use('tablet');
+  fill(LIMIT);
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('E')], 'Zu viel');
+  await C.sync();
+  assert.equal(C.cloudInfo().rejected, 1);
+  T.deleteSong('mel', idOf('Lied 0'));
+  await C.sync();
+  assert.ok(account().includes('Zu viel'));
+  assert.equal(C.cloudInfo().rejected, 0);
+  assert.equal(C.localOnly('mel', idOf('Zu viel')), false);
+});
+
+test('Konto voll: Löschen auf einem anderen Gerät schafft auch hier Platz', async () => {
+  await use('tablet');
+  fill(LIMIT);
+  await C.register('a@b.de', 'geheim123');
+  await use('laptop');
+  await C.login('a@b.de', 'geheim123');
+  await use('tablet');
+  T.saveSong('mel', [tune('E')], 'Zu viel');
+  await C.sync();
+  assert.equal(C.cloudInfo().rejected, 1);
+  await use('laptop');
+  T.deleteSong('mel', idOf('Lied 3'));
+  await C.sync();
+  await use('tablet');
+  assert.ok(account().includes('Zu viel'));
+  assert.equal(C.cloudInfo().rejected, 0);
+  assert.equal(mel()['Lied 3'], undefined);
+});
+
+test('erstes Anmelden mit mehr Liedern, als ins Konto passen: die übrigen bleiben auf dem Gerät', async () => {
+  await use('tablet');
+  fill(30, 'Konto ');
+  await C.register('a@b.de', 'geheim123');
+  await use('laptop');
+  fill(25, 'Laptop ');
+  await C.login('a@b.de', 'geheim123');
+  assert.equal(account().length, LIMIT);
+  assert.equal(T.loadSongs('mel').length, 55);
+  assert.equal(C.cloudInfo().rejected, 5);
+  // auf dem Tablet kommen nur die an, die ins Konto gepasst haben
+  await use('tablet');
+  assert.equal(T.loadSongs('mel').length, LIMIT);
+});
+
+/* ---------- Geräte mit falsch gehender Uhr ---------- */
+test('Uhr geht ein Jahr vor: das Gerät gewinnt nicht für immer', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.sync();
+  await use('vorgehend', YEAR);
+  await C.login('a@b.de', 'geheim123'); // lernt die Uhr des Servers
+  T.saveSong('mel', [tune('D')], 'Lied');
+  await C.sync();
+  await use('tablet');
+  assert.deepEqual(mel(), { Lied: 'D' });
+  T.saveSong('mel', [tune('E')], 'Lied'); // später, mit richtiger Uhr
+  await C.sync();
+  await use('vorgehend', YEAR);
+  assert.deepEqual(mel(), { Lied: 'E' });
+});
+
+test('Uhr ging vor, bevor das Gerät den Server kannte: der Server kappt, das Gerät übernimmt die Zeit', async () => {
+  await use('vorgehend', YEAR);
+  T.saveSong('mel', [tune('C')], 'Lied'); // Zeitstempel ein Jahr in der Zukunft
+  await C.register('a@b.de', 'geheim123');
+  await use('tablet');
+  await C.login('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('E')], 'Lied');
+  await C.sync();
+  await use('vorgehend', YEAR);
+  assert.deepEqual(mel(), { Lied: 'E' });
+});
+
+test('Uhr geht ein Jahr nach: Änderungen des Geräts gehen trotzdem nicht verloren', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  T.saveSong('mel', [tune('C')], 'Lied');
+  await C.sync();
+  await use('nachgehend', -YEAR);
+  await C.login('a@b.de', 'geheim123');
+  server.online = false;
+  await use('tablet');
+  T.saveSong('mel', [tune('D')], 'Lied'); // früher
+  await use('nachgehend', -YEAR);
+  T.saveSong('mel', [tune('E')], 'Lied'); // später, aber nach der eigenen Uhr ein Jahr früher
+  server.online = true;
+  await use('tablet');
+  await use('nachgehend', -YEAR);
+  await use('tablet');
+  assert.deepEqual(mel(), { Lied: 'E' });
+});
+
+/* ---------- Format ---------- */
+test('Lieder in einem Format, das diese Version nicht kennt, bleiben liegen', async () => {
+  await use('tablet');
+  await C.register('a@b.de', 'geheim123');
+  server.songs.push({ user: 'u0', id: newId(), area: 'mel', format: 'tafel.9', name: 'Zukunft', savedAt: 1, changedAt: 1, deleted: false, data: { neu: true }, updated: ++server.tick });
+  server.songs.push({ user: 'u0', id: newId(), area: 'mel', format: 'tafel.1', name: 'Heute', savedAt: 1, changedAt: 1, deleted: false, data: { rows: [[{ n: 'C', h: '' }]], lines: [] }, updated: ++server.tick });
+  await C.sync();
+  assert.deepEqual(mel(), { Heute: 'C' });
+});
+
+test('beim Hochladen geht das Format jedes Bereichs mit', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'M');
+  L.store.saveSong({ meter: '4/4', pickup: 0, key: 0, ev: [] }, 'N');
+  await C.register('a@b.de', 'geheim123');
+  assert.equal(server.songs.find((s) => s.name === 'M').format, 'tafel.1');
+  assert.equal(server.songs.find((s) => s.name === 'N').format, 'lied.1');
+});
+
+/* ---------- Exportieren und Importieren ---------- */
+test('Import: Lieder aus einer exportierten Datei kommen dazu, ohne Doppel, und gehen ins Konto', async () => {
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'Eins');
+  T.saveSong('mel', [tune('D')], 'Zwei');
+  const file = T.stores.mel.rawSongs();
+  await use('laptop');
+  T.saveSong('mel', [tune('G')], 'Zwei'); // anderes Lied, gleicher Name, später angelegt
+  await C.register('a@b.de', 'geheim123');
+  assert.equal(T.stores.mel.importSongs(file), 2);
+  assert.deepEqual(mel(), { Eins: 'C', Zwei: 'D', 'Zwei (2)': 'G' });
+  assert.equal(T.stores.mel.importSongs(file), 0); // noch einmal: nichts Neues
+  await C.sync();
+  assert.deepEqual(account(), ['Eins', 'Zwei', 'Zwei (2)']);
+});
+
+test('Sicherungsdatei: alle Bereiche hin und zurück, fremde Dateien werden abgelehnt', async () => {
+  const { exportAll, importAll } = await import('../js/core/store.js');
+  await use('tablet');
+  T.saveSong('mel', [tune('C')], 'M');
+  T.saveSong('rhy', [tune('D')], 'R');
+  L.store.saveSong({ meter: '3/4', pickup: 0, key: 0, ev: [] }, 'N');
+  const file = JSON.parse(JSON.stringify(exportAll()));
+  assert.equal(file.kind, 'musiktafel-lieder');
+  await use('neu');
+  assert.equal(importAll(file), 3);
+  assert.deepEqual(mel(), { M: 'C' });
+  assert.deepEqual(T.loadSongs('rhy').map((s) => s.name), ['R']);
+  assert.equal(L.store.loadSongs()[0].song.meter, '3/4');
+  assert.equal(importAll(file), 0);
+  assert.equal(importAll({ irgendwas: 1 }), -1);
+  file.areas.mel.format = 'tafel.9';
+  T.deleteSong('mel', idOf('M'));
+  assert.equal(importAll(file), 0); // Format unbekannt: Melodien bleiben liegen
 });

@@ -659,6 +659,17 @@
       <p class="hint">Die Tafel vor dem letzten Laden oder „Alles löschen“.</p>
     </section>
 
+    <section id="backupSec" data-part="songs">
+      <h3>Alle Lieder sichern</h3>
+      <div class="sizes accrow">
+        <button type="button" class="btn" id="btnExportAll">Exportieren</button>
+        <button type="button" class="btn" id="btnImportAll">Importieren</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <p class="hint" id="backupHint" aria-live="polite"></p>
+      <p class="hint">Speichert die Lieder aus Rhythmus, Farbnoten und Notenblatt in eine Datei. Mit „Importieren“ kommen sie wieder in die Musiktafel, auch auf einem anderen Gerät. Was schon da ist, wird nicht doppelt angelegt.</p>
+    </section>
+
     <section id="melodiesSec" data-area="tafel" data-part="songs">
       <h3>Bekannte Lieder</h3>
       <input type="search" class="songsearch" placeholder="Lied suchen" aria-label="Bekannte Lieder durchsuchen" autocomplete="off" enterkeyhint="search">

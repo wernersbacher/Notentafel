@@ -12,6 +12,7 @@ migrate((app) => {
       { type: 'relation', name: 'user', collectionId: '_pb_users_auth_', required: true, maxSelect: 1, cascadeDelete: true },
       { type: 'text', name: 'sid', required: true, min: 9, max: 40, pattern: '^[0-9a-z]+$' },
       { type: 'select', name: 'area', values: ['mel', 'rhy', 'lied'], required: true, maxSelect: 1 },
+      { type: 'text', name: 'format', max: 20 }, // Format von data, z. B. tafel.1 (siehe makeStore)
       { type: 'text', name: 'name', required: true, max: 40 },
       { type: 'json', name: 'data', maxSize: 200000 },
       { type: 'number', name: 'saved_at', onlyInt: true }, // wann der Inhalt gespeichert wurde

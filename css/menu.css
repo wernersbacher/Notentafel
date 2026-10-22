@@ -69,6 +69,7 @@
 }
 .song .name { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .song .date { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); }
+.song .here { display: block; font-size: .75rem; font-weight: 800; color: var(--danger); }
 .song .btn { min-height: 44px; font-size: .85rem; }
 .empty { margin: 0; font-size: .88rem; color: var(--muted); }
 .themes { display: flex; flex-direction: column; gap: 8px; }

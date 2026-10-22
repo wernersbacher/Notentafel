@@ -11,10 +11,10 @@ routerAdd('GET', '/api/me', (e) => {
   return e.json(200, { tier, features: TIERS[tier].features, limits: TIERS[tier].limits, user });
 });
 
-// Neue Konten sind vorerst Pro (siehe NEW_USER_PRO_UNTIL). Läuft auch beim Anlegen in der Admin-Oberfläche;
-// ein dort schon eingetragenes pro_until bleibt.
+// Neue Konten: Pro bis zum Ende der Beta, danach eine Woche (siehe tiers.js). Läuft auch beim Anlegen in der
+// Admin-Oberfläche; ein dort schon eingetragenes pro_until bleibt.
 onRecordCreate((e) => {
-  const { NEW_USER_PRO_UNTIL } = require(`${__hooks}/tiers.js`);
-  if (!e.record.getString('pro_until')) e.record.set('pro_until', NEW_USER_PRO_UNTIL);
+  const { newUserProUntil } = require(`${__hooks}/tiers.js`);
+  if (!e.record.getString('pro_until')) e.record.set('pro_until', newUserProUntil());
   e.next();
 }, 'users');

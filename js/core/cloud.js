@@ -3,18 +3,29 @@
 // Mit Konto bleibt der localStorage der Speicher, aus dem die App liest. Jedes Speichern und Löschen merkt sich
 // cloud.js (pending) und schickt es kurz danach an den Server; die Antwort bringt mit, was sich auf anderen Geräten
 // geändert hat. Ein Lied erkennt der Abgleich an seiner id (siehe store.js); je Lied gewinnt der neuere Stand.
-import { readJSON, writeJSON, syncStores, onSongChange } from './store.js';
+// Ins Konto passen nur so viele Lieder, wie der Server sagt (limit); was darüber hinausgeht, lehnt er ab, und es
+// bleibt nur auf diesem Gerät (rejected), bis wieder Platz ist.
+import { readJSON, writeJSON, syncStores, onSongChange, setClock } from './store.js';
 
 const KEY = 'notentafel.konto.v1';
-// acc = { token, user: { id, email }, since, pending: [{ area, id, at }] }; leer, wenn niemand angemeldet ist
+// acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id }], limit, offset };
+// ohne Anmeldung steht nur offset darin
 let acc = {};
 let base = null; // Adresse der API, null ohne Backend
-let me = null; // Antwort von /api/me: { tier, features, … }
+let me = null; // Antwort von /api/me: { tier, features, limits, … }
 let running = null, again = false, timer = null;
 let lastSync = 0, error = '';
 const listeners = new Set();
 
 const persist = () => writeJSON(KEY, acc);
+
+// Uhr nach dem Server: offset ist, wie weit die Uhr des Geräts nachgeht (zuletzt gemessen, bleibt beim Abmelden)
+const now = () => Date.now() + (acc.offset || 0);
+function setOffset(serverMs) {
+  if (!Number.isFinite(serverMs)) return;
+  acc.offset = serverMs - Date.now();
+  setClock(now);
+}
 
 // f(merged) nach jeder Änderung am Zustand; merged: Lieder vom Server sind hinzugekommen oder haben sich geändert
 export const onCloudChange = (f) => { listeners.add(f); };
@@ -22,9 +33,21 @@ const emit = (merged) => listeners.forEach((f) => f(!!merged));
 
 const loggedIn = () => !!acc.token;
 const canSync = () => loggedIn() && !!me && me.features.includes('cloud');
+function limit() {
+  const l = acc.limit !== undefined ? acc.limit : me && me.limits && me.limits.songs;
+  return typeof l === 'number' ? l : null;
+}
+const localCount = () => Object.values(syncStores).reduce((n, s) => n + s.songIds().length, 0);
+// Lieder im Konto: alle hier, außer denen, die nicht mehr hineingepasst haben
+const accountCount = () => localCount() - (acc.rejected || []).length;
 export const cloudInfo = () => ({
-  available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, busy: !!running, lastSync, error
+  available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, busy: !!running, lastSync, error,
+  limit: canSync() ? limit() : null, rejected: canSync() ? (acc.rejected || []).length : 0
 });
+// Liegt das Lied nur auf diesem Gerät, weil es nicht mehr ins Konto gepasst hat?
+export const localOnly = (area, id) => canSync() && (acc.rejected || []).some((r) => r.area === area && r.id === id);
+// Ist das Konto voll? Dann landet ein neues Lied nur auf diesem Gerät.
+export const accountFull = () => canSync() && limit() !== null && accountCount() >= limit();
 
 /* ---------- Anfragen ---------- */
 class ApiError extends Error {
@@ -52,7 +75,7 @@ function message(err) {
 }
 // Token abgelaufen oder Konto weg: abmelden, die Lieder auf dem Gerät bleiben
 function dropLogin() {
-  acc = {};
+  acc = { offset: acc.offset };
   me = null;
   persist();
 }
@@ -62,14 +85,16 @@ function dropLogin() {
 // schon im selben oder einem neueren Stand hat, lässt er liegen; verschiedene Lieder mit gleichem Namen bleiben beide
 // (siehe resolveNames in store.js).
 async function start(auth) {
-  acc = { token: auth.token, user: { id: auth.record.id, email: auth.record.email }, since: '', pending: [] };
+  acc = { token: auth.token, user: { id: auth.record.id, email: auth.record.email }, since: '', pending: [], rejected: [], offset: acc.offset };
   persist();
   me = await api('/me');
   if (!canSync()) { emit(); return; }
   const res = await api('/songs/sync', { method: 'POST', body: { since: '', changes: [] } });
+  setOffset(res.nowMs);
+  acc.limit = res.limit;
   mergeAll(res.songs);
-  const now = Date.now();
-  for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, now));
+  const t = now();
+  for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, t));
   acc.since = res.now;
   persist();
   emit(true);
@@ -106,9 +131,20 @@ function mark(area, id, at) {
   acc.pending = (acc.pending || []).filter((p) => p.area !== area || p.id !== id);
   acc.pending.push({ area, id, at });
 }
+// Lieder, die nicht ins Konto gepasst haben, beim nächsten Abgleich noch einmal versuchen (es ist Platz geworden)
+function retryRejected() {
+  (acc.rejected || []).forEach((r) => mark(r.area, r.id, now()));
+  acc.rejected = [];
+}
 function queue(area, id) {
   if (!loggedIn()) return;
-  mark(area, id, Date.now());
+  const store = syncStores[area];
+  // Gelöscht: Platz im Konto für Lieder, die nur hier liegen
+  if (store && !store.rawSong(id)) {
+    acc.rejected = (acc.rejected || []).filter((r) => r.area !== area || r.id !== id);
+    retryRejected();
+  }
+  mark(area, id, now());
   persist();
   clearTimeout(timer);
   timer = setTimeout(sync, 800);
@@ -137,11 +173,11 @@ async function run() {
   const sent = acc.pending.slice();
   // Was gerade da ist, nicht was beim Speichern da war: ein inzwischen gelöschtes Lied geht als gelöscht raus
   const changes = sent.filter((p) => syncStores[p.area]).map((p) => {
-    const s = syncStores[p.area].rawSong(p.id);
+    const store = syncStores[p.area], s = store.rawSong(p.id);
     if (!s) return { area: p.area, id: p.id, changedAt: p.at, deleted: true };
     const { id, name, savedAt, changedAt, ...data } = s;
-    return { area: p.area, id, name, savedAt, changedAt: changedAt || savedAt, data };
-  });
+    return { area: p.area, id, format: store.format, name, savedAt, changedAt: changedAt || savedAt, data };
+  }).sort((a, b) => !!b.deleted - !!a.deleted); // Löschen zuerst: macht Platz im Konto für Lieder, die nachrücken
   let res;
   try {
     res = await api('/songs/sync', { method: 'POST', body: { since: acc.since || '', changes } });
@@ -151,8 +187,19 @@ async function run() {
     emit();
     return;
   }
+  setOffset(res.nowMs);
+  acc.limit = res.limit;
   acc.pending = acc.pending.filter((p) => !sent.includes(p));
+  const no = new Set(res.rejected || []);
+  acc.rejected = (acc.rejected || []).concat(sent.filter((p) => no.has(p.id)).map(({ area, id }) => ({ area, id })));
+  const before = localCount();
   const merged = mergeAll(res.songs);
+  // Woanders gelöscht: Platz für Lieder, die nur hier liegen
+  if (localCount() < before && acc.rejected.length) { retryRejected(); again = true; }
+  // Was es hier nicht mehr gibt oder was der Server inzwischen hat, liegt nicht mehr nur hier
+  const there = new Set(res.songs.filter((s) => !s.deleted).map((s) => s.id));
+  acc.rejected = [...new Map(acc.rejected.map((r) => [r.area + '/' + r.id, r])).values()]
+    .filter((r) => !there.has(r.id) && syncStores[r.area] && syncStores[r.area].rawSong(r.id));
   acc.since = res.now;
   persist();
   lastSync = Date.now();
@@ -165,9 +212,9 @@ async function run() {
 function mergeAll(songs) {
   let merged = false;
   for (const area in syncStores) {
-    const m = syncStores[area].merge(songs.filter((s) => s.area === area));
+    const m = syncStores[area].merge(songs.filter((s) => s.area === area), now());
     if (m.merged) merged = true;
-    m.touched.forEach((id) => mark(area, id, Date.now()));
+    m.touched.forEach((id) => mark(area, id, now()));
     if (m.touched.length && running) again = true;
   }
   return merged;
@@ -180,6 +227,7 @@ export async function initCloud(backend) {
   base = backend || null;
   acc = readJSON(KEY) || {};
   me = null;
+  setClock(now);
   if (!base) { emit(); return; }
   onSongChange(queue);
   if (!wired && typeof window !== 'undefined') {

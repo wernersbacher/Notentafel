@@ -22,6 +22,7 @@ import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
 import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
 import { el } from './dom.js';
+import { accountFull, cloudInfo } from './cloud.js';
 
 const areas = [];
 let cur = null;
@@ -175,12 +176,16 @@ function setArea(id) {
 export function saveAs(input, btn, report) {
   const s = cur.songs, n = input.value.trim();
   if (!n) { report('Bitte zuerst einen Namen eingeben.', true); input.focus(); return; }
+  const exists = s.store.songExists(n);
   const doSave = () => {
+    // Ein neues Lied passt nicht mehr ins Konto: Es wird trotzdem gespeichert, aber nur auf diesem Gerät
+    const full = !exists && accountFull();
     if (!s.store.saveSong(s.data(), n)) { report('Speichern hat nicht geklappt (Speicher voll oder gesperrt).', true); return; }
     s.saved(n);
-    report('Gespeichert: „' + n + '“');
+    if (full) report('Gespeichert, aber nur auf diesem Gerät: In dein Konto passen höchstens ' + cloudInfo().limit + ' Lieder.', true);
+    else report('Gespeichert: „' + n + '“');
   };
-  if (s.store.songExists(n)) confirmTap(btn, 'Ersetzen?', doSave);
+  if (exists) confirmTap(btn, 'Ersetzen?', doSave);
   else doSave();
 }
 function prepareSavePop() {

@@ -17,13 +17,17 @@ function render() {
     el.accWho.textContent = c.user.email;
     el.accState.textContent = c.error ? c.error + ' Die Lieder bleiben vorgemerkt und gehen beim nächsten Mal mit.'
       : !c.sync ? (c.tier ? 'Mit diesem Konto werden die Lieder nicht abgeglichen.' : '')
-      : c.lastSync ? 'Lieder abgeglichen um ' + timeOf(c.lastSync) + ' Uhr.' : 'Lieder werden abgeglichen …';
-    el.accState.classList.toggle('warn', !!c.error);
+      : (c.lastSync ? 'Lieder abgeglichen um ' + timeOf(c.lastSync) + ' Uhr.' : 'Lieder werden abgeglichen …') + full(c);
+    el.accState.classList.toggle('warn', !!c.error || !!c.rejected);
   }
   el.cloudHint.hidden = !c.available;
-  el.cloudHint.textContent = c.user && c.sync ? 'Liegen auch in deinem Konto (' + c.user.email + ') und sind auf allen deinen Geräten da.'
+  el.cloudHint.textContent = c.user && c.sync ? 'Liegen auch in deinem Konto (' + c.user.email + ') und sind auf allen deinen Geräten da.' + full(c)
     : 'Liegen nur auf diesem Gerät. Mit einem Konto (in den Einstellungen) sind sie auf allen deinen Geräten da.';
 }
+// Hinweis, wenn Lieder nicht mehr ins Konto gepasst haben
+const full = (c) => c.rejected ? ' ' + (c.rejected === 1 ? 'Ein Lied passt' : c.rejected + ' Lieder passen') +
+  ' nicht mehr ins Konto (höchstens ' + c.limit + ') und ' + (c.rejected === 1 ? 'liegt' : 'liegen') +
+  ' nur auf diesem Gerät. Lösche Lieder, die du nicht mehr brauchst, dann rücken sie nach.' : '';
 function hint(text, warn) {
   el.accHint.textContent = text;
   el.accHint.classList.toggle('warn', !!warn);
@@ -47,9 +51,9 @@ async function submit(fn, doing) {
 }
 
 export function initAccount() {
-  onCloudChange((merged) => {
+  onCloudChange(() => {
     render();
-    if (merged) refreshSongs();
+    refreshSongs(); // auch ohne neue Lieder: „nur auf diesem Gerät“ kann sich geändert haben
   });
   el.btnLogin.addEventListener('click', () => submit(login, 'Anmelden …'));
   el.btnRegister.addEventListener('click', () => submit(register, 'Konto wird angelegt …'));

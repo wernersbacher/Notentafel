@@ -14,10 +14,15 @@ const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 // Jedes gespeicherte Lied hat eine id, die bleibt, auch wenn es umbenannt wird. Vorn steht der Zeitpunkt des Anlegens,
 // so sortieren ältere Lieder vor jüngeren (das ältere behält bei gleichem Namen seinen Namen, siehe resolveNames).
 const validId = (id) => typeof id === 'string' && /^[0-9a-z]{9,40}$/.test(id);
-export const newId = (t = Date.now()) => t.toString(36).padStart(9, '0') + Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+export const newId = (t = clock()) => t.toString(36).padStart(9, '0') + Math.random().toString(36).slice(2, 10).padEnd(8, '0');
 // Neben savedAt (wann der Inhalt gespeichert wurde, steht in der Liste) hat jedes Lied changedAt: wann es zuletzt
 // gespeichert, umbenannt oder gelöscht wurde. Beim Abgleich gewinnt der Stand mit dem neueren changedAt.
 const changedAt = (s) => s.changedAt || s.savedAt || 0;
+
+// Uhr für alle Zeitstempel der Lieder. Mit Konto stellt cloud.js sie nach der Uhr des Servers, damit ein Gerät mit
+// falsch gehender Uhr beim Abgleich nicht immer gewinnt oder immer verliert.
+let clock = () => Date.now();
+export const setClock = (f) => { clock = f; };
 
 // Speicher mit area (Name beim Abgleich: 'mel', 'rhy', 'lied'), damit cloud.js sie alle findet
 export const syncStores = {};
@@ -59,6 +64,8 @@ function resolveNames(list, now) {
 // Arbeitet Stände vom Server in die gespeicherten Lieder ein (list wie gespeichert).
 // remote: [{ id, name, savedAt, changedAt, deleted, data }]. Je id gewinnt der neuere Stand (changedAt); ein gelöschtes
 // Lied verschwindet nur, wenn es hier nicht danach noch geändert wurde. ok(entry) prüft einen Stand.
+// Ist ein Lied hier „neuer“, aber gleich (Name und Inhalt), übernimmt es die Zeit vom Server: Der hat einen Zeitstempel
+// aus der Zukunft gekappt, und sonst nähme dieses Gerät nie wieder Änderungen von anderen an.
 // Liefert { list, touched } (touched siehe resolveNames) oder null, wenn sich nichts geändert hat.
 export function mergeSongs(list, remote, ok, now) {
   const out = list.map((s) => ({ ...s }));
@@ -70,7 +77,11 @@ export function mergeSongs(list, remote, ok, now) {
       if (i >= 0 && mine <= r.changedAt) { out.splice(i, 1); dirty = true; }
       continue;
     }
-    if (mine >= r.changedAt) continue;
+    if (mine >= r.changedAt) {
+      const m = out[i];
+      if (mine > r.changedAt && m.name === r.name && sameContent(m, r.data)) { m.changedAt = r.changedAt; dirty = true; }
+      continue;
+    }
     const s = { ...r.data, id: r.id, name: r.name, savedAt: r.savedAt, changedAt: r.changedAt };
     if (!ok(s)) continue;
     if (i >= 0) out[i] = s; else out.push(s);
@@ -80,10 +91,31 @@ export function mergeSongs(list, remote, ok, now) {
   return dirty || touched.length ? { list: out, touched } : null;
 }
 
+// Sicherungsdatei: die gespeicherten Lieder aller Bereiche, so wie sie gespeichert sind (mit id, damit ein erneuter
+// Import keine Doppel macht). importAll legt sie wie beim Abgleich dazu und liefert, wie viele neu oder neuer waren,
+// oder -1, wenn es keine Sicherungsdatei der Musiktafel ist. Bereiche in einem anderen Format bleiben liegen.
+const BACKUP = 'musiktafel-lieder';
+export function exportAll(now = new Date()) {
+  const areas = {};
+  for (const a in syncStores) areas[a] = { format: syncStores[a].format, songs: syncStores[a].rawSongs() };
+  return { kind: BACKUP, version: 1, exportedAt: now.toISOString(), areas };
+}
+export function importAll(file) {
+  if (!file || file.kind !== BACKUP || !file.areas || typeof file.areas !== 'object') return -1;
+  let n = 0;
+  for (const a in file.areas) {
+    const store = syncStores[a], part = file.areas[a];
+    if (store && part && part.format === store.format && Array.isArray(part.songs)) n += store.importSongs(part.songs);
+  }
+  return n;
+}
+
 // Speicher eines Bereichs: aktuelle Tafel, gespeicherte Lieder (neueste zuerst) und ein Autosave-Platz.
 // keys = { board, songs, auto }. pack(data, name, savedAt) macht daraus einen speicherbaren Stand,
-// unpack(raw) prüft ihn und liefert { name, savedAt, … } oder null. Mit area nimmt der Speicher am Abgleich teil.
-export function makeStore(keys, { pack, unpack, area }) {
+// unpack(raw) prüft ihn und liefert { name, savedAt, … } oder null. Mit area nimmt der Speicher am Abgleich teil;
+// format (z. B. 'tafel.1') sagt dem Server, in welchem Format die Lieder sind. Ändert sich das Format, bekommt es eine
+// neue Nummer, und Lieder in einem Format, das diese Version der App nicht kennt, lässt sie beim Abgleich liegen.
+export function makeStore(keys, { pack, unpack, area, format }) {
   // Gültige Einträge so, wie sie gespeichert sind. Lieder von vor den ids bekommen hier einmal eine.
   function readSongs() {
     const list = readJSON(keys.songs);
@@ -91,13 +123,15 @@ export function makeStore(keys, { pack, unpack, area }) {
     const out = list.filter((s) => s && typeof s.name === 'string' && unpack(s))
       .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
     if (out.some((s) => !validId(s.id))) {
-      out.forEach((s) => { if (!validId(s.id)) s.id = newId(s.savedAt || Date.now()); });
+      out.forEach((s) => { if (!validId(s.id)) s.id = newId(s.savedAt || clock()); });
       writeJSON(keys.songs, out);
     }
     return out;
   }
   const notify = (ok, id) => { if (ok && area) changed(area, id); return ok; };
   const store = {
+    area,
+    format,
     loadBoard: () => unpack(readJSON(keys.board)),
     saveBoard: (data, name) => writeJSON(keys.board, pack(data, name)),
     // Wie unpack, dazu die id
@@ -106,7 +140,7 @@ export function makeStore(keys, { pack, unpack, area }) {
     songExists: (name, exceptId) => readSongs().some((s) => s.id !== exceptId && sameName(s.name, name)),
     // Speichert unter name; ein Lied mit gleichem Namen (ohne Groß/klein) wird ersetzt und behält seine id
     saveSong(data, name) {
-      const list = readSongs(), old = list.find((s) => sameName(s.name, name)), now = Date.now();
+      const list = readSongs(), old = list.find((s) => sameName(s.name, name)), now = clock();
       const entry = { ...pack(data, name, now), id: old ? old.id : newId(now), changedAt: now };
       const rest = list.filter((s) => s !== old);
       rest.unshift(entry);
@@ -119,20 +153,36 @@ export function makeStore(keys, { pack, unpack, area }) {
       if (!s) return 'error';
       if (list.some((x) => x !== s && sameName(x.name, name))) return 'taken';
       s.name = name;
-      s.changedAt = Date.now();
+      s.changedAt = clock();
       return notify(writeJSON(keys.songs, list), id) ? 'ok' : 'error';
     },
     // Autosave: der Stand, der zuletzt durch Laden oder „Alles löschen“ ersetzt wurde
     loadAuto: () => unpack(readJSON(keys.auto)),
-    saveAuto: (data, name) => writeJSON(keys.auto, pack(data, name, Date.now())),
+    saveAuto: (data, name) => writeJSON(keys.auto, pack(data, name, clock())),
     // Für den Abgleich: ein gespeichertes Lied so, wie es gespeichert ist (oder undefined), alle ids,
     // und Stände vom Server einarbeiten. merge liefert die ids, die danach an den Server müssen.
     rawSong: (id) => readSongs().find((s) => s.id === id),
     songIds: () => readSongs().map((s) => s.id),
-    merge(remote, now = Date.now()) {
-      const m = mergeSongs(readSongs(), remote, unpack, now);
+    // Alle gespeicherten Lieder so, wie sie gespeichert sind (zum Exportieren)
+    rawSongs: () => readSongs(),
+    merge(remote, now = clock()) {
+      const known = remote.filter((r) => r.deleted || !r.format || r.format === format);
+      const m = mergeSongs(readSongs(), known, unpack, now);
       if (!m || !writeJSON(keys.songs, m.list)) return { merged: false, touched: [] };
       return { merged: true, touched: m.touched };
+    },
+    // Lieder aus einer exportierten Datei (wie rawSongs) dazulegen: wie beim Abgleich je id der neuere Stand,
+    // gleiche Namen werden aufgelöst. Liefert, wie viele Lieder dazugekommen oder neuer geworden sind.
+    importSongs(list) {
+      const remote = list.filter((s) => s && validId(s.id) && typeof s.name === 'string')
+        .map((s) => ({ id: s.id, name: s.name, savedAt: s.savedAt || 0, changedAt: changedAt(s), data: s }));
+      const before = new Map(readSongs().map((s) => [s.id, changedAt(s)]));
+      const m = mergeSongs(readSongs(), remote, unpack, clock());
+      if (!m || !writeJSON(keys.songs, m.list)) return 0;
+      const mine = new Set(remote.map((r) => r.id));
+      const fresh = m.list.filter((s) => mine.has(s.id) && before.get(s.id) !== changedAt(s)).map((s) => s.id);
+      new Set([...fresh, ...m.touched]).forEach((id) => notify(true, id));
+      return fresh.length;
     }
   };
   if (area) syncStores[area] = store;

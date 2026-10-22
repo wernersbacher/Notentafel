@@ -15,7 +15,7 @@ function unpack(d) {
   const song = cleanSong(d);
   return song ? { song, name: typeof d.name === 'string' ? d.name : '', savedAt: d.savedAt || 0 } : null;
 }
-export const store = makeStore(KEYS, { pack, unpack, area: 'lied' });
+export const store = makeStore(KEYS, { pack, unpack, area: 'lied', format: 'lied.1' });
 
 export function cleanLiedSettings(s) {
   s = s || {};

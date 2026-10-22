@@ -1,5 +1,6 @@
 // Felder über dem Notenblatt: Tuch, ?-Karten und der Greifer zum Ziehen. render.js zeichnet das Blatt und holt sie von hier.
 import { L } from './state.js';
+import { findCoverIndex } from './model.js';
 import { el } from './dom.js';
 import { spPx } from './scale.js';
 
@@ -26,7 +27,7 @@ export function clothFrom(i, cls, tip = '') {
   if (s.t + s.h > below + 1) addBox(cls + ' rest', { l: s.l, t: below, w: s.w, h: s.t + s.h - below });
 }
 export function placeCovers() {
-  const k = L.song.ev.findIndex((e) => e.cv);
+  const k = findCoverIndex(L.song.ev);
   if (k >= 0) clothFrom(k, 'cloth', '<span class="clothtip">▼ antippen: nächste Zeile aufdecken</span>');
   // ?-Karten: verdeckt eine Karte über der Note bzw. ihrem Namen (aufgedeckte bleiben gemerkt für „neu abdecken“)
   L.song.ev.forEach((e, i) => {

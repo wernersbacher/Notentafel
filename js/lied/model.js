@@ -1,7 +1,8 @@
 // Datenmodell des Lieds. Alle Funktionen hier sind rein.
 //
-// Dies ist nur die Fassade: Die Abschnitte liegen in einzelnen Dateien und werden hier gesammelt, damit alle
-// bestehenden Importe aus './model.js' unverändert bleiben.
+// Dies ist die Fassade: Die Abschnitte liegen in einzelnen Dateien und werden hier gesammelt, damit alle
+// bestehenden Importe aus './model.js' unverändert bleiben. Dazu kommt findCoverIndex, weil Notenblatt (overlays.js)
+// und Aktionen (cover.js) dieselbe Stelle des Tuchs brauchen.
 //   theory.js   Grundbegriffe: Werte, Tonart, Tonhöhen (kennt kein anderes Modul aus lied/)
 //   measures.js Takte, Raster, Zählzeiten, Haltebögen und Änderungen daran (kennt theory)
 //   quizpool.js Stammtöne, Knöpfe und Tonraum fürs Tonnamen-Quiz (kennt theory und measures)
@@ -27,3 +28,7 @@ export * from './quizpool.js';
 export * from './melody.js';
 export * from './clean.js';
 export * from './play.js';
+
+/* ---------- Verdecken ---------- */
+// Ereignis, ab dem das Tuch liegt (-1: keins); rein, damit Notenblatt und Aktionen dieselbe Stelle fragen
+export const findCoverIndex = (events) => events.findIndex((e) => e.cv);

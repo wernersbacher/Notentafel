@@ -1,6 +1,7 @@
 // Verdecken: Tuch, ?-Karten, eingeklappte Zeilen und das Aufdecken per Tipp. Jede Aktion merkt sich vorher den Stand
 // für „Rückgängig“ und endet mit commit().
 import { isNote, isBeat } from './model.js';
+import { findCoverRow } from './cells.js';
 import { S, curCell, snap } from './state.js';
 import { commit } from './redraw.js';
 import { toast } from '../core/ui.js';
@@ -8,8 +9,9 @@ import { select } from './edit.js';
 
 /* ---------- Verdecken ---------- */
 // Tuch: ab der Zeile mit cover ist alles abgedeckt; coverFrom merkt, wo es am Anfang lag. ?-Karte: q am Zeichen
-// (1 verdeckt, 2 aufgedeckt). Alles hängt an Zeilen und Zeichen und wird mit der Tafel gespeichert.
-export const coverRow = () => S.rows.findIndex((row) => row.cover);
+// (1 verdeckt, 2 aufgedeckt). Alles hängt an Zeilen und Zeichen und wird mit der Tafel gespeichert. Wo das Tuch liegt,
+// sagt findCoverRow (cells.js), weil auch das Zeichnen in board.js dieselbe Stelle braucht.
+export const coverRow = () => findCoverRow(S.rows);
 const hasContentFrom = (r) => S.rows.slice(r).some((row) => row.some(Boolean));
 
 // Tuch ab der markierten Zeile

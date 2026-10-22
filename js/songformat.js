@@ -5,14 +5,17 @@
 // liest aus beiden Bereichen (Zellbegriffe aus tafel/cells.js, Tonhöhen und Takte aus lied/theory.js und lied/measures.js).
 import { isNote, parsePitch, accOf, ticks, QUARTER } from './lied/theory.js';
 import { barsAfter, tiedFrom } from './lied/measures.js';
+import { MAX_PER_ROW, MAX_ROWS } from './tafel/config.js';
 import * as tafelCell from './tafel/cells.js';
 
 /* ---------- Ins Lied übernehmen ---------- */
-// Tonhöhe im Lied ('c1' = c') und Vorzeichen zu jedem bunten Punkt
+// Tonhöhe im Lied ('c1' = c') und Vorzeichen (1 ♯, −1 ♭) zu jedem bunten Punkt. Einzige Quelle der Tonzuordnung; die
+// Umkehrung für den Weg zurück steht als MEL_IDS darunter.
 const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: ['a1'], H: ['h1'],
   'C+': ['c2'], 'D+': ['d2'], 'E+': ['e2'], 'F+': ['f2'], Fis: ['f1', 1], B: ['h1', -1],
   Cis: ['c1', 1], Dis: ['d1', 1], Gis: ['g1', 1], 'Cis+': ['c2', 1], 'Dis+': ['d2', 1] };
-// Länge in Schlägen als Notenwert im Lied [v, dot]
+// Länge in Schlägen als Notenwert im Lied [v, dot]. Bewusst nicht dieselbe Liste wie MEL_BEATS: Die Tafel kennt auch
+// Sechzehntel (0.25), die Melodie nicht.
 const LIED_VALUE = { 0.25: [16], 0.5: [8], 1: [4], 1.5: [4, 1], 2: [2], 3: [2, 1], 4: [1] };
 // Die Tafel als Lied (Format wie in lied/model.js): bunte Punkte werden Noten auf ihrer Tonhöhe, eigenständige
 // Notenzeichen Noten auf der Mittellinie (h'), Pausen und leere Plätze Pausen. Ein Platz mit nur einem Strich ist kein
@@ -26,7 +29,7 @@ export function rowsToSong(rows) {
     row.forEach((c) => {
       // Ein Platz, der nur einen Strich trägt (z. B. der Schlussstrich am Zeilenende), ist kein Schlag: Er wird kein Ton
       // und keine Pause, sonst klänge an jedem Zeilenende eine Viertelpause.
-      if (!tafelCell.filled(c) && c && c.bar) return;
+      if (tafelCell.isBarOnly(c)) return;
       const [v, dot] = LIED_VALUE[tafelCell.dur(c)] || [4];
       const o = tafelCell.isNote(c) ? { p: LIED_PITCH[c.n][0], v } : tafelCell.isBeat(c) ? { p: 'h1', v } : { v };
       if (tafelCell.isNote(c) && LIED_PITCH[c.n][1]) o.acc = LIED_PITCH[c.n][1];
@@ -40,22 +43,26 @@ export function rowsToSong(rows) {
 }
 
 /* ---------- Als Melodie übernehmen ---------- */
-// Farbnoten zu Stufe (0 = c) und Vorzeichen, je Oktave: c'–h' mit allen Halbtönen, c''–f'' mit Cis und Dis
-// (Des wie Cis, Es wie Dis, Ges wie Fis, As wie Gis, Ais wie B)
-const MEL_IDS = [
-  { '0:0': 'C', '0:1': 'Cis', '1:-1': 'Cis', '1:0': 'D', '1:1': 'Dis', '2:-1': 'Dis', '2:0': 'E', '3:0': 'F', '3:1': 'Fis', '4:-1': 'Fis',
-    '4:0': 'G', '4:1': 'Gis', '5:-1': 'Gis', '5:0': 'A', '5:1': 'B', '6:-1': 'B', '6:0': 'H' },
-  { '0:0': 'C+', '0:1': 'Cis+', '1:-1': 'Cis+', '1:0': 'D+', '1:1': 'Dis+', '2:-1': 'Dis+', '2:0': 'E+', '3:0': 'F+' }
-];
+// Umkehrung von LIED_PITCH: Farbnoten zu Stufe (0 = c) und Vorzeichen, je Oktave c'–h' mit allen Halbtönen und c''–f''
+// mit Cis und Dis. Enharmonisch gleiche Schreibweisen, die die Tafel nicht als eigenen Punkt hat, kommen dazu (Des wie
+// Cis, Es wie Dis, Ges wie Fis, As wie Gis, Ais wie B; B bleibt B, weil die Tafel es selbst hat).
+const MEL_IDS = [{}, {}];
+for (const [id, [p, acc = 0]] of Object.entries(LIED_PITCH)) {
+  const { step, oct } = parsePitch(p);
+  const put = (o, s, a) => { if (MEL_IDS[o - 1]) MEL_IDS[o - 1][s + ':' + a] = id; };
+  put(oct, step, acc);
+  // Ein ♯ klingt wie die nächste Stufe mit ♭ und umgekehrt (h♭ = B, a♯ = derselbe Ton; an den Rändern wechselt die Oktave)
+  if (acc === 1) put(step === 6 ? oct + 1 : oct, (step + 1) % 7, -1);
+  else if (acc === -1) put(step === 0 ? oct - 1 : oct, (step + 6) % 7, 1);
+}
+// Längen, die die Melodie kennt (in Schlägen): keine Sechzehntel, anders als die Tafel (LIED_VALUE) – siehe melBeats
 const MEL_BEATS = [0.5, 1, 1.5, 2, 3, 4];
-const MEL_PER_ROW = 10; // Schläge pro Zeile der Melodie (wie MAX_PER_ROW in tafel/config.js)
-const MEL_ROWS = 8;     // Zeilen der Tafel (wie MAX_ROWS)
 // Nächste Länge, die die Melodie kennt (gleich weit: die längere)
 const melBeats = (b) => MEL_BEATS.reduce((a, x) => (Math.abs(x - b) < Math.abs(a - b) || (Math.abs(x - b) === Math.abs(a - b) && x > a) ? x : a));
 // Das Lied als Melodie (Format der Tafel: rows mit Plätzen, lines mit Taktart; siehe tafel/model.js). Jede Note wird ein
 // Farbpunkt mit Notenwert, übergebundene Noten werden zu einer langen zusammengefasst, wenn es die Länge gibt. Töne
 // außerhalb des Vorrats (c'–f'' mit Halbtönen) werden Pausen gleicher Länge, andere Längen gerundet. Takte bleiben zusammen in
-// einer Zeile (höchstens 10 Schläge), ein Umbruch beginnt eine neue; Schluss- und Wiederholungsstriche kommen mit.
+// einer Zeile (höchstens MAX_PER_ROW Schläge), ein Umbruch beginnt eine neue; Schluss- und Wiederholungsstriche kommen mit.
 // Liefert { rows, lines, skipped (Töne als Pause), cut (Zeilen, die nicht mehr auf die Tafel passten) }.
 export function songToMelody(song, autoBar = true) {
   const ev = song.ev, bars = barsAfter(song, autoBar), units = [];
@@ -82,7 +89,7 @@ export function songToMelody(song, autoBar = true) {
   let beatsInRow = 0, chunk = [], chunkBeats = 0;
   const flush = (brk) => {
     if (chunk.length) {
-      if (beatsInRow && beatsInRow + chunkBeats > MEL_PER_ROW) { rows.push([]); beatsInRow = 0; }
+      if (beatsInRow && beatsInRow + chunkBeats > MAX_PER_ROW) { rows.push([]); beatsInRow = 0; }
       rows[rows.length - 1].push(...chunk);
       beatsInRow += chunkBeats;
     }
@@ -96,7 +103,7 @@ export function songToMelody(song, autoBar = true) {
   flush(false);
   if (!rows[rows.length - 1].length) rows.pop();
   // Striche: im Lied hinter einem Zeichen, auf der Tafel vor dem nächsten Platz (am Zeilenende ein leerer Platz mit Strich)
-  const out = rows.slice(0, MEL_ROWS).map((us) => {
+  const out = rows.slice(0, MAX_ROWS).map((us) => {
     const cells = us.map((u) => ({ ...u.cell }));
     us.forEach((u, k) => {
       if (!u.bar || (u.bar === 1 && autoBar)) return;
@@ -104,5 +111,5 @@ export function songToMelody(song, autoBar = true) {
     });
     return cells.slice(0, 32);
   });
-  return { rows: out, lines: out.map((_, r) => (r === 0 && song.meter ? { l: 0, m: song.meter } : 0)), skipped, cut: Math.max(0, rows.length - MEL_ROWS) };
+  return { rows: out, lines: out.map((_, r) => (r === 0 && song.meter ? { l: 0, m: song.meter } : 0)), skipped, cut: Math.max(0, rows.length - MAX_ROWS) };
 }

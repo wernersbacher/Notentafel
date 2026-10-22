@@ -1,6 +1,6 @@
 // Verdecken: Tuch, ?-Karten, eingeklappte Zeilen und das Aufdecken per Tipp.
 import { toast } from '../core/ui.js';
-import { isNote } from './model.js';
+import { isNote, findCoverIndex } from './model.js';
 import { L, opts, persistOpts, snap } from './state.js';
 import { commit, lineStartAfter } from './render.js';
 import { ev, cur } from './common.js';
@@ -8,8 +8,9 @@ import { select } from './edit.js';
 
 /* ---------- Verdecken ---------- */
 // Tuch: ab dem Ereignis mit cv ist alles abgedeckt; cf merkt, wo es am Anfang lag. ?-Karten: q über der Note, qn über
-// ihrem Notennamen (1 verdeckt, 2 aufgedeckt). Alles hängt an den Ereignissen und wird mit dem Lied gespeichert.
-export const coverIndex = () => ev().findIndex((e) => e.cv);
+// ihrem Notennamen (1 verdeckt, 2 aufgedeckt). Alles hängt an den Ereignissen und wird mit dem Lied gespeichert. Die
+// Stelle des Tuchs sucht findCoverIndex (model.js), weil auch das Notenblatt (overlays.js) sie braucht.
+export const coverIndex = () => findCoverIndex(ev());
 
 // Tuch ab der markierten Note
 export function coverFrom() {

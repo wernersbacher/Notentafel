@@ -1,6 +1,6 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, filled, widest, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
+import { isNote, isBeat, isRest, isBarOnly, findCoverRow, widest, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { spanOf, unitCount, colFrs, midOf, geoFrac } from './board-math.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { meterParts } from './rhythms.js';
@@ -107,7 +107,7 @@ function rowHTML(row, r, cols, P, marks) {
   // Ein Platz am Zeilenende, der nur einen Strich trägt, belegt keinen Schlag (rowUnits zählt ihn mit 0). Er wird nicht
   // als eigener Platz gezeichnet; sein Strich hängt als endBar am Platz davor.
   const tailAt = row.length - 1;
-  const tail = tailAt > 0 && row[tailAt] && !filled(row[tailAt]) && row[tailAt].bar ? tailAt : -1;
+  const tail = tailAt > 0 && isBarOnly(row[tailAt]) ? tailAt : -1;
   // Erst alle Plätze ausmessen (Balken und Silbenfelder reichen bis zu einem späteren Platz).
   // u: belegte Sechzehntel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen
   // Achtel oder Sechzehntel nur bis zum nächsten Schlag, damit sie wieder auf den Schlägen stehen
@@ -182,7 +182,7 @@ export function renderBoard() {
   grid.classList.toggle('counts', settings.autoZ ? auto.any : S.rows.some((row) => row.some((x) => x && x.z)));
   // Tuch: deckt ab seiner Zeile alles bis unten ab; ein Tipp darauf deckt die nächste Zeile auf (liegt darunter nichts
   // mehr, heißt es nur „aufdecken“, z. B. beim Rhythmus-Echo)
-  const k = S.rows.findIndex((row) => row.cover), more = S.rows.slice(k + 1).some((row) => row.some(Boolean));
+  const k = findCoverRow(S.rows), more = S.rows.slice(k + 1).some((row) => row.some(Boolean));
   const cloth = k < 0 ? '' : '<div class="cloth" style="grid-row:' + (k + 1) + ' / ' + (S.rows.length + 1) + '" role="button" tabindex="0" aria-label="Abgedeckt. Antippen deckt ' + (more ? 'die nächste Zeile ' : '') + 'auf.">' +
     '<span class="clothtip">▼ antippen: ' + (more ? 'nächste Zeile aufdecken' : 'aufdecken') + '</span></div>';
   grid.innerHTML = rows.map((row, r) => rowHTML(row, r, cols, Ps[r], auto.rows[r])).join('') + cloth;

@@ -1,5 +1,6 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import { fakeStorage } from './helpers.mjs';
 
 // Mehrere Geräte: jedes hat seinen eigenen localStorage, use(dev) schaltet um. Muss stehen, bevor storage.js geladen wird.
@@ -20,7 +21,10 @@ const C = await import('../js/core/cloud.js');
 const realTimeout = setTimeout;
 globalThis.setTimeout = (f, ms, ...a) => (ms === C.SYNC_DELAY ? 0 : realTimeout(f, ms, ...a));
 const { mergeSongs, newId } = await import('../js/core/store.js');
-const LIMIT = 50;
+// Die Server-Regeln selbst liegen in pb_hooks/ (CommonJS) und laufen hier mit: der nachgebaute Server hält nur die Daten
+const require = createRequire(import.meta.url);
+const { planSync } = require('../pb_hooks/sync.js');
+const LIMIT = require('../pb_hooks/tiers.js').TIERS.pro.limits.songs;
 
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
@@ -30,20 +34,6 @@ function resetServer() {
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
   : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, resort(v[k])])) : v;
-// Warum der Server eine Änderung nicht annimmt (null: gültig), wie refusal in pb_hooks/songs.pb.js
-const AREAS = ['mel', 'rhy', 'lied'], MAX_DATA = 200000;
-function refusal(c) {
-  if (!c || typeof c !== 'object' || !AREAS.includes(c.area)) return 'area';
-  if (typeof c.id !== 'string' || !/^[0-9a-z]{9,40}$/.test(c.id)) return 'id';
-  if (!Number.isInteger(c.changedAt)) return 'changedAt';
-  if (c.deleted) return null;
-  if (typeof c.name !== 'string' || !c.name.trim() || c.name.length > 40) return 'name';
-  if (!Number.isInteger(c.savedAt)) return 'savedAt';
-  if (typeof c.format !== 'string' || c.format.length > 20) return 'format';
-  if (!c.data || typeof c.data !== 'object') return 'data';
-  if (JSON.stringify(c.data).length > MAX_DATA) return 'size';
-  return null;
-}
 function handle(method, path, auth, body) {
   const uid = server.tokens.get(auth);
   if (method === 'POST' && path === '/collections/users/records') {
@@ -76,28 +66,20 @@ function handle(method, path, auth, body) {
     return [204, null];
   }
   if (method === 'POST' && path === '/songs/sync') {
-    const now = ++server.tick, nowMs = serverNow(), rejected = [], refused = [];
-    const clamp = (t) => Math.min(t, nowMs);
-    let active = server.songs.filter((s) => s.user === uid && !s.deleted).length;
-    for (const c of body.changes) {
-      const reason = refusal(c);
-      if (reason) { refused.push(c && c.id !== undefined ? { id: String(c.id), reason } : { reason }); continue; }
-      const changedAt = clamp(c.changedAt);
-      let rec = server.songs.find((s) => s.user === uid && s.id === c.id);
-      if (rec && rec.changedAt >= changedAt) continue;
-      if (!rec && c.deleted) continue;
-      const adds = !c.deleted && (!rec || rec.deleted);
-      if (adds && active >= server.limit) { rejected.push(c.id); continue; }
-      if (adds) active++;
-      else if (c.deleted && !rec.deleted) active--;
-      if (!rec) server.songs.push(rec = { user: uid, id: c.id });
-      Object.assign(rec, { area: c.area, changedAt, deleted: !!c.deleted, updated: ++server.tick });
-      if (!c.deleted) Object.assign(rec, { format: c.format, name: c.name, savedAt: clamp(c.savedAt), data: resort(c.data) });
+    const now = ++server.tick, nowMs = serverNow();
+    const mine = server.songs.filter((s) => s.user === uid);
+    const plan = planSync(mine.map(({ id, changedAt, deleted }) => ({ id, changedAt, deleted })), body.changes, nowMs, server.limit);
+    for (const w of plan.writes) {
+      // in der ganzen Liste suchen: ein eben angelegtes Lied steht noch nicht in mine
+      let rec = server.songs.find((s) => s.user === uid && s.id === w.id);
+      if (!rec) server.songs.push(rec = { user: uid, id: w.id });
+      Object.assign(rec, { area: w.area, changedAt: w.changedAt, deleted: w.deleted, updated: ++server.tick });
+      if (!w.deleted) Object.assign(rec, { format: w.format, name: w.name, savedAt: w.savedAt, data: resort(w.data) });
     }
     const since = body.since === '' ? 0 : +body.since;
     const songs = server.songs.filter((s) => s.user === uid && s.updated >= since)
       .map(({ area, id, format, name, savedAt, changedAt, deleted, data }) => ({ area, id, format, name, savedAt, changedAt, deleted, data: deleted ? null : data }));
-    return [200, { now: String(now), nowMs, limit: server.limit, rejected, refused, songs: JSON.parse(JSON.stringify(songs)) }];
+    return [200, { now: String(now), nowMs, limit: server.limit, rejected: plan.rejected, refused: plan.refused, songs: JSON.parse(JSON.stringify(songs)) }];
   }
   return [404, { message: 'Not found' }];
 }

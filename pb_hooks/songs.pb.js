@@ -16,8 +16,10 @@
 //             'size' (Inhalt größer als die data-Spalte erlaubt) oder 'save' (Speichern scheiterte).
 //             Eine solche Änderung hält die übrigen nicht auf; sie werden trotzdem gespeichert.
 //   nowMs     Uhrzeit des Servers, danach stellt die App ihre Zeitstempel (Geräte mit falsch gehender Uhr)
+// Was angenommen wird, entscheidet planSync (sync.js); hier bleibt nur Body lesen, einspielen und antworten.
 routerAdd('POST', '/api/songs/sync', (e) => {
   const { TIERS, tierOf } = require(`${__hooks}/tiers.js`);
+  const { MAX_CHANGES, planSync } = require(`${__hooks}/sync.js`);
   const auth = e.auth;
   const tier = TIERS[tierOf(auth)];
   if (!tier.features.includes('cloud')) throw new ForbiddenError('Abgleich nur mit Pro.');
@@ -25,76 +27,47 @@ routerAdd('POST', '/api/songs/sync', (e) => {
   const body = e.requestInfo().body || {};
   const since = typeof body.since === 'string' ? body.since : '';
   const changes = Array.isArray(body.changes) ? body.changes : [];
-  if (changes.length > 500) throw new BadRequestError('Zu viele Änderungen auf einmal.');
+  if (changes.length > MAX_CHANGES) throw new BadRequestError('Zu viele Änderungen auf einmal.');
   // Vor dem Schreiben: was ab jetzt geändert wird, kommt beim nächsten Abgleich (noch einmal) mit
   const now = new DateTime().string();
   const nowMs = Date.now();
-  // Zeitstempel aus der Zukunft (Uhr des Geräts geht vor) zählen als jetzt, sonst gewönne das Gerät jeden Vergleich
-  const clamp = (t) => Math.min(t, nowMs);
 
-  const AREAS = ['mel', 'rhy', 'lied'];
-  // Grenze der data-Spalte (maxSize in pb_migrations/1761100000_songs.js): Größeres nimmt die Datenbank nicht an
-  const MAX_DATA = 200000;
-  // Warum eine Änderung nicht angenommen wird (null: gültig). Der Grund geht als refused zurück und bleibt dort,
-  // statt still zu verschwinden.
-  const refusal = (c) => {
-    if (!c || typeof c !== 'object' || !AREAS.includes(c.area)) return 'area';
-    if (typeof c.id !== 'string' || !/^[0-9a-z]{9,40}$/.test(c.id)) return 'id';
-    if (!Number.isInteger(c.changedAt)) return 'changedAt';
-    if (c.deleted) return null;
-    if (typeof c.name !== 'string' || !c.name.trim() || c.name.length > 40) return 'name';
-    if (!Number.isInteger(c.savedAt)) return 'savedAt';
-    if (typeof c.format !== 'string' || c.format.length > 20) return 'format';
-    if (!c.data || typeof c.data !== 'object') return 'data';
-    if (JSON.stringify(c.data).length > MAX_DATA) return 'size';
-    return null;
-  };
-  const rejected = [];
-  const refused = [];
-  // id so, wie der Client sie zum Zuordnen schicken kann, auch wenn sie kein gültiger Lied-Schlüssel ist
-  const refuse = (c, reason) => refused.push(c && c.id !== undefined && c.id !== null ? { id: String(c.id), reason } : { reason });
+  let plan;
   e.app.runInTransaction((tx) => {
     const col = tx.findCollectionByNameOrId('songs');
-    let active = tx.countRecords(col, $dbx.hashExp({ user: auth.id, deleted: false }));
-    for (const c of changes) {
-      const reason = refusal(c);
-      if (reason) { refuse(c, reason); continue; }
-      const changedAt = clamp(c.changedAt);
+    const existing = tx.findRecordsByFilter(col, 'user = {:u}', '', 0, 0, { u: auth.id })
+      .map((r) => ({ id: r.getString('sid'), changedAt: r.getInt('changed_at'), deleted: r.getBool('deleted') }));
+    plan = planSync(existing, changes, nowMs, limit);
+    for (const w of plan.writes) {
       let rec = null;
-      try { rec = tx.findFirstRecordByFilter(col, 'user = {:u} && sid = {:s}', { u: auth.id, s: c.id }); } catch (err) { /* noch nicht da */ }
-      if (rec && rec.getInt('changed_at') >= changedAt) continue; // auf dem Server liegt schon ein neuerer Stand
-      if (!rec && c.deleted) continue; // nie angekommen, schon wieder gelöscht
-      // Ein neues Lied oder eins aus dem Papierkorb braucht Platz im Konto
-      const adds = !c.deleted && (!rec || rec.getBool('deleted'));
-      if (adds && limit !== null && active >= limit) { rejected.push(c.id); continue; }
-      const frees = c.deleted && !rec.getBool('deleted'); // Löschen gibt Platz frei
+      try { rec = tx.findFirstRecordByFilter(col, 'user = {:u} && sid = {:s}', { u: auth.id, s: w.id }); } catch (err) { /* noch nicht da */ }
       if (!rec) {
         rec = new Record(col);
         rec.set('user', auth.id);
-        rec.set('sid', c.id);
+        rec.set('sid', w.id);
       }
-      rec.set('area', c.area);
-      rec.set('changed_at', changedAt);
-      rec.set('deleted', !!c.deleted);
-      if (!c.deleted) {
-        rec.set('format', c.format);
-        rec.set('name', c.name);
-        rec.set('saved_at', clamp(c.savedAt));
-        rec.set('data', c.data);
+      rec.set('area', w.area);
+      rec.set('changed_at', w.changedAt);
+      rec.set('deleted', w.deleted);
+      if (!w.deleted) {
+        rec.set('format', w.format);
+        rec.set('name', w.name);
+        rec.set('saved_at', w.savedAt);
+        rec.set('data', w.data);
       }
       try {
         tx.save(rec);
       } catch (err) {
         // Eine kaputte Änderung darf die übrigen nicht mitreißen (sonst rollt die ganze Transaktion zurück
         // und der Abgleich bliebe für dieses Gerät für immer stecken)
-        refuse(c, 'save');
-        continue;
+        plan.refused.push({ id: w.id, reason: 'save' });
       }
-      // Erst nach erfolgreichem Speichern zählen, sonst bliebe der Platz im Konto falsch belegt
-      if (adds) active++;
-      else if (frees) active--;
     }
   });
+  // Anders als früher zählt planSync den Platz schon für alle geplanten Änderungen, nicht erst nach erfolgreichem
+  // Speichern: scheitert ein save, gilt für die übrigen Änderungen desselben Aufrufs trotzdem der geplante Stand
+  // (ein gescheitertes Anlegen hält so Platz frei, ein gescheitertes Löschen gibt so keinen frei). Betroffen ist
+  // nur dieser eine Aufruf; der nächste rechnet wieder anhand der Datenbank.
   require(`${__hooks}/trash.js`).capTrash(e.app, auth.id);
 
   const filter = since ? 'user = {:u} && updated >= {:since}' : 'user = {:u}';
@@ -107,5 +80,5 @@ routerAdd('POST', '/api/songs/sync', (e) => {
       data: deleted ? null : JSON.parse(r.getString('data') || 'null')
     };
   });
-  return e.json(200, { now, nowMs, limit, rejected, refused, songs });
+  return e.json(200, { now, nowMs, limit, rejected: plan.rejected, refused: plan.refused, songs });
 }, $apis.requireAuth('users'));

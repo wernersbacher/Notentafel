@@ -9,7 +9,6 @@ import { shellState } from './shell-state.js';
 export const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
 
 export function initBar(areas, setArea, setPlay) {
-  el.sharedTools = el.btnIns.parentNode;
   el.tabs.innerHTML = areas.map((a) =>
     '<button type="button" class="tab" role="tab" id="tab-' + a.id + '" data-area="' + a.id + '" aria-controls="' + a.panel.id + '">' + a.label + '</button>'
   ).join('');

@@ -126,8 +126,8 @@ function stepQuiz() {
 }
 
 /* ---------- Notenwerte ---------- */
-// Werte je Stufe: key ist Grundwert und Punkt (z. B. '2.' punktierte Halbe)
-const VALUES = [
+// Werte je Stufe: key ist Grundwert und Punkt (z. B. '2.' punktierte Halbe), dazu der Name und die Stufe
+const VALUE_STEPS = [
   ['1', 'Ganze', 1], ['2', 'Halbe', 1], ['4', 'Viertel', 1], ['8', 'Achtel', 2], ['16', 'Sechzehntel', 3],
   ['2.', 'punktierte Halbe', 3], ['4.', 'punktierte Viertel', 3]
 ];
@@ -148,7 +148,7 @@ function valueSVG(e) {
   return staffSVG({ top: -3, bottom: 7.5 }, s, e.p ? 'Note' : 'Pause');
 }
 function valuesQuiz() {
-  const vals = VALUES.filter((x) => x[2] <= opts.valLevel), pitches = whiteRange('e1', 'f2');
+  const vals = VALUE_STEPS.filter((x) => x[2] <= opts.valLevel), pitches = whiteRange('e1', 'f2');
   const keys = vals.map(([key, name]) => ({ key, html: '<span>' + name + '</span>', label: name }));
   let cur = null, plan = null;
   el.quizView.hidden = false;

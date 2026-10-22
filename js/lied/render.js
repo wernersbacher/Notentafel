@@ -6,7 +6,7 @@ import { follow } from '../core/ui.js';
 import { isNote } from './model.js';
 import { layout, widestMeasure } from './layout.js';
 import { sheetSVG, NUM_W, foldedLine } from './sheet.js';
-import { L, opts, persistSong } from './state.js';
+import { L, opts, persistSong, written } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 import { setSpPx } from './scale.js';
@@ -30,8 +30,10 @@ let folded = new Set();
 export const isFolded = (i) => folded.has(i);
 
 export function renderSheet() {
+  // Übt man gerade, liefert written() das wartende Lied statt L selbst
+  const practicing = written() !== L;
   // Leere Übungstafel: ganz leer, ohne Notenlinien
-  if (L.written && !L.song.ev.length) { el.sheet.innerHTML = ''; lastFirst = 0; folded = new Set(); return; }
+  if (practicing && !L.song.ev.length) { el.sheet.innerHTML = ''; lastFirst = 0; folded = new Set(); return; }
   // Schreibt man gerade am Ende, bleibt die letzte Zeile beim Umbrechen einfach gefüllt (growing in layout.js)
   const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check, lyrics: opts.lyrics };
   const growing = L.last != null && L.sel >= L.song.ev.length;
@@ -51,7 +53,7 @@ export function renderSheet() {
   folded = new Set();
   lay.systems.forEach((s) => { if (foldedLine(L.song.ev, s)) for (let i = s.first; i < s.end; i++) folded.add(i); });
   // Eingeklappte Leiste, Tonnamen-Quiz und Übungstafel: Bearbeiten beendet, ohne Markierung und leeren Platz
-  const clean = sideCollapsed() || !!L.quiz || !!L.written;
+  const clean = sideCollapsed() || !!L.quiz || practicing;
   const last = !clean && L.last != null && isNote(L.song.ev[L.last]) ? L.last : -1;
   // Hervorgehoben ist, was gerade klingt, sonst die Note, nach der das Tonnamen-Quiz fragt. Beim Quiz stehen die
   // Notennamen nur unter den Noten, die schon benannt sind.

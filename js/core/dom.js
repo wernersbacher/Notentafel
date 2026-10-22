@@ -5,7 +5,7 @@ const ids = [
   'gameBar', 'quizView', 'gameIntro',
   'btnPlay', 'btnPresent', 'btnTempo', 'tempoNum', 'tempoPop', 'tempoPopOut', 'tempoRange', 'tempoMinus', 'tempoPlus', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
-  'drawer', 'backdrop', 'btnClose', 'drawerTitle', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
+  'drawer', 'backdrop', 'btnClose', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs', 'cloudHint', 'btnExportAll', 'btnImportAll', 'importFile', 'backupHint',
   'accountSec', 'accOut', 'accIn', 'accEmail', 'accPass', 'btnLogin', 'btnRegister', 'accHint', 'accWho', 'accState', 'btnLogout', 'btnDelAcc',
   'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut', 'uiScale', 'uiRange', 'uiNum', 'uiMinus', 'uiPlus'
@@ -17,3 +17,6 @@ export function byId(ids) {
 export const el = byId(ids);
 // Der Rahmen um die Tafel, in dem jeder Bereich seine eigene Fläche hat
 el.board = document.querySelector('.board');
+// Der gemeinsame Behälter der Werkzeugknöpfe oben in der Leiste (index.html: .tools.toprow mit insert, gap, del, brk);
+// shell.js blendet ihn aus, wenn der Bereich keine dieser Werkzeuge hat
+el.sharedTools = document.querySelector('.tools.toprow');

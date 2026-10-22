@@ -1,7 +1,7 @@
 // Laufender Zustand der Tafel. Alle Module der Tafel lesen und ändern diese beiden Objekte direkt.
 import { useSettings } from '../core/settings.js';
 import { pushState, popState } from '../core/history.js';
-import { emptyRows, appendPos, hasNotes, attachLines, packLines } from './model.js';
+import { emptyRows, appendPos, hasNotes, isNote, attachLines, packLines } from './model.js';
 import { loadBoard, saveBoard, saveAuto, cleanTafelSettings } from './storage.js';
 
 // Gemeinsame Einstellungen samt denen der Tafel, je ein Set für Melodie und Rhythmus (unter mel und rhy)
@@ -28,7 +28,7 @@ export const S = {
   written: null, // beim Üben und Spielen: die geschriebene Tafel { rows, name, sel, hist }, die so lange wartet
   cap: 0 // Plätze pro Zeile, danach wird automatisch umbrochen (0 = noch nicht gezeichnet)
 };
-// Zeilen werden automatisch umbrochen, wenn sie voll sind (Melodie: MAX_PER_ROW Plätze, Rhythmus: RHY_PER_ROW Schläge)
+// Zeilen werden automatisch umbrochen, wenn sie voll sind (Melodie: MAX_PER_ROW, Rhythmus: RHY_PER_ROW Schläge)
 export const wraps = () => S.cap > 0;
 
 // Schaltet auf die Tafel v um: Zustand und Einstellungen (geladen wird in area.js)
@@ -58,9 +58,11 @@ export function startPractice() {
 export function clearPractice() {
   if (S.written) Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [] });
 }
-// Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten
+// Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten.
+// false, wenn darin nichts zu benennen ist: Dann bleibt die Übungstafel unangetastet (das Quiz prüft es damit vor dem
+// Umschalten, sonst wäre sie schon getauscht, wenn es die Leer-Meldung zeigt).
 export function practiceWritten() {
-  if (!S.written) return;
+  if (!S.written || !S.written.rows.some((row) => !row.fold && row.some(isNote))) return false;
   const src = S.written.rows;
   S.rows = attachLines(JSON.parse(JSON.stringify(src)), packLines(src));
   S.rows.forEach((row) => {
@@ -68,6 +70,7 @@ export function practiceWritten() {
     row.forEach((x) => { if (x) delete x.q; });
   });
   S.sel = { r: 0, c: 0 };
+  return true;
 }
 export function endPractice() {
   if (!S.written) return;

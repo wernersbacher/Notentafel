@@ -54,7 +54,8 @@ function randomQuiz() {
 // Melodie durchgehen: Punkt für Punkt (eingeklappte Zeilen nicht); die Buchstaben erscheinen erst, wenn der Punkt
 // benannt ist (S.quiz, siehe board.js), der gefragte Punkt leuchtet wie beim Abspielen
 function songQuiz() {
-  practiceWritten(); // die geschriebene Melodie, als Kopie auf der Übungstafel
+  // Erst prüfen, ob es etwas zu üben gibt: sonst wäre die Übungstafel schon getauscht, bevor das Quiz abbricht.
+  if (!practiceWritten()) { toast('Auf der Tafel stehen noch keine Farbpunkte.', true); return null; }
   const order = [];
   S.rows.forEach((row, r) => { if (!row.fold) row.forEach((x, c) => { if (isNote(x)) order.push({ r, c }); }); });
   if (!order.length) { toast('Auf der Tafel stehen noch keine Farbpunkte.', true); return null; }

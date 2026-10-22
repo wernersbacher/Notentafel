@@ -1,6 +1,6 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, units, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
+import { isNote, isBeat, isRest, filled, units, rowUnits, widest, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { meterParts } from './rhythms.js';
 import { S, settings, wraps } from './state.js';
@@ -19,7 +19,7 @@ const BAR_CLS = { 2: ' final', 3: ' final rep-end', 4: ' final rep-start', 5: ' 
 // Jeder Schlag hat ein Feld: Ein Platz belegt so viele Sechzehntel-Spalten, wie er dauert (leer = ein Schlag); eine Halbe
 // hält also das nächste Feld frei. Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
 const spanOf = units;
-const rowUnits = (row) => row.reduce((u, x) => u + spanOf(x), 0);
+// rowUnits (model.js) zählt einen Platz, der nur einen Strich trägt, mit 0: Er verbreitert die Zeile nicht.
 // Auf ganze Schläge (vier Spalten) aufgerundet
 const wholeBeats = (n) => n + (4 - n % 4) % 4;
 // Gezählt wird in Spalten. Rhythmus: immer S.cap Schläge (mehr nur, wenn eine ältere Zeile länger ist). Melodie: die
@@ -74,7 +74,9 @@ function countsHTML(zz, geo) {
 // beam: 1 = Achtel mit Balken zur nächsten, 2 = Achtel am Ende eines Balkens.
 // line: Lage auf der Notenlinie der Zeile ('first', 'mid', 'last', 'one' oder leer). meter: Taktart vor dem Platz.
 // marks: automatische Taktstriche und Zählzeiten der Zeile. Der erste Platz trägt die Zeilennummer (auf Höhe des Kreises).
-// endBar: Taktstrich hinter dem Platz (letztes Zeichen einer vollen Zeile, hinter dem kein leerer Platz mehr kommt).
+// endBar: Strich hinter dem Platz (Art wie bei bar: 1 Taktstrich, 2 Schlussstrich, 3–5 Wiederholung) – am Ende einer
+// vollen Zeile oder für einen Platz am Zeilenende, der nur einen Strich trägt. Die Position rechts überstimmt dabei das
+// left der Schluss- und Wiederholungsstriche (style="left:auto").
 // Balken an einem verdeckten Achtel (?-Karte): beamCut – der Balken dieses Platzes endet in der Mitte, weil das Achtel
 // danach verdeckt ist; beamIn – das Achtel davor ist verdeckt, sein Balken fehlt, also kommt die Hälfte bis hierher.
 // bw: wie weit der Balken reicht (bis zum Hals des nächsten Zeichens, als Anteil eines Kreises); sub: zweiter Balken der
@@ -131,7 +133,7 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
   return '<div class="cell' + (isSel ? ' sel' : '') + (q === 1 ? ' quiz' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '"' + (bw ? ' style="--bw:' + bw.toFixed(4) + '"' : '') + '>' + (c === 0 ? '<span class="rnum" data-fold="' + r + '" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
-    (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after"></span>' : '') + dot +
+    (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after' + (BAR_CLS[endBar] || '') + '"' + (BAR_CLS[endBar] ? ' style="left:auto"' : '') + '></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
     (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (sub && isBeat(cell) ? '<span class="bm2 s' + sub + '"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
 }
@@ -149,6 +151,10 @@ function rowHTML(row, r, cols, P, marks) {
   const last = full && (span >= 0 || row.meter) ? Infinity : full ? -1 : span;
   // Steht direkt hinter dem letzten Zeichen ein Takt- oder Schlussstrich, läuft die Linie bis dorthin
   const toBar = last >= 0 && barAt(row[last + 1], last + 1, marks, settings.autoBar) > 0;
+  // Ein Platz am Zeilenende, der nur einen Strich trägt, belegt keinen Schlag (rowUnits zählt ihn mit 0). Er wird nicht
+  // als eigener Platz gezeichnet; sein Strich hängt als endBar am Platz davor.
+  const tailAt = row.length - 1;
+  const tail = tailAt > 0 && row[tailAt] && !filled(row[tailAt]) && row[tailAt].bar ? tailAt : -1;
   // Erst alle Plätze ausmessen (Balken und Silbenfelder reichen bis zu einem späteren Platz).
   // u: belegte Sechzehntel-Spalten; leere Plätze hinter dem Zeilenende sind einen Schlag breit, nach einer einzelnen
   // Achtel oder Sechzehntel nur bis zum nächsten Schlag, damit sie wieder auf den Schlägen stehen
@@ -161,11 +167,12 @@ function rowHTML(row, r, cols, P, marks) {
   const widthOf = (g) => P[g.u0 + g.k] - P[g.u0];
   let cells = '';
   geos.forEach((geo, c) => {
+    if (c === tail) return; // sein Strich steht schon am Platz davor
     const beyond = c >= row.length;
     // Über die ganze Zeile: jeder Platz trägt ein volles Stück (mit Taktart beginnt die Linie schon vor ihr)
     const line = c > last ? '' : full ? (c === 0 && meter ? 'first' : 'mid') : last === 0 ? (toBar ? 'first' : 'one') : c === 0 ? 'first' : c === last && !toBar ? 'last' : 'mid';
     // Füllt die Zeile alle Spalten, kommt hinter dem letzten Zeichen kein leerer Platz, der den Taktstrich tragen könnte
-    const endBar = c === row.length - 1 && geo.u0 + geo.k >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1;
+    const endBar = c === row.length - 1 && geo.u0 + geo.k >= cols && barAt(null, c + 1, marks, settings.autoBar) === 1 ? 1 : 0;
     const hid = (k) => !!(row[k] && row[k].q === 1);
     // Balken bis zum Hals des nächsten Zeichens (ein Kreis ist 2 --L); das Silbenfeld am Anfang einer Gruppe bis zur
     // Mitte ihres letzten Zeichens
@@ -174,7 +181,7 @@ function rowHTML(row, r, cols, P, marks) {
     let end = c;
     while (b[end] === 1 && geos[end + 1]) end++;
     const reach = !gin && end > c ? (midOf(geos[end]) - midOf(geo)) / widthOf(geo) : 0;
-    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar,
+    cells += cellHTML(row[c] || null, r, c, { beyond, beam: b[c], line, meter: c === 0 ? meter : '', marks, geo, endBar: endBar || (c === tail - 1 ? row[tail].bar : 0),
       beamCut: b[c] === 1 && hid(c + 1), beamIn: c > 0 && b[c - 1] === 1 && hid(c - 1) && !hid(c),
       bw, sub: sub[c], odd: geo.u0 % 2 === 1, gin, reach });
   });
@@ -207,7 +214,8 @@ export function renderBoard() {
   grid.classList.toggle('rhy', S.variant === 'rhy');
   const rows = S.rows.map((row, r) => row.hide ? blankRow(row, meterOf(S.rows, r)) : row);
   const Ps = rows.map((row) => colFrs(cols, row));
-  grid.style.setProperty('--fr', Math.max(...Ps.map((P) => P[cols])));
+  // Leere Tafel (keine Zeilen, z. B. direkt zu Beginn eines Spiels): --fr bleibt beim CSS-Standard statt -Infinity
+  grid.style.setProperty('--fr', widest(Ps.map((P) => P[cols])));
   grid.style.setProperty('--rows', S.rows.length);
   grid.style.setProperty('--cols', cols);
   // Steht irgendwo eine Taktart, bekommt die Spalte vor den Plätzen in allen Zeilen Platz dafür

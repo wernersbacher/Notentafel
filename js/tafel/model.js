@@ -19,6 +19,18 @@ export const sounds = (c) => isNote(c) || isBeat(c);
 export const dur = (c) => (c && c.d) || 1;
 // Länge eines Platzes in Sechzehnteln (so viele Spalten belegt er auf der Tafel; ein Schlag sind vier)
 export const units = (c) => Math.round(dur(c) * 4);
+// Belegte Zeit eines Platzes: Ein Platz, der nur einen Strich trägt, ist keine Zeit, sondern eine Markierung – er zählt
+// nichts (sonst schöbe er beim Umbrechen einen Geisterschlag in die Zeile). Ein leerer Platz bleibt ein stiller Schlag.
+export const cellUnits = (c) => (!filled(c) && c && c.bar ? 0 : units(c));
+// Belegte Sechzehntel einer Zeile bzw. bis zum Platz c: die eine Zählung für Zeilenbreite, Umbruch und volle Zeile
+export const rowUnits = (row) => row.reduce((u, c) => u + cellUnits(c), 0);
+export const rowUnitsAt = (row, c) => rowUnits(row.slice(0, c + 1));
+// Ist die Zeile bis zum Platz c voll? cap Schläge je Zeile (ein Schlag sind vier Sechzehntel).
+export const rowFullAt = (row, c, cap) => rowUnitsAt(row, c) >= 4 * cap;
+// Passt ein neues Zeichen noch ans Ende der Zeile?
+export const fitsInRow = (row, v, cap) => rowUnits(row) + units(v) <= 4 * cap;
+// Breite der Tafel in --L: die breiteste Zeile; ohne Zeilen der CSS-Standard (--fr: 2 statt -Infinity)
+export const widest = (widths) => (widths.length ? Math.max(...widths) : 2);
 
 // Leere Tafel; line: alle Zeilen mit Notenlinie (Rhythmus)
 export function emptyRows(line = false) {
@@ -32,16 +44,24 @@ export function newRow(line = false) {
   row.meter = '';
   return row;
 }
-// Automatischer Umbruch: Hat Zeile r mehr als cap Plätze, rutscht der Überhang an den Anfang der nächsten Zeile
-// (die neu angelegt wird, wenn es keine gibt, mit derselben Notenlinie), und so weiter. false, wenn die Tafel schon
-// MAX_ROWS Zeilen hat und nichts mehr nach unten rutschen kann (der Überhang bleibt dann stehen).
+// Automatischer Umbruch: Hat Zeile r mehr als cap Schläge (cap × 4 Sechzehntel; ein Strich-Platz zählt nichts), rutscht
+// der Überhang an den Anfang der nächsten Zeile (die neu angelegt wird, wenn es keine gibt, mit derselben Notenlinie), und
+// so weiter. Ein Zeichen, das selbst nicht mehr ganz hineinpasst, rutscht mit. false, wenn die Tafel schon MAX_ROWS
+// Zeilen hat und nichts mehr nach unten rutschen kann (der Überhang bleibt dann stehen).
 export function reflow(rows, r, cap) {
-  for (let i = r; i < rows.length && rows[i].length > cap; i++) {
+  const max = 4 * cap;
+  for (let i = r; i < rows.length && rowUnits(rows[i]) > max; i++) {
+    // Schnitt vor dem ersten Platz, der über die Zeile hinausreicht; das erste Zeichen bleibt in jedem Fall stehen
+    let u = 0, cut = rows[i].length;
+    for (let c = 0; c < rows[i].length; c++) {
+      if (u + cellUnits(rows[i][c]) > max) { cut = Math.max(1, c); break; }
+      u += cellUnits(rows[i][c]);
+    }
     if (i + 1 >= rows.length) {
       if (rows.length >= MAX_ROWS) return false;
       rows.push(newRow(rows[i].line));
     }
-    rows[i + 1].unshift(...rows[i].splice(cap));
+    rows[i + 1].unshift(...rows[i].splice(cut));
   }
   return true;
 }
@@ -174,20 +194,25 @@ const LIED_PITCH = { C: ['c1'], D: ['d1'], E: ['e1'], F: ['f1'], G: ['g1'], A: [
 // Länge in Schlägen als Notenwert im Lied [v, dot]
 const LIED_VALUE = { 0.25: [16], 0.5: [8], 1: [4], 1.5: [4, 1], 2: [2], 3: [2, 1], 4: [1] };
 // Die Tafel als Lied (Format wie in lied/model.js): bunte Punkte werden Noten auf ihrer Tonhöhe, eigenständige
-// Notenzeichen Noten auf der Mittellinie (h'), Pausen und leere Plätze Pausen. Jede Zeile endet mit einem Umbruch,
-// das letzte Zeichen mit einem Schlussstrich; die Taktart ist die erste der Tafel.
+// Notenzeichen Noten auf der Mittellinie (h'), Pausen und leere Plätze Pausen. Ein Platz mit nur einem Strich ist kein
+// Schlag und wird übergangen. Jede Zeile endet mit einem Umbruch, das letzte Zeichen mit einem Schlussstrich; die
+// Taktart ist die erste der Tafel.
 export function rowsToSong(rows) {
   const ev = [];
   rows.forEach((row) => {
     if (!row.some(Boolean)) return;
+    const first = ev.length; // wo die Zeile beginnt: ein Strich allein darf keinen Umbruch an die Zeile davor hängen
     row.forEach((c) => {
+      // Ein Platz, der nur einen Strich trägt (z. B. der Schlussstrich am Zeilenende), ist kein Schlag: Er wird kein Ton
+      // und keine Pause, sonst klänge an jedem Zeilenende eine Viertelpause.
+      if (!filled(c) && c && c.bar) return;
       const [v, dot] = LIED_VALUE[dur(c)] || [4];
       const o = isNote(c) ? { p: LIED_PITCH[c.n][0], v } : isBeat(c) ? { p: 'h1', v } : { v };
       if (isNote(c) && LIED_PITCH[c.n][1]) o.acc = LIED_PITCH[c.n][1];
       if (dot) o.dot = 1;
       ev.push(o);
     });
-    ev[ev.length - 1].brk = 1;
+    if (ev.length > first) ev[ev.length - 1].brk = 1;
   });
   if (ev.length) { delete ev[ev.length - 1].brk; ev[ev.length - 1].bar = 2; }
   return { meter: (rows.find((row) => row.meter) || {}).meter || '', pickup: 0, key: 0, ev };

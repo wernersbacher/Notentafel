@@ -1,6 +1,6 @@
 // Alles, was die Tafel verändert. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { MAX_LEN, MAX_ROWS, DOTTED } from './config.js';
-import { isNote, isBeat, filled, units, canCloseGap, dotTargetIn, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
+import { isNote, isBeat, filled, rowFullAt, fitsInRow, canCloseGap, dotTargetIn, emptyRows, newRow, reflow, appendPos, canStepDown, put, setCell, content, trimRow, cleanRows, packLines } from './model.js';
 import { countSlots, openMeasureAt } from './theory.js';
 import { S, wraps, curCell, curRow, snap, restore, stashBoard } from './state.js';
 import { render, commit } from './render.js';
@@ -8,21 +8,17 @@ import { toast } from '../core/ui.js';
 import { stopPlay } from '../core/player.js';
 import { el } from './dom.js';
 
-// Ist die Zeile mit dem Platz c voll? Gezählt werden Schläge (S.cap pro Zeile; ein Platz je Schlag).
+// Ist die Zeile mit dem Platz c voll? Gezählt wird in Schlägen (S.cap Schläge je Zeile = S.cap × 4 Sechzehntel): ein
+// leerer Platz zählt einen Schlag, ein Platz mit nur einem Strich nichts – dieselbe Zählung wie beim Umbruch (rowUnits).
 function fullAt(row, c) {
-  if (!wraps()) return false;
-  let u = 0;
-  for (let k = 0; k <= c; k++) u += units(row[k]);
-  return u >= 4 * S.cap;
+  return wraps() && rowFullAt(row, c, S.cap);
 }
 // Passt ein neues Zeichen am Ende der Zeile nicht mehr hinein (z. B. eine Ganze nach drei
 // Schlägen in einer Zeile mit vier Feldern), kommt es gleich an den Anfang der nächsten Zeile
 function makeRoom(v) {
   const row = curRow();
   if (!wraps() || S.sel.c < row.length || !row.some(Boolean)) return;
-  let u = 0;
-  row.forEach((x) => { u += units(x); });
-  if (u + units(v) <= 4 * S.cap) return;
+  if (fitsInRow(row, v, S.cap)) return;
   nextLine();
 }
 // Weiter in der nächsten Zeile. Ein Takt geht nicht über zwei Zeilen: Ist am Ende der Zeile ein Takt angefangen
@@ -82,7 +78,7 @@ export function toggleInsert() { S.insertMode = !S.insertMode; render(); }
 // Bei Rhythmus rutscht, was nicht mehr in die Zeile passt, in die nächste.
 function insertCell(v) {
   const row = curRow();
-  if (row.length >= MAX_LEN || (wraps() && row.length >= S.cap && !reflowRoom())) {
+  if (row.length >= MAX_LEN || (wraps() && rowFullAt(row, row.length - 1, S.cap) && !reflowRoom())) {
     toast(wraps() ? 'Die Tafel ist voll. Entferne zuerst einen Ton.' : 'Die Zeile ist voll (' + MAX_LEN + ' Plätze). Entferne zuerst einen Ton oder mach einen Umbruch.', true);
     return;
   }

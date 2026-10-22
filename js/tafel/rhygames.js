@@ -80,6 +80,9 @@ function whichQuiz() {
 }
 
 /* ---------- Vom Blatt klatschen ---------- */
+// Eigene Spielart: Mit der des Echos (echo.js) hielte sich das Rhythmus-Echo für das laufende Spiel, hinge seine Zeile
+// an und kaperte den Hauptknopf. Die Leiste steht und lässt unten Platz wie beim Echo (CSS .echo und .game-echo).
+const READ_KIND = 'read';
 // Vier Schläge
 const CLAP_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6M9.5 7v10M14.5 7v10M19.5 9v6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
 function newSheet() {
@@ -100,9 +103,16 @@ function readTap(b) {
   else if (act === 'hear') { const p = rowPlan(0); if (p) playNow(p, markPlaying); }
   else if (act === 'end') endGame();
 }
+function readStop() {
+  stopPlay();
+  el.gameBar.classList.remove('echo');
+  el.gameBar.parentNode.classList.remove('game-echo');
+}
 function startRead() {
-  openGame('echo', gameBtn('clap', CLAP_ICON, 'Mitklatschen') + gameBtn('hear', AGAIN_ICON, 'Anhören') +
-    gameBtn('main', GAME_ICONS.dice, 'Neuer Rhythmus', 'main big') + gameBtn('end', GAME_ICONS.close, 'Ende'), { tap: readTap, stop: stopPlay });
+  openGame(READ_KIND, gameBtn('clap', CLAP_ICON, 'Mitklatschen') + gameBtn('hear', AGAIN_ICON, 'Anhören') +
+    gameBtn('main', GAME_ICONS.dice, 'Neuer Rhythmus', 'main big') + gameBtn('end', GAME_ICONS.close, 'Ende'), { tap: readTap, stop: readStop });
+  el.gameBar.classList.add('echo');
+  el.gameBar.parentNode.classList.add('game-echo');
   newSheet();
 }
 
@@ -192,7 +202,7 @@ function fixQuiz() {
     hear: play,
     // Geantwortet wird auch mit einem Tipp in den Takt auf der Tafel
     cell: (r, c) => (r === 0 && barOf[c] != null ? barOf[c] : null),
-    solved: play,
+    solved: playRow, // richtig ist, was auf der Tafel steht – nicht der Stand mit dem eingebauten Fehler
     // Die Zeilennummer spielt den Rhythmus richtig, wie er dasteht
     row: playRow,
     stop() { render(); }

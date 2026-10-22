@@ -3,8 +3,8 @@ import { TONE_COLORS as T, SEMI_COLORS as S } from '../core/colors.js';
 
 // Zeilen sind beliebig lang (bis MAX_LEN; so viele Sechzehntel hat eine volle Rhythmus-Zeile)
 export const MAX_LEN = 48, MAX_ROWS = 8, START_ROWS = 3;
-// Höchstens so viele Plätze stehen in einer Zeile; dann geht es automatisch in der nächsten weiter.
-// (Ältere Stände mit längeren Zeilen, bis MAX_LEN, bleiben, wie sie sind.)
+// Höchstens so viele Schläge stehen in einer Zeile (bei den Farbnoten ein Platz je Schlag); dann geht es automatisch in
+// der nächsten weiter. (Ältere Stände mit längeren Zeilen, bis MAX_LEN, bleiben, wie sie sind.)
 export const MAX_PER_ROW = 10;
 // Rhythmus: so viele Felder (Schläge) hat jede Zeile; die Felder werden so breit, dass sie die Zeile füllen
 export const RHY_PER_ROW = 12;

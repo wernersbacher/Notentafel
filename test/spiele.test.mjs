@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { makeRhythm, meterParts } from '../js/tafel/rhythms.js';
 import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../js/lied/model.js';
 import { makeMelody } from '../js/tafel/theory.js';
@@ -127,4 +129,26 @@ test('Schritt oder Sprung: die Art passt zum Abstand, beide Töne im Tonraum', (
   assert.deepEqual([...seen].sort(), ['leap', 'same', 'step']);
   // Zu kleiner Tonraum für einen Sprung: dann derselbe Ton
   assert.deepEqual(makeInterval(['c1', 'd1'], () => 0.9), ['c1', 'c1', 'same']);
+});
+
+// Die Spiele öffnen ihre Leiste über core/game.js und zeichnen auf der Tafel; im Test lässt sich nur prüfen, dass die
+// Spielabläufe in rhygames.js/echo.js die richtige Spielart öffnen und nach dem Lösen den richtigen Stand spielen.
+const tafelSrc = (f) => fs.readFileSync(path.resolve(import.meta.dirname, '../js/tafel', f), 'utf8');
+
+test('Spielarten: „Vom Blatt klatschen“ ist nicht das Rhythmus-Echo', () => {
+  const rhy = tafelSrc('rhygames.js');
+  // Mit derselben Spielart hielte sich das Echo für das laufende Spiel (gameOn('echo')) und hinge seine Zeile an
+  const readKind = rhy.match(/const READ_KIND = '([a-z]+)'/)[1];
+  assert.ok(rhy.includes('openGame(READ_KIND'));
+  const echoKind = tafelSrc('echo.js').match(/openGame\('([a-z]+)'/)[1];
+  assert.equal(echoKind, 'echo'); // eine gespeicherte Spielwahl „echo“ bleibt das Rhythmus-Echo
+  assert.notEqual(readKind, echoKind);
+  assert.ok(!rhy.includes("gameOn('echo')"));
+});
+
+test('Fehler finden: nach dem Lösen spielt die Tafel die richtige Zeile, nicht den Stand mit dem Fehler', () => {
+  const src = tafelSrc('rhygames.js'), from = src.indexOf('function fixQuiz()');
+  const block = src.slice(from, src.indexOf('/* ----------', from));
+  assert.match(block, /solved:\s*playRow/);
+  assert.doesNotMatch(block, /solved:\s*play\b/);
 });

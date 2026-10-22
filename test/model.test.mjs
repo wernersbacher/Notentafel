@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, subBeams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn } from '../js/tafel/model.js';
+import { cleanRows, attachLines, packLines, beams, subBeams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn, units, cellUnits, rowUnits, rowFullAt, fitsInRow, widest } from '../js/tafel/model.js';
 import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
@@ -150,14 +150,18 @@ test('emptyRows: Rhythmus startet mit Notenlinie in jeder Zeile', () => {
   assert.deepEqual(packLines(emptyRows(true)), [1, 1, 1]);
 });
 
-test('reflow: was nicht in die Zeile passt, rutscht an den Anfang der nächsten', () => {
+test('reflow: was nicht mehr in die Zeile passt, rutscht an den Anfang der nächsten', () => {
   const b = (d) => ({ k: 'b', d });
   const rows = emptyRows(true);
   rows[0].push(b(1), b(1), b(1), b(2), b(0.5));
   rows[1].push(b(4));
+  // Vier Schläge je Zeile: Nach drei Vierteln passt die Halbe nicht mehr hinein. Früher zählte reflow Plätze und ließ
+  // sie stehen; seit der einheitlichen Zählung in Schlägen (wie fullAt/makeRoom) rutscht sie mit – und die Ganze, die
+  // in der nächsten Zeile nun über vier Schläge hinausreicht, rutscht gleich weiter.
   assert.equal(reflow(rows, 0, 4), true);
-  assert.deepEqual([...rows[0]], [b(1), b(1), b(1), b(2)]);
-  assert.deepEqual([...rows[1]], [b(0.5), b(4)]);
+  assert.deepEqual([...rows[0]], [b(1), b(1), b(1)]);
+  assert.deepEqual([...rows[1]], [b(2), b(0.5)]);
+  assert.deepEqual([...rows[2]], [b(4)]);
   // Am Ende der Tafel kommt eine neue Zeile mit derselben Notenlinie dazu
   const one = emptyRows(true).slice(0, 1);
   one[0].push(b(1), b(1), b(1));
@@ -165,6 +169,36 @@ test('reflow: was nicht in die Zeile passt, rutscht an den Anfang der nächsten'
   assert.equal(one.length, 2);
   assert.equal(one[1].line, true);
   assert.deepEqual([...one[1]], [b(1)]);
+});
+
+test('rowUnits: ein Platz, der nur einen Strich trägt, zählt keinen Schlag', () => {
+  const b = (d) => ({ k: 'b', d });
+  assert.equal(rowUnits([b(1), b(0.5), { bar: 2 }]), 6);
+  assert.equal(cellUnits({ bar: 2 }), 0);
+  assert.equal(cellUnits(null), 4); // leerer Platz: ein stiller Schlag
+  assert.equal(units({ bar: 2 }), 4); // als sichtbarer Platz bleibt er einen Schlag breit
+});
+
+test('Zeilenumbruch: reflow, rowFullAt und fitsInRow zählen dieselbe Einheit (Schläge)', () => {
+  const b = (d) => ({ k: 'b', d });
+  // Zwei Schläge je Zeile. Zwei Viertel und ein Strich sind genau voll; der Strich selbst zählt dabei nicht.
+  const full = [b(1), b(1), { bar: 2 }];
+  assert.equal(rowFullAt(full, full.length - 1, 2), true);
+  assert.equal(fitsInRow(full, b(1), 2), false);
+  // Ohne den Strich ist eine Zeile mit einer Viertel noch nicht voll (der Strich schob früher einen Geisterschlag)
+  assert.equal(rowFullAt([b(1), { bar: 2 }], 1, 2), false);
+  // reflow schneidet an derselben Grenze: Der Strich bleibt bei seinen zwei Schlägen, das dritte Zeichen rutscht
+  const rows = emptyRows(true);
+  rows[0].push(b(1), b(1), { bar: 2 }, b(1));
+  assert.equal(reflow(rows, 0, 2), true);
+  assert.deepEqual([...rows[0]], [b(1), b(1), { bar: 2 }]);
+  assert.deepEqual([...rows[1]], [b(1)]);
+});
+
+test('widest: leere Zeilenliste ergibt eine endliche Breite (CSS-Standard 2 statt -Infinity)', () => {
+  assert.equal(widest([]), 2);
+  assert.ok(Number.isFinite(widest([])));
+  assert.equal(widest([2, 5, 3]), 5);
 });
 
 test('canCloseGap: löschen geht auf einem Platz, hinter dem letzten Zeichen und am Anfang einer leeren Zeile', () => {
@@ -197,6 +231,18 @@ test('rowsToSong: Melodie und Rhythmus als Lied', () => {
     ev: [{ p: 'c1', v: 4 }, { p: 'f1', v: 2, acc: 1 }, { v: 4, brk: 1 }, { p: 'h1', v: 8 }, { v: 4 }, { p: 'c2', v: 2, dot: 1, bar: 2 }]
   });
   assert.deepEqual(rowsToSong(emptyRows()).ev, []);
+});
+
+test('rowsToSong: ein Strich am Zeilenende wird kein Ton und keine Pause', () => {
+  // Die Schlussstrich-Zelle hinter der letzten Note ist kein Schlag: Früher wurde daraus eine hörbare Viertelpause
+  const rows = attachLines([[{ n: 'C', h: '' }, { bar: 2 }], [{ n: 'D', h: '' }, { bar: 1 }]], [0, 0]);
+  assert.deepEqual(rowsToSong(rows).ev, [{ p: 'c1', v: 4, brk: 1 }, { p: 'd1', v: 4, bar: 2 }]);
+  // Eine Zeile nur aus Strichen erzeugt nichts und hängt keinen Umbruch an die Zeile davor
+  const marks = attachLines([[{ n: 'C', h: '' }], [{ bar: 2 }], [{ n: 'D', h: '' }], [{ bar: 1 }]], [0, 0, 0, 0]);
+  assert.deepEqual(rowsToSong(marks).ev, [{ p: 'c1', v: 4, brk: 1 }, { p: 'd1', v: 4, bar: 2 }]);
+  assert.deepEqual(rowsToSong(attachLines([[{ bar: 2 }]], [0])).ev, []);
+  // Ein leerer Platz bleibt dagegen eine Pause (ein stiller Schlag)
+  assert.deepEqual(rowsToSong(attachLines([[{ n: 'C', h: '' }, null, { bar: 2 }]], [0])).ev, [{ p: 'c1', v: 4 }, { v: 4, bar: 2 }]);
 });
 
 test('syllableParts: Silben auf die Schläge verteilt', () => {

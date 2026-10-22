@@ -5,6 +5,7 @@ import { initAccount } from './core/account.js';
 import { initCloud } from './core/cloud.js';
 import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
+import { initParts } from './core/parts.js';
 import { initBlocks } from './core/blocks.js';
 import { initGamePicks } from './core/game.js';
 import { setWriteError } from './core/store.js';
@@ -20,6 +21,8 @@ setWriteError(() => {
   toast('Der Speicher des Geräts ist voll. Neue Lieder können verloren gehen.', true);
 });
 
+// Die geteilten Blöcke einsetzen, bevor die Leiste ihre Knöpfe bindet
+initParts();
 initBlocks();
 initGamePicks();
 initPlayer();

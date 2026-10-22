@@ -113,6 +113,29 @@
   <symbol id="notenblatt" viewBox="0 0 24 24"><path d="M3 6h18M3 10h18M3 14h18M3 18h18" fill="none" stroke="currentColor" stroke-width="1.4"/><ellipse cx="9" cy="16" rx="2.6" ry="2" fill="currentColor"/><path d="M11.4 16V5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
 </svg>
 
+<!-- Verdecken: dieser Block sieht in Farbnoten und Rhythmus gleich aus und steht deshalb hier einmal.
+     Die Nummer setzt die Leiste beim Einsetzen in die Slots .cover-slot (siehe js/core/parts.js). -->
+<template id="tplCover">
+  <section class="group block">
+    <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num"></span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+    <div class="tools covers">
+      <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
+      </button>
+      <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
+        <span class="big">?</span><span class="small">Karte</span>
+      </button>
+      <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
+      </button>
+      <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
+      </button>
+    </div>
+    <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
+  </section>
+</template>
+
 <div class="app">
   <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
   <header class="topbar" id="topbar">
@@ -256,24 +279,8 @@
         </div>
       </section>
 
-      <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
-        <div class="tools covers">
-          <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
-          </button>
-          <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
-            <span class="big">?</span><span class="small">Karte</span>
-          </button>
-          <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
-          </button>
-          <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
-          </button>
-        </div>
-        <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
-      </section>
+      <!-- Verdecken: Block aus <template id="tplCover"> -->
+      <div class="cover-slot" data-num="4"></div>
 
       <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben. Oben die Spiele als Kacheln,
            darunter das gewählte mit Start-Knopf, dann die Einstellungen für alle Spiele des Bereichs -->
@@ -387,24 +394,8 @@
         <div class="zbtns" id="counts"></div>
       </section>
 
-      <section class="group block">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
-        <div class="tools covers">
-          <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
-          </button>
-          <button type="button" class="btn" data-cover="card" title="Die markierte Note mit einer ?-Karte verdecken (nochmal: Karte wieder weg). Ein Tipp auf die Karte deckt sie auf.">
-            <span class="big">?</span><span class="small">Karte</span>
-          </button>
-          <button type="button" class="btn" data-cover="reset" title="Tuch und Karten wieder wie am Anfang, z. B. für die nächste Klasse">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch-neu"/></svg></span><span class="small">neu abdecken</span>
-          </button>
-          <button type="button" class="btn" data-cover="clear" title="Tuch und alle Karten entfernen">
-            <span class="big"><svg class="ico" aria-hidden="true"><use href="#auge"/></svg></span><span class="small">alles zeigen</span>
-          </button>
-        </div>
-        <button type="button" class="btn stephide" data-play="stepHide" aria-pressed="false" title="Bei Schritt für Schritt erscheint jede Note erst, wenn man zu ihr weitertippt">Schritt für Schritt: Noten erst beim Weitertippen anzeigen</button>
-      </section>
+      <!-- Verdecken: Block aus <template id="tplCover"> -->
+      <div class="cover-slot" data-num="5"></div>
 
       <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben. Oben die Spiele als Kacheln,
            darunter das gewählte mit Start-Knopf, dann die Einstellungen für alle Rhythmus-Spiele -->

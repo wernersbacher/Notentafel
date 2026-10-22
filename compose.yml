@@ -3,7 +3,7 @@
 services:
   app:
     build: { context: ., dockerfile: deploy/Dockerfile }
-    ports: ["8080:8090"]
+    ports: ["8082:8090"]
     volumes:
       - ./pb_data:/pb/pb_data
       # Hooks und Migrationen direkt aus dem Repo, damit Änderungen ohne neuen Build greifen (Hooks lädt PocketBase bei Änderungen neu)

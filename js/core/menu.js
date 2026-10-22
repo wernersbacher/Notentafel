@@ -12,7 +12,7 @@ import {
 } from './menu-songs.js';
 import { renderToggle, toggleSetting, applyUiScale, renderTempo, WAKE, initSettings } from './menu-settings.js';
 // Wie bisher aus menu.js erreichbar, weil die Bereiche und account.js von hier importieren
-export { refreshSongs, sortAbc, renderToggle, toggleSetting, applyUiScale };
+export { refreshSongs, sortAbc, renderToggle, toggleSetting };
 
 /* ---------- Öffnen und schließen ---------- */
 // mode 'songs' (Liedersammlung) oder 'settings' (Einstellungen): beide nutzen dieselbe Seitenleiste, jeder zeigt nur

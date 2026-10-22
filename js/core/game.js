@@ -91,7 +91,7 @@ export function playTones(tones, sound, mark = () => {}, gap = 0.15) {
 // Ein Bereich beschreibt seine Spiele selbst ({ game, intro, hint, hintId?, go, label }, siehe tafel/gameFrames.js);
 // daraus entstehen sein Hinweis und sein Startknopf. frameHTML liefert den Rahmen als String, fillGameFrames setzt
 // data-intro am Abschnitt und fügt ihn vorn ein – vor den Einstellungen, die im HTML stehen bleiben.
-export function frameHTML(f) {
+function frameHTML(f) {
   return '<p class="ghint"' + (f.hintId ? ' id="' + f.hintId + '"' : '') + '>' + f.hint + '</p>' +
     '<button type="button" class="btn gamego" id="' + f.go + '"><svg class="ico" aria-hidden="true"><use href="#play"/></svg><span>' + f.label + '</span></button>';
 }

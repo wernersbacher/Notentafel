@@ -6,7 +6,7 @@ import { ev, cur } from './common.js';
 
 /* ---------- Liedtext ---------- */
 // Note, die eine Silbe bekommen kann: die markierte, wenn sie nicht nur eine übergebundene Fortsetzung ist
-export const lyricTarget = () => { const e = cur(); return isNote(e) && !tiedFrom(ev()[L.sel - 1], e) ? e : null; };
+const lyricTarget = () => { const e = cur(); return isNote(e) && !tiedFrom(ev()[L.sel - 1], e) ? e : null; };
 // Beim Schreiben einer Silbe wird nur einmal (beim Hineintippen ins Feld) für „Rückgängig“ gemerkt
 // Ist der Liedtext ausgeblendet, kommt er dabei wieder, damit man sieht, was man schreibt
 export function beginLyric() {

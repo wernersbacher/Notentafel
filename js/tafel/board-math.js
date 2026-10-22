@@ -9,7 +9,7 @@ import { S } from './state.js';
 export const spanOf = units;
 // rowUnits (model.js) zählt einen Platz, der nur einen Strich trägt, mit 0: Er verbreitert die Zeile nicht.
 // Auf ganze Schläge (vier Spalten) aufgerundet
-export const wholeBeats = (n) => n + (4 - n % 4) % 4;
+const wholeBeats = (n) => n + (4 - n % 4) % 4;
 // Gezählt wird in Spalten. Rhythmus: immer S.cap Schläge (mehr nur, wenn eine ältere Zeile länger ist). Melodie: die
 // längste Zeile plus ein freier Schlag, mindestens bis zur Markierung, höchstens S.cap Schläge (außer ältere Zeilen),
 // aufgerundet auf ganze Schläge.

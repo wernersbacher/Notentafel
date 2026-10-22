@@ -13,7 +13,7 @@ import { beamGroups } from './layout-beam.js';
 import { wrap } from './layout-wrap.js';
 import { noteShape } from './layout-shape.js';
 
-export { G, spacing, lyricText, lyricWidth, barExtra, keyWidth, widestMeasure, MAX_MEASURES } from './layout-metrics.js';
+export { G, spacing, lyricText, lyricWidth, widestMeasure, MAX_MEASURES } from './layout-metrics.js';
 export { beamGroups } from './layout-beam.js';
 
 // Ergebnis: { systems, at } – at[i] ist das Zeichen von Ereignis i. Ein System (eine Zeile) hat

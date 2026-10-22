@@ -44,7 +44,7 @@ const canon = (v) => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
   : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
   : JSON.stringify(v);
 const META = { id: 0, name: 0, savedAt: 0, changedAt: 0 };
-export const sameContent = (a, b) => canon({ ...a, ...META }) === canon({ ...b, ...META });
+const sameContent = (a, b) => canon({ ...a, ...META }) === canon({ ...b, ...META });
 
 // Freier Name: „Name (2)“, „Name (3)“ …, höchstens 40 Zeichen
 function freeName(name, taken) {

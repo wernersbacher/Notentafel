@@ -53,7 +53,7 @@ export function meterParts(meter) {
 }
 
 // So oft kommen bei „schwer“ Sechzehntel vor: in etwa jedem siebten Rhythmus (in der Grundschule sind sie selten)
-export const SIXTEENTHS = 0.15;
+const SIXTEENTHS = 0.15;
 const has16 = (p) => p.ev.some((d) => Math.abs(d) === 0.25);
 
 // Ein Rhythmus: bars Takte (1–3) in der Taktart meter. notes 1–3 und rests 0–3 wie oben. Liefert die Plätze einer

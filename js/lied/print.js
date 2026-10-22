@@ -7,7 +7,7 @@ import { sheetSVG } from './sheet.js';
 // Satzbreite auf A4 hochkant mit 15 mm Rand
 export const PAGE_MM = 180;
 // Linienabstand in mm je nach Notengröße (normal entspricht üblichen Noten, Systemhöhe 7,2 mm)
-export const SP_MM = { 1: 1.8, 2: 2.4, 3: 3.2 };
+const SP_MM = { 1: 1.8, 2: 2.4, 3: 3.2 };
 
 const xmlEsc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
 

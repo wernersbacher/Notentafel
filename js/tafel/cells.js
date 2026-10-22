@@ -18,7 +18,7 @@ export const isBarOnly = (c) => !filled(c) && !!(c && c.bar);
 export const cellUnits = (c) => (isBarOnly(c) ? 0 : units(c));
 // Belegte Sechzehntel einer Zeile bzw. bis zum Platz c: die eine Zählung für Zeilenbreite, Umbruch und volle Zeile
 export const rowUnits = (row) => row.reduce((u, c) => u + cellUnits(c), 0);
-export const rowUnitsAt = (row, c) => rowUnits(row.slice(0, c + 1));
+const rowUnitsAt = (row, c) => rowUnits(row.slice(0, c + 1));
 // Ist die Zeile bis zum Platz c voll? cap Schläge je Zeile (ein Schlag sind vier Sechzehntel).
 export const rowFullAt = (row, c, cap) => rowUnitsAt(row, c) >= 4 * cap;
 // Passt ein neues Zeichen noch ans Ende der Zeile?

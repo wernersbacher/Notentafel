@@ -8,7 +8,7 @@ export function measureTicks(m) {
   return +n * 32 / +base;
 }
 // Mögliche Auftakte in Ticks (Achtel, Viertel, punktierte Viertel, Halbe, punktierte Halbe); kürzer als ein Takt
-export const PICKUPS = [4, 8, 12, 16, 24];
+const PICKUPS = [4, 8, 12, 16, 24];
 export const pickupsFor = (m) => (m ? PICKUPS.filter((t) => t < measureTicks(m)) : []);
 // Verschiebung auf das Taktraster: Mit Auftakt beginnt das Lied so viele Ticks vor dem ersten vollen Takt,
 // das erste Ereignis steht also bei Takt − Auftakt. Ohne Taktart oder Auftakt 0.

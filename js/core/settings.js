@@ -5,7 +5,7 @@ import { makeSignal } from './signal.js';
 
 const KEY = 'notentafel.settings.v1';
 export const TEMPO = { min: 50, max: 160, start: 90 };
-export const UI_SCALE = { min: 0.5, max: 2 };
+const UI_SCALE = { min: 0.5, max: 2 };
 // Aufgeklappte Blöcke der Leiste, über ihren stabilen Namen aus data-block (früher Bereich + Nummer, z. B. 'mel2');
 // am Anfang je Bereich „schreiben“
 export const OPEN_START = ['mel-notes', 'rhy-notes', 'lied-notes'];

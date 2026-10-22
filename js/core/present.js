@@ -10,7 +10,7 @@ import { shellState } from './shell-state.js';
 let collapsed = false;
 export const sideCollapsed = () => collapsed;
 // keepPlay: Abspielen läuft weiter (beim Vorführen ändert sich nur, was zu sehen ist)
-export function setCollapsed(on, keepPlay) {
+function setCollapsed(on, keepPlay) {
   collapsed = on;
   if (!keepPlay) stopPlay();
   shellState.savePop.close();
@@ -31,13 +31,13 @@ const PRESENT_ICONS = {
   off: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 let present = null; // während des Vorführens: { collapsed } von vorher
-export function showPresent() {
+function showPresent() {
   const on = !!present, b = el.btnPresent;
   b.innerHTML = on ? PRESENT_ICONS.off : PRESENT_ICONS.on;
   setPressed(b, on);
   b.title = on ? 'Vorführen beenden: Leisten wieder einblenden' : 'Vorführen: nur die Tafel, über den ganzen Bildschirm';
 }
-export function setPresent(on) {
+function setPresent(on) {
   if (!!present === on) return;
   const before = present;
   present = on ? { collapsed } : null;

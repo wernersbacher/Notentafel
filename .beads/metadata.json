@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "notentafel",
+  "project_id": "2bac002f-1199-4994-8f0a-0c3c7d0a9a08"
+}

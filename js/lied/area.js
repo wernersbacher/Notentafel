@@ -9,7 +9,7 @@ import { store } from './storage.js';
 import { SONGS, songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { printHTML } from './print.js';
-import { L, opts, persistOpts, written, startPractice, endPractice, clearPractice } from './state.js';
+import { L, opts, persistOpts, written, startPractice, endPractice, resetPractice } from './state.js';
 import { render, renderSheet, markPlaying, isFolded } from './render.js';
 import { buildPanel, buildSteps } from './sidebar.js';
 import { initSheetInput } from './input.js';
@@ -141,7 +141,7 @@ export function registerLied() {
     // Das Tonnamen-Quiz gehört zum Notenblatt und endet beim Wechsel
     leave: endGame,
     write: 'Lied schreiben',
-    play: { enter: startPractice, leave: endPractice, clear: clearPractice },
+    play: { enter: startPractice, leave: endPractice, clear: resetPractice },
     tools: {
       insert: act.toggleInsert,
       gap: act.removeEv,

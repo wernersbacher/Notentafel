@@ -1,6 +1,7 @@
 // Laufender Zustand der Tafel. Alle Module der Tafel lesen und ändern diese beiden Objekte direkt.
 import { useSettings } from '../core/settings.js';
-import { pushState, popState } from '../core/history.js';
+import { makePractice } from '../core/practice.js';
+import { makeUndo } from '../core/undo.js';
 import { emptyRows, appendPos, hasNotes, isNote, attachLines, packLines } from './model.js';
 import { loadBoard, saveBoard, saveAuto, cleanTafelSettings } from './storage.js';
 
@@ -49,45 +50,34 @@ export function stashBoard() {
 
 /* ---------- Üben und Spielen ---------- */
 // Eine neue, leere Übungstafel; die geschriebene Tafel wartet so lange unberührt in S.written
-export function startPractice() {
-  if (S.written) return;
-  S.written = { rows: S.rows, name: S.name, sel: S.sel, hist: S.hist };
-  Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), name: '', sel: { r: 0, c: 0 }, hist: [], insertMode: false, countAt: null });
-}
-// Die Übungstafel wieder leer (beim Wählen eines Spiels)
-export function clearPractice() {
-  if (S.written) Object.assign(S, { rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [] });
-}
-// Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten.
-// false, wenn darin nichts zu benennen ist: Dann bleibt die Übungstafel unangetastet (das Quiz prüft es damit vor dem
-// Umschalten, sonst wäre sie schon getauscht, wenn es die Leer-Meldung zeigt).
-export function practiceWritten() {
-  if (!S.written || !S.written.rows.some((row) => !row.fold && row.some(isNote))) return false;
-  const src = S.written.rows;
-  S.rows = attachLines(JSON.parse(JSON.stringify(src)), packLines(src));
-  S.rows.forEach((row) => {
-    delete row.cover; delete row.coverFrom; delete row.hide;
-    row.forEach((x) => { if (x) delete x.q; });
-  });
-  S.sel = { r: 0, c: 0 };
-  return true;
-}
-export function endPractice() {
-  if (!S.written) return;
-  Object.assign(S, S.written, { written: null, insertMode: false, countAt: null });
-}
+export const { startPractice, resetPractice, practiceWritten, endPractice } = makePractice({
+  state: S,
+  fields: ['rows', 'sel', 'hist'],
+  fresh: () => ({ rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [] }),
+  // Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten.
+  // false, wenn darin nichts zu benennen ist: Dann bleibt die Übungstafel unangetastet (das Quiz prüft es damit vor dem
+  // Umschalten, sonst wäre sie schon getauscht, wenn es die Leer-Meldung zeigt).
+  copy: (w) => {
+    if (!w.rows.some((row) => !row.fold && row.some(isNote))) return false;
+    const src = w.rows;
+    S.rows = attachLines(JSON.parse(JSON.stringify(src)), packLines(src));
+    S.rows.forEach((row) => {
+      delete row.cover; delete row.coverFrom; delete row.hide;
+      row.forEach((x) => { if (x) delete x.q; });
+    });
+    S.sel = { r: 0, c: 0 };
+    return true;
+  }
+});
 
 // Merkt sich den Stand vor einer Änderung für „Rückgängig“
-export function snap() {
-  pushState(S.hist, { rows: S.rows, lines: packLines(S.rows), sel: S.sel, name: S.name });
-}
-// Holt den letzten gemerkten Stand zurück; false, wenn es keinen gibt
-export function restore() {
-  const d = popState(S.hist);
-  if (!d) return false;
-  S.rows = attachLines(d.rows, d.lines);
-  S.sel = d.sel;
-  S.name = d.name || '';
-  S.countAt = null;
-  return true;
-}
+export const { snap, restore } = makeUndo({
+  state: S,
+  snapshot: () => ({ rows: S.rows, lines: packLines(S.rows), sel: S.sel, name: S.name }),
+  apply: (d) => {
+    S.rows = attachLines(d.rows, d.lines);
+    S.sel = d.sel;
+    S.name = d.name || '';
+    S.countAt = null;
+  }
+});

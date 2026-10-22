@@ -1,5 +1,6 @@
 // Laufender Zustand des Lieds. Alle Module des Lieds lesen und ändern diese Objekte direkt.
-import { pushState, popState } from '../core/history.js';
+import { makePractice } from '../core/practice.js';
+import { makeUndo } from '../core/undo.js';
 import { emptySong, cleanSong } from './model.js';
 import { store, loadLiedSettings, saveLiedSettings } from './storage.js';
 
@@ -32,33 +33,25 @@ export function stashSong() {
 // Das geschriebene Lied, auch während geübt wird
 export const written = () => L.written || L;
 // Eine neue, leere Übungstafel; das geschriebene Lied bleibt unberührt liegen
-export function startPractice() {
-  if (L.written) return;
-  L.written = { song: L.song, name: L.name, sel: L.sel, hist: L.hist };
-  Object.assign(L, { song: emptySong(), name: '', sel: 0, hist: [], last: null });
-}
-// Die Übungstafel wieder leer (beim Wählen eines Spiels)
-export function clearPractice() {
-  if (L.written) Object.assign(L, { song: emptySong(), sel: 0, hist: [], last: null });
-}
-// Legt eine Kopie des geschriebenen Lieds auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz)
-export function practiceWritten() {
-  if (L.written) Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(L.written.song))), sel: 0, last: null });
-}
-export function endPractice() {
-  if (!L.written) return;
-  Object.assign(L, L.written, { last: null, written: null });
-}
+export const { startPractice, resetPractice, practiceWritten, endPractice } = makePractice({
+  state: L,
+  fields: ['song', 'sel', 'hist'],
+  fresh: () => ({ song: emptySong(), sel: 0, hist: [], last: null }),
+  // Legt eine Kopie des geschriebenen Lieds auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz)
+  copy: (w) => {
+    Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(w.song))), sel: 0, last: null });
+    return true;
+  }
+});
 
-export function snap() {
-  pushState(L.hist, { song: L.song, sel: L.sel, name: L.name });
-}
-export function restore() {
-  const d = popState(L.hist);
-  if (!d) return false;
-  L.song = cleanSong(d.song);
-  L.sel = Math.min(d.sel, L.song.ev.length);
-  L.name = d.name || '';
-  L.last = null;
-  return true;
-}
+// Merkt sich den Stand vor einer Änderung für „Rückgängig“
+export const { snap, restore } = makeUndo({
+  state: L,
+  snapshot: () => ({ song: L.song, sel: L.sel, name: L.name }),
+  apply: (d) => {
+    L.song = cleanSong(d.song);
+    L.sel = Math.min(d.sel, L.song.ev.length);
+    L.name = d.name || '';
+    L.last = null;
+  }
+});

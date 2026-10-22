@@ -1,7 +1,7 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register, setPlay } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js';
-import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter } from '../core/ui.js';
+import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter, setPressed } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
 import { beatsOf, startAt, cutAt, skip } from '../core/plan.js';
@@ -89,11 +89,7 @@ function renderKnown() {
 
 // Notengröße: drei Knöpfe, der gewählte ist hervorgehoben
 function renderSizes() {
-  el.liedSizes.querySelectorAll('[data-size]').forEach((b) => {
-    const on = +b.dataset.size === opts.size;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  el.liedSizes.querySelectorAll('[data-size]').forEach((b) => setPressed(b, +b.dataset.size === opts.size));
 }
 
 // Lädt das Lied als MusicXML-Datei herunter

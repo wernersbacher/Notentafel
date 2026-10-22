@@ -5,16 +5,13 @@ import { L, opts } from './state.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
 import { breakJoins } from '../core/shell.js';
+import { setPressed as pressed } from '../core/ui.js';
 
 const VALUE_NAMES = { 1: 'Ganze', 2: 'Halbe', 4: 'Viertel', 8: 'Achtel', 16: 'Sechzehntel' };
 // Auftakte in Ticks als Notenwert (mit Punkt) für Symbol und Namen
 const PICKUP_NOTES = { 4: [8, 0], 8: [4, 0], 12: [4, 1], 16: [2, 0], 24: [2, 1] };
 const valueName = ([v, d]) => (d ? 'punktierte ' : '') + VALUE_NAMES[v];
 
-const pressed = (btn, on) => {
-  btn.classList.toggle('on', on);
-  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-};
 const meterHTML = (m) => {
   const [top, bottom] = m.split('/');
   return '<span class="mtr"><span>' + top + '</span><span>' + bottom + '</span></span>';

@@ -7,7 +7,7 @@ import { L, opts, persistOpts, practiceWritten } from './state.js';
 import { render, markPlaying } from './render.js';
 import { toneColor } from '../core/colors.js';
 import { startQuiz } from '../core/game.js';
-import { toast, delegate } from '../core/ui.js';
+import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 // Knöpfe aus quizKeys: Name (ein Halbton mit beiden Namen übereinander) auf der Farbe des Tons
@@ -95,10 +95,6 @@ function startLiedQuiz() {
 }
 
 /* ---------- Leiste rechts ---------- */
-function pressed(b, on) {
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
-}
 function renderQuizSide() {
   el.liedQuizMode.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === opts.quizMode));
   // Der Tonraum gilt auch für die anderen Spiele; nur beim Durchgehen des Lieds im Quiz braucht es ihn und die

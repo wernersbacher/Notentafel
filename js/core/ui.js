@@ -1,9 +1,29 @@
-// Kleine Bausteine der Oberfläche: Einblendung und „Nochmal tippen“-Bestätigung
+// Kleine Bausteine der Oberfläche: Einblendung, Knopfzustände, Hinweise und „Nochmal tippen“-Bestätigung
 import { el } from './dom.js';
 
 export function esc(s) {
   return String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 }
+
+// Knopf an oder aus: leuchtet und meldet es der Sprachausgabe
+export const setPressed = (btn, on) => {
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+};
+
+// Hinweis unter einem Feld; warn färbt ihn rot
+export function status(node, text, warn) {
+  node.textContent = text;
+  node.classList.toggle('warn', !!warn);
+}
+
+// Deutsch geschriebene Zeit und Daten für die Hinweise an den gespeicherten Liedern
+export const timeOf = (t) => new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+export const dateOf = (t) => new Date(t).toLocaleDateString('de-DE');
+export const dateTimeOf = (t) => new Date(t).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+
+// „120 pro Minute“ – im Menü und am runden Tempoknopf der Tafel
+export const tempoText = (v) => v + ' pro Minute';
 
 // Kurze Einblendung unten auf der Tafel – verschiebt nichts im Layout
 let toastTimer = null;

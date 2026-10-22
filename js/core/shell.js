@@ -20,7 +20,7 @@
 //                    Übungstafel wieder leer (beim Wählen eines Spiels).
 import { settings, persistSettings } from './settings.js';
 import { stopPlay, togglePlay } from './player.js';
-import { toast, confirmTap, disarm, isArmed, popover, onEnter } from './ui.js';
+import { toast, confirmTap, disarm, isArmed, popover, onEnter, setPressed } from './ui.js';
 import { el } from './dom.js';
 import { accountFull, cloudInfo } from './cloud.js';
 
@@ -133,8 +133,7 @@ let present = null; // während des Vorführens: { collapsed } von vorher
 function showPresent() {
   const on = !!present, b = el.btnPresent;
   b.innerHTML = on ? PRESENT_ICONS.off : PRESENT_ICONS.on;
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  setPressed(b, on);
   b.title = on ? 'Vorführen beenden: Leisten wieder einblenden' : 'Vorführen: nur die Tafel, über den ganzen Bildschirm';
 }
 function setPresent(on) {

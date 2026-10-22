@@ -19,7 +19,7 @@ import { markPlaying } from './board.js';
 import { colorStyle, noteLabel } from './symbols.js';
 import { previewTone, stopPlay, playNow } from '../core/player.js';
 import { startQuiz, playTones } from '../core/game.js';
-import { delegate } from '../core/ui.js';
+import { delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 const rnd = (n) => Math.floor(Math.random() * n);
@@ -182,10 +182,6 @@ function guessQuiz() {
 }
 
 /* ---------- Leiste rechts ---------- */
-function pressed(b, on) {
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
-}
 function renderSide() {
   el.meloLen.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === games.melo.len));
   el.meloSteps.querySelectorAll('[data-v]').forEach((b) => pressed(b, (b.dataset.v === 'steps') === games.melo.steps));

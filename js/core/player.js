@@ -9,13 +9,14 @@
 import { audioCtx, strike, tick } from './audio.js';
 import { settings, persistSettings, setTempo, watchTempo } from './settings.js';
 import { startAt } from './plan.js';
-import { toast, popover } from './ui.js';
+import { toast, popover, setPressed, tempoText } from './ui.js';
 import { el } from './dom.js';
+import { PLAY, EAR } from './icons.js';
 
 export const ICONS = {
-  play: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>',
+  play: PLAY,
   stop: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
-  sound: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  sound: EAR,
   mute: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15l11-7.5z" fill="currentColor"/><rect x="16.5" y="4.5" width="3.2" height="15" rx="1" fill="currentColor"/></svg>'
 };
@@ -154,8 +155,7 @@ export function playNow(plan, mark) {
 function renderPlayOpts() {
   document.querySelectorAll('[data-play]').forEach((b) => {
     const on = !!settings[b.dataset.play];
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    setPressed(b, on);
     if (b.dataset.play !== 'stepSound') return;
     b.hidden = !settings.step;
     b.innerHTML = on ? ICONS.sound : ICONS.mute;
@@ -167,8 +167,8 @@ function renderPlayOpts() {
 // Ändert es sich beim Abspielen, geht es ab der nächsten Note im neuen Tempo weiter.
 function renderTempo(v = settings.tempo) {
   el.tempoNum.textContent = v;
-  el.tempoPopOut.textContent = v + ' pro Minute';
-  el.btnTempo.setAttribute('aria-label', 'Tempo ' + v + ' pro Minute');
+  el.tempoPopOut.textContent = tempoText(v);
+  el.btnTempo.setAttribute('aria-label', 'Tempo ' + tempoText(v));
   if (document.activeElement !== el.tempoRange) el.tempoRange.value = v;
 }
 function changeTempo(v) {

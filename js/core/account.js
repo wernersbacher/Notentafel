@@ -1,11 +1,10 @@
 // Konto in den Einstellungen (anmelden, Konto anlegen, abmelden, löschen) und der Hinweis unter den gespeicherten
 // Liedern, wo sie liegen. Den Abgleich selbst macht cloud.js; ohne Backend bleibt der Abschnitt ausgeblendet.
 import { cloudInfo, onCloudChange, login, register, logout, deleteAccount } from './cloud.js';
-import { confirmTap, onEnter } from './ui.js';
+import { confirmTap, onEnter, status, timeOf } from './ui.js';
 import { el } from './dom.js';
 import { refreshSongs } from './menu.js';
 
-const timeOf = (t) => new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 let busy = false;
 
 function render() {
@@ -44,10 +43,7 @@ function full(c) {
     (c.rejected === 1 ? '1 passt' : c.rejected + ' passen') + ' nicht mehr ins Konto (höchstens ' + c.limit + '), ' +
     (c.invalid === 1 ? '1 nimmt' : c.invalid + ' nehmen') + ' der Server nicht an (Name zu lang oder Inhalt zu groß).' + advice;
 }
-function hint(text, warn) {
-  el.accHint.textContent = text;
-  el.accHint.classList.toggle('warn', !!warn);
-}
+const hint = (text, warn) => status(el.accHint, text, warn);
 
 // Anmelden oder Konto anlegen mit den Feldern; die Knöpfe sind gesperrt, bis der Server geantwortet hat
 async function submit(fn, doing) {

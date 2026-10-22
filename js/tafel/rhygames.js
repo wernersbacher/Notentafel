@@ -19,7 +19,7 @@ import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
 import { noteSym, restSym } from './symbols.js';
 import { playNow, stopPlay } from '../core/player.js';
 import { openGame, endGame, gameBtn, GAME_ICONS, startQuiz } from '../core/game.js';
-import { delegate } from '../core/ui.js';
+import { delegate, setPressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 const quiet = () => {};
@@ -211,11 +211,7 @@ function fixQuiz() {
 
 /* ---------- Leiste rechts ---------- */
 function renderSide() {
-  el.whichCount.querySelectorAll('[data-v]').forEach((b) => {
-    const on = +b.dataset.v === games.which.count;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  el.whichCount.querySelectorAll('[data-v]').forEach((b) => setPressed(b, +b.dataset.v === games.which.count));
 }
 export function initRhyGames() {
   delegate(el.whichCount, '[data-v]', (b) => { games.which.count = +b.dataset.v; persistGames(); renderSide(); });

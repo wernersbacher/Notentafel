@@ -6,6 +6,7 @@ import { settings, persistSettings } from './settings.js';
 import { clearPractice, playing, onShow } from './shell.js';
 import { toast } from './ui.js';
 import { el } from './dom.js';
+import { PLAY, CLOSE, EAR } from './icons.js';
 
 let game = null; // { kind, tap, stop }
 
@@ -49,7 +50,7 @@ export function gameFirst(first) {
       game.gate = replay;
       el.gameBar.classList.add('gated');
       const box = el.gameBar.querySelector('.gctl');
-      (box || el.gameBar).insertAdjacentHTML('afterbegin', gameBtn('start', PLAY_ICON, 'Abspielen', box ? 'main' : 'main big'));
+      (box || el.gameBar).insertAdjacentHTML('afterbegin', gameBtn('start', PLAY, 'Abspielen', box ? 'main' : 'main big'));
     }
   }
 }
@@ -65,8 +66,8 @@ export function gameStart() {
 }
 
 export const GAME_ICONS = {
-  close: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>',
-  ear: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  close: CLOSE,
+  ear: EAR,
   eye: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
   check: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5L19.5 6.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5.5l6.5 6.5-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -100,7 +101,6 @@ function showPick(box) {
 }
 // Startseite auf der Tafel, solange beim Üben kein Spiel läuft: Name des gewählten Spiels, eine kurze Erklärung für die
 // Kinder (data-intro an seinem Abschnitt) und „Los geht's!“, das wie der Startknopf in der Leiste wirkt (.gamego)
-const PLAY_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>';
 let introGo = null;
 function showIntro() {
   const box = playing() && !game && document.querySelector('.gamepick[data-area="' + document.getElementById('side').dataset.area + '"]');
@@ -110,7 +110,7 @@ function showIntro() {
   el.gameIntro.hidden = !introGo;
   if (!introGo) { el.gameIntro.innerHTML = ''; return; }
   el.gameIntro.innerHTML = '<div class="gintro"><h2>' + tile.textContent + '</h2><p>' + (sec.dataset.intro || '') + '</p>' +
-    '<button type="button" class="gbtn main big" data-act="go">' + PLAY_ICON + '<span>Los geht\'s!</span></button></div>';
+    '<button type="button" class="gbtn main big" data-act="go">' + PLAY + '<span>Los geht\'s!</span></button></div>';
 }
 el.gameIntro.addEventListener('click', (e) => { if (e.target.closest('[data-act="go"]') && introGo) introGo.click(); });
 

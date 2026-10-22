@@ -13,7 +13,7 @@ import { opts, persistOpts } from './state.js';
 import { toneColor } from '../core/colors.js';
 import { startQuiz, quizAnswer, playTones } from '../core/game.js';
 import { previewTone, stopPlay, playNow } from '../core/player.js';
-import { delegate } from '../core/ui.js';
+import { delegate, setPressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 const rnd = (n) => Math.floor(Math.random() * n);
@@ -173,9 +173,8 @@ function valuesQuiz() {
   };
 }
 function renderValSide() {
-  el.valLevel.querySelectorAll('[data-v]').forEach((b) => { const on = +b.dataset.v === opts.valLevel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-  el.valRests.classList.toggle('on', opts.valRests);
-  el.valRests.setAttribute('aria-pressed', opts.valRests ? 'true' : 'false');
+  el.valLevel.querySelectorAll('[data-v]').forEach((b) => setPressed(b, +b.dataset.v === opts.valLevel));
+  setPressed(el.valRests, opts.valRests);
 }
 
 export function initLiedGames() {

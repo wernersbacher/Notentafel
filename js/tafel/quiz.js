@@ -8,7 +8,7 @@ import { render } from './render.js';
 import { games, persistGames } from './games.js';
 import { colorStyle, noteLabel, upArrow } from './symbols.js';
 import { startQuiz } from '../core/game.js';
-import { toast, delegate } from '../core/ui.js';
+import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 // Töne der Zufallspunkte: die Grundtöne, dazu nach Wahl die hohen Töne und Halbtöne
@@ -85,10 +85,6 @@ function startMelQuiz() {
 }
 
 /* ---------- Leiste rechts ---------- */
-function pressed(b, on) {
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
-}
 function renderQuizSide() {
   const g = games.quiz;
   el.melQuizHint.textContent = g.ask === 'name'

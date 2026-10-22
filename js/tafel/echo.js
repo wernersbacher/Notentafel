@@ -13,7 +13,7 @@ import { markPlaying } from './board.js';
 import { playNow, stopPlay, previewTone } from '../core/player.js';
 import { beatsOf } from '../core/plan.js';
 import { openGame, endGame, gameOn, gameFirst, gameStart, gameBtn, GAME_ICONS } from '../core/game.js';
-import { toast, delegate } from '../core/ui.js';
+import { toast, delegate, setPressed as pressed } from '../core/ui.js';
 import { el } from './dom.js';
 
 export const AGAIN_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4.5H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -128,10 +128,6 @@ function startEcho() {
 
 /* ---------- Leiste rechts ---------- */
 const OPTS = [['echoBars', 'bars'], ['echoNotes', 'notes'], ['echoRests', 'rests']];
-function pressed(b, on) {
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
-}
 function renderEchoSide() {
   OPTS.forEach(([id, k]) => el[id].querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === games.echo[k])));
   el.echoMeter.querySelectorAll('[data-v]').forEach((b) => pressed(b, b.dataset.v === games.echo.meter));

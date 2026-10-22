@@ -4,25 +4,20 @@
 import { settings, persistSettings, clampUi, setTempo } from './settings.js';
 import { current, saveAs, closeSavePop, playing, setPlay } from './shell.js';
 import { stopPlay } from './player.js';
-import { esc, confirmTap, disarm, isArmed, delegate, onEnter, downloadFile } from './ui.js';
+import { esc, confirmTap, disarm, isArmed, delegate, onEnter, downloadFile, setPressed, status, tempoText, dateOf, dateTimeOf } from './ui.js';
 import { exportAll, importAll } from './store.js';
 import { el } from './dom.js';
 import { updateWake } from './wake.js';
 import { localOnly } from './cloud.js';
+import { CLOSE } from './icons.js';
 
-function hint(text, warn) {
-  el.saveHint.textContent = text;
-  el.saveHint.classList.toggle('warn', !!warn);
-}
-const dateOf = (t) => new Date(t).toLocaleDateString('de-DE');
-const dateTimeOf = (t) => new Date(t).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+const hint = (text, warn) => status(el.saveHint, text, warn);
 
 /* ---------- Listen ---------- */
 // Die gespeicherten Lieder des offenen Bereichs, so wie sie gerade angezeigt werden
 let shown = [];
 let renaming = null; // id des Lieds, das gerade umbenannt wird: Statt Name und Knöpfen steht dort ein Feld
 const PENCIL = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>';
-const CROSS = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>';
 function renderSongs() {
   disarm();
   const s = current().songs;
@@ -36,7 +31,7 @@ function renderSongs() {
   el.songs.innerHTML = shown.map((x, i) => x.id === renaming
     ? '<li class="song renaming"><input type="text" class="renamein" maxlength="40" autocomplete="off" enterkeyhint="done" aria-label="Neuer Name" value="' + esc(x.name) + '">' +
       '<button type="button" class="btn" data-ren-ok>Umbenennen</button>' +
-      '<button type="button" class="btn icon" data-ren-no title="Abbrechen" aria-label="Abbrechen">' + CROSS + '</button></li>'
+      '<button type="button" class="btn icon" data-ren-no title="Abbrechen" aria-label="Abbrechen">' + CLOSE + '</button></li>'
     : '<li class="song' + (x.name === name ? ' current' : '') + '">' +
       '<span class="name">' + esc(x.name) + '<span class="date">' + (x.savedAt ? dateOf(x.savedAt) : '') + '</span>' +
       (localOnly(s.store.area, x.id) ? '<span class="here">nur auf diesem Gerät</span>' : '') + '</span>' +
@@ -83,8 +78,7 @@ function renderAuto() {
 // t = { key, btn, state }; liegt die Einstellung nicht in den gemeinsamen, kommen obj und save (zum Speichern) dazu.
 export function renderToggle(t) {
   const on = (t.obj || settings)[t.key];
-  t.btn.classList.toggle('on', on);
-  t.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  setPressed(t.btn, on);
   t.state.textContent = on ? 'an' : 'aus';
 }
 // apply setzt die Einstellung um, nachdem sie umgeschaltet und gespeichert wurde
@@ -110,20 +104,12 @@ function setUi(v) {
 export function applyUiScale() {
   document.body.style.zoom = settings.ui === 1 ? '' : String(settings.ui);
   showUi(Math.round(settings.ui * 100));
-  el.uiScale.querySelectorAll('[data-ui]').forEach((b) => {
-    const on = +b.dataset.ui === settings.ui;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  el.uiScale.querySelectorAll('[data-ui]').forEach((b) => setPressed(b, +b.dataset.ui === settings.ui));
 }
 // Bekannte Lieder nach Thema oder alphabetisch: die Knöpfe mit data-sort stehen über den Listen der Bereiche
 export const sortAbc = () => settings.songSort === 'abc';
 function renderSort() {
-  el.drawer.querySelectorAll('[data-sort]').forEach((b) => {
-    const on = b.dataset.sort === settings.songSort;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  el.drawer.querySelectorAll('[data-sort]').forEach((b) => setPressed(b, b.dataset.sort === settings.songSort));
 }
 // Suche in den bekannten Liedern: zeigt nur Lieder, deren Name den Suchtext enthält (ohne Groß/klein, Umlaute und
 // Satzzeichen, „hanschen“ findet „Hänschen klein“); Überschriften ohne Treffer verschwinden mit
@@ -141,7 +127,8 @@ function searchSongs(input) {
   sec.querySelector('[data-none]').hidden = found > 0;
 }
 const searchAll = () => el.drawer.querySelectorAll('.songsearch').forEach(searchSongs);
-function renderTempo() { el.tempoOut.textContent = settings.tempo + ' pro Minute'; }
+// Tempoanzeige im Menü; der runde Knopf der Tafel zeigt dasselbe (player.js)
+function renderTempo() { el.tempoOut.textContent = tempoText(settings.tempo); }
 
 /* ---------- Öffnen und schließen ---------- */
 // mode 'songs' (Liedersammlung) oder 'settings' (Einstellungen): beide nutzen dieselbe Seitenleiste, jeder zeigt nur
@@ -196,10 +183,7 @@ function loadFromMenu(song) {
   current().songs.load(song);
 }
 /* ---------- Alle Lieder sichern ---------- */
-function backupHint(text, warn) {
-  el.backupHint.textContent = text;
-  el.backupHint.classList.toggle('warn', !!warn);
-}
+function backupHint(text, warn) { status(el.backupHint, text, warn); }
 function exportSongs() {
   const file = exportAll(), n = Object.values(file.areas).reduce((k, a) => k + a.songs.length, 0);
   if (!n) { backupHint('Es sind noch keine Lieder gespeichert.', true); return; }

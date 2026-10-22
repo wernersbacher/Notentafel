@@ -8,11 +8,7 @@ import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
 import { breakJoins } from '../core/shell.js';
-
-const pressed = (btn, on) => {
-  btn.classList.toggle('on', on);
-  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-};
+import { setPressed as pressed } from '../core/ui.js';
 
 // Töne der Leiste; nach einem Wechsel des Farbthemas neu zeichnen. Darunter klappen die weiteren Halbtöne auf.
 let moreSemis = false;

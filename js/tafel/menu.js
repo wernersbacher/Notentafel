@@ -7,7 +7,7 @@ import { closeMenu, renderToggle, toggleSetting, sortAbc } from '../core/menu.js
 import { esc, delegate, toast, groupedHTML } from '../core/ui.js';
 import { handOver, playing, setPlay } from '../core/shell.js';
 import { hasNotes, rowsToSong } from './model.js';
-import { render } from './render.js';
+import { render } from './redraw.js';
 import { loadSong } from './actions.js';
 import { el } from './dom.js';
 

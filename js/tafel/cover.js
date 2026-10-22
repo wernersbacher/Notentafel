@@ -2,7 +2,7 @@
 // für „Rückgängig“ und endet mit commit().
 import { isNote, isBeat } from './model.js';
 import { S, curCell, snap } from './state.js';
-import { commit } from './render.js';
+import { commit } from './redraw.js';
 import { toast } from '../core/ui.js';
 import { select } from './edit.js';
 

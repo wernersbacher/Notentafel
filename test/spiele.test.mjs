@@ -6,9 +6,9 @@ import { makeRhythm, meterParts } from '../js/tafel/rhythms.js';
 import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../js/lied/model.js';
 import { makeMelody } from '../js/tafel/theory.js';
 
-// localStorage-Ersatz für die Einstellungen (vor dem Laden von games.js und lied/storage.js)
+// localStorage-Ersatz für die Einstellungen (vor dem Laden von gameOptions.js und lied/storage.js)
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-const { cleanGames } = await import('../js/tafel/games.js');
+const { cleanGames } = await import('../js/tafel/gameOptions.js');
 const { cleanLiedSettings } = await import('../js/lied/storage.js');
 
 // Gleicher Zufall bei jedem Lauf

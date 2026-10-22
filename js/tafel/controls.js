@@ -5,7 +5,7 @@ import { hasMeter } from './model.js';
 import { S, settings } from './state.js';
 import { persistSettings } from '../core/settings.js';
 import { meterHTML } from './symbols.js';
-import { render } from './render.js';
+import { render } from './redraw.js';
 import { toggleMoreSemis } from './sidebar.js';
 import { toast, delegate } from '../core/ui.js';
 import * as act from './actions.js';

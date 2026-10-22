@@ -2,7 +2,7 @@
 // Stand für „Rückgängig“ und endet mit commit().
 import { emptyRows, content, setCell, trimRow, cleanRows, appendPos, packLines } from './model.js';
 import { S, snap, restore, stashBoard } from './state.js';
-import { commit } from './render.js';
+import { commit } from './redraw.js';
 import { toast } from '../core/ui.js';
 import { el } from './dom.js';
 

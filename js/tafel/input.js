@@ -1,7 +1,7 @@
 // Tafel: antippen zum Markieren, ziehen zum Verschieben oder Tauschen
 import { filled } from './model.js';
 import { S } from './state.js';
-import { render } from './render.js';
+import { render } from './redraw.js';
 import { cellEl } from './board.js';
 import { tapCell, swapCells, deleteCell, revealRow, toggleFold } from './actions.js';
 import { quizRow, quizCell } from '../core/game.js';

@@ -3,7 +3,7 @@ import { MAX_LEN, MAX_ROWS, DOTTED } from './config.js';
 import { isNote, isBeat, filled, rowFullAt, fitsInRow, canCloseGap, dotTargetIn, newRow, reflow, put, setCell, trimRow } from './model.js';
 import { openMeasureAt } from './theory.js';
 import { S, wraps, curCell, curRow, snap } from './state.js';
-import { render, commit } from './render.js';
+import { render, commit } from './redraw.js';
 import { toast } from '../core/ui.js';
 import { stopPlay } from '../core/player.js';
 

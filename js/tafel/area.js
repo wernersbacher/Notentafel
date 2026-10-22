@@ -6,7 +6,7 @@ import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
 import { S, persistBoard, useVariant, startPractice, endPractice, resetPractice } from './state.js';
 import { loadBoard, stores } from './storage.js';
-import { render } from './render.js';
+import { render } from './redraw.js';
 import { markPlaying } from './board.js';
 import { renderPalette, buildCounts } from './sidebar.js';
 import { initControls } from './controls.js';

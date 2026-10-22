@@ -4,8 +4,8 @@
 import { NOTE_BY, GROUPS } from './config.js';
 import { isNote } from './model.js';
 import { S, practiceWritten } from './state.js';
-import { render } from './render.js';
-import { games, persistGames } from './games.js';
+import { render } from './redraw.js';
+import { games, persistGames } from './gameOptions.js';
 import { colorStyle, noteLabel, upArrow } from './symbols.js';
 import { startQuiz } from '../core/game.js';
 import { toast, delegate, setPressed as pressed } from '../core/ui.js';

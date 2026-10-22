@@ -1,6 +1,7 @@
 // Darstellung der Tafel
 import { MAX_LEN, MAX_PER_ROW, RHY_PER_ROW, NOTE_BY, DUR_BY } from './config.js';
-import { isNote, isBeat, isRest, filled, units, rowUnits, widest, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
+import { isNote, isBeat, isRest, filled, widest, beams, subBeams, lineSpan, hasMeter, syllable, syllableParts } from './model.js';
+import { spanOf, unitCount, colFrs, midOf, geoFrac } from './board-math.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { meterParts } from './rhythms.js';
 import { S, settings, wraps } from './state.js';
@@ -13,54 +14,6 @@ import { el } from './dom.js';
 const NO_MARKS = { b: {}, z: [] };
 // Klassen der Striche vor einem Platz: Schluss, Wiederholung Ende, Anfang, beides
 const BAR_CLS = { 2: ' final', 3: ' final rep-end', 4: ' final rep-start', 5: ' final rep-end rep-start' };
-
-
-/* ---------- Breite nach Notenlänge ---------- */
-// Jeder Schlag hat ein Feld: Ein Platz belegt so viele Sechzehntel-Spalten, wie er dauert (leer = ein Schlag); eine Halbe
-// hält also das nächste Feld frei. Kürzere Zeilen zeigen dahinter blasse Plätze, über die man auch Pausen setzen kann.
-const spanOf = units;
-// rowUnits (model.js) zählt einen Platz, der nur einen Strich trägt, mit 0: Er verbreitert die Zeile nicht.
-// Auf ganze Schläge (vier Spalten) aufgerundet
-const wholeBeats = (n) => n + (4 - n % 4) % 4;
-// Gezählt wird in Spalten. Rhythmus: immer S.cap Schläge (mehr nur, wenn eine ältere Zeile länger ist). Melodie: die
-// längste Zeile plus ein freier Schlag, mindestens bis zur Markierung, höchstens S.cap Schläge (außer ältere Zeilen),
-// aufgerundet auf ganze Schläge.
-function unitCount() {
-  if (S.variant === 'rhy') {
-    let n = 4 * S.cap;
-    S.rows.forEach((row) => { if (rowUnits(row) > n) n = rowUnits(row) + 4; });
-    return wholeBeats(n);
-  }
-  let n = 0;
-  S.rows.forEach((row, r) => {
-    const extra = r === S.sel.r && S.sel.c >= row.length ? (S.sel.c - row.length + 1) * 4 : 4;
-    const u = rowUnits(row);
-    n = Math.max(n, u > 4 * S.cap ? u + 4 : Math.min(u + extra, 4 * S.cap));
-  });
-  return wholeBeats(n);
-}
-// Breite der Spalten einer Zeile in --L, aufsummiert (P[u] = Breite aller Spalten vor u). Ein Schlag ist einen Kreis breit (4 × ½).
-// Melodie: Beginnt in der Zeile auf diesem Schlag eine Achtel oder ein Zeichen zwischen den Schlägen, wird er zwei Kreise
-// breit (4 × 1), damit die bunten Kreise nebeneinander passen. Rhythmus: Ein Schlag bleibt ein Feld, zwei Achtel teilen
-// es sich; beginnt auf ihm eine Sechzehntel, wird er zwei Felder breit (die Sechzehntel stehen dann so weit auseinander
-// wie sonst zwei Achtel).
-function colFrs(cols, row) {
-  const wide = [], P = [0], share = S.variant === 'rhy';
-  let u = 0;
-  row.forEach((x) => {
-    const k = spanOf(x);
-    if (share ? k === 1 || u % 2 : k < 4 || u % 4) wide[u >> 2] = true;
-    u += k;
-  });
-  for (u = 0; u < cols; u++) P.push(P[u] + (wide[u >> 2] ? 1 : 0.5));
-  return P;
-}
-// Mitte des Zeichens eines Platzes in --L: Ab einem Schlag Breite steht es vorn in seinem Platz (einen Kreis breit),
-// in einem schmaleren Platz (Achtel, Sechzehntel im geteilten Feld) mittig darüber
-const midOf = (geo) => geo.P[geo.u0] + Math.min(geo.P[geo.u0 + geo.k] - geo.P[geo.u0], 2) / 2;
-// geo (nur bei Breite nach Notenlänge): u0 = erste Sechzehntel-Spalte des Platzes, k = Anzahl Spalten, P = aufsummierte
-// Spaltenbreiten. Liefert den Anteil des Platzes, der vor Sechzehntel o liegt.
-const geoFrac = (geo, o) => (geo.P[geo.u0 + o] - geo.P[geo.u0]) / (geo.P[geo.u0 + geo.k] - geo.P[geo.u0]);
 
 /* ---------- Ein Platz ---------- */
 function countsHTML(zz, geo) {

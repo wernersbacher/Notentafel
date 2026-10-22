@@ -11,9 +11,9 @@
 //                       Takt wird hinterlegt; rot und grün werden nur die Knöpfe unten.
 //                       Rhythmus legen und Fehler finden: Nach dem Lösen spielt die Zeilennummer den Rhythmus richtig.
 import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
-import { games, persistGames } from './games.js';
+import { games, persistGames } from './gameOptions.js';
 import { S } from './state.js';
-import { render } from './render.js';
+import { render } from './redraw.js';
 import { markPlaying } from './board.js';
 import { rhythmRow, rowPlan, planOf, AGAIN_ICON } from './echo.js';
 import { noteSym, restSym } from './symbols.js';

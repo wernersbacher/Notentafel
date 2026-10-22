@@ -3,7 +3,7 @@
 import { MAX_ROWS } from './config.js';
 import { newRow, canStepDown, appendPos } from './model.js';
 import { S, curRow, snap } from './state.js';
-import { render, commit } from './render.js';
+import { render, commit } from './redraw.js';
 
 /* ---------- Zeilen ---------- */
 // Umbruch: Die Markierung und alles dahinter rutscht in eine neue Zeile darunter.

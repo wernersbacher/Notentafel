@@ -3,7 +3,7 @@
 import { filled, put, trimRow } from './model.js';
 import { countSlots } from './theory.js';
 import { S, curCell, curRow, snap } from './state.js';
-import { commit } from './render.js';
+import { commit } from './redraw.js';
 import { advance } from './edit.js';
 
 /* ---------- Takt ---------- */

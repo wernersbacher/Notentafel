@@ -5,7 +5,7 @@
 //   theory.js   Grundbegriffe: Werte, Tonart, Tonhöhen (kennt kein anderes Modul aus lied/)
 //   measures.js Takte, Raster, Zählzeiten, Haltebögen und Änderungen daran (kennt theory)
 //   quizpool.js Stammtöne, Knöpfe und Tonraum fürs Tonnamen-Quiz (kennt theory und measures)
-//   melody.js   Lied als Melodie übernehmen und transponieren (kennt theory und measures)
+//   melody.js   Transponieren; reicht songToMelody aus dem gemeinsamen songformat.js weiter (kennt theory)
 //   clean.js    gespeicherte Stände prüfen, Vorzeichen und unvollständige Takte (kennt theory und measures)
 //   play.js     Abspielplan und Intervall fürs Üben (kennt theory und measures)
 //

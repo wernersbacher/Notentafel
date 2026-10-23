@@ -26,7 +26,7 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           PKG=$(node -p "require('./package.json').version")
-          HTML=$(sed -n 's/.*<p class="version">Version \([^<]*\)<\/p>.*/\1/p' app/index.html | head -n1)
+          HTML=$(sed -n 's/.*<p class="version">Version \([0-9.]*\).*/\1/p' app/index.html | head -n1)
           echo "Tag: $TAG, package.json: $PKG, app/index.html: $HTML"
           if [ "$TAG" != "$PKG" ] || [ "$TAG" != "$HTML" ]; then
             echo "Versionen passen nicht zusammen (Tag $TAG, package.json $PKG, app/index.html $HTML)" >&2

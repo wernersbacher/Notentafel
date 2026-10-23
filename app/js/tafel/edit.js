@@ -129,11 +129,13 @@ export function placeRest(d) {
   snap();
   replaceCur({ k: 'r', d });
 }
+// Setzt die Hand (nochmal dieselbe nimmt sie weg) und springt wie beim Notenwert zum nächsten Platz
 export function setHand(h) {
   const cell = curCell();
   if (!isNote(cell)) return;
   snap();
   cell.h = cell.h === h ? '' : h;
+  advance();
   commit();
 }
 

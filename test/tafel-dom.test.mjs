@@ -308,6 +308,20 @@ test('renderSidebar: Hand-Knöpfe nur bei einer Note, gedrückt nach der Hand de
   assert.ok(!on(el.btnR));
 });
 
+test('setHand: setzt die Hand an der Note und springt zum nächsten Platz; nochmal dieselbe nimmt sie weg', async () => {
+  const { setHand } = await import('../app/js/tafel/edit.js');
+  S.sel = { r: 0, c: 0 };
+  setHand('l');
+  assert.equal(S.rows[0][0].h, 'l');
+  assert.deepEqual(S.sel, { r: 0, c: 1 });
+  S.sel = { r: 0, c: 0 };
+  setHand('l');
+  assert.equal(S.rows[0][0].h, '');
+  S.sel = { r: 1, c: 0 }; // leerer Platz: nichts passiert, die Markierung bleibt
+  setHand('r');
+  assert.deepEqual(S.sel, { r: 1, c: 0 });
+});
+
 test('renderSidebar: Wertknöpfe zeigen den Wert des markierten Platzes (punktiert als Grundwert mit Punkt)', () => {
   S.rows[0][1].d = 2;
   SB.renderSidebar();

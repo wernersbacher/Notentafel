@@ -94,6 +94,8 @@ export async function api(path, { method = 'GET', body, token } = {}) {
   if (!res.ok) throw new ApiError(res.status, data);
   return data;
 }
+// Meldung beim Anmelden mit unbestätigter E-Mail; die Anmeldeseite erkennt daran, dass sie die Mail erneut anbietet
+export const NOT_VERIFIED = 'Bitte bestätige zuerst deine E-Mail-Adresse. Den Link dazu haben wir dir geschickt.';
 // Fehlermeldung für die Oberfläche; ohne Antwort vom Server liegt es meist am Netz
 export function message(err) {
   if (!(err instanceof ApiError)) return 'Keine Verbindung zum Server.';
@@ -108,6 +110,8 @@ export function message(err) {
   if (mail) return 'Bitte eine gültige E-Mail eingeben.';
   if (d.name) return 'Der Name darf höchstens 60 Zeichen haben.';
   if (d.password) return 'Das Passwort braucht mindestens 8 Zeichen.';
+  // richtiges Passwort, aber die E-Mail ist noch nicht bestätigt (PocketBase antwortet dann 403, bei falschem Passwort 400)
+  if (err.status === 403 && /authenticate/i.test(err.message)) return NOT_VERIFIED;
   if (err.status === 400 && /authenticate/i.test(err.message)) return 'E-Mail oder Passwort stimmt nicht.';
   if (err.status === 429) return 'Zu viele Versuche, bitte kurz warten.';
   return 'Das hat nicht geklappt (' + err.status + ').';
@@ -127,11 +131,15 @@ export async function login(email, password) {
   notify();
   return '';
 }
+// Legt das Konto an und schickt die Bestätigungsmail, meldet aber nicht an: ein Konto gilt erst nach dem Link
+// aus der Mail. Liefert '' oder eine Fehlermeldung. Schlägt nur der Versand fehl, ist das Konto trotzdem da; die
+// Seite bietet dann „Mail erneut senden“ an.
 export async function register(email, password) {
   try {
     await api('/collections/users/records', { method: 'POST', body: { email, password, passwordConfirm: password } });
   } catch (err) { return message(err); }
-  return login(email, password);
+  await requestVerification(email);
+  return '';
 }
 // Schickt die Mail zum Zurücksetzen. Die Antwort ist immer 204, auch bei unbekannter E-Mail; nur Netz- und
 // Formatfehler kommen zurück, so verrät die Seite nicht, welche Konten es gibt.
@@ -232,7 +240,7 @@ export async function logoutAll() {
   return '';
 }
 
-// Token erneuern und das Konto holen (liefert /api/me). Ist das Token abgelaufen oder das Konto weg (401, 404),
+// Token erneuern und das Konto holen (liefert /api/me). Ist das Token abgelaufen, das Konto weg oder nicht bestätigt (401, 403, 404),
 // wird abgemeldet und der Fehler weitergegeben; bei anderen Fehlern (offline) bleibt man angemeldet.
 export async function refresh() {
   try {
@@ -243,7 +251,7 @@ export async function refresh() {
     me = await api('/me');
     return me;
   } catch (err) {
-    if (err instanceof ApiError && (err.status === 401 || err.status === 404) && auth) logout();
+    if (err instanceof ApiError && (err.status === 401 || err.status === 403 || err.status === 404) && auth) logout();
     throw err;
   }
 }

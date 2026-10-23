@@ -24,7 +24,8 @@ const C = await import('../app/js/core/cloud.js');
 const A = await import('../shared/auth.js');
 // Anmelden liegt in shared/auth.js; der Erst-Abgleich danach läuft in cloud.js und ist erst nach ready() durch
 const login = async (email, pass) => { const err = await A.login(email, pass); await C.ready(); return err; };
-const register = async (email, pass) => { const err = await A.register(email, pass); await C.ready(); return err; };
+// Registrieren meldet nicht mehr an (erst nach der Mail); der Fake-Server nimmt bestätigte Konten an, also folgt die Anmeldung
+const register = async (email, pass) => { const err = (await A.register(email, pass)) || (await A.login(email, pass)); await C.ready(); return err; };
 const logout = A.logout;
 const deleteAccount = async (pass = 'geheim123') => { const err = await A.deleteAccount(pass); await C.ready(); return err; };
 // Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf

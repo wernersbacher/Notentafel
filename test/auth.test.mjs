@@ -17,7 +17,15 @@ globalThis.fetch = async (url, opts = {}) => {
   const record = { id: 'u1', email: 'a@b.de', name: 'Anna Beispiel' };
   if (url === '/api/collections/users/auth-with-password') {
     const b = JSON.parse(opts.body);
+    if (b.identity === 'neu@b.de') {
+      // wie PocketBase: richtiges Passwort bei unbestätigtem Konto 403, falsches 400
+      return b.password === 'geheim123' ? reply(403, { message: "The request doesn't satisfy the collection requirements to authenticate.", data: {} })
+        : reply(400, { message: 'Failed to authenticate.', data: {} });
+    }
     return b.password === 'geheim123' ? reply(200, { token: 'tok1', record }) : reply(400, { message: 'Failed to authenticate.', data: {} });
+  }
+  if (url === '/api/collections/users/records' && opts.method === 'POST') {
+    return JSON.parse(opts.body).email === 'vergeben@b.de' ? reply(400, { message: 'x', data: { email: { code: 'validation_not_unique' } } }) : reply(200, { ...record, verified: false });
   }
   if (url === '/api/me') return meFails ? reply(500, { message: 'Kaputt' }) : reply(200, { tier: 'pro', features: ['cloud'], limits: {} });
   if (url === '/api/collections/users/auth-refresh') {
@@ -101,6 +109,26 @@ test('login und logout schreiben auth.v1 und melden onAuthChange', async () => {
   off();
   A.logout();
   assert.equal(seen.length, 2);
+});
+
+test('register: legt an und schickt die Bestätigungsmail, meldet aber nicht an', async () => {
+  const seen = [];
+  const off = A.onAuthChange((u) => seen.push(u));
+  assert.equal(await A.register('neu@b.de', 'geheim123'), '');
+  assert.deepEqual(calls.map((c) => c.url), ['/api/collections/users/records', '/api/collections/users/request-verification']);
+  assert.equal(A.currentUser(), null);
+  assert.equal(mem.getItem('notentafel.auth.v1'), null);
+  assert.deepEqual(seen, []);
+  assert.equal(await A.register('vergeben@b.de', 'geheim123'), 'Für diese E-Mail gibt es schon ein Konto.');
+  off();
+});
+
+test('login: unbestätigtes Konto (403) bekommt die Hinweis-Meldung, falsches Passwort (400) nicht', async () => {
+  assert.equal(await A.login('neu@b.de', 'geheim123'), A.NOT_VERIFIED);
+  assert.match(A.NOT_VERIFIED, /bestätige zuerst deine E-Mail/);
+  assert.equal(await A.login('neu@b.de', 'falsch'), 'E-Mail oder Passwort stimmt nicht.');
+  assert.equal(A.currentUser(), null);
+  assert.equal(mem.getItem('notentafel.auth.v1'), null);
 });
 
 test('login: scheitert /me, bleibt nichts gespeichert und es wird nichts gemeldet', async () => {

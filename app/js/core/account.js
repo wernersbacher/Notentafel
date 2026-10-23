@@ -1,12 +1,12 @@
-// Konto in den Einstellungen (anmelden, Konto anlegen, abmelden; Daten und Löschen stehen auf /account/) und der
-// Hinweis unter den gespeicherten Liedern, wo sie liegen. Den Abgleich selbst macht cloud.js; ohne Backend bleibt der Abschnitt ausgeblendet.
+// Konto in den Einstellungen (Status und Links; Anmelden, Passwort, Daten und Löschen stehen auf /login/ und /account/),
+// der Avatar mit Menü in der Leiste oben und der Hinweis unter den gespeicherten Liedern, wo sie liegen. Den Abgleich
+// selbst macht cloud.js; ohne Backend bleiben Abschnitt und Avatar ausgeblendet.
 import { cloudInfo, onCloudChange } from './cloud.js';
-import { login, register, logout } from '../../../shared/auth.js';
-import { confirmTap, onEnter, status, timeOf } from './ui.js';
+import { logout } from '../../../shared/auth.js';
+import { mountAccount } from '../../../shared/header.js';
+import { confirmTap, timeOf } from './ui.js';
 import { el } from './dom.js';
 import { refreshSongs } from './menu.js';
-
-let busy = false;
 
 function render() {
   const c = cloudInfo();
@@ -44,34 +44,15 @@ function full(c) {
     (c.rejected === 1 ? '1 passt' : c.rejected + ' passen') + ' nicht mehr ins Konto (höchstens ' + c.limit + '), ' +
     (c.invalid === 1 ? '1 nimmt' : c.invalid + ' nehmen') + ' der Server nicht an (Name zu lang oder Inhalt zu groß).' + advice;
 }
-const hint = (text, warn) => status(el.accHint, text, warn);
-
-// Anmelden oder Konto anlegen mit den Feldern; die Knöpfe sind gesperrt, bis der Server geantwortet hat
-async function submit(fn, doing) {
-  const email = el.accEmail.value.trim(), pass = el.accPass.value;
-  if (!email || !pass) { hint('Bitte E-Mail und Passwort eingeben.', true); return; }
-  if (busy) return;
-  busy = true;
-  el.btnLogin.disabled = el.btnRegister.disabled = true;
-  hint(doing);
-  const err = await fn(email, pass);
-  busy = false;
-  el.btnLogin.disabled = el.btnRegister.disabled = false;
-  if (err) { hint(err, true); return; }
-  el.accPass.value = '';
-  el.accPass.blur();
-  hint('');
-}
 
 export function initAccount() {
+  // der Avatar liest die Anmeldung aus shared/auth.js; initAuth läuft erst in initCloud, danach meldet cloud.js eine Änderung
+  const redraw = mountAccount(el.accMount);
   onCloudChange(() => {
     render();
+    redraw();
     refreshSongs(); // auch ohne neue Lieder: „nur auf diesem Gerät“ kann sich geändert haben
   });
-  el.btnLogin.addEventListener('click', () => submit(login, 'Anmelden …'));
-  el.btnRegister.addEventListener('click', () => submit(register, 'Konto wird angelegt …'));
-  onEnter(el.accEmail, () => el.accPass.focus());
-  onEnter(el.accPass, () => submit(login, 'Anmelden …'));
   el.btnLogout.addEventListener('click', () => confirmTap(el.btnLogout, 'Sicher?', logout));
   render();
 }

@@ -107,13 +107,7 @@
 .sgroup { margin: 8px 0 -2px; font: 800 .74rem var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .sgroup:first-child { margin-top: 0; }
 
-/* Konto: E-Mail und Passwort untereinander, darunter Anmelden und Konto anlegen */
-.accform { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-.accform input {
-  font: 700 16px var(--font-ui); color: var(--fg); background: var(--btn);
-  border: 2px solid var(--btn-line); border-radius: 12px;
-  min-height: 48px; padding: 0 .75rem; min-width: 0;
-  -webkit-user-select: text; user-select: text;
-}
+/* Konto: Hinweis, darunter zwei Knöpfe (Links oder Abmelden) */
 .sizes.accrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#accOut .accrow { margin-top: 10px; }
 .accwho { margin: 0 0 4px; font-weight: 700; overflow-wrap: anywhere; }

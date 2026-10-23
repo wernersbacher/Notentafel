@@ -8,6 +8,7 @@
 <link rel="preload" href="/shared/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/shared/fonts.css?v=1.0.0">
 <link rel="stylesheet" href="/shared/tokens.css?v=1.0.0">
+<link rel="stylesheet" href="/shared/header.css?v=1.0.0">
 <link rel="stylesheet" href="css/base.css?v=1.0.0">
 <link rel="stylesheet" href="css/tafel.css?v=1.0.0">
 <link rel="stylesheet" href="css/lied.css?v=1.0.0">
@@ -119,6 +120,7 @@
   "./js/tafel/symbols.js": "./js/tafel/symbols.js?v=1.0.0",
   "./js/tafel/theory.js": "./js/tafel/theory.js?v=1.0.0",
   "../shared/auth.js": "../shared/auth.js?v=1.0.0",
+  "../shared/avatar.js": "../shared/avatar.js?v=1.0.0",
   "../shared/header.js": "../shared/header.js?v=1.0.0"
 } }
 </script>
@@ -213,6 +215,8 @@
         <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
           <svg class="ico" aria-hidden="true"><use href="#einstellungen"/></svg><span>Einstellungen</span>
         </button>
+        <!-- Anmelden oder Avatar mit Menü (shared/header.js, nur mit Backend) -->
+        <div id="accMount"></div>
       </div>
       <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" aria-hidden="true"><use href="#hoch"/></svg></button>
     </div>
@@ -806,25 +810,20 @@
     <section id="accountSec" hidden>
       <h3>Konto</h3>
       <div id="accOut">
-        <div class="accform">
-          <input id="accEmail" type="email" placeholder="E-Mail" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" aria-label="E-Mail">
-          <input id="accPass" type="password" placeholder="Passwort (mindestens 8 Zeichen)" autocomplete="current-password" enterkeyhint="go" aria-label="Passwort">
-        </div>
-        <div class="sizes accrow">
-          <button type="button" class="btn" id="btnLogin">Anmelden</button>
-          <button type="button" class="btn" id="btnRegister">Konto anlegen</button>
-        </div>
-        <p class="hint" id="accHint" aria-live="polite"></p>
         <p class="hint">Freiwillig: Mit einem Konto liegen deine gespeicherten Lieder auch auf dem Server und sind auf jedem Gerät da, auf dem du dich anmeldest. Ohne Konto bleibt alles nur auf diesem Gerät. <a href="/privacy/" target="_blank" rel="noopener">Datenschutz</a></p>
+        <div class="sizes accrow">
+          <a class="btn" href="/login/?next=/app/">Anmelden</a>
+          <a class="btn" href="/login/?mode=register&amp;next=/app/">Konto anlegen</a>
+        </div>
       </div>
       <div id="accIn" hidden>
         <p class="accwho">Angemeldet als <b id="accWho"></b></p>
         <p class="hint" id="accState" aria-live="polite"></p>
         <div class="sizes accrow">
+          <a class="btn" href="/account/">Mein Konto</a>
           <button type="button" class="btn" id="btnLogout">Abmelden</button>
-          <a class="btn danger" href="/account/#daten">Konto löschen</a>
         </div>
-        <p class="hint">Beim Abmelden bleiben die Lieder auf diesem Gerät. Unter „Konto löschen“ kannst du erst deine Daten herunterladen und das Konto danach mit allen Liedern darin auf dem Server löschen; die Lieder auf diesem Gerät bleiben.</p>
+        <p class="hint">Beim Abmelden bleiben die Lieder auf diesem Gerät.</p>
       </div>
     </section>
 

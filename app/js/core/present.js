@@ -1,6 +1,6 @@
 // Einklappen der Leiste und Vorführen. Beides ändert nur, was zu sehen ist; der offene Bereich kommt aus shell-state.js.
 import { stopPlay } from './player.js';
-import { setPressed } from './ui.js';
+import { setPressed, toast } from './ui.js';
 import { el } from './dom.js';
 import { shellState } from './shell-state.js';
 
@@ -13,7 +13,7 @@ export const sideCollapsed = () => collapsed;
 function setCollapsed(on, keepPlay) {
   collapsed = on;
   if (!keepPlay) stopPlay();
-  shellState.savePop.close();
+  shellState.savePop?.close();
   document.querySelector('.app').classList.toggle('collapsed', on);
   el.btnSide.setAttribute('aria-expanded', on ? 'false' : 'true');
   el.btnSide.title = on ? 'Leiste ausklappen (bearbeiten)' : 'Leiste einklappen (Bearbeiten beenden)';
@@ -55,7 +55,28 @@ function setPresent(on) {
 
 // Knöpfe der Leiste für Einklappen und Vorführen; wird Vollbild vom Gerät aus beendet (z. B. Wischgeste), endet auch
 // das Vorführen
+// Handy (bis 600 px): reiner Ansichtsmodus. Die Leiste bleibt eingeklappt und ist nicht ausklappbar (siehe .phone in
+// base.css), einmal pro Sitzung erklärt ein Hinweis, wofür das Gerät nicht gedacht ist.
+let PHONE = null; // matchMedia, erst in initPresent (Tests laden das Modul ohne Browser)
+const PHONE_HINT = 'Am Handy zum Ansehen und Abspielen. Zum Schreiben bitte Tablet oder Computer nehmen.';
+function applyPhone() {
+  document.body.classList.toggle('phone', PHONE.matches);
+  if (PHONE.matches && !collapsed) setCollapsed(true, true);
+  else if (!PHONE.matches && collapsed && !present) setCollapsed(false, true);
+}
+function hintPhone() {
+  try {
+    if (!PHONE.matches || sessionStorage.getItem('phoneHint')) return;
+    sessionStorage.setItem('phoneHint', '1');
+  } catch (e) { /* ohne Speicher: Hinweis bei jedem Start */ }
+  toast(PHONE_HINT);
+}
+
 export function initPresent() {
+  PHONE = window.matchMedia('(max-width: 600px)');
+  applyPhone();
+  PHONE.addEventListener('change', applyPhone);
+  hintPhone();
   el.btnSide.addEventListener('click', () => setCollapsed(!collapsed));
   showPresent();
   el.btnPresent.addEventListener('click', () => setPresent(!present));

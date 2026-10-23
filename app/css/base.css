@@ -162,6 +162,8 @@ a.btn { text-decoration: none; }
 @media (max-width: 600px) { /* nur Handys; ein iPad (ab 768 px) behält die Leiste an der Seite */
   html, body { height: auto; }
   .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
+  /* Nur ansehen und abspielen: nichts zum Schreiben (die Leiste bleibt eingeklappt, Speichern entfällt) */
+  .phone .fab.sidetoggle, .phone .savewrap { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) { transform: none; }

@@ -368,3 +368,46 @@ a.btn { text-decoration: none; }
   .boot { transition: none; }
   .boot .bootdots i { animation: none; }
 }
+
+/* ---------- Startbildschirm ---------- */
+/* Der Titel oben links führt dorthin zurück */
+.title > button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
+/* Über der ganzen App: drei Bereiche nebeneinander, in jedem die Kacheln „schreiben“ und „Üben und Spielen“ */
+.start {
+  position: fixed; inset: 0; z-index: 60; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+  background: var(--bg);
+}
+.stitle { margin: 0; font: 800 clamp(2rem, 5vw, 3.2rem)/1.1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
+.ssub { margin: 0 0 18px; font: 700 clamp(1.05rem, 2vw, 1.4rem) var(--font-ui); color: var(--muted); }
+.sareas { width: 100%; max-width: 1180px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.sarea { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; background: var(--panel); }
+.sarea h2 { margin: 0; display: flex; align-items: center; gap: .6rem; font: 800 clamp(1.4rem, 2.6vw, 2rem)/1.1 var(--font-ui); }
+.snum { display: grid; place-items: center; flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--fg); color: var(--board); font-size: 1.1rem; }
+.shead { margin: 0 0 4px; min-height: 2.7em; font: 700 .98rem/1.35 var(--font-ui); color: var(--muted); }
+.stile {
+  position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px;
+  min-height: 150px; padding: 18px 20px; border: 3px solid var(--btn-line); border-radius: 20px; text-align: left;
+  background: var(--btn); color: var(--fg); box-shadow: 0 3px 10px var(--shadow); cursor: pointer; touch-action: manipulation;
+}
+.stile:active { transform: scale(.97); }
+.stile .sname { font: 800 1.45rem/1.15 var(--font-ui); }
+.stile .stext { font: 700 .95rem/1.35 var(--font-ui); color: var(--muted); }
+/* „Üben und Spielen“ ist dunkel, damit man es auf einen Blick von „schreiben“ unterscheidet */
+.stile[data-part="play"] { background: var(--fg); border-color: var(--fg); color: var(--board); }
+.stile[data-part="play"] .stext { color: inherit; opacity: .8; }
+.slast { position: absolute; top: 12px; right: 14px; font: 800 .72rem/1 var(--font-ui); letter-spacing: .05em; text-transform: uppercase; opacity: .7; }
+@media (max-width: 900px) { /* schmal: die Bereiche untereinander, die beiden Kacheln eines Bereichs nebeneinander */
+  .start { justify-content: flex-start; }
+  .sareas { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .sarea { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; }
+  .sarea h2, .shead { grid-column: 1 / -1; }
+  .shead { min-height: 0; margin: 0; }
+  .stile { min-height: 110px; padding: 14px 16px; }
+  .stile .sname { font-size: 1.2rem; }
+}
+@media (max-width: 600px) { /* Handy: auch die beiden Kacheln eines Bereichs untereinander */
+  .sarea { grid-template-columns: minmax(0, 1fr); }
+  .stile { min-height: 0; }
+}

@@ -27,6 +27,7 @@ import { accountFull, cloudInfo } from './cloud.js';
 import { shellState } from './shell-state.js';
 import { initBar, TOOL_BTNS } from './shell-bar.js';
 import { initPresent } from './present.js';
+import { initStart } from './start.js';
 import { makeSignal } from './signal.js';
 import { plan, limitText } from './tier.js';
 import { songRoom } from './store.js';
@@ -184,4 +185,5 @@ export function startShell() {
   el.saveName.addEventListener('input', () => { if (isArmed(el.btnSaveOk)) disarm(); });
 
   setArea(areas.some((a) => a.id === settings.mode) ? settings.mode : areas[0].id);
+  initStart(areas, setArea, setPlay);
 }

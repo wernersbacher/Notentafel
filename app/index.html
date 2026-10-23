@@ -47,6 +47,7 @@
   "./js/core/shell-bar.js": "./js/core/shell-bar.js?v=1.1.0",
   "./js/core/shell-state.js": "./js/core/shell-state.js?v=1.1.0",
   "./js/core/shell.js": "./js/core/shell.js?v=1.1.0",
+  "./js/core/start.js": "./js/core/start.js?v=1.1.0",
   "./js/core/signal.js": "./js/core/signal.js?v=1.1.0",
   "./js/core/store.js": "./js/core/store.js?v=1.1.0",
   "./js/core/tier.js": "./js/core/tier.js?v=1.1.0",
@@ -201,7 +202,7 @@
 <div class="app">
   <!-- Leiste oben mit den drei Tafeln; einklappbar für mehr Platz -->
   <header class="topbar" id="topbar">
-    <h1 class="title">Musiktafel</h1>
+    <h1 class="title"><button type="button" id="btnStart" title="Zurück zum Start: Bereich wählen">Musiktafel</button></h1>
     <!-- Darunter für den offenen Bereich: schreiben oder Üben und Spielen (auf einer eigenen Übungstafel) -->
     <div class="areanav">
       <div class="tabs" id="tabs" role="tablist" aria-label="Bereich"></div>
@@ -910,6 +911,9 @@
 </aside>
 
 <div class="printout" id="printOut"></div>
+
+<!-- Startbildschirm: start.js baut die drei Bereiche mit ihren sechs Kacheln; liegt über der ganzen App -->
+<main class="start" id="start" hidden></main>
 
 </body>
 </html>

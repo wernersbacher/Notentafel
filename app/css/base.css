@@ -164,6 +164,20 @@ a.btn { text-decoration: none; }
   .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
   /* Nur ansehen und abspielen: nichts zum Schreiben (die Leiste bleibt eingeklappt, Speichern entfällt) */
   .phone .fab.sidetoggle, .phone .savewrap { display: none; }
+  /* Leiste oben auf dem Handy: Titel und Knöpfe in einer Zeile (nur Symbole), darunter Reiter und Schreiben/Üben */
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
+  .topbar .title { font-size: 1.15rem; letter-spacing: .02em; padding-left: 2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .areanav { grid-column: 1 / -1; grid-row: 2; }
+  .headbtns > .btn > span { display: none; }
+  .headbtns > .btn { min-height: 44px; min-width: 44px; padding: .25rem; }
+  .headbtns { gap: 4px; }
+  .topright { gap: 4px; }
+  .tab { font-size: .9rem; letter-spacing: 0; min-height: 44px; }
+  /* Runde Knöpfe auf der Tafel kleiner und bei Bedarf in zwei Reihen, damit nichts links herausragt */
+  .playfab { left: 10px; right: 10px; bottom: 18px; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .playfab .fab { width: 42px; height: 42px; }
+  .playfab .fab.play { width: 62px; height: 62px; }
+  .playfab .fab.play .ico { width: 1.8rem; height: 1.8rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) { transform: none; }

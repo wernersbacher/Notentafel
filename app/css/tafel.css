@@ -5,7 +5,7 @@
   --nw: 1.5rem; --mw: 2.7rem; /* Spalte vor den Plätzen: Breite der Zeilennummer, dazu die der Taktart */
   flex: 1; min-height: 0;
   min-width: calc(var(--nw) + var(--cols, 1) * 46px);
-  padding: 14px 12px;
+  padding: 62px 12px 14px; /* oben Platz für den Vorführen-Knopf (.presentfab) in der Ecke */
   display: grid;
   gap: 6px;
   /* 12rem: Platz für einen großen Kreis plus Längenzeichen und r/l darunter */

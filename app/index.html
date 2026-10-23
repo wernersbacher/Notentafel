@@ -235,13 +235,14 @@
       <div class="grid" id="grid" aria-label="Musiktafel"></div>
       <div class="sheet" id="sheet" aria-label="Notenblatt" hidden></div>
     </div>
-    <!-- Runde Knöpfe unten rechts auf der Tafel (für alle Bereiche): Vorführen, Metronom, Einzählen, Tempo, Schritt für Schritt, Ton dabei, Abspielen -->
+    <!-- Runde Knöpfe unten rechts auf der Tafel (für alle Bereiche): Metronom, Einzählen, Tempo, Schritt für Schritt, Ton dabei, Abspielen -->
     <!-- Leiste ein- und ausklappen; eingeklappt ist das Bearbeiten beendet (keine Markierung, keine leeren Plätze) -->
     <button type="button" class="fab sidetoggle" id="btnSide" aria-expanded="true" aria-controls="side" title="Leiste einklappen (Bearbeiten beenden)" aria-label="Leiste einklappen">
       <svg class="ico" aria-hidden="true"><use href="#rechts"/></svg>
     </button>
+    <!-- Vorführen: fest oben rechts auf der Tafel, in jedem Bereich und Spiel, unabhängig von den Knöpfen unten -->
+    <button type="button" class="fab presentfab" id="btnPresent" aria-pressed="false" title="Vorführen: nur die Tafel, über den ganzen Bildschirm" aria-label="Vorführen"></button>
     <div class="playfab" role="group" aria-label="Abspielen">
-      <button type="button" class="fab" id="btnPresent" aria-pressed="false" title="Vorführen: nur die Tafel, über den ganzen Bildschirm" aria-label="Vorführen"></button>
       <button type="button" class="fab" data-play="metro" aria-pressed="false" title="Metronom: jeden Schlag mitklicken" aria-label="Metronom"><svg class="ico" aria-hidden="true"><use href="#metronom"/></svg></button>
       <button type="button" class="fab" data-play="countIn" aria-pressed="false" title="Einzählen: vor dem Abspielen einen Takt vorweg" aria-label="Einzählen"><span class="cnt4" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i>4</i></span></button>
       <button type="button" class="fab tempo" id="btnTempo" aria-haspopup="true" aria-expanded="false" aria-controls="tempoPop" title="Tempo ändern"><span class="tnum" id="tempoNum"></span><span class="tlbl">Tempo</span></button>

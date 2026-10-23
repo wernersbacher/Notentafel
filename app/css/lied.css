@@ -2,7 +2,7 @@
 .sheet {
   --mark: #2563eb; --mark-bg: rgba(37, 99, 235, .12); --play: #d1281f; --bad: rgba(209, 40, 31, .1);
   flex: 1; min-width: 0; min-height: 0; overflow: auto;
-  padding: 8px 0 24px; color: var(--fg);
+  padding: 60px 0 24px; color: var(--fg); /* oben Platz für den Vorführen-Knopf (.presentfab) in der Ecke */
   -webkit-tap-highlight-color: transparent;
 }
 @media (prefers-color-scheme: dark) {

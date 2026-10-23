@@ -78,3 +78,40 @@ test('explainLocked: ein Tipp auf die Stelle eines grauen Knopfs blendet seinen 
   tap(30, 30);
   assert.equal(el.toast.hidden, true, 'ohne Grund kein Hinweis');
 });
+
+test('Spiele: die Einstellungen stehen zugeklappt hinter „Einstellungen“ unter dem Startknopf und bleiben gemerkt', async () => {
+  await import('../app/js/tafel/dom.js'); // fügt Hinweis und Startknopf der Spiele ein
+  await import('../app/js/lied/dom.js');
+  (await import('../app/js/core/game.js')).initGamePicks();
+  const plays = [...document.querySelectorAll('.panel > .play')];
+  assert.equal(plays.length, 3);
+  for (const play of plays) {
+    assert.ok(!play.classList.contains('opts-open'), 'am Anfang zu');
+    for (const sec of play.querySelectorAll(':scope > .game')) {
+      const go = sec.querySelector(':scope > .gamego');
+      assert.ok(go.nextElementSibling.classList.contains('gopt'), sec.dataset.game + ': der Knopf folgt dem Startknopf');
+    }
+  }
+  const rhy = document.getElementById('rhyPlay');
+  assert.ok(document.getElementById('echoMeter').closest('.gopts'), 'die Einstellungen für alle Spiele liegen im zuklappbaren Teil');
+  assert.ok(document.getElementById('whichCount').closest('.gopts'), 'ebenso die des einzelnen Spiels');
+  const btn = rhy.querySelector('.gopt');
+  btn.click();
+  assert.ok(rhy.classList.contains('opts-open'));
+  assert.equal(btn.getAttribute('aria-expanded'), 'true');
+  assert.ok(settings.open.includes('rhy-play-opts'));
+  btn.click();
+  assert.ok(!rhy.classList.contains('opts-open'));
+  assert.ok(!settings.open.includes('rhy-play-opts'));
+});
+
+test('Umwandeln: das Feld klappt auf und schließt sich nach einem Tipp auf eine Umwandlung', async () => {
+  (await import('../app/js/core/convert.js')).initConvert();
+  assert.equal(el.convertPop.hidden, true);
+  el.btnConvert.click();
+  assert.equal(el.convertPop.hidden, false);
+  assert.equal(el.btnConvert.getAttribute('aria-expanded'), 'true');
+  document.getElementById('btnToLiedSide').click();
+  assert.equal(el.convertPop.hidden, true);
+  assert.equal(el.btnConvert.getAttribute('aria-expanded'), 'false');
+});

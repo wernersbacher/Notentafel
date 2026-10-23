@@ -138,12 +138,10 @@
 /* Vorzeichen und „alle Töne“ in einer Reihe */
 .tools.accs { grid-template-columns: 1fr 1fr 1fr 1.5fr; }
 .tools.accs .btn.more { width: auto; min-height: 54px; margin: 0; }
-/* Als Melodie übernehmen: unten neben Speichern, nur im Bereich Lied */
-.side:not([data-area="lied"]) #btnToMelody { display: none; }
-/* Ins Notenblatt: das Gegenstück in Farbnoten und Rhythmus */
-.side[data-area="lied"] #btnToLiedSide { display: none; }
-.actions > .btn.tolied { gap: .4rem; }
-.actions > .btn.tomel { width: auto; min-height: 0; flex-direction: column; gap: .2rem; font: inherit; font-size: .88rem; }
+/* Umwandeln: Als Farbnoten gibt es nur im Bereich Lied, Ins Notenblatt in Farbnoten und Rhythmus */
+.side:not([data-area="lied"]) .conv-tomel { display: none; }
+.side[data-area="lied"] .conv-tolied { display: none; }
+.btn.tolied { width: 100%; min-height: 46px; gap: .5rem; font: 800 .92rem var(--font-ui); }
 
 /* ---------- Leiste: mittlerer Teil scrollt, Werkzeugreihe oben und Knöpfe unten bleiben stehen ---------- */
 aside.side { padding: 12px; overflow: hidden; }

@@ -77,9 +77,19 @@
 .values.v6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .values .vgap { display: block; }
 .values .btn .small { font-size: .8rem; }
-.actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin-top: auto; position: relative; }
+/* Unten: Umwandeln und Alles löschen mit Abstand, damit man das Gefährliche nicht aus Versehen trifft */
+.actions { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; margin-top: auto; position: relative; }
 .actions > .btn { padding: 0 .3rem; gap: .3rem; font-size: .88rem; line-height: 1.1; text-align: center; }
 /* Namensfeld zum Speichern, klappt unter dem Knopf in der Leiste oben auf */
+/* Feld „Umwandeln“: klappt über den Knöpfen unten auf, erklärt die Umwandlung des offenen Bereichs */
+.convertpop {
+  position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 30; padding: 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--panel); border: 2px solid var(--btn-line); border-radius: 14px; box-shadow: 0 10px 24px var(--shadow);
+}
+.convitem { display: flex; flex-direction: column; gap: 6px; }
+#btnConvert .chev { width: 1.1rem; height: 1.1rem; transform: rotate(180deg); transition: transform .18s ease; }
+#btnConvert[aria-expanded="true"] .chev { transform: none; }
 .savewrap { position: relative; display: flex; }
 .savepop {
   position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; width: min(340px, calc(100vw - 32px));
@@ -123,6 +133,12 @@
 .side:not([data-part="play"]) .panel > .play { display: none; }
 .panel .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
 .play .game { gap: 7px; margin-bottom: 4px; }
+/* Einstellungen der Spiele: zugeklappt hinter „Einstellungen“ unter dem Startknopf (game.js initOptions) */
+.play .gopts { display: flex; flex-direction: column; gap: 7px; }
+.play:not(.opts-open) .gopts { display: none; }
+.btn.gopt { width: 100%; min-height: 44px; padding: 0 .8rem; justify-content: space-between; font-size: .9rem; }
+.btn.gopt .chev { width: 1.1rem; height: 1.1rem; color: var(--muted); transition: transform .18s ease; }
+.play.opts-open .gopt .chev { transform: rotate(180deg); }
 /* Spielauswahl: große Kacheln, das gewählte Spiel ist dunkel. Die Schrift wird in schmaler Leiste kleiner, damit jedes
    Wort in eine Zeile passt (umbrochen wird nur zwischen Wörtern, nie mit Bindestrich) */
 .gamepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; container-type: inline-size; }

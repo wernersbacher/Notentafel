@@ -24,6 +24,7 @@
   "./js/core/blocks.js": "./js/core/blocks.js?v=1.1.0",
   "./js/core/cloud.js": "./js/core/cloud.js?v=1.1.0",
   "./js/core/colors.js": "./js/core/colors.js?v=1.1.0",
+  "./js/core/convert.js": "./js/core/convert.js?v=1.1.0",
   "./js/core/dom.js": "./js/core/dom.js?v=1.1.0",
   "./js/core/game.js": "./js/core/game.js?v=1.1.0",
   "./js/core/glyphs.js": "./js/core/glyphs.js?v=1.1.0",
@@ -686,15 +687,27 @@
 
     </div>
 
-    <!-- Unten: von einem Bereich in den anderen und Alles löschen -->
+    <!-- Unten: Umwandeln (in den anderen Bereich) und Alles löschen. Das Feld „Umwandeln“ erklärt, was passiert; es zeigt
+         nur die Umwandlung, die im offenen Bereich gilt (CSS nach data-area der Leiste) -->
     <div class="actions">
-      <button type="button" class="btn tolied" id="btnToLiedSide" title="Macht aus der Tafel echte Noten im Bereich Notenblatt – aus bunten Punkten Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.">
-        <svg class="ico" aria-hidden="true"><use href="#notenblatt"/></svg><span>Ins Notenblatt</span>
-      </button>
-      <button type="button" class="btn tomel" id="btnToMelody" title="Macht aus dem Lied Farbnoten im Bereich Farbnoten (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.">
-        <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span><span>Als Farbnoten</span>
+      <button type="button" class="btn" id="btnConvert" aria-haspopup="true" aria-expanded="false" aria-controls="convertPop">
+        <span>Umwandeln</span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg>
       </button>
       <button type="button" class="btn danger" id="btnClear">Alles löschen</button>
+      <div class="convertpop" id="convertPop" role="group" aria-label="Umwandeln" hidden>
+        <div class="convitem conv-tolied">
+          <button type="button" class="btn tolied" id="btnToLiedSide">
+            <svg class="ico" aria-hidden="true"><use href="#notenblatt"/></svg><span>Ins Notenblatt</span>
+          </button>
+          <p class="ghint">Macht aus der Tafel echte Noten im Bereich Notenblatt: aus bunten Punkten werden Noten auf ihrer Tonhöhe (gleich farbig), aus Notenzeichen Noten auf der Mittellinie. Das bisherige Lied liegt danach unter „Zuletzt ersetzt“.</p>
+        </div>
+        <div class="convitem conv-tomel">
+          <button type="button" class="btn tomel" id="btnToMelody">
+            <span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span><span>Als Farbnoten</span>
+          </button>
+          <p class="ghint">Macht aus dem Lied Farbnoten im Bereich Farbnoten (wie Glockenspiel und Boomwhackers). Töne außerhalb von c' bis f'' werden Pausen, Sechzehntel werden zu Achteln. Die bisherige Melodie liegt danach in der Liedersammlung unter „Zuletzt ersetzt“.</p>
+        </div>
+      </div>
     </div>
   </aside>
 </div>

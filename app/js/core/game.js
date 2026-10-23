@@ -145,7 +145,43 @@ function showIntro() {
 }
 el.gameIntro.addEventListener('click', (e) => { if (e.target.closest('[data-act="go"]') && introGo) introGo.click(); });
 
+/* ---------- Einstellungen zuklappen ---------- */
+// Unter jeder Kachelreihe: Hinweis und Startknopf des gewählten Spiels, dann ein Knopf „Einstellungen“, der die Auswahl
+// darunter (die des Spiels und die für alle Spiele des Bereichs) auf- und zuklappt. Zu ist die Voreinstellung: Ein Tipp
+// auf die Kachel und „Los geht's!“ reichen. Offen oder zu bleibt je Bereich gemerkt (settings.open, z. B. 'rhy-play-opts').
+const OPT_BTN = '<button type="button" class="btn gopt" aria-expanded="false"><span>Einstellungen</span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button>';
+function initOptions(play) {
+  const key = play.querySelector('.gamepick').dataset.area + '-play-opts';
+  const wrap = (nodes) => {
+    if (!nodes.length) return;
+    const box = document.createElement('div');
+    box.className = 'gopts';
+    nodes[0].before(box);
+    box.append(...nodes);
+  };
+  play.querySelectorAll(':scope > .game').forEach((sec) => {
+    const go = sec.querySelector(':scope > .gamego');
+    if (!go) return;
+    wrap([...sec.children].slice([...sec.children].indexOf(go) + 1));
+    go.insertAdjacentHTML('afterend', OPT_BTN);
+  });
+  wrap([...play.children].filter((c) => !c.matches('.gamepick, .game')));
+  const show = (on) => {
+    play.classList.toggle('opts-open', on);
+    play.querySelectorAll('.gopt').forEach((b) => b.setAttribute('aria-expanded', on ? 'true' : 'false'));
+  };
+  show(settings.open.includes(key));
+  play.addEventListener('click', (e) => {
+    if (!e.target.closest('.gopt')) return;
+    const on = !play.classList.contains('opts-open');
+    show(on);
+    settings.open = settings.open.filter((k) => k !== key).concat(on ? [key] : []);
+    persistSettings();
+  });
+}
+
 export function initGamePicks() {
+  document.querySelectorAll('.play').forEach((play) => { if (play.querySelector('.gamepick')) initOptions(play); });
   document.querySelectorAll('.gamepick').forEach((box) => {
     showPick(box);
     box.addEventListener('click', (e) => {

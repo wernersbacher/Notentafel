@@ -382,9 +382,13 @@ a.btn { text-decoration: none; }
 .stitle { margin: 0; font: 800 clamp(2rem, 5vw, 3.2rem)/1.1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
 .ssub { margin: 0 0 18px; font: 700 clamp(1.05rem, 2vw, 1.4rem) var(--font-ui); color: var(--muted); }
 .sareas { width: 100%; max-width: 1180px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.sarea { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; background: var(--panel); }
+/* Jeder Bereich hat eine zarte Farbe (--acc, aus den Avatar-Farben, hell und dunkel passend): Spalte, Zahl und Rand der Kacheln */
+.sarea[data-area="rhy"] { --acc: var(--av-1); }
+.sarea[data-area="mel"] { --acc: var(--av-2); }
+.sarea[data-area="lied"] { --acc: var(--av-4); }
+.sarea { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; background: color-mix(in srgb, var(--acc) 13%, var(--panel)); }
 .sarea h2 { margin: 0; display: flex; align-items: center; gap: .6rem; font: 800 clamp(1.4rem, 2.6vw, 2rem)/1.1 var(--font-ui); }
-.snum { display: grid; place-items: center; flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--fg); color: var(--board); font-size: 1.1rem; }
+.snum { display: grid; place-items: center; flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--acc); color: var(--av-fg); font-size: 1.1rem; }
 .shead { margin: 0 0 4px; min-height: 2.7em; font: 700 .98rem/1.35 var(--font-ui); color: var(--muted); }
 .stile {
   position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px;
@@ -394,9 +398,9 @@ a.btn { text-decoration: none; }
 .stile:active { transform: scale(.97); }
 .stile .sname { font: 800 1.45rem/1.15 var(--font-ui); }
 .stile .stext { font: 700 .95rem/1.35 var(--font-ui); color: var(--muted); }
-/* „Üben und Spielen“ ist dunkel, damit man es auf einen Blick von „schreiben“ unterscheidet */
-.stile[data-part="play"] { background: var(--fg); border-color: var(--fg); color: var(--board); }
-.stile[data-part="play"] .stext { color: inherit; opacity: .8; }
+.stile { border-color: color-mix(in srgb, var(--acc) 40%, var(--btn-line)); }
+/* „Üben und Spielen“ ist leicht in der Farbe des Bereichs getönt, damit man es von „schreiben“ unterscheidet */
+.stile[data-part="play"] { background: color-mix(in srgb, var(--acc) 22%, var(--btn)); }
 .slast { position: absolute; top: 12px; right: 14px; font: 800 .72rem/1 var(--font-ui); letter-spacing: .05em; text-transform: uppercase; opacity: .7; }
 @media (max-width: 900px) { /* schmal: die Bereiche untereinander, die beiden Kacheln eines Bereichs nebeneinander */
   .start { justify-content: flex-start; }

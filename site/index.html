@@ -3,20 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Musiktafel</title>
+<title>Musiktafel: Noten und Rhythmen im Musikunterricht</title>
 <link rel="stylesheet" href="/shared/fonts.css">
 <link rel="stylesheet" href="/shared/tokens.css">
 <link rel="stylesheet" href="/shared/header.css">
-<link rel="stylesheet" href="/legal.css">
+<link rel="stylesheet" href="/site.css">
 </head>
 <body>
 <header id="kopf"></header>
 <main>
-  <h1>Musiktafel</h1>
-  <p>Noten und Rhythmen auf der Tafel zeigen, hören und üben.</p>
-  <p><a href="/app/">Weiter zur Musiktafel</a></p>
-  <p class="muted"><a href="/imprint/">Impressum</a> · <a href="/privacy/">Datenschutz</a></p>
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Musiktafel</h1>
+      <p class="lead">Rhythmen und Noten im Musikunterricht an der Tafel zeigen, hören und üben. Für Tablet und digitale Tafel, bedient mit dem Finger.</p>
+      <p><a class="grossknopf" href="/app/" data-weiter>Musiktafel öffnen</a></p>
+      <p class="unter">kostenlos, ohne Anmeldung</p>
+    </div>
+    <img class="bild" src="/assets/screens/melodie.webp" width="1180" height="820" fetchpriority="high" alt="Die Musiktafel auf dem Tablet: ein Lied in bunten Farbnoten, links die Leiste zum Abspielen und Schreiben">
+  </section>
+
+  <section class="block" id="rhythmus">
+    <div class="text">
+      <h2>Rhythmus</h2>
+      <p>Schreib einen Rhythmus mit Viertel, Halben, Achteln und Pausen, wahlweise mit Taktstrichen und Zählzeiten. Auf Wunsch stehen die Silben der Rhythmussprache darunter: ta, ti-ti, taja.</p>
+      <p>Spiel ihn vor, mit Klatschen, Woodblock, Glockenspiel oder Klavier, und lass ihn mit Metronom und Einzählen mitlaufen.</p>
+      <p class="touch"><strong>Am Tablet:</strong> Mit dem Tuch deckst du Zeile für Zeile ab und tippst es nach und nach auf. Bei „Schritt für Schritt“ zeigt jeder Tipp die nächste Note.</p>
+    </div>
+    <img class="bild" src="/assets/screens/rhythmus.webp" width="1180" height="820" loading="lazy" alt="Die Musiktafel mit einem Rhythmus in drei Zeilen und den Silben der Rhythmussprache unter den Noten">
+  </section>
+
+  <section class="block" id="farbnoten">
+    <div class="text">
+      <h2>Farbnoten</h2>
+      <p>Jeder Ton hat seine Farbe. So lesen schon die Jüngsten eine Melodie: bunte Punkte auf der Tafel, getrennt nach rechter und linker Hand.</p>
+      <p>Dazu gibt es kleine Spiele für die Klasse: Tonnamen-Quiz, Melodie-Echo, „Höher oder tiefer?“ und „Lied erraten“.</p>
+      <p class="touch"><strong>Am Tablet:</strong> Töne setzt du mit einem Tipp. Eine ?-Karte verdeckt einzelne Töne, ein weiterer Tipp deckt sie vor der Klasse auf.</p>
+    </div>
+    <img class="bild" src="/assets/screens/melodie.webp" width="1180" height="820" loading="lazy" alt="Die Musiktafel mit einem Lied in Farbnoten, jede Note in der Farbe ihres Tons">
+  </section>
+
+  <section class="block" id="notenblatt">
+    <div class="text">
+      <h2>Notenblatt</h2>
+      <p>Aus der Melodie wird ein Notenblatt mit Liedtext. Notennamen, Farben und Zählzeiten blendest du ein und aus, das Lied lässt sich in andere Tonarten transponieren.</p>
+      <p>Bekannte Lieder sind schon dabei. Drucken kannst du das Blatt auf A4 oder als MusicXML für MuseScore und andere Notenprogramme speichern.</p>
+      <p class="touch"><strong>Am Tablet:</strong> „Vorführen“ zeigt nur die Tafel, groß über den ganzen Bildschirm, auch an der digitalen Tafel.</p>
+    </div>
+    <img class="bild" src="/assets/screens/lied.webp" width="1180" height="820" loading="lazy" alt="Die Musiktafel als Notenblatt: ein Lied mit Noten, Notennamen und Liedtext">
+  </section>
+
+  <section class="konto">
+    <h2>Deine Lieder auf allen Geräten</h2>
+    <p>Die Musiktafel geht ohne Konto, dann bleibt alles auf dem Gerät. Wenn du möchtest, legst du ein Konto an: Deine gespeicherten Lieder sind dann auf Tablet und Computer da.</p>
+    <p>Das Konto ist freiwillig. In der Beta bis zum 30.06.2027 ist es kostenlos, auch die Pro-Stufe.</p>
+    <p><a class="knopf" href="/login/?mode=register">Konto anlegen</a></p>
+  </section>
+
+  <section class="faq">
+    <h2>Gut zu wissen</h2>
+    <details>
+      <summary>Was passiert mit meinen Daten?</summary>
+      <p>Ohne Konto bleibt alles, was du speicherst, im Browser auf deinem Gerät. Es gibt keine Cookies, kein Tracking und keine Werbung. Wenn du ein Konto anlegst, liegen deine Lieder zusätzlich auf unserem Server. Mehr steht in der <a href="/privacy/">Datenschutzerklärung</a>.</p>
+    </details>
+    <details>
+      <summary>Wo läuft die Musiktafel?</summary>
+      <p>Auf einem Server von netcup.de in Deutschland. Schriften und alle anderen Dateien kommen von unserem eigenen Server.</p>
+    </details>
+    <details>
+      <summary>Was kostet sie?</summary>
+      <p>Bis zum 30.06.2027 ist die Beta kostenlos, auch mit Konto. Für die Musiktafel selbst brauchst du kein Konto.</p>
+    </details>
+    <details>
+      <summary>Auf welchen Geräten geht das?</summary>
+      <p>Die Musiktafel ist für Tablet und Computer gebaut und läuft im Browser, ohne Installation. Bedient wird sie per Touch oder mit der Maus. Auf dem Handy geht sie nur eingeschränkt, der Platz ist dort zu knapp.</p>
+    </details>
+  </section>
+
+  <section class="schluss">
+    <p><a class="grossknopf" href="/app/" data-weiter>Musiktafel öffnen</a></p>
+  </section>
 </main>
+<footer class="fuss">
+  <a href="/imprint/">Impressum</a> · <a href="/privacy/">Datenschutz</a>
+</footer>
+<script src="/landing.js"></script>
 <script type="module">
 import { mountHeader } from '/shared/header.js';
 mountHeader(document.getElementById('kopf'));

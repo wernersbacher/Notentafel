@@ -8,7 +8,7 @@ import { el } from './dom.js';
 const INTRO = {
   rhy: { head: 'Klatschen, Zählen und Rhythmen lesen', write: 'Notenwerte und Pausen auf die Tafel setzen' },
   mel: { head: 'Bunte Töne wie bei Glockenspiel und Boomwhackers', write: 'Töne als bunte Punkte setzen' },
-  lied: { head: 'Echte Noten auf Linien, mit Liedtext', write: 'Noten setzen und den Liedtext darunter schreiben' }
+  lied: { head: 'Notenschrift wie im Liederbuch, mit Liedtext', write: 'Noten setzen und den Liedtext darunter schreiben' }
 };
 
 const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');

@@ -81,3 +81,22 @@ test('Einstellungen: alte und neue Schlüssel werden angenommen, Unbrauchbares f
   assert.deepEqual(cleanCoreSettings({}).open, OPEN_START);
   assert.deepEqual(cleanCoreSettings({ open: [] }).open, []);
 });
+
+test('Einstellungen: Akkordeon ist für neue Nutzer an, wer Blöcke schon einzeln geöffnet hat, behält mehrere', () => {
+  assert.equal(cleanCoreSettings({}).accordion, true);
+  assert.equal(cleanCoreSettings({ open: ['mel-notes', 'mel-setup'] }).accordion, false);
+  assert.equal(cleanCoreSettings({ open: ['mel-notes'], accordion: true }).accordion, true);
+  assert.equal(cleanCoreSettings({ accordion: false }).accordion, false);
+});
+
+test('Blöcke: jeder hat einen Namen ohne Nummer, ein „?“ und einen Erklärtext direkt unter der Überschrift', () => {
+  assert.ok(!/class="num"|data-num/.test(src), 'die Nummern der Blöcke sind weg');
+  const heads = [...src.matchAll(/<h2 class="btitle">(.*)<\/h2>\n\s*<p class="bhelptext ghint" hidden>(.+?)<\/p>/g)];
+  const blocks = [...src.matchAll(/<section class="group block"/g)];
+  assert.equal(heads.length, blocks.length, 'zu jedem Block ein Erklärtext');
+  for (const [, h, help] of heads) {
+    assert.match(h, /<span class="bname">[^<]+<\/span>/);
+    assert.match(h, /class="bhelp" aria-expanded="false" aria-label="Erklärung: [^"]+">\?<\/button>/);
+    assert.ok(help.length > 30, 'Erklärtext zu kurz: ' + help);
+  }
+});

@@ -406,6 +406,7 @@ test('renderSidebar: Werkzeuge Löschen, Lücke, Umbruch, Rückgängig, Zeilen',
   S.sel = { r: 1, c: 0 };
   SB.renderSidebar();
   assert.equal(el.btnDel.disabled, true, 'leerer Platz');
+  assert.match(el.btnDel.dataset.why, /nichts/, 'der graue Knopf nennt seinen Grund');
   assert.equal(el.btnUndo.disabled, false);
   assert.equal(el.btnRedo.disabled, true);
   assert.equal(el.btnAddRow.disabled, false);

@@ -173,11 +173,12 @@
 </svg>
 
 <!-- Verdecken: dieser Block sieht in Farbnoten und Rhythmus gleich aus und steht deshalb hier einmal.
-     Die Nummer setzt die Leiste beim Einsetzen in die Slots .cover-slot (siehe js/core/parts.js).
+     Die Leiste setzt ihn beim Einsetzen in die Slots .cover-slot (siehe js/core/parts.js).
      data-block nennt hier nur die Rolle; blocks.js stellt den Bereich davor (mel-cover, rhy-cover). -->
 <template id="tplCover">
   <section class="group block" data-block="cover">
-    <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num"></span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+    <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Verdecken &amp; Aufdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Verdecken &amp; Aufdecken">?</button></h2>
+    <p class="bhelptext ghint" hidden>Ab der markierten Zeile ein Tuch auflegen oder die markierte Note mit einer ?-Karte verdecken. Ein Tipp auf Tuch oder Karte deckt sie wieder auf, „neu abdecken“ stellt den Anfang wieder her (z. B. für die nächste Klasse).</p>
     <div class="tools covers">
       <button type="button" class="btn" data-cover="from" title="Ab der markierten Zeile alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
         <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
@@ -288,11 +289,11 @@
       <button type="button" class="btn" id="btnIns" aria-pressed="false" title="Töne einfügen statt überschreiben">
         <span class="big"><svg class="ico" aria-hidden="true"><use href="#einfuegen"/></svg></span><span class="small">einfügen</span>
       </button>
-      <button type="button" class="btn" id="btnGap" title="Zeichen löschen, der Rest rückt nach vorn">
-        <span class="big"><svg class="ico" aria-hidden="true"><use href="#loeschen"/></svg></span><span class="small">löschen</span>
+      <button type="button" class="btn" id="btnGap" title="Lücke schließen: Das Zeichen am markierten Platz verschwindet, der Rest rückt nach vorn">
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#loeschen"/></svg></span><span class="small">Lücke schließen</span>
       </button>
-      <button type="button" class="btn" id="btnDel" title="Zeichen entfernen, der Platz bleibt (eine Note wird zur Pause)">
-        <span class="big"><svg class="ico" aria-hidden="true"><use href="#close"/></svg></span><span class="small">entfernen</span>
+      <button type="button" class="btn" id="btnDel" title="Platz leeren: Das Zeichen verschwindet, der Platz bleibt (eine Note wird zur Pause)">
+        <span class="big"><svg class="ico" aria-hidden="true"><use href="#close"/></svg></span><span class="small">leeren</span>
       </button>
       <button type="button" class="btn" id="btnBreak" title="Ab der Markierung in einer neuen Zeile weiterschreiben">
         <span class="big"><svg class="ico" aria-hidden="true"><use href="#umbruch"/></svg></span><span class="small">Umbruch</span>
@@ -303,7 +304,8 @@
 
     <div class="panel" id="panelMel" role="tabpanel" aria-labelledby="tab-mel">
       <section class="group block" id="melSetup" data-block="mel-setup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Taktart &amp; Hilfen</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Taktart &amp; Hilfen">?</button></h2>
+        <p class="bhelptext ghint" hidden>Einmal am Anfang: die Taktart für die markierte Zeile wählen. „Taktstriche“ und „Zählzeiten“ setzen sich dann von selbst nach der Taktart; ausgeschaltet lassen sie sich von Hand setzen.</p>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="melMeters"></div>
         <h2 class="glabel">Automatisch</h2>
@@ -314,7 +316,8 @@
       </section>
 
       <section class="group block" data-block="mel-notes">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Farbnoten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Farbnoten schreiben">?</button></h2>
+        <p class="bhelptext ghint" hidden>Zuerst einen Platz auf der Tafel antippen, dann einen Ton wählen: Er erscheint dort als bunter Punkt. Hand, Notenwert und Pause beziehen sich auf den markierten Platz.</p>
         <h2 class="glabel">Töne</h2>
         <div class="palette" id="palette"></div>
         <h2 class="glabel">Hand</h2>
@@ -329,7 +332,8 @@
       </section>
 
       <section class="group block" data-block="mel-symbols">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Striche &amp; Wiederholung</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Striche &amp; Wiederholung">?</button></h2>
+        <p class="bhelptext ghint" hidden>Taktstrich, Schlussstrich und Wiederholungszeichen stehen vor dem markierten Platz. Ein Taktstrich von Hand geht nur, wenn „Taktstriche“ unter „Taktart &amp; Hilfen“ ausgeschaltet ist.</p>
         <div class="tools three">
           <button type="button" class="btn" id="btnBarMel" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
             <span class="big"><svg class="ico" aria-hidden="true"><use href="#taktstrich"/></svg></span><span class="small">Taktstrich</span>
@@ -347,7 +351,7 @@
       </section>
 
       <!-- Verdecken: Block aus <template id="tplCover"> -->
-      <div class="cover-slot" data-num="4"></div>
+      <div class="cover-slot"></div>
 
       <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben. Oben die Spiele als Kacheln,
            darunter das gewählte mit Start-Knopf, dann die Einstellungen für alle Spiele des Bereichs -->
@@ -407,7 +411,8 @@
 
     <div class="panel" id="panelRhy" role="tabpanel" aria-labelledby="tab-rhy" hidden>
       <section class="group block" id="rhySetup" data-block="rhy-setup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Taktart &amp; Hilfen</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Taktart &amp; Hilfen">?</button></h2>
+        <p class="bhelptext ghint" hidden>Einmal am Anfang: die Taktart für die markierte Zeile wählen. „Taktstriche“ und „Zählzeiten“ setzen sich dann von selbst nach der Taktart; ausgeschaltet lassen sie sich von Hand setzen. „Rhythmussprache“ schreibt ta, ti-ti usw. unter die Noten.</p>
         <h2 class="glabel">Taktart <span>für die markierte Zeile</span></h2>
         <div class="meterrow" id="rhyMeters"></div>
         <h2 class="glabel">Automatisch</h2>
@@ -419,7 +424,8 @@
       </section>
 
       <section class="group block" data-block="rhy-notes">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Rhythmus schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Rhythmus schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Rhythmus schreiben">?</button></h2>
+        <p class="bhelptext ghint" hidden>Zuerst einen Platz auf der Tafel antippen, dann einen Notenwert oder eine Pause wählen. Der Punkt macht aus dem Wert einen punktierten.</p>
         <h2 class="glabel">Notenwert</h2>
         <div class="values v6" id="values"></div>
         <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
@@ -427,7 +433,8 @@
       </section>
 
       <section class="group block" data-block="rhy-symbols">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Striche &amp; Wiederholung</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Striche &amp; Wiederholung">?</button></h2>
+        <p class="bhelptext ghint" hidden>Taktstrich, Schlussstrich und Wiederholungszeichen stehen vor dem markierten Platz. Ein Taktstrich von Hand geht nur, wenn „Taktstriche“ unter „Taktart &amp; Hilfen“ ausgeschaltet ist. „Linie“ legt eine Notenlinie durch die markierte Zeile.</p>
         <div class="tools three">
           <button type="button" class="btn" id="btnBar" aria-pressed="false" title="Taktstrich vor dem markierten Platz (nur, wenn die Taktstriche nicht automatisch kommen)">
             <span class="big"><svg class="ico" aria-hidden="true"><use href="#taktstrich"/></svg></span><span class="small">Taktstrich</span>
@@ -448,12 +455,13 @@
       </section>
 
       <section class="group block" data-block="rhy-counts">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Zählzeiten von Hand</span><span class="bhint">unter dem markierten Zeichen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Zählzeiten von Hand">?</button></h2>
+        <p class="bhelptext ghint" hidden>Eine Zählzeit unter das markierte Zeichen schreiben („+“ heißt „und“). Das geht nur, wenn „Zählzeiten“ unter „Taktart &amp; Hilfen“ ausgeschaltet ist.</p>
         <div class="zbtns" id="counts"></div>
       </section>
 
       <!-- Verdecken: Block aus <template id="tplCover"> -->
-      <div class="cover-slot" data-num="5"></div>
+      <div class="cover-slot"></div>
 
       <!-- Üben und Spielen: nur auf der Übungstafel zu sehen, statt der Blöcke zum Schreiben. Oben die Spiele als Kacheln,
            darunter das gewählte mit Start-Knopf, dann die Einstellungen für alle Rhythmus-Spiele -->
@@ -518,13 +526,14 @@
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
       <section class="group block" id="liedSetup" data-block="lied-setup">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">1</span><span class="bname">Einrichten</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Takt &amp; Tonart</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Takt &amp; Tonart">?</button></h2>
+        <p class="bhelptext ghint" hidden>Taktart, Auftakt und Tonart des Liedes. Die Pfeile ♭ ◀ ▶ ♯ ändern die Vorzeichen, ▼ ▲ transponieren das ganze Lied. Unter „Anzeige“ lassen sich Notennamen, Farben, Zählzeiten und Liedtext ein- und ausblenden.</p>
         <h2 class="glabel">Taktart</h2>
         <div class="meterrow" id="liedMeters"></div>
-        <h2 class="glabel">Taktstriche <span>von Hand: unter ③ Weitere Symbole</span></h2>
+        <h2 class="glabel">Taktstriche <span>von Hand: unter „Striche &amp; Bogen“</span></h2>
         <div class="tools barmode">
           <button type="button" class="btn" id="liedBarAuto" aria-pressed="true" title="Taktstriche kommen von selbst nach der Taktart">automatisch</button>
-          <button type="button" class="btn" id="liedBarHand" aria-pressed="false" title="Taktstriche selbst setzen (unter ③ Weitere Symbole)">von Hand</button>
+          <button type="button" class="btn" id="liedBarHand" aria-pressed="false" title="Taktstriche selbst setzen (unter „Striche &amp; Bogen“)">von Hand</button>
         </div>
         <h2 class="glabel">Auftakt</h2>
         <div class="meterrow" id="liedPickups"></div>
@@ -546,7 +555,8 @@
       </section>
 
       <section class="group block" data-block="lied-notes">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">2</span><span class="bname">Noten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Noten schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Noten schreiben">?</button></h2>
+        <p class="bhelptext ghint" hidden>Erst den Notenwert wählen, dann die Töne antippen: Sie werden an der markierten Stelle gesetzt. ♯, ♭ und ♮ ändern die markierte Note, „Pause“ setzt eine Pause.</p>
         <h2 class="glabel">Notenwert <span>gilt für die nächsten Töne</span></h2>
         <div class="values v6" id="liedValues"></div>
         <h2 class="glabel">Pause <span>antippen setzt sie</span></h2>
@@ -562,7 +572,8 @@
       </section>
 
       <section class="group block" data-block="lied-symbols">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">3</span><span class="bname">Weitere Symbole</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Striche &amp; Bogen</span><span class="bhint">vor der Markierung</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Striche &amp; Bogen">?</button></h2>
+        <p class="bhelptext ghint" hidden>Bogen, Taktstrich, Schlussstrich, Wiederholung und Klammer 1.|2. beziehen sich auf die Markierung: Der Bogen verbindet die markierte Note mit der nächsten, die Striche stehen davor. Ein Taktstrich von Hand geht nur, wenn die Taktstriche unter „Takt &amp; Tonart“ auf „von Hand“ stehen. Die Klammer gibt es nur an einem Wiederholungsende.</p>
         <div class="tools three">
         <button type="button" class="btn" id="liedTie" aria-pressed="false" title="Haltebogen zur nächsten Note">
           <span class="big"><svg class="ico" aria-hidden="true"><use href="#bogen"/></svg></span><span class="small">Bogen</span>
@@ -586,7 +597,8 @@
       </section>
 
       <section class="group block" data-block="lied-lyrics">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">4</span><span class="bname">Liedtext</span><span class="bhint">Note antippen, Silbe schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Liedtext</span><span class="bhint">Note antippen, Silbe schreiben</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Liedtext">?</button></h2>
+        <p class="bhelptext ghint" hidden>Eine Note antippen, die Silbe eintippen und mit „weiter“ zur nächsten Note springen.</p>
         <div class="lyrow">
           <input type="text" id="liedLyric" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Silbe unter der markierten Note">
           <button type="button" class="btn" id="liedLyricNext" title="Zur nächsten Note">weiter ▶</button>
@@ -594,7 +606,8 @@
       </section>
 
       <section class="group block" data-block="lied-cover">
-        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="num">5</span><span class="bname">Verdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button></h2>
+        <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Verdecken &amp; Aufdecken</span><span class="bhint">nach und nach zeigen</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Verdecken &amp; Aufdecken">?</button></h2>
+        <p class="bhelptext ghint" hidden>Tuch und ?-Karten verdecken Noten oder Notennamen; beim Üben deckt ein Tipp sie wieder auf. „ab hier“ deckt ab der markierten Note alles ab, „neu abdecken“ stellt den Anfang wieder her (z. B. für die nächste Klasse).</p>
         <div class="tools covers three">
           <button type="button" class="btn" data-cover="from" title="Ab der markierten Note alles mit einem Tuch abdecken. Ein Tipp auf das Tuch deckt Zeile für Zeile auf.">
             <span class="big"><svg class="ico" aria-hidden="true"><use href="#tuch"/></svg></span><span class="small">ab hier</span>
@@ -849,6 +862,13 @@
         <input type="range" id="tempo" min="50" max="160" step="5" aria-label="Tempo">
         <output id="tempoOut" for="tempo"></output>
       </div>
+    </section>
+
+    <section class="switches">
+      <button type="button" class="btn switch" id="btnAccordionToggle" aria-pressed="true">
+        <span class="sname">Nur ein Block offen</span><span class="state" id="accordionToggleState">an</span>
+        <span class="desc">In der Leiste klappt beim Öffnen eines Blocks der vorige zu. Aus: alle Blöcke lassen sich einzeln offen halten.</span>
+      </button>
     </section>
 
     <section id="wakeSec" class="switches">

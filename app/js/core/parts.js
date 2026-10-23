@@ -3,10 +3,8 @@
 export function initParts() {
   const tpl = document.getElementById('tplCover');
   if (!tpl) return;
-  // Jeder Platzhalter in der Leiste bekommt seine eigene Kopie des Blocks, die Nummer steht im Slot
+  // Jeder Platzhalter in der Leiste bekommt seine eigene Kopie des Blocks
   document.querySelectorAll('.cover-slot').forEach((slot) => {
-    const block = tpl.content.cloneNode(true);
-    block.querySelector('.num').textContent = slot.dataset.num;
-    slot.replaceWith(block);
+    slot.replaceWith(tpl.content.cloneNode(true));
   });
 }

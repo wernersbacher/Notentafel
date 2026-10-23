@@ -5,7 +5,7 @@ import { L, opts } from './state.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
 import { breakJoins } from '../core/shell.js';
-import { setPressed as pressed } from '../core/ui.js';
+import { setPressed as pressed, lock } from '../core/ui.js';
 
 const VALUE_NAMES = { 1: 'Ganze', 2: 'Halbe', 4: 'Viertel', 8: 'Achtel', 16: 'Sechzehntel' };
 // Auftakte in Ticks als Notenwert (mit Punkt) für Symbol und Namen
@@ -59,30 +59,32 @@ function renderPickups() {
 export function renderSidebar() {
   const ev = L.song.ev, cur = ev[L.sel];
   const t = L.last != null && isNote(ev[L.last]) ? ev[L.last] : isNote(cur) ? cur : null;
-  el.liedTie.disabled = !t;
+  const NOTE_FIRST = 'Erst eine Note antippen.';
+  lock(el.liedTie, !t && NOTE_FIRST);
   pressed(el.liedTie, !!t && !!t.tie);
   [[el.liedSharp, 1], [el.liedFlat, -1], [el.liedNat, 0]].forEach(([b, a]) => {
-    b.disabled = !t;
+    lock(b, !t && NOTE_FIRST);
     pressed(b, !!t && t.acc === a);
   });
   el.liedValues.querySelectorAll('[data-v]').forEach((b) => pressed(b, +b.dataset.v === L.pen.v));
   const dotBtn = el.liedValues.querySelector('[data-dot]');
   pressed(dotBtn, !!L.pen.dot);
-  dotBtn.disabled = !canDot(L.pen.v);
+  lock(dotBtn, !canDot(L.pen.v) && 'Zu diesem Notenwert gibt es keinen Punkt.');
   pressed(el.liedShowNames, opts.names);
   pressed(el.liedShowColors, opts.colors);
   pressed(el.liedShowCounts, opts.autoZ);
   pressed(el.liedShowLyrics, opts.lyrics);
   // Takt- und Schlussstrich hinter dem Zeichen vor der Markierung; Taktstriche von Hand nur ohne Automatik
   const prev = ev[L.sel - 1], bar = prev ? prev.bar : 0;
-  el.liedBar.disabled = !prev || opts.autoBar;
+  const AT_START = 'Am Anfang steht noch kein Zeichen, hinter dem ein Strich stehen könnte.';
+  lock(el.liedBar, opts.autoBar ? 'Die Taktstriche kommen von selbst. Zum Selbersetzen oben unter „Takt & Tonart“ auf „von Hand“ stellen.' : !prev && AT_START);
   pressed(el.liedBar, bar === 1 && !opts.autoBar);
-  el.liedEnd.disabled = !prev;
+  lock(el.liedEnd, !prev && AT_START);
   pressed(el.liedEnd, bar === 2);
-  el.liedRepStart.disabled = el.liedRepEnd.disabled = !prev;
+  [el.liedRepStart, el.liedRepEnd].forEach((b) => lock(b, !prev && AT_START));
   pressed(el.liedRepStart, bar === 4 || bar === 5);
   pressed(el.liedRepEnd, bar === 3 || bar === 5);
-  el.liedVolta.disabled = !(bar === 3 || bar === 5);
+  lock(el.liedVolta, !(bar === 3 || bar === 5) && 'Die Klammer 1.|2. gibt es nur an einem Wiederholungsende. Erst „Wdh. Ende“ setzen.');
   pressed(el.liedVolta, !!(prev && prev.volta));
   el.liedMeters.querySelectorAll('[data-m]').forEach((b) => pressed(b, b.dataset.m === L.song.meter));
   pressed(el.liedBarAuto, opts.autoBar);
@@ -96,16 +98,16 @@ export function renderSidebar() {
   if (document.activeElement !== el.liedLyric) el.liedLyric.value = lt && lt.ly ? lt.ly : '';
   const k = L.song.key || 0;
   el.liedKeyName.textContent = keyName(k) + (k ? ' · ' + Math.abs(k) + (k > 0 ? '♯' : '♭') : '');
-  el.liedKeyDown.disabled = k <= KEY_MIN;
-  el.liedKeyUp.disabled = k >= KEY_MAX;
+  lock(el.liedKeyDown, k <= KEY_MIN && 'Mehr ♭ gibt es nicht.');
+  lock(el.liedKeyUp, k >= KEY_MAX && 'Mehr ♯ gibt es nicht.');
   blockSum('liedSetup', (L.song.meter || 'ohne Taktart') + ' · ' + keyName(k) + (L.song.pickup ? ' · Auftakt' : '') + (opts.autoBar ? '' : ' · Striche von Hand'));
 
   // Gemeinsame Knöpfe
   pressed(el.btnIns, L.insertMode);
-  el.btnDel.disabled = !cur;
-  el.btnGap.disabled = !cur && L.sel === 0;
-  el.btnBreak.disabled = L.sel === 0;
+  lock(el.btnDel, !cur && 'Hier steht nichts, das sich leeren ließe.');
+  lock(el.btnGap, !cur && L.sel === 0 && 'Am Anfang gibt es nichts, das nachrücken könnte.');
+  lock(el.btnBreak, L.sel === 0 && 'Am Anfang kann kein Umbruch stehen.');
   breakJoins(!!(ev[L.sel - 1] && ev[L.sel - 1].brk));
-  el.btnUndo.disabled = L.hist.length === 0;
-  el.btnRedo.disabled = L.redo.length === 0;
+  lock(el.btnUndo, L.hist.length === 0 && 'Es gibt noch nichts zurückzunehmen.');
+  lock(el.btnRedo, L.redo.length === 0 && 'Es gibt nichts zu wiederholen.');
 }

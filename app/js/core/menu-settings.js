@@ -23,6 +23,8 @@ export function toggleSetting(t, apply) {
     apply();
   });
 }
+// Immer nur ein Block der Leiste offen (blocks.js liest settings.accordion beim Öffnen, es braucht nichts umzusetzen)
+export const ACCORDION = { key: 'accordion', btn: el.btnAccordionToggle, state: el.accordionToggleState };
 export const WAKE = { key: 'wake', btn: el.btnWakeToggle, state: el.wakeToggleState };
 function showUi(pct) {
   el.uiRange.value = pct;
@@ -45,6 +47,7 @@ export function renderTempo() { el.tempoOut.textContent = tempoText(settings.tem
 // Schalter, Größe der Oberfläche und Tempo; menu.js ruft das beim Start auf
 export function initSettings() {
   toggleSetting(WAKE, updateWake);
+  toggleSetting(ACCORDION, () => {});
   // Größe der Oberfläche: skaliert die ganze Seite (CSS zoom), Tippen und Ziehen bleiben dabei genau
   delegate(el.uiScale, '[data-ui]', (b) => setUi(+b.dataset.ui));
   // Regler: beim Ziehen nur die Zahl zeigen, erst beim Loslassen anwenden (sonst springt die Seite unter dem Finger)

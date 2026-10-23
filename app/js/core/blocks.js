@@ -1,4 +1,5 @@
-// Aufklappbare Blöcke der Leiste: Tipp auf die Überschrift klappt auf oder zu, jeder Block für sich.
+// Aufklappbare Blöcke der Leiste: Tipp auf die Überschrift klappt auf oder zu. Mit settings.accordion bleibt je Bereich
+// nur ein Block offen (der zuletzt geöffnete), sonst klappt jeder für sich.
 // Welche offen sind, bleibt gemerkt (settings.open über den stabilen Namen aus data-block, z. B. 'mel-notes').
 // Eingeklappt zeigt die Überschrift eine Kurzinfo (blockSum).
 import { settings, persistSettings } from './settings.js';
@@ -17,16 +18,33 @@ function setOpen(block, on) {
   block.querySelector('.bhead').setAttribute('aria-expanded', on ? 'true' : 'false');
 }
 
+// „?“ neben der Überschrift zeigt oder verbirgt den Erklärtext des Blocks (das <p class="bhelptext"> direkt unter der Überschrift)
+function initHelp() {
+  const side = document.querySelector('.side');
+  if (!side) return;
+  side.addEventListener('click', (e) => {
+    const btn = e.target.closest('.bhelp');
+    const text = btn && btn.closest('.btitle').nextElementSibling;
+    if (!text || !text.classList.contains('bhelptext')) return;
+    text.hidden = !text.hidden;
+    btn.setAttribute('aria-expanded', text.hidden ? 'false' : 'true');
+  });
+}
+
 export function initBlocks() {
+  initHelp();
   document.querySelectorAll('.side .panel').forEach((panel) => {
     const area = panel.id.replace('panel', '').toLowerCase();
-    panel.querySelectorAll(':scope > .block').forEach((b, i) => {
-      const key = blockKey(b, area, i);
+    const blocks = [...panel.querySelectorAll(':scope > .block')].map((b, i) => ({ b, key: blockKey(b, area, i) }));
+    blocks.forEach(({ b, key }) => {
       setOpen(b, settings.open.includes(key));
       b.querySelector('.bhead').addEventListener('click', () => {
         const on = !b.classList.contains('open');
+        // Beim Öffnen die anderen Blöcke des Bereichs zuklappen
+        const shut = on && settings.accordion ? blocks.filter((o) => o.b !== b) : [];
+        shut.forEach((o) => setOpen(o.b, false));
         setOpen(b, on);
-        settings.open = settings.open.filter((k) => k !== key).concat(on ? [key] : []);
+        settings.open = settings.open.filter((k) => k !== key && !shut.some((o) => o.key === k)).concat(on ? [key] : []);
         persistSettings();
       });
     });

@@ -9,6 +9,7 @@ import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
 import { initParts } from './core/parts.js';
 import { initBlocks } from './core/blocks.js';
+import { explainLocked } from './core/ui.js';
 import { initGamePicks } from './core/game.js';
 import { setWriteError } from './core/store.js';
 import { toast } from './core/ui.js';
@@ -29,6 +30,7 @@ await loadPlan();
 // Die geteilten Blöcke einsetzen, bevor die Leiste ihre Knöpfe bindet
 initParts();
 initBlocks();
+explainLocked(document.querySelector('.side'));
 initGamePicks();
 initPlayer();
 registerTafel();

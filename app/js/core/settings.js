@@ -50,6 +50,8 @@ export function cleanCoreSettings(s) {
     // Gewähltes Spiel je Bereich, z. B. { rhy: 'which' }; ob es das Spiel gibt, prüft game.js
     game: Object.fromEntries(entriesOf(s.game).filter(([, v]) => typeof v === 'string' && /^[a-z]+$/.test(v))),
     ui: s.ui === undefined ? 1 : clampUi(s.ui), // Größe der ganzen Oberfläche (z. B. 1.3 für eine Spiegelung auf den großen Bildschirm)
+    // Immer nur ein Block je Bereich offen; wer die Blöcke schon einzeln auf- und zugeklappt hat (open gespeichert), behält mehrere
+    accordion: s.accordion === undefined ? !Array.isArray(s.open) : !!s.accordion,
     open: Array.isArray(s.open) ? [...new Set(s.open.filter((k) => typeof k === 'string' && isBlockKey(k)).map(openKey))] : OPEN_START.slice()
   };
 }

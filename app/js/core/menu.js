@@ -10,7 +10,7 @@ import { el } from './dom.js';
 import {
   hint, backupHint, clearRenaming, initSongs, renderSongs, refreshSongs, renderAuto, renderSort, sortAbc, searchAll
 } from './menu-songs.js';
-import { renderToggle, toggleSetting, applyUiScale, renderTempo, WAKE, initSettings } from './menu-settings.js';
+import { renderToggle, toggleSetting, applyUiScale, renderTempo, WAKE, ACCORDION, initSettings } from './menu-settings.js';
 // Wie bisher aus menu.js erreichbar, weil die Bereiche und account.js von hier importieren
 export { refreshSongs, sortAbc, renderToggle, toggleSetting };
 
@@ -46,6 +46,7 @@ function openMenu(mode) {
   searchAll();
   renderSort();
   renderToggle(WAKE);
+  renderToggle(ACCORDION);
   el.tempo.value = settings.tempo;
   renderTempo();
   el.backdrop.hidden = false;

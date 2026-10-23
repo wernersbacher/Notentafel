@@ -103,8 +103,7 @@
 }
 .panel .block > .glabel { margin-top: 1px; }
 .btitle { margin: 0 0 2px; display: flex; align-items: center; gap: .45rem; font: 800 .82rem var(--font-ui); letter-spacing: .05em; text-transform: uppercase; color: var(--fg); }
-.btitle .num { flex: none; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--fg); color: var(--panel); font-size: .75rem; letter-spacing: 0; }
-.btitle > span:not(.num) { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.btitle > span { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .btitle .ico { width: 1rem; height: 1rem; }
 
 /* Aufklappbare Blöcke (alle Bereiche): die ganze Überschrift ist der Knopf, eingeklappt nur sie mit Kurzinfo */
@@ -119,6 +118,15 @@
 .bhead .chev { flex: none; margin-left: auto; width: 1.25rem; height: 1.25rem; color: var(--muted); transition: transform .18s ease; }
 .block.open .bhead .chev { transform: rotate(180deg); }
 .block.open .bhead .bsum, .block:not(.open) .bhead .bhint { display: none; }
+/* „?“ neben der Überschrift: öffnet einen kurzen Erklärtext (auf dem Tablet gibt es kein Hovern für title); nur im offenen Block */
+.bhelp {
+  flex: none; width: 32px; height: 32px; padding: 0; border: 2px solid var(--btn-line); border-radius: 50%;
+  background: var(--btn); color: var(--fg); font: 800 .85rem/1 var(--font-ui); cursor: pointer; touch-action: manipulation;
+}
+.bhelp[aria-expanded="true"] { background: var(--fg); border-color: var(--fg); color: var(--panel); }
+.block:not(.open) .bhelp { display: none; }
+.bhelptext { margin: 0; padding: 2px 4px 4px; font-size: .86rem; }
+.bhelptext[hidden] { display: none; }
 .panel .block:not(.open) { padding-top: 6px; padding-bottom: 6px; }
 .panel .block:not(.open) > :not(.btitle) { display: none !important; }
 .panel .block:not(.open) > .btitle { margin-bottom: 0; }

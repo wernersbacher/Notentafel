@@ -11,6 +11,25 @@ export const setPressed = (btn, on) => {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 };
 
+// Knopf aus, solange why einen Grund nennt (Text), sonst an. Der Grund bleibt am Knopf (data-why): ein Tipp auf den
+// grauen Knopf blendet ihn ein (explainLocked), denn auf dem Tablet gibt es kein title zum Hovern.
+export function lock(btn, why) {
+  btn.disabled = !!why;
+  if (why) btn.dataset.why = why;
+  else delete btn.dataset.why;
+}
+// Tipp auf einen grauen Knopf mit Grund in root: den Grund kurz einblenden. Solche Knöpfe fangen in CSS keine Tipps ab
+// (pointer-events: none), der Tipp landet auf dem Behälter; welcher Knopf darunter liegt, sagt die Lage des Tipps.
+export function explainLocked(root) {
+  root.addEventListener('click', (e) => {
+    const hit = [...root.querySelectorAll('button[data-why]:disabled')].find((b) => {
+      const r = b.getBoundingClientRect();
+      return r.width > 0 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    });
+    if (hit) toast(hit.dataset.why);
+  });
+}
+
 // Hinweis unter einem Feld; warn färbt ihn rot
 export function status(node, text, warn) {
   node.textContent = text;

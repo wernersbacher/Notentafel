@@ -36,10 +36,14 @@
 .tools.toprow > .btn { flex: 1 1 0; min-width: min-content; }
 .tools.toprow .btn { min-height: 50px; padding: .25rem 3px; }
 .tools.toprow .small { font-size: .57rem; white-space: nowrap; }
+/* „Lücke schließen“ bricht in zwei Zeilen, damit der Knopf nicht breiter wird als „entfernen“ früher */
+.tools.toprow #btnGap .small { white-space: normal; text-align: center; line-height: 1.05; }
 .tools.toprow .big .ico { width: 1.15rem; height: 1.15rem; }
 /* + Zeile und − Zeile (nur Farbnoten und Rhythmus) als flache zweite Reihe, Symbol neben der Schrift */
 .tools.toprow > #btnAddRow, .tools.toprow > #btnDelRow { flex: 1 1 40%; flex-direction: row; gap: .4rem; min-height: 36px; }
 .tools.toprow > #btnAddRow .small, .tools.toprow > #btnDelRow .small { font-size: .72rem; }
+/* Grauer Knopf mit Grund (data-why, ui.js lock): der Tipp landet auf dem Behälter, ui.js explainLocked blendet den Grund ein */
+.side button:disabled[data-why] { pointer-events: none; }
 .tools.t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tools.t2 .btn { flex-direction: row; gap: .5rem; min-height: 48px; }
 /* Zählzeiten von Hand: 1–6, + und Löschen */

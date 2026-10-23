@@ -8,7 +8,7 @@ import { noteIcon, restIcon, dotIcon } from '../core/glyphs.js';
 import { el } from './dom.js';
 import { blockSum } from '../core/blocks.js';
 import { breakJoins } from '../core/shell.js';
-import { setPressed as pressed } from '../core/ui.js';
+import { setPressed as pressed, lock } from '../core/ui.js';
 
 // Töne der Leiste; nach einem Wechsel des Farbthemas neu zeichnen. Darunter klappen die weiteren Halbtöne auf.
 let moreSemis = false;
@@ -55,22 +55,24 @@ function renderValues(cur) {
   el.rests.innerHTML = valueBtns(RHY_VALUE_BTNS, isRest(cur) && cur.d, restIcon, 'p');
 }
 // Aus, solange die Zählzeiten automatisch kommen
+const AUTO_Z = 'Die Zählzeiten kommen von selbst. Zum Selbersetzen „Zählzeiten“ unter „Taktart & Hilfen“ ausschalten.';
 function renderCounts(cur) {
-  el.counts.querySelectorAll('[data-z]').forEach((b) => { b.disabled = settings.autoZ || !filled(cur); });
-  el.counts.querySelector('[data-zclear]').disabled = settings.autoZ || !(cur && cur.z);
+  const empty = filled(cur) ? '' : 'Auf einem leeren Platz gibt es nichts zu zählen.';
+  el.counts.querySelectorAll('[data-z]').forEach((b) => lock(b, settings.autoZ ? AUTO_Z : empty));
+  lock(el.counts.querySelector('[data-zclear]'), settings.autoZ ? AUTO_Z : !(cur && cur.z) && 'Hier steht keine Zählzeit.');
 }
 
 export function renderSidebar() {
   const cur = curCell(), row = curRow();
   el.btnR.classList.toggle('on', isNote(cur) && cur.h === 'r');
   el.btnL.classList.toggle('on', isNote(cur) && cur.h === 'l');
-  el.btnR.disabled = el.btnL.disabled = !isNote(cur);
+  [el.btnR, el.btnL].forEach((b) => lock(b, !isNote(cur) && 'Rechts oder links gibt es nur bei einem gesetzten Ton.'));
   renderValues(cur);
 
   const hasBar = !!(cur && cur.bar === 1), hasEnd = !!(cur && cur.bar === 2);
   [el.btnBar, el.btnBarMel].forEach((b) => {
     b.classList.toggle('on', hasBar && !settings.autoBar);
-    b.disabled = settings.autoBar;
+    lock(b, settings.autoBar && 'Die Taktstriche kommen von selbst. Zum Selbersetzen „Taktstriche“ unter „Taktart & Hilfen“ ausschalten.');
     b.setAttribute('aria-pressed', hasBar ? 'true' : 'false');
   });
   [el.btnEnd, el.btnEndMel].forEach((b) => pressed(b, hasEnd));
@@ -89,12 +91,12 @@ export function renderSidebar() {
   renderCounts(cur);
 
   pressed(el.btnIns, S.insertMode);
-  el.btnDel.disabled = !filled(cur);
-  el.btnGap.disabled = !canCloseGap(S.rows, S.sel);
-  el.btnBreak.disabled = S.rows.length >= maxRows() && !canStepDown(S.rows, S.sel);
+  lock(el.btnDel, !filled(cur) && 'Auf diesem Platz steht nichts, das sich leeren ließe.');
+  lock(el.btnGap, !canCloseGap(S.rows, S.sel) && 'Hier gibt es keine Lücke zu schließen.');
+  lock(el.btnBreak, S.rows.length >= maxRows() && !canStepDown(S.rows, S.sel) && 'Hier passt keine neue Zeile mehr auf die Tafel.');
   breakJoins(false);
-  el.btnUndo.disabled = S.hist.length === 0;
-  el.btnRedo.disabled = S.redo.length === 0;
-  el.btnAddRow.disabled = S.rows.length >= maxRows();
-  el.btnDelRow.disabled = S.rows.length <= 1;
+  lock(el.btnUndo, S.hist.length === 0 && 'Es gibt noch nichts zurückzunehmen.');
+  lock(el.btnRedo, S.redo.length === 0 && 'Es gibt nichts zu wiederholen.');
+  lock(el.btnAddRow, S.rows.length >= maxRows() && 'Mehr Zeilen passen nicht auf die Tafel.');
+  lock(el.btnDelRow, S.rows.length <= 1 && 'Eine Zeile bleibt immer stehen.');
 }

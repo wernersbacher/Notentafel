@@ -76,10 +76,16 @@
   body > :not(.printout) { display: none !important; }
   html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
   body { padding: 0 !important; }
-  .printout { display: block; color: #000; --muted: #555; }
+  .printout { display: block; position: relative; color: #000; --muted: #555; }
+  /* Wasserzeichen (Lite): fixed steht auf jeder gedruckten Seite */
+  .printout .wm { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); white-space: nowrap; font: 800 64pt var(--font-display); color: rgba(0, 0, 0, .12); pointer-events: none; z-index: 1; }
   .printout h1 { margin: 0 0 6mm; font: 700 20pt var(--font-display); text-align: center; }
   .printout .score { max-width: 100%; height: auto; margin: 0 auto 3mm; break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* MusicXML-Knopf ohne Pro: gedimmt, mit Hinweis „Mit Pro“ (bleibt antippbar, der Tipp erklärt es) */
+#btnLiedExport.locked { opacity: .6; }
+#btnLiedExport .pro-tag { justify-self: start; margin-top: 2px; padding: 2px 9px; border-radius: 99px; font: 800 .75rem var(--font-ui); background: var(--fg); color: var(--bg); }
 
 /* ---------- Leiste des Lieds in Blöcken: einrichten, Noten schreiben, Liedtext, abspielen ---------- */
 .panel .block {

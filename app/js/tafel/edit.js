@@ -1,5 +1,5 @@
 // Markierung, Zeichen setzen und Entfernen. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
-import { MAX_LEN, MAX_ROWS, DOTTED } from './config.js';
+import { MAX_LEN, maxRows, fullText, DOTTED } from './config.js';
 import { isNote, isBeat, filled, rowFullAt, fitsInRow, canCloseGap, dotTargetIn, newRow, reflow, put, setCell, trimRow } from './model.js';
 import { openMeasureAt } from './theory.js';
 import { S, wraps, curCell, curRow, snap } from './state.js';
@@ -22,16 +22,16 @@ function makeRoom(v) {
 }
 // Weiter in der nächsten Zeile. Ein Takt geht nicht über zwei Zeilen: Ist am Ende der Zeile ein Takt angefangen
 // (und beginnt er nicht schon am Zeilenanfang), wandert er ganz in die nächste Zeile, und es geht hinter ihm weiter.
-// Die nächste Zeile wird dafür angelegt (oder eine leere genutzt); bei MAX_ROWS Zeilen bleibt alles, wie es ist.
+// Die nächste Zeile wird dafür angelegt (oder eine leere genutzt); bei maxRows() Zeilen bleibt alles, wie es ist.
 function nextLine() {
   const r = S.sel.r, row = curRow(), open = openMeasureAt(S.rows, r);
   const move = open > 0 && open < row.length ? row.splice(open) : [];
   let next = S.rows[r + 1];
   if (move.length && next && next.some(Boolean)) next = null; // nicht vor eine beschriebene Zeile schieben
   if (!next) {
-    if (S.rows.length >= MAX_ROWS) {
+    if (S.rows.length >= maxRows()) {
       row.push(...move);
-      toast('Die Tafel ist voll (' + MAX_ROWS + ' Zeilen).', true);
+      toast(fullText(), true);
       return false;
     }
     next = newRow(row.line);

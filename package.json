@@ -5,6 +5,7 @@
   "description": "Digitale Musiktafel für den Musikunterricht",
   "scripts": {
     "start": "node tools/serve.js",
+    "dev:lite": "node tools/serve.js --lite",
     "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
     "screens": "node tools/screens.js",
     "version:set": "node tools/version.js"

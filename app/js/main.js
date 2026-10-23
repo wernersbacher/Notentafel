@@ -4,6 +4,7 @@ import { initMenu } from './core/menu.js';
 import { initAccount } from './core/account.js';
 import { initCloud } from './core/cloud.js';
 import { loadBackend } from '../../shared/auth.js';
+import { loadPlan } from './core/tier.js';
 import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
 import { initParts } from './core/parts.js';
@@ -22,6 +23,9 @@ setWriteError(() => {
   toast('Der Speicher des Geräts ist voll. Neue Lieder können verloren gehen.', true);
 });
 
+// Stufe klären, bevor die Bereiche sich anmelden (gesperrt wird hier noch nichts)
+await loadPlan();
+
 // Die geteilten Blöcke einsetzen, bevor die Leiste ihre Knöpfe bindet
 initParts();
 initBlocks();
@@ -33,5 +37,5 @@ initMenu();
 initAccount();
 initWake();
 startShell();
-// Backend nur im Docker-Image (shared/env.js, siehe deploy/env.prod.js); mit npm start fehlt die Datei, dann ohne Konto
+// Backend nur im Docker-Image (shared/env.js, siehe deploy/env.prod.js); mit npm start ist backend null, dann ohne Konto
 loadBackend().then(initCloud);

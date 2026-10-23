@@ -3,7 +3,8 @@
 import { settings, persistSettings } from './settings.js';
 import { current, saveAs, setPlay } from './shell.js';
 import { esc, confirmTap, disarm, isArmed, delegate, onEnter, downloadFile, setPressed, status, dateOf, dateTimeOf } from './ui.js';
-import { exportAll, importAll } from './store.js';
+import { exportAll, importAll, songRoom } from './store.js';
+import { plan, limitText } from './tier.js';
 import { el } from './dom.js';
 import { localOnly } from './cloud.js';
 import { CLOSE } from './icons.js';
@@ -110,9 +111,13 @@ function exportSongs() {
 }
 async function importSongs(f) {
   let n;
-  try { n = importAll(JSON.parse(await f.text())); } catch (e) { n = -1; }
+  // Die Grenze der Stufe gilt auch hier: nur so viele neue Lieder, wie noch hineinpassen (Export bleibt frei)
+  const max = plan.limit('songs'), info = {};
+  try { n = importAll(JSON.parse(await f.text()), max == null ? null : songRoom(max), info); } catch (e) { n = -1; }
   if (n < 0) { backupHint('Das ist keine Sicherungsdatei der Musiktafel.', true); return; }
   renderSongs();
+  const rest = info.skipped ? ' ' + info.skipped + (info.skipped === 1 ? ' Lied' : ' Lieder') + ' nicht übernommen. ' + limitText('songs') : '';
+  if (rest) { backupHint((!n ? 'Kein Lied importiert.' : n === 1 ? 'Ein Lied importiert.' : n + ' Lieder importiert.') + rest, true); return; }
   backupHint(!n ? 'Alle Lieder aus der Datei waren schon da.' : n === 1 ? 'Ein Lied importiert.' : n + ' Lieder importiert.');
 }
 

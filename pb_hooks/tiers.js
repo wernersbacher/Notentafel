@@ -1,9 +1,17 @@
-// Was zu welcher Stufe gehört. Die einzige Stelle im Server; die Dev-Modi im Frontend bekommen später eine Kopie davon.
-// limits.songs: so viele Lieder (alle Bereiche zusammen, ohne Papierkorb) passen ins Konto; null = beliebig viele
+// Was zu welcher Stufe gehört. Die einzige Stelle im Server; die Dev-Modi im Frontend bekommen eine Kopie davon.
+// features (nur Pro): known = bekannte Lieder (Liedersammlung), cloud = Abgleich ins Konto, export = MusicXML und Druck ohne Wasserzeichen.
+// limits (null = unbegrenzt). Gast und Konto ohne Pro sind Lite: zum Ausprobieren, im Schulalltag zu klein.
+//   songs          so viele eigene Lieder (alle Bereiche zusammen, ohne Papierkorb); bei Pro die Grenze im Konto,
+//                  bei Lite nur auf dem Gerät, denn den Abgleich (cloud) gibt es nur mit Pro
+//   measures       Takte pro Tafel/Notenblatt (etwa 2 Zeilen)
+//   games          offene Spiele je Bereich
+//   quizQuestions  Fragen je Quiz-Runde
+// Alle Zahlen stehen nur hier, damit sie sich später ohne Code-Änderung anpassen lassen.
+const LITE = { features: [], limits: { songs: 3, measures: 8, games: 2, quizQuestions: 5 } };
 const TIERS = {
-  guest: { features: [], limits: { songs: 5 } },
-  account: { features: [], limits: { songs: 5 } },
-  pro: { features: ['lied', 'cloud'], limits: { songs: 50 } }
+  guest: { features: [...LITE.features], limits: { ...LITE.limits } },
+  account: { features: [...LITE.features], limits: { ...LITE.limits } },
+  pro: { features: ['known', 'cloud', 'export'], limits: { songs: 50, measures: null, games: null, quizQuestions: null } }
 };
 
 // Neue Konten bekommen Pro bis zum Ende der Beta, danach eine Woche zum Ausprobieren (pb_hooks/main.pb.js).

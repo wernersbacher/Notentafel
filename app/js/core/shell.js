@@ -28,6 +28,8 @@ import { shellState } from './shell-state.js';
 import { initBar, TOOL_BTNS } from './shell-bar.js';
 import { initPresent } from './present.js';
 import { makeSignal } from './signal.js';
+import { plan, limitText } from './tier.js';
+import { songRoom } from './store.js';
 // Einklappen und Vorführen liegen in present.js, sind aber wie bisher über shell.js erreichbar
 export { sideCollapsed } from './present.js';
 
@@ -135,6 +137,10 @@ export function saveAs(input, btn, report) {
   const s = shellState.area.songs, n = input.value.trim();
   if (!n) { report('Bitte zuerst einen Namen eingeben.', true); input.focus(); return; }
   const exists = s.store.songExists(n);
+  // Lite: höchstens plan.limit('songs') Lieder, alle Bereiche zusammen. Ein Lied mit gleichem Namen wird ersetzt und zählt
+  // nicht neu; Lieder, die schon darüber liegen, bleiben (es kommt nur keins dazu).
+  const max = plan.limit('songs');
+  if (!exists && !songRoom(max)) { report(limitText('songs'), true); return; }
   const doSave = () => {
     // Ein neues Lied passt nicht mehr ins Konto: Es wird trotzdem gespeichert, aber nur auf diesem Gerät
     const full = !exists && accountFull();

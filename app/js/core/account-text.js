@@ -28,13 +28,17 @@ export function accountStatus(c, timeOf) {
   if (!c.user) return null;
   const warn = !!c.error || !!c.rejected || !!c.invalid;
   const text = c.error ? c.error + ' Die Lieder bleiben vorgemerkt und gehen beim nächsten Mal mit.'
-    : !c.sync ? (c.tier ? 'Mit diesem Konto werden die Lieder nicht abgeglichen.' : '')
+    : !c.sync ? (c.tier ? 'Die Lieder bleiben auf diesem Gerät. Der Abgleich mit dem Konto gehört zu Pro.' : '')
     : (c.lastSync ? 'Lieder abgeglichen um ' + timeOf(c.lastSync) + ' Uhr.' : 'Lieder werden abgeglichen …') + fullNote(c);
   return text ? { text: text.trim(), warn } : null;
 }
 
-// Hinweis unter den gespeicherten Liedern
+// Hinweis unter den gespeicherten Liedern. c.songsLimit: so viele Lieder gehen ohne Konto-Speicher (plan.limit('songs'),
+// aus limits der /me-Antwort); null oder fehlt = keine Grenze, dann steht keine Zahl da.
 export function songsHint(c) {
-  return c.user && c.sync ? 'Liegen auch in deinem Konto (' + c.user.email + ') und sind auf allen deinen Geräten da.' + fullNote(c)
-    : 'Liegen nur auf diesem Gerät. Mit einem Konto (oben rechts) sind sie auf allen deinen Geräten da.';
+  if (c.user && c.sync) return 'Liegen auch in deinem Konto (' + c.user.email + ') und sind auf allen deinen Geräten da.' + fullNote(c);
+  const n = c.songsLimit;
+  const nur = 'Liegen nur auf diesem Gerät' + (typeof n === 'number' ? ', höchstens ' + n + ' Lieder' : '') + '.';
+  return nur + (c.user ? (c.tier ? ' Der Abgleich mit dem Konto gehört zu Pro.' : '')
+    : ' Mit einem Pro-Konto (oben rechts) sind sie auf allen deinen Geräten da.');
 }

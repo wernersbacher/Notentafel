@@ -2,7 +2,7 @@
 // und spielt ihn vor. Die Kinder klatschen nach, dann wird er aufgelöst. Bis dahin steht in der Zeile nur die leere
 // Notenlinie mit Taktart und Taktstrichen (row.hide, siehe board.js). Die Rhythmen sammeln sich auf der Übungstafel,
 // die geschriebene Tafel bleibt unberührt.
-import { MAX_ROWS } from './config.js';
+import { maxRows } from './config.js';
 import { filled, isBeat, dur, newRow } from './model.js';
 import { meterOf } from './theory.js';
 import { makeRhythm, meterParts } from './rhythms.js';
@@ -66,7 +66,7 @@ function newRhythm() {
   snap();
   while (S.rows.length && !S.rows[S.rows.length - 1].some(Boolean)) S.rows.pop();
   // Ist die Tafel voll, fällt der älteste Rhythmus weg
-  if (S.rows.length >= MAX_ROWS) S.rows.splice(0, S.rows.length - MAX_ROWS + 1);
+  if (S.rows.length >= maxRows()) S.rows.splice(0, S.rows.length - maxRows() + 1);
   S.rows.forEach((x) => { delete x.cover; delete x.coverFrom; delete x.hide; });
   const r = rhythmRow(cells, meter);
   r.hide = true;

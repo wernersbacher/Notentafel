@@ -7,6 +7,8 @@ import { installDom, uninstallDom } from './helpers.mjs';
 let S, settings, useVariant, B, SB, RD, CONFIG, MODEL, el, storage;
 before(async () => {
   ({ storage } = installDom());
+  // Diese Tests gehen von der vollen Tafel (MAX_ROWS Zeilen) aus; die Lite-Grenze prüft lite-limits.test.mjs
+  await (await import('../app/js/core/tier.js')).loadPlan({ env: { backend: null, tier: 'pro' }, search: '' });
   ({ S, settings, useVariant } = await import('../app/js/tafel/state.js'));
   B = await import('../app/js/tafel/board.js');
   SB = await import('../app/js/tafel/sidebar.js');

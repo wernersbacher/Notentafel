@@ -113,3 +113,9 @@
 .drawer #songsSec { border: 2px solid var(--line); }
 .drawer section.library { background: var(--bg); }
 .drawer section.library h3 span { text-transform: none; letter-spacing: 0; font-weight: 700; }
+/* Liedersammlung ohne Pro: nur die Karte mit dem Hinweis, Suche und Liste sind weg */
+.procard { display: none; background: var(--btn); border: 2px dashed var(--btn-line); border-radius: 12px; padding: 12px; }
+.procard b { display: inline-block; padding: 2px 9px; border-radius: 99px; font: 800 .75rem var(--font-ui); background: var(--fg); color: var(--bg); }
+.procard p { margin: 8px 0 0; font-weight: 700; }
+.library.locked .procard { display: block; }
+.library.locked > :not(h3):not(.procard) { display: none; }

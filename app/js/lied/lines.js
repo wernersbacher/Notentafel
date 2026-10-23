@@ -1,6 +1,7 @@
 // Entfernen, Umbruch und Zeilen.
 import { toast } from '../core/ui.js';
-import { isNote, keepMarks } from './model.js';
+import { plan, limitText } from '../core/tier.js';
+import { isNote, keepMarks, measuresFull } from './model.js';
 import { L, snap } from './state.js';
 import { render, commit, lastLineStart } from './render.js';
 import { ev, cur } from './common.js';
@@ -43,6 +44,7 @@ export function lineBreak() {
 export function addLine() {
   const last = ev()[ev().length - 1];
   if (!last) { toast('Das Lied ist noch leer.', true); return; }
+  if (measuresFull(L.song, plan.limit('measures'))) { toast(limitText('measures'), true); return; }
   if (last.brk) { L.sel = ev().length; L.last = null; render(); return; } // eine leere Zeile gibt es schon
   snap();
   last.brk = 1;

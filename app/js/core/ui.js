@@ -128,3 +128,10 @@ export function groupedHTML(items, itemHTML, abc) {
   }).join('');
 }
 
+// Liedersammlung ohne Pro: Der Abschnitt (die Liste ul liegt darin) zeigt statt Suche und Liste nur die Karte .procard
+// („Bekannte Lieder gibt es mit Pro“, im HTML; das CSS blendet sie nur bei .locked ein). Tipp-tauglich, kein Hover.
+export function lockLibrary(ul, locked) {
+  const sec = ul.closest('section');
+  if (sec) sec.classList.toggle('locked', locked);
+}
+

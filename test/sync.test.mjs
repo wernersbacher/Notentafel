@@ -132,12 +132,14 @@ test('overCap: bei absteigend nach changedAt sortierter Liste fallen die ältest
   assert.deepEqual(overCap([1, 2, 3], 2), [3]);
 });
 
-test('TIERS: Pro hat cloud und 50 Lieder, Gast und Konto 5', () => {
-  assert.deepEqual(TIERS.pro.features, ['lied', 'cloud']);
-  assert.equal(TIERS.pro.limits.songs, 50);
-  assert.equal(TIERS.guest.limits.songs, 5);
-  assert.equal(TIERS.account.limits.songs, 5);
-  assert.ok(!TIERS.guest.features.includes('cloud'));
+test('TIERS: Pro hat known, cloud, export und 50 Lieder, Gast und Konto sind Lite ohne Abgleich', () => {
+  assert.deepEqual(TIERS.pro.features, ['known', 'cloud', 'export']);
+  assert.deepEqual(TIERS.pro.limits, { songs: 50, measures: null, games: null, quizQuestions: null });
+  for (const t of ['guest', 'account']) {
+    assert.deepEqual(TIERS[t].features, []);
+    assert.deepEqual(TIERS[t].limits, { songs: 3, measures: 8, games: 2, quizQuestions: 5 });
+  }
+  assert.notStrictEqual(TIERS.guest.limits, TIERS.account.limits);
 });
 
 test('newUserProUntil: vor dem Beta-Ende gilt das Beta-Ende, danach eine Woche zum Ausprobieren', () => {

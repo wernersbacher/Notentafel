@@ -40,7 +40,7 @@ const LIMIT = require('../pb_hooks/tiers.js').TIERS.pro.limits.songs;
 /* ---------- Nachgebauter Server: Konten wie PocketBase, Abgleich wie pb_hooks/songs.pb.js ---------- */
 let server;
 function resetServer() {
-  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], since: [], changes: [], limit: LIMIT, meFails: false };
+  server = { users: new Map(), tokens: new Map(), songs: [], tick: 0, online: true, calls: [], since: [], changes: [], limit: LIMIT, meFails: false, pro: true };
 }
 // Wie PocketBase JSON-Felder zurückgibt: Schlüssel sortiert
 const resort = (v) => Array.isArray(v) ? v.map(resort)
@@ -67,7 +67,7 @@ function handle(method, path, auth, body) {
   }
   if (method === 'GET' && path === '/me') {
     if (server.meFails) return [500, { message: 'Kaputt' }]; // Anmeldung gelingt, das Konto ist aber nicht erreichbar
-    return [200, { tier: 'pro', features: ['lied', 'cloud'], limits: {} }];
+    return [200, server.pro ? { tier: 'pro', features: ['known', 'cloud', 'export'], limits: {} } : { tier: 'account', features: [], limits: { songs: 3 } }];
   }
   if (method === 'POST' && path === '/me/delete') {
     const id = uid;
@@ -79,6 +79,7 @@ function handle(method, path, auth, body) {
     return [204, null];
   }
   if (method === 'POST' && path === '/songs/sync') {
+    if (!server.pro) return [403, { message: 'Abgleich nur mit Pro.' }]; // wie pb_hooks/songs.pb.js
     const now = ++server.tick, nowMs = serverNow();
     const mine = server.songs.filter((s) => s.user === uid);
     const plan = planSync(mine.map(({ id, changedAt, deleted }) => ({ id, changedAt, deleted })), body.changes, nowMs, server.limit);
@@ -609,6 +610,48 @@ test('Bereiche bleiben getrennt: gleicher Name in Melodie und Rhythmus', async (
 /* ---------- Grenze: höchstens LIMIT Lieder im Konto ---------- */
 // n Melodien „Lied 0“ … auf dem gerade benutzten Gerät
 const fill = (n, prefix = 'Lied ') => { for (let i = 0; i < n; i++) T.stores.mel.saveSong([tune('C')], prefix + i); };
+
+test('Konto ohne Pro: kein Abgleich, nichts wird hochgeladen, gespeichert wird auf dem Gerät', async () => {
+  server.pro = false;
+  await use('tablet');
+  T.stores.mel.saveSong([tune('C')], 'Vorher');
+  assert.equal(await register('a@b.de', 'geheim123'), '');
+  assert.equal(C.cloudInfo().sync, false);
+  assert.equal(C.cloudInfo().tier, 'account');
+  assert.equal(C.cloudInfo().limit, null);
+  T.stores.mel.saveSong([tune('D')], 'Nachher');
+  await C.sync();
+  assert.equal(server.calls.includes('/songs/sync'), false);
+  assert.deepEqual(account(), []);
+  assert.equal(C.cloudInfo().error, '');
+  assert.equal(C.accountFull(), false);
+  assert.deepEqual(mel(), { Vorher: 'C', Nachher: 'D' });
+  await use('tablet'); // Neuladen
+  assert.equal(server.calls.includes('/songs/sync'), false);
+});
+
+test('Pro läuft mitten in der Sitzung ab: Abgleich hört ohne Fehler auf, mit neuem Pro geht alles nach', async () => {
+  await use('tablet');
+  await register('a@b.de', 'geheim123');
+  T.stores.mel.saveSong([tune('C')], 'Eins');
+  await C.sync();
+  assert.deepEqual(account(), ['Eins']);
+  assert.equal(C.cloudInfo().sync, true);
+  server.pro = false; // abgelaufen, das Gerät weiß es noch nicht
+  T.stores.mel.saveSong([tune('D')], 'Zwei');
+  await C.sync();
+  assert.deepEqual(account(), ['Eins']);
+  assert.equal(C.cloudInfo().sync, false);
+  assert.equal(C.cloudInfo().error, '');
+  assert.equal(A.currentMe().tier, 'account'); // auch die Stufe für plan.has ist neu
+  assert.equal(A.currentUser().email, 'a@b.de'); // weiter angemeldet
+  const calls = server.calls.filter((c) => c === '/songs/sync').length;
+  await C.sync();
+  assert.equal(server.calls.filter((c) => c === '/songs/sync').length, calls); // kein weiterer Versuch
+  server.pro = true; // wieder Pro: nach dem Neuladen geht nach, was liegengeblieben ist
+  await use('tablet');
+  assert.deepEqual(account(), ['Eins', 'Zwei']);
+});
 
 test('Konto voll: was nicht mehr passt, bleibt auf dem Gerät und ist als solches erkennbar', async () => {
   await use('tablet');

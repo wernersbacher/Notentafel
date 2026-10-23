@@ -1,12 +1,12 @@
 // Bereich Lied: echtes Notenblatt mit Violinschlüssel. Meldet sich beim Kern an und verdrahtet die Leiste.
 import { register, setPlay } from '../core/shell.js';
 import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js';
-import { confirmTap, delegate, esc, groupedHTML, toast, downloadFile, onEnter, setPressed } from '../core/ui.js';
+import { confirmTap, delegate, esc, groupedHTML, lockLibrary, toast, downloadFile, onEnter, setPressed } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
 import { beatsOf, startAt, cutAt, skip } from '../core/plan.js';
 import { store } from './storage.js';
-import { SONGS, songOf } from './songs.js';
+import { songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
 import { printHTML } from './print.js';
 import { L, opts, persistOpts, written, startPractice, endPractice, resetPractice } from './state.js';
@@ -18,6 +18,8 @@ import { initLiedGames } from './games.js';
 import { endGame } from '../core/game.js';
 import * as act from './actions.js';
 import { el } from './dom.js';
+import { plan, onTier } from '../core/tier.js';
+import { known, loadKnown, onKnown } from '../core/known.js';
 
 function initControls() {
   delegate(el.liedSteps, '[data-p]', (b) => act.placePitch(b.dataset.p));
@@ -79,9 +81,12 @@ const COLORS = { key: 'colors', btn: el.btnColorsToggle, state: el.colorsToggleS
 const CHECK = { key: 'check', btn: el.btnCheckToggle, state: el.checkToggleState, obj: opts, save: persistOpts };
 const WRAP = { key: 'wrap', btn: el.btnWrapToggle, state: el.wrapToggleState, obj: opts, save: persistOpts };
 
-// Bekannte Lieder im Menü; das gerade geladene ist hervorgehoben
-function renderKnown() {
-  el.liedSongs.innerHTML = groupedHTML(SONGS, (s, i) =>
+// Bekannte Lieder im Menü; das gerade geladene ist hervorgehoben. Ohne Pro (Funktion known) zeigt der Abschnitt nur die Karte
+// „Mit Pro“, die Lieder selbst kommen vom Server (core/known.js)
+export function renderKnown() {
+  const locked = !plan.has('known');
+  lockLibrary(el.liedSongs, locked);
+  el.liedSongs.innerHTML = locked ? '' : groupedHTML(known().lied, (s, i) =>
     '<li class="song one' + (s.name === L.name ? ' current' : '') + '"><span class="name">' + esc(s.name) + '</span>' +
     '<button type="button" class="btn" data-known="' + i + '">Laden</button></li>', sortAbc()
   );
@@ -92,9 +97,21 @@ function renderSizes() {
   el.liedSizes.querySelectorAll('[data-size]').forEach((b) => setPressed(b, +b.dataset.size === opts.size));
 }
 
+// MusicXML ist Pro: ohne bleibt der Knopf sichtbar, trägt „Mit Pro“ und ist gesperrt (aria-disabled statt disabled,
+// damit ein Tipp den Grund zeigt)
+export function renderExportLock() {
+  const locked = !plan.has('export'), b = el.btnLiedExport;
+  b.classList.toggle('locked', locked);
+  if (locked) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+  let tag = b.querySelector('.pro-tag');
+  if (locked && !tag) { tag = document.createElement('span'); tag.className = 'pro-tag'; tag.textContent = 'Mit Pro'; b.append(tag); }
+  else if (!locked && tag) tag.remove();
+}
+
 // Lädt das Lied als MusicXML-Datei herunter
 // (auch beim Üben das geschriebene Lied, nicht die Übungstafel)
 function exportMusicXML() {
+  if (!plan.has('export')) { toast('MusicXML gibt es mit Pro.', true); return; }
   const { song, name } = written();
   if (!song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
   const xml = songToMusicXML(song, { name, autoBar: opts.autoBar, tempo: settings.tempo });
@@ -107,7 +124,7 @@ function exportMusicXML() {
 function printSheet() {
   const { song, name } = written();
   if (!song.ev.length) { toast('Das Lied ist noch leer.', true); return; }
-  el.printOut.innerHTML = printHTML(song, { name,autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, wrap: opts.wrap, size: opts.size });
+  el.printOut.innerHTML = printHTML(song, { name,autoBar: opts.autoBar, names: opts.names, colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, wrap: opts.wrap, size: opts.size, watermark: plan.has('export') ? '' : 'Musiktafel Lite' });
   closeMenu();
   window.print();
 }
@@ -125,7 +142,7 @@ export function registerLied() {
   el.liedShowColors.addEventListener('click', () => { opts.colors = !opts.colors; persistOpts(); render(); });
   toggleSetting(WRAP, render);
   delegate(el.liedSongs, '[data-known]', (b) => {
-    const s = SONGS[+b.dataset.known];
+    const s = known().lied[+b.dataset.known];
     if (!s) return;
     closeMenu();
     setPlay(false);
@@ -133,6 +150,8 @@ export function registerLied() {
     act.loadSong(songOf(s));
   });
   el.btnLiedExport.addEventListener('click', exportMusicXML);
+  onTier(renderExportLock);
+  onKnown(renderKnown); // die Lieder sind da, oder die Stufe hat sich geändert
   el.btnLiedPrint.addEventListener('click', printSheet);
   delegate(el.liedSizes, '[data-size]', (b) => { opts.size = +b.dataset.size; persistOpts(); renderSizes(); render(); });
   register({
@@ -183,6 +202,8 @@ export function registerLied() {
         renderToggle(WRAP);
         renderSizes();
         renderKnown();
+        loadKnown(); // hat beim Start nicht geklappt: noch einmal versuchen
+        renderExportLock();
       }
     }
   });

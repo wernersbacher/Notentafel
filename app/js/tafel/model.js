@@ -14,7 +14,7 @@
 // Abspielreihenfolge in play.js und das Prüfen gespeicherter Stände in clean.js. rowsToSong kommt aus dem gemeinsamen
 // songformat.js (oberste Schicht, verbindet Tafel und Lied). Alles wird hier gesammelt, damit alle bestehenden Importe
 // aus './model.js' unverändert bleiben.
-import { MAX_ROWS, START_ROWS, DOTTED } from './config.js';
+import { maxRows, START_ROWS, DOTTED } from './config.js';
 import { cellUnits, filled, isBeat, isNote, rowUnits } from './cells.js';
 
 export * from './cells.js';
@@ -37,7 +37,7 @@ export function newRow(line = false) {
 }
 // Automatischer Umbruch: Hat Zeile r mehr als cap Schläge (cap × 4 Sechzehntel; ein Strich-Platz zählt nichts), rutscht
 // der Überhang an den Anfang der nächsten Zeile (die neu angelegt wird, wenn es keine gibt, mit derselben Notenlinie), und
-// so weiter. Ein Zeichen, das selbst nicht mehr ganz hineinpasst, rutscht mit. false, wenn die Tafel schon MAX_ROWS
+// so weiter. Ein Zeichen, das selbst nicht mehr ganz hineinpasst, rutscht mit. false, wenn die Tafel schon maxRows()
 // Zeilen hat und nichts mehr nach unten rutschen kann (der Überhang bleibt dann stehen).
 export function reflow(rows, r, cap) {
   const max = 4 * cap;
@@ -49,7 +49,7 @@ export function reflow(rows, r, cap) {
       u += cellUnits(rows[i][c]);
     }
     if (i + 1 >= rows.length) {
-      if (rows.length >= MAX_ROWS) return false;
+      if (rows.length >= maxRows()) return false;
       rows.push(newRow(rows[i].line));
     }
     rows[i + 1].unshift(...rows[i].splice(cut));

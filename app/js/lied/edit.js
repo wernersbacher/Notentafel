@@ -1,7 +1,8 @@
 // Markieren, Zeichen setzen und ziehen. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet mit commit().
 import { toast } from '../core/ui.js';
+import { plan, limitText } from '../core/tier.js';
 import { stopPlay } from '../core/player.js';
-import { MAX_EV, isNote, canDot, splitAtBar, keepMarks, canTie, toggleTieAt, changePitch, swapEvents } from './model.js';
+import { MAX_EV, measureCount, isNote, canDot, splitAtBar, keepMarks, canTie, toggleTieAt, changePitch, swapEvents } from './model.js';
 import { L, opts, snap, restore } from './state.js';
 import { render, commit } from './render.js';
 import { ev, cur } from './common.js';
@@ -16,6 +17,16 @@ function fresh(o) {
 function full() {
   if (ev().length < MAX_EV) return false;
   toast('Das Lied ist voll (' + MAX_EV + ' Zeichen).', true);
+  return true;
+}
+
+// Lite: höchstens limit('measures') Takte. Wurde der Stand nach einer Änderung (snap() ist schon gelaufen) länger als erlaubt
+// und länger als vorher (ein Lied, das schon darüber liegt, bleibt, wie es ist), geht die Änderung zurück. true: zurückgenommen.
+function tooLong(was) {
+  const max = plan.limit('measures');
+  if (max == null || measureCount(L.song) <= Math.max(max, was)) return false;
+  restore();
+  toast(limitText('measures'), true);
   return true;
 }
 
@@ -50,7 +61,7 @@ function splitHere(i) {
 // Setzt ein Ereignis an der Markierung: am Ende oder im Einfügen-Modus kommt es dazu, sonst ersetzt es das Zeichen dort.
 // Der zuletzt gesetzte Ton ist bei einer aufgeteilten Note ihr letztes Stück (dort setzt ein Bogen an).
 function place(o, keepValue) {
-  const prev = cur();
+  const prev = cur(), was = measureCount(L.song);
   if (L.insertMode || !prev) {
     if (full()) return;
     snap();
@@ -61,6 +72,7 @@ function place(o, keepValue) {
     ev()[L.sel] = keepMarks(prev, o);
   }
   const k = splitHere(L.sel);
+  if (tooLong(was)) return;
   L.last = L.sel + k - 1;
   L.sel += k;
   commit();
@@ -83,10 +95,12 @@ export function setValue(v) {
   L.pen = { v, dot: 0 };
   const e = valueTarget();
   if (!e) { render(); return; }
+  const was = measureCount(L.song);
   snap();
   e.v = v;
   delete e.dot;
   splitHere(L.sel);
+  if (tooLong(was)) { render(); return; }
   commit();
 }
 export function toggleDot() {
@@ -94,9 +108,11 @@ export function toggleDot() {
   L.pen.dot = L.pen.dot ? 0 : 1;
   const e = valueTarget();
   if (!e || !canDot(e.v)) { render(); return; }
+  const was = measureCount(L.song);
   snap();
   if (L.pen.dot) e.dot = 1; else delete e.dot;
   splitHere(L.sel);
+  if (tooLong(was)) { render(); return; }
   commit();
 }
 // Vorzeichen (1 ♯, −1 ♭, 0 ♮) am Ton umschalten; es gilt für alle Noten, die mit ihm durch Haltebögen zu einem Ton

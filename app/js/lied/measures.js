@@ -27,6 +27,21 @@ function grid(song) {
   });
 }
 export const gridStarts = (song) => grid(song).map((g) => g.start);
+// Anzahl der Takte des Lieds (für die Lite-Grenze): angefangene Takte zählen mit, ein Auftakt nicht. Ohne Taktart
+// zählt 4/4, damit man die Grenze nicht umgeht, indem man die Taktart weglässt.
+export function measureCount(song) {
+  const g = grid({ ...song, meter: song.meter || '4/4' });
+  if (!g.length) return 0;
+  const len = measureTicks(song.meter || '4/4');
+  return Math.max(0, Math.ceil(g[g.length - 1].end / len) - (song.meter && song.pickup ? 1 : 0));
+}
+// Ist bei der Grenze limit (null = keine) kein Platz mehr, auch nicht für ein weiteres Zeichen? Das gilt, wenn die
+// erlaubte Zahl an Takten erreicht und der letzte Takt voll ist.
+export function measuresFull(song, limit) {
+  if (limit == null || measureCount(song) < limit) return false;
+  const g = grid({ ...song, meter: song.meter || '4/4' });
+  return g[g.length - 1].end % measureTicks(song.meter || '4/4') === 0;
+}
 
 // Notenwerte [v, dot] nach Länge in Ticks, die längsten zuerst
 const PIECES = [[1, 0], [2, 1], [2, 0], [4, 1], [4, 0], [8, 1], [8, 0], [16, 0]].map(([v, dot]) => ({ v, dot, t: ticks({ v, dot }) }));

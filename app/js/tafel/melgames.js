@@ -7,9 +7,10 @@
 //                       wählen unten aus drei Namen. Mit der Lösung steht der Anfang als Farbpunkte auf der Tafel;
 //                       danach lässt ein Tipp auf einen Namen den Anfang dieses Lieds hören.
 // Eine falsche Antwort wird rot und erklingt nicht (Melodie-Echo: auch der falsche Ton nicht).
-import { MAX_ROWS, NOTE_BY } from './config.js';
+import { maxRows, NOTE_BY } from './config.js';
 import { newRow, isNote, dur } from './model.js';
-import { MELODIES, melodyRows } from './melodies.js';
+import { melodyRows } from './melodies.js';
+import { known } from '../core/known.js';
 import { makeMelody } from './theory.js';
 import { pool } from './quiz.js';
 import { games, persistGames } from './gameOptions.js';
@@ -20,7 +21,7 @@ import { colorStyle, noteLabel } from './symbols.js';
 import { previewTone, stopPlay, playNow } from '../core/player.js';
 import { playTones } from '../core/game.js';
 import { startQuiz } from '../core/quiz.js';
-import { delegate, setPressed as pressed } from '../core/ui.js';
+import { delegate, setPressed as pressed, toast } from '../core/ui.js';
 import { el } from './dom.js';
 
 const rnd = (n) => Math.floor(Math.random() * n);
@@ -42,7 +43,7 @@ function meloQuiz() {
       if (fresh) { S.rows = []; fresh = false; } // ein neues Melodie-Echo beginnt auf einer leeren Übungstafel
       while (S.rows.length && !S.rows[S.rows.length - 1].some(Boolean)) S.rows.pop();
       // Ist die Tafel voll, fällt die älteste Melodie weg
-      if (S.rows.length >= MAX_ROWS) S.rows.splice(0, S.rows.length - MAX_ROWS + 1);
+      if (S.rows.length >= maxRows()) S.rows.splice(0, S.rows.length - maxRows() + 1);
       const row = newRow(false);
       seq.forEach((id) => row.push({ n: id, h: '', q: 1 }));
       S.rows.push(row);
@@ -135,6 +136,7 @@ function openingOf(m, short) {
 }
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function guessQuiz() {
+  const MELODIES = known().mel; // mit Pro vom Server (core/known.js), die Runde bleibt bei den Liedern vom Start
   let cells = [], last = -1, solved = false;
   const plan = (cs = cells) => {
     const items = [];
@@ -194,6 +196,9 @@ export function initMelGames() {
   el.meloGo.addEventListener('click', () => startQuiz(meloQuiz()));
   el.updownGo.addEventListener('click', () => startQuiz(updownQuiz()));
   delegate(el.guessLen, '[data-v]', (b) => { games.guess.len = b.dataset.v; persistGames(); renderSide(); });
-  el.guessGo.addEventListener('click', () => startQuiz(guessQuiz()));
+  el.guessGo.addEventListener('click', () => {
+    if (known().mel.length < 3) { toast('Die bekannten Lieder sind noch nicht da. Bitte gleich noch einmal versuchen.', true); return; }
+    startQuiz(guessQuiz());
+  });
   renderSide();
 }

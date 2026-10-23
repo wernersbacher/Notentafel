@@ -71,8 +71,10 @@ export function initAuth(backend) {
     });
   }
 }
-// Adresse der API aus shared/env.js; ohne die Datei (npm start) gibt es kein Backend
-export const loadBackend = () => import('./env.js').then((m) => m.ENV.backend, () => null);
+// shared/env.js ({ backend, tier }); ohne die Datei null
+export const loadEnv = () => import('./env.js').then((m) => m.ENV, () => null);
+// Adresse der API aus shared/env.js; ohne die Datei gibt es kein Backend
+export const loadBackend = () => loadEnv().then((env) => (env ? env.backend : null));
 
 function set(next) {
   auth = next;

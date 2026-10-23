@@ -9,7 +9,7 @@ const uhr = () => '12:34';
 test('Status: Gast und Konto ohne Abgleich haben keinen Text', () => {
   assert.equal(accountStatus({ ...base, user: null }, uhr), null);
   assert.equal(accountStatus({ ...base, sync: false, tier: null }, uhr), null);
-  assert.equal(accountStatus({ ...base, sync: false }, uhr).text, 'Mit diesem Konto werden die Lieder nicht abgeglichen.');
+  assert.equal(accountStatus({ ...base, sync: false }, uhr).text, 'Die Lieder bleiben auf diesem Gerät. Der Abgleich mit dem Konto gehört zu Pro.');
 });
 
 test('Status: abgeglichen, laufend und Fehler', () => {
@@ -32,4 +32,23 @@ test('Status: Lieder über dem Limit oder abgelehnt warnen', () => {
 test('Hinweis unter den Liedern verweist auf oben rechts', () => {
   assert.match(songsHint({ ...base, user: null }), /\(oben rechts\)/);
   assert.match(songsHint(base), /a@b\.de/);
+});
+
+test('Hinweis: Gast und Konto ohne Pro nennen die Grenze aus den limits, nicht fest', () => {
+  const gast = songsHint({ ...base, user: null, sync: false, songsLimit: 3 });
+  assert.match(gast, /^Liegen nur auf diesem Gerät, höchstens 3 Lieder./);
+  assert.match(gast, /Pro-Konto \(oben rechts\)/);
+  assert.match(songsHint({ ...base, user: null, sync: false, songsLimit: 9 }), /höchstens 9 Lieder/);
+  const konto = songsHint({ ...base, sync: false, songsLimit: 3 });
+  assert.match(konto, /höchstens 3 Lieder. Der Abgleich mit dem Konto gehört zu Pro./);
+  assert.doesNotMatch(konto, /Notenblatt/);
+});
+
+test('Hinweis: ohne Grenze keine Zahl, vor dem ersten /me kein Pro-Satz', () => {
+  assert.doesNotMatch(songsHint({ ...base, user: null, sync: false, songsLimit: null }), /höchstens/);
+  assert.doesNotMatch(songsHint({ ...base, sync: false, tier: undefined, songsLimit: 3 }), /Pro/);
+});
+
+test('Hinweis: mit Abgleich liegen die Lieder auch im Konto', () => {
+  assert.match(songsHint({ ...base, songsLimit: 50 }), /^Liegen auch in deinem Konto \(a@b\.de\)/);
 });

@@ -1,11 +1,22 @@
 // Feste Größen und Tabellen der Tafel (Melodie und Rhythmus)
 import { TONE_COLORS as T, SEMI_COLORS as S } from '../core/colors.js';
+import { plan, limitText } from '../core/tier.js';
 
 // Zeilen sind beliebig lang (bis MAX_LEN; so viele Sechzehntel hat eine volle Rhythmus-Zeile)
 export const MAX_LEN = 48, MAX_ROWS = 8, START_ROWS = 3;
 // Höchstens so viele Schläge stehen in einer Zeile (bei den Farbnoten ein Platz je Schlag); dann geht es automatisch in
 // der nächsten weiter. (Ältere Stände mit längeren Zeilen, bis MAX_LEN, bleiben, wie sie sind.)
 export const MAX_PER_ROW = 10;
+// So viele Zeilen darf die Tafel jetzt haben. Die Tafel kennt nur Zeilen, die Stufe Lite aber Takte (limit('measures')):
+// Eine Zeile fasst MAX_PER_ROW Schläge, ein Takt rechnet als 4 Schläge (4/4), also Zeilen = Takte × 4 / MAX_PER_ROW,
+// gerundet, mindestens 1 (Lite: 8 Takte = 32 Schläge = 3 Zeilen, wie die Tafel beim Start). Ohne Grenze (Pro, Dev)
+// gilt MAX_ROWS. Bestehende Stände werden nie abgeschnitten (clean.js prüft gegen MAX_ROWS); gesperrt ist nur das Weiterschreiben.
+export function rowsFor(measures) {
+  return measures == null ? MAX_ROWS : Math.min(MAX_ROWS, Math.max(1, Math.round(measures * 4 / MAX_PER_ROW)));
+}
+export const maxRows = () => rowsFor(plan.limit('measures'));
+// Hinweis, wenn die Tafel voll ist
+export const fullText = () => 'Die Tafel ist voll (' + maxRows() + ' Zeilen).' + (plan.limit('measures') != null ? ' ' + limitText('measures') : '');
 // Rhythmus: so viele Felder (Schläge) hat jede Zeile; die Felder werden so breit, dass sie die Zeile füllen
 export const RHY_PER_ROW = 12;
 

@@ -1,6 +1,6 @@
 // Zeilen: Umbruch, Zeile anhängen und entfernen. Jede Aktion merkt sich vorher den Stand für „Rückgängig“ und endet
 // mit commit().
-import { MAX_ROWS } from './config.js';
+import { maxRows } from './config.js';
 import { newRow, canStepDown, appendPos } from './model.js';
 import { S, curRow, snap } from './state.js';
 import { render, commit } from './redraw.js';
@@ -10,7 +10,7 @@ import { render, commit } from './redraw.js';
 // Steht dahinter nichts und ist die nächste Zeile leer, springt die Markierung nur dorthin.
 export function lineBreak() {
   if (canStepDown(S.rows, S.sel)) { S.sel = { r: S.sel.r + 1, c: 0 }; render(); return; }
-  if (S.rows.length >= MAX_ROWS) return;
+  if (S.rows.length >= maxRows()) return;
   snap();
   const rest = curRow().splice(S.sel.c);
   rest.line = curRow().line;
@@ -19,7 +19,7 @@ export function lineBreak() {
   commit();
 }
 export function addRow() {
-  if (S.rows.length >= MAX_ROWS) return;
+  if (S.rows.length >= maxRows()) return;
   snap();
   S.rows.push(newRow(S.variant === 'rhy'));
   commit();

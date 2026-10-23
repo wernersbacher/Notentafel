@@ -61,3 +61,11 @@ export function uninstallDom() {
   saved.clear();
   current = null;
 }
+
+// Die Daten der bekannten Lieder, wie die App sie vom Server bekommt (pb_hooks/known.js, nach Gruppen geordnet wie in
+// core/known.js). Sie liegen nicht mehr in app/, die Tests lesen sie direkt aus der Server-Datei.
+import { createRequire } from 'node:module';
+import { byGroup } from '../app/js/core/groups.js';
+const known = createRequire(import.meta.url)('../pb_hooks/known.js');
+export const MELODIES = byGroup(known.MELODIES);
+export const SONGS = byGroup(known.SONGS);

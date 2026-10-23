@@ -109,12 +109,23 @@ export function exportAll(now = new Date()) {
   for (const a in syncStores) areas[a] = { format: syncStores[a].format, songs: syncStores[a].rawSongs() };
   return { kind: BACKUP, version: 1, exportedAt: now.toISOString(), areas };
 }
-export function importAll(file) {
+// Wie viele Lieder liegen insgesamt gespeichert (alle Bereiche)? Gegen die Grenze der Stufe (plan.limit('songs')).
+export const songTotal = () => Object.values(syncStores).reduce((n, s) => n + s.songIds().length, 0);
+// room: so viele neue Lieder dürfen noch dazukommen (null = beliebig viele); Lieder, die es schon gibt, werden auch
+// darüber hinaus aktualisiert. info.skipped bekommt die Zahl der Lieder, die wegen room nicht übernommen wurden.
+export const songRoom = (max) => (max == null ? Infinity : Math.max(0, max - songTotal()));
+export function importAll(file, room = null, info = {}) {
   if (!file || file.kind !== BACKUP || !file.areas || typeof file.areas !== 'object') return -1;
   let n = 0;
+  info.skipped = 0;
   for (const a in file.areas) {
     const store = syncStores[a], part = file.areas[a];
-    if (store && part && part.format === store.format && Array.isArray(part.songs)) n += store.importSongs(part.songs);
+    if (store && part && part.format === store.format && Array.isArray(part.songs)) {
+      const r = {};
+      n += store.importSongs(part.songs, room, r);
+      info.skipped += r.skipped;
+      if (room != null) room = Math.max(0, room - r.added);
+    }
   }
   return n;
 }
@@ -184,16 +195,23 @@ export function makeStore(keys, { pack, unpack, area, format }) {
     },
     // Lieder aus einer exportierten Datei (wie rawSongs) dazulegen: wie beim Abgleich je id der neuere Stand,
     // gleiche Namen werden aufgelöst. Liefert, wie viele Lieder dazugekommen oder neuer geworden sind.
-    importSongs(list) {
+    importSongs(list, room = null, info = {}) {
       // Name höchstens 40 Zeichen wie im Eingabefeld (Grenze des Servers), sonst nähme er das Lied nicht an
-      const remote = list.filter((s) => s && validId(s.id) && typeof s.name === 'string')
+      let remote = list.filter((s) => s && validId(s.id) && typeof s.name === 'string')
         .map((s) => ({ id: s.id, name: s.name.slice(0, 40), savedAt: s.savedAt || 0, changedAt: changedAt(s), data: s }));
       const before = new Map(readSongs().map((s) => [s.id, changedAt(s)]));
+      // Mit room (Grenze der Stufe) kommen nur die ersten room neuen Lieder mit; die übrigen bleiben draußen
+      info.added = 0; info.skipped = 0;
+      if (room != null) {
+        let left = room;
+        remote = remote.filter((r) => before.has(r.id) || r.deleted || (left > 0 ? (left--, true) : (info.skipped++, false)));
+      }
       const m = mergeSongs(readSongs(), remote, unpack, clock());
       if (!m || !writeJSON(keys.songs, m.list)) return 0;
       const mine = new Set(remote.map((r) => r.id));
       const fresh = m.list.filter((s) => mine.has(s.id) && before.get(s.id) !== changedAt(s)).map((s) => s.id);
       new Set([...fresh, ...m.touched]).forEach((id) => notify(true, id));
+      info.added = fresh.filter((id) => !before.has(id)).length;
       return fresh.length;
     }
   };

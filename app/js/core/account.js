@@ -5,12 +5,13 @@ import { mountAccount } from '../../../shared/header.js';
 import { timeOf } from './ui.js';
 import { el } from './dom.js';
 import { refreshSongs } from './menu.js';
+import { plan } from './tier.js';
 import { accountStatus, songsHint } from './account-text.js';
 
 function render() {
   const c = cloudInfo();
   el.cloudHint.hidden = !c.available;
-  el.cloudHint.textContent = songsHint(c);
+  el.cloudHint.textContent = songsHint({ ...c, songsLimit: plan.limit('songs') });
 }
 
 export function initAccount() {

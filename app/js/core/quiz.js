@@ -2,6 +2,7 @@
 // endGame, gameFirst) und die Auswahl der Spiele gibt game.js vor; hier liegt nur, wie eine Frage abläuft.
 import { previewTone, stopPlay } from './player.js';
 import { toast } from './ui.js';
+import { plan, limitText } from './tier.js';
 import { el } from './dom.js';
 import { openGame, endGame, gameFirst, gameBtn, GAME_ICONS, gameGated } from './game.js';
 
@@ -128,7 +129,7 @@ export function startQuiz(q) {
     tap: quizTap,
     stop() { stopPlay(); el.gameBar.parentNode.classList.remove('rowplay'); const x = quiz; quiz = null; x.q.stop(); }
   });
-  quiz = { q, cur: null, solved: false };
+  quiz = { q, cur: null, solved: false, asked: 0 };
   gameFirst(quizNext);
 }
 function quizNext() {
@@ -137,6 +138,10 @@ function quizNext() {
   el.gameBar.parentNode.classList.remove('rowplay');
   feedback(null);
   setMain(false);
+  // Lite: eine Runde hat höchstens limit('quizQuestions') Fragen, danach endet sie mit einem Hinweis
+  const max = plan.limit('quizQuestions');
+  if (max != null && quiz.asked >= max) { endGame(); toast(limitText('quizQuestions'), true); return; }
+  quiz.asked++;
   quiz.cur = quiz.q.next();
   const box = quiz.cur && quiz.q.rekey && el.gameBar.querySelector('.qkeys');
   if (box) box.outerHTML = keysHTML(quiz.q);

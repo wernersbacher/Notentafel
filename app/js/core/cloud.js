@@ -183,6 +183,14 @@ function queue(area, id) {
   clearTimeout(timer);
   timer = setTimeout(sync, SYNC_DELAY);
 }
+// Stufe neu holen (auch für plan in tier.js). true: ohne cloud, der Abgleich ist beendet und die Ansicht aktuell.
+async function recheck(my) {
+  try { me = await refresh(); } catch { return false; }
+  if (my !== session || canSync()) return false;
+  error = '';
+  emit();
+  return true;
+}
 // Schickt, was noch aussteht, und arbeitet ein, was vom Server kommt. Läuft schon ein Abgleich, folgt gleich danach ein weiterer.
 export function sync() {
   if (!base || !loggedIn()) return Promise.resolve();
@@ -219,6 +227,10 @@ async function run() {
   try {
     res = await api('/songs/sync', { method: 'POST', body: { since: acc.since || '', changes } });
   } catch (err) {
+    if (my !== session) return;
+    // 403: Pro ist mitten in der Sitzung abgelaufen. Stufe neu holen; ohne cloud geht nichts mehr raus (Lieder bleiben
+    // auf dem Gerät, pending bleibt für ein späteres Pro stehen), und es ist kein Fehler.
+    if (err.status === 403 && (await recheck(my))) return;
     if (my !== session) return;
     if (err.status === 401) authLogout();
     else error = message(err);

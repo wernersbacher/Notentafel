@@ -6,6 +6,8 @@ import { settings, persistSettings } from './settings.js';
 import { clearPractice, playing, onShow } from './shell.js';
 import { el } from './dom.js';
 import { PLAY, CLOSE, EAR } from './icons.js';
+import { toast } from './ui.js';
+import { plan, onTier, openGames, limitText } from './tier.js';
 
 let game = null; // { kind, tap, stop }
 
@@ -109,9 +111,20 @@ export function fillGameFrames(sectionId, frames) {
 // dann sein Abschnitt (.game mit data-game) und die Einstellungen, die es betreffen (data-for: Spiele, durch Leerzeichen
 // getrennt). Der Rahmen .play trägt das Spiel in data-game (für das CSS). Die Wahl bleibt gemerkt (settings.game).
 // Ein Tipp auf eine Kachel beendet das laufende Spiel und macht die Übungstafel leer.
+// Lite: Nur die ersten limit('games') Kacheln eines Bereichs sind offen (Reihenfolge wie im HTML), die übrigen gesperrt
+// (aria-disabled statt disabled, damit der Tipp noch ankommt und den Hinweis zeigen kann). „Lied erraten“ regelt die
+// Funktion 'known' selbst: Sie zählt nicht mit, ist aber ohne Pro gesperrt (ohne die bekannten Lieder gibt es nichts zu erraten).
+const EXEMPT = ['guess'];
 function showPick(box) {
   const play = box.closest('.play'), ids = [...box.querySelectorAll('[data-game]')].map((b) => b.dataset.game);
-  const want = settings.game[box.dataset.area], g = ids.includes(want) ? want : ids[0];
+  const open = openGames(ids, plan.limit('games'), EXEMPT);
+  if (!plan.has('known')) open.delete('guess');
+  box.querySelectorAll('[data-game]').forEach((b) => {
+    const locked = !open.has(b.dataset.game);
+    b.classList.toggle('locked', locked);
+    if (locked) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+  });
+  const want = settings.game[box.dataset.area], g = open.has(want) ? want : ids.find((id) => open.has(id));
   play.dataset.game = g;
   box.querySelectorAll('[data-game]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.game === g ? 'true' : 'false'));
   play.querySelectorAll('.game[data-game]').forEach((x) => { x.hidden = x.dataset.game !== g; });
@@ -138,6 +151,7 @@ export function initGamePicks() {
     box.addEventListener('click', (e) => {
       const b = e.target.closest('[data-game]');
       if (!b) return;
+      if (b.getAttribute('aria-disabled') === 'true') { toast(limitText('games'), true); return; }
       settings.game[box.dataset.area] = b.dataset.game;
       persistSettings();
       endGame();
@@ -146,6 +160,7 @@ export function initGamePicks() {
       showIntro();
     });
   });
+  onTier(() => document.querySelectorAll('.gamepick').forEach(showPick)); // Anmelden oder Abmelden ändert die offenen Spiele
   onShow(showIntro); // beim Wechsel des Bereichs oder zwischen schreiben und üben
   showIntro();
 }

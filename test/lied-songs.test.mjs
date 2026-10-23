@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SONGS, songOf } from '../app/js/lied/songs.js';
+import { songOf } from '../app/js/lied/songs.js';
+import { SONGS } from './helpers.mjs';
 import { cleanSong, ticks, measureTicks, barsAfter, hasLyrics } from '../app/js/lied/model.js';
 
 const evOf = (notes) => songOf({ name: 'x', meter: '4/4', notes }).song.ev;

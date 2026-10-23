@@ -57,12 +57,12 @@
 .tools.three .btn { min-height: 52px; }
 .btn .volta { font: 800 1rem/1 var(--font-ui); letter-spacing: .02em; }
 .btn.more { width: 100%; min-height: 34px; margin: 5px 0; font: 800 .78rem var(--font-ui); color: var(--muted); }
-.tools.shows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tools.shows { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
 .btn.tomel { width: 100%; min-height: 46px; gap: .5rem; font: 800 .92rem var(--font-ui); }
 .btn.tomel .dots, .shows .dots { display: inline-flex; gap: 2px; }
 .btn.tomel .dots i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); }
 /* Die Anzeige-Knöpfe sind so hoch wie die übrigen Werkzeugknöpfe in der Leiste */
-.shows .btn { min-height: 58px; font: 800 .85rem var(--font-ui); }
+.shows .btn { flex-direction: column; gap: .2rem; min-height: 52px; padding: .25rem 2px; font: 800 .74rem/1.1 var(--font-ui); hyphens: manual; }
 .shows .dots i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); }
 .btn .acc { font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", serif; font-weight: 400; }
 #liedRests .sym, #rests .sym, #restsMel .sym { height: 2.2rem; }

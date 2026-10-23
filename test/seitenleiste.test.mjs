@@ -115,3 +115,14 @@ test('Umwandeln: das Feld klappt auf und schließt sich nach einem Tipp auf eine
   assert.equal(el.convertPop.hidden, true);
   assert.equal(el.btnConvert.getAttribute('aria-expanded'), 'false');
 });
+
+test('Notenblatt: die Anzeige-Schalter stehen als eigene Reihe über den Blöcken, nicht im Block „Takt & Tonart“', () => {
+  const row = document.querySelector('#panelLied > .showrow');
+  assert.ok(row, 'Reihe Anzeige im Panel');
+  for (const id of ['liedShowNames', 'liedShowColors', 'liedShowCounts', 'liedShowLyrics']) {
+    const b = document.getElementById(id);
+    assert.ok(row.contains(b), id + ' gehört in die Reihe');
+    assert.ok(!block('lied-setup').contains(b), id + ' nicht mehr im Block „Takt & Tonart“');
+  }
+  assert.ok(row.compareDocumentPosition(block('lied-setup')) & Node.DOCUMENT_POSITION_FOLLOWING, 'die Reihe steht vor den Blöcken');
+});

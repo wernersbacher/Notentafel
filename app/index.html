@@ -526,9 +526,20 @@
     </div>
 
     <div class="panel" id="panelLied" role="tabpanel" aria-labelledby="tab-lied" hidden>
+      <!-- Anzeige: Schalter, die man beim Schreiben und Zeigen laufend braucht, darum nicht im Block „Takt & Tonart“ -->
+      <div class="group showrow" role="group" aria-label="Anzeige unter den Noten">
+        <h2 class="glabel">Anzeige <span>unter den Noten</span></h2>
+        <div class="tools shows">
+          <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Noten&shy;namen</button>
+          <button type="button" class="btn" id="liedShowColors" aria-pressed="false" title="Notenköpfe in den Farben der Töne"><span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Farben</button>
+          <button type="button" class="btn" id="liedShowCounts" aria-pressed="false" title="Zählzeiten nach der Taktart unter den Noten">Zähl&shy;zeiten</button>
+          <button type="button" class="btn" id="liedShowLyrics" aria-pressed="true" title="Liedtext unter den Noten">Lied&shy;text</button>
+        </div>
+      </div>
+
       <section class="group block" id="liedSetup" data-block="lied-setup">
         <h2 class="btitle"><button type="button" class="bhead" aria-expanded="false"><span class="bname">Takt &amp; Tonart</span><span class="bhint">einmal am Anfang</span><span class="bsum"></span><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg></button><button type="button" class="bhelp" aria-expanded="false" aria-label="Erklärung: Takt &amp; Tonart">?</button></h2>
-        <p class="bhelptext ghint" hidden>Taktart, Auftakt und Tonart des Liedes. Die Pfeile ♭ ◀ ▶ ♯ ändern die Vorzeichen, ▼ ▲ transponieren das ganze Lied. Unter „Anzeige“ lassen sich Notennamen, Farben, Zählzeiten und Liedtext ein- und ausblenden.</p>
+        <p class="bhelptext ghint" hidden>Taktart, Auftakt und Tonart des Liedes. Die Pfeile ♭ ◀ ▶ ♯ ändern die Vorzeichen, ▼ ▲ transponieren das ganze Lied. Die Schalter „Anzeige“ darüber blenden Notennamen, Farben, Zählzeiten und Liedtext ein und aus.</p>
         <h2 class="glabel">Taktart</h2>
         <div class="meterrow" id="liedMeters"></div>
         <h2 class="glabel">Taktstriche <span>von Hand: unter „Striche &amp; Bogen“</span></h2>
@@ -545,13 +556,6 @@
           <button type="button" class="btn" id="liedKeyUp" title="Ein ♯ mehr bzw. ein ♭ weniger">▶ <span class="acc">♯</span></button>
           <button type="button" class="btn trans" id="btnTransDown" title="Das ganze Lied einen Halbton tiefer (zweimal: ein ganzer Ton)" aria-label="Ganzes Lied einen Halbton tiefer"><span class="big">▼ ½</span><span class="small">tiefer</span></button>
           <button type="button" class="btn trans" id="btnTransUp" title="Das ganze Lied einen Halbton höher (zweimal: ein ganzer Ton)" aria-label="Ganzes Lied einen Halbton höher"><span class="big">▲ ½</span><span class="small">höher</span></button>
-        </div>
-        <h2 class="glabel">Anzeige</h2>
-        <div class="tools shows">
-          <button type="button" class="btn" id="liedShowNames" aria-pressed="false" title="Notennamen unter den Noten">Notennamen</button>
-          <button type="button" class="btn" id="liedShowColors" aria-pressed="false" title="Notenköpfe in den Farben der Töne"><span class="dots" aria-hidden="true"><i style="background:#e5383b"></i><i style="background:#f7d11e"></i><i style="background:#1e8449"></i></span>Farben</button>
-          <button type="button" class="btn" id="liedShowCounts" aria-pressed="false" title="Zählzeiten nach der Taktart unter den Noten">Zählzeiten</button>
-          <button type="button" class="btn" id="liedShowLyrics" aria-pressed="true" title="Liedtext unter den Noten">Liedtext</button>
         </div>
       </section>
 

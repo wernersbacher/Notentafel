@@ -129,7 +129,7 @@
 }
 .part[aria-pressed="true"] { background: var(--fg); color: var(--board); }
 /* Beim Üben zeigt die Leiste nur die Spiele: ohne Werkzeuge oben, ohne Blöcke zum Schreiben und ohne Knöpfe unten */
-.side[data-part="play"] .tools.toprow, .side[data-part="play"] .actions, .side[data-part="play"] .panel > .block { display: none; }
+.side[data-part="play"] .tools.toprow, .side[data-part="play"] .actions, .side[data-part="play"] .panel > .block, .side[data-part="play"] .panel > .showrow { display: none; }
 .side:not([data-part="play"]) .panel > .play { display: none; }
 .panel .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
 .play .game { gap: 7px; margin-bottom: 4px; }

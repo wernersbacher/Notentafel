@@ -1,5 +1,5 @@
 // Anmeldung für alle Seiten der Musiktafel (Landing, Konto, App): Anfragen an die API (PocketBase, ohne SDK),
-// Anmelden, Registrieren, Abmelden, Konto löschen, Passwort zurücksetzen, E-Mail bestätigen, Profil und Sicherheit. Das Token liegt im localStorage und gilt damit auf jeder Seite
+// Anmelden, Registrieren, Abmelden, Daten herunterladen, Konto löschen, Passwort zurücksetzen, E-Mail bestätigen, Profil und Sicherheit. Das Token liegt im localStorage und gilt damit auf jeder Seite
 // derselben Domain. Der Abgleich der Lieder ist Sache der App (app/js/core/cloud.js), er hört auf onAuthChange.
 // Diese Datei hängt von nichts unter app/ ab.
 const KEY = 'notentafel.auth.v1';
@@ -168,10 +168,30 @@ export function logout() {
   set(null);
   notify();
 }
-// Löscht das Konto samt den Liedern darin auf dem Server. Die Lieder auf diesem Gerät bleiben.
-export async function deleteAccount() {
-  try { await api('/collections/users/records/' + auth.user.id, { method: 'DELETE' }); } catch (err) { return message(err); }
+// Löscht das Konto samt den Liedern darin auf dem Server (endgültig, auch den Papierkorb), das Passwort wird noch
+// einmal geprüft. Die Lieder auf diesem Gerät bleiben. Liefert '' oder eine Meldung.
+export async function deleteAccount(password) {
+  try { await api('/me/delete', { method: 'POST', body: { password } }); } catch (err) { return message(err); }
   logout();
+  return '';
+}
+// Lädt alle Daten des Kontos als Datei herunter (GET /me/export: Profil, Lieder, Papierkorb). Mit dem Token geholt
+// und über einen Link im Dokument gespeichert, weil ein einfacher Link keinen Header mitschicken kann.
+// Liefert '' oder eine Meldung; der Dateiname kommt vom Server.
+export async function downloadExport() {
+  try {
+    const res = await fetch(base + '/me/export', { headers: { Authorization: auth.token } });
+    if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
+    const name = /filename="?([^";]+)"?/.exec(res.headers.get('Content-Disposition') || '');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name ? name[1] : 'musiktafel-konto.json';
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (err) { return message(err); }
   return '';
 }
 /* ---------- Profil und Sicherheit ---------- */

@@ -1,15 +1,16 @@
-// Seite /account/: Reiter Profil und Sicherheit, ansteuerbar per Hash (#profil, #sicherheit). Ohne Anmeldung
+// Seite /account/: Reiter Profil, Sicherheit und Daten, ansteuerbar per Hash (#profil, #sicherheit, #daten). Ohne Anmeldung
 // geht es auf /login/?next=/account/. Breit stehen die Reiter links, schmal als Umschalter oben (account.css).
 import { mountHeader } from '/shared/header.js';
 import { node, button, anchor, note, field, form } from '/formular.js';
 import { avatar } from '/shared/avatar.js';
 import {
-  hasBackend, currentUser, onAuthChange, updateProfile, changePassword, requestEmailChange, logoutAll
+  hasBackend, currentUser, onAuthChange, updateProfile, changePassword, requestEmailChange, logoutAll, downloadExport, deleteAccount
 } from '/shared/auth.js';
 
 const root = document.getElementById('inhalt');
 const LOGIN = '/login/?next=' + encodeURIComponent('/account/');
 let leaving = LOGIN; // wohin es nach dem Abmelden geht
+let gone = false; // Konto gerade gelöscht: statt der Anmeldung die Abschiedsseite zeigen
 
 /* ---------- Reiter ---------- */
 function tabProfil() {
@@ -88,11 +89,79 @@ function abschnittAbmelden() {
 }
 const tabSicherheit = () => [abschnittPasswort(), abschnittEmail(), abschnittAbmelden()];
 
-// Später kommen hier Daten (5z1.8) und Abo (5z1.9) dazu: Eintrag mit id, Text und Aufbau genügt
+/* ---------- Daten ---------- */
+function abschnittHerunterladen() {
+  const s = node('section');
+  const msg = node('div');
+  const los = button('Daten herunterladen', 'knopf', async () => {
+    los.disabled = true;
+    msg.replaceChildren();
+    const err = await downloadExport();
+    los.disabled = false;
+    msg.replaceChildren(err ? note(err, 'fehler') : note('Die Datei wurde heruntergeladen.', 'ok'));
+  });
+  s.append(node('h2', '', 'Daten herunterladen'),
+    node('p', 'klein', 'Eine Datei mit deinem Profil und allen Liedern in deinem Konto, auch denen im Papierkorb. ' +
+      'Die Lieder lassen sich in der Musiktafel unter Lieder wieder importieren; was im Papierkorb lag, kommt dabei nicht zurück.'), msg, los);
+  return s;
+}
+
+function abschnittLoeschen() {
+  const s = node('section');
+  const msg = node('div');
+  const pw = field('Passwort', { type: 'password', autocomplete: 'current-password', name: 'password', show: true });
+  const reihe = node('div', 'reihe');
+  const erst = button('Konto löschen', 'knopf gefahr', () => {
+    msg.replaceChildren();
+    if (!pw.input.value) { msg.replaceChildren(note('Bitte gib zur Sicherheit dein Passwort ein.', 'fehler')); pw.input.focus(); return; }
+    // zweiter Tipp zur Bestätigung, damit es nicht aus Versehen passiert
+    const ja = button('Ja, Konto endgültig löschen', 'knopf gefahr', async () => {
+      ja.disabled = true;
+      gone = true;
+      const err = await deleteAccount(pw.input.value); // bei Erfolg meldet auth.js ab und die Seite zeigt die Abschiedsseite
+      if (err) { gone = false; ja.disabled = false; reihe.replaceChildren(erst); msg.replaceChildren(note(err, 'fehler')); }
+    });
+    reihe.replaceChildren(ja, button('Abbrechen', 'knopf zweit', () => reihe.replaceChildren(erst)));
+  });
+  reihe.append(erst);
+  const liste = node('ul', 'klein');
+  liste.append(node('li', '', 'Dein Konto und deine E-Mail-Adresse.'),
+    node('li', '', 'Alle Lieder in deinem Konto, auch die im Papierkorb.'),
+    node('li', '', 'Das geschieht sofort und endgültig, wir können nichts wiederherstellen.'));
+  const bleibt = node('p', 'klein', 'Was bleibt: die Lieder auf diesem Gerät, in der Musiktafel im Browser gespeichert.');
+  const erstDaten = button('Erst Daten herunterladen', 'textknopf', async () => {
+    erstDaten.disabled = true;
+    const err = await downloadExport();
+    erstDaten.disabled = false;
+    msg.replaceChildren(err ? note(err, 'fehler') : note('Die Datei wurde heruntergeladen.', 'ok'));
+  });
+  const davor = node('p', 'zeile');
+  davor.append(erstDaten);
+  // Als Formular, damit der Passwort-Manager das Feld einordnet und Enter den ersten Tipp auslöst
+  const f = node('form');
+  f.addEventListener('submit', (e) => { e.preventDefault(); if (reihe.firstChild === erst) erst.click(); });
+  f.append(msg, pw.wrap, reihe);
+  s.append(node('h2', '', 'Konto löschen'), node('p', 'klein', 'Das verschwindet:'), liste, bleibt, davor, f);
+  return s;
+}
+const tabDaten = () => [abschnittHerunterladen(), abschnittLoeschen()];
+
+// Später kommt hier noch das Abo dazu (5z1.9): Eintrag mit id, Text und Aufbau genügt
 const TABS = [
   { id: 'profil', text: 'Profil', build: tabProfil },
-  { id: 'sicherheit', text: 'Sicherheit', build: tabSicherheit }
+  { id: 'sicherheit', text: 'Sicherheit', build: tabSicherheit },
+  { id: 'daten', text: 'Daten', build: tabDaten }
 ];
+
+// Nach dem Löschen: das Konto ist weg und man ist abgemeldet
+function abschied() {
+  const reihe = node('div', 'reihe');
+  reihe.append(anchor('/', 'Zur Startseite', 'knopf zweit'), anchor('/app/', 'Weiter zur Musiktafel', 'knopf'));
+  const k = node('div', 'konto-blatt');
+  k.append(node('h2', '', 'Dein Konto ist gelöscht'),
+    node('p', '', 'Dein Konto und alle Lieder darin sind vom Server entfernt. Die Lieder auf diesem Gerät sind noch da.'), reihe);
+  root.replaceChildren(node('h1', '', 'Mein Konto'), k);
+}
 
 /* ---------- Seite ---------- */
 function render() {
@@ -121,7 +190,7 @@ if (!hasBackend()) {
   location.replace(LOGIN);
 } else {
   render();
-  window.addEventListener('hashchange', render);
+  window.addEventListener('hashchange', () => { if (!gone) render(); });
   // Abmelden (hier, in der Kopfleiste, in einem anderen Tab oder durch ein abgelaufenes Token) führt zur Anmeldung
-  onAuthChange((user) => { if (!user) location.replace(leaving); });
+  onAuthChange((user) => { if (!user) { if (gone) abschied(); else location.replace(leaving); } });
 }

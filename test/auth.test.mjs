@@ -10,7 +10,7 @@ globalThis.window = { addEventListener: (type, f) => { windowEvents[type] = f; }
 const A = await import('../shared/auth.js');
 
 // Kleiner Server: ein Konto, Anmeldung und /me
-let calls, meFails;
+let calls, meFails, exportFails;
 globalThis.fetch = async (url, opts = {}) => {
   calls.push({ url, auth: opts.headers && opts.headers.Authorization });
   const reply = (status, data) => ({ ok: status < 300, status, json: async () => data });
@@ -51,6 +51,16 @@ globalThis.fetch = async (url, opts = {}) => {
     if (b.token !== 'gut') return reply(400, { message: 'x', data: { token: { code: 'validation_invalid_token' } } });
     return b.password === 'geheim123' ? reply(204, null) : reply(400, { message: 'x', data: { password: { code: 'validation_invalid_password' } } });
   }
+  if (url === '/api/me/delete') {
+    if (!opts.headers.Authorization) return reply(401, { message: 'x' });
+    return JSON.parse(opts.body).password === 'geheim123' ? reply(204, null)
+      : reply(400, { message: 'Das Passwort stimmt nicht.', data: { password: { code: 'validation_invalid_password', message: 'x' } } });
+  }
+  if (url === '/api/me/export') {
+    if (!opts.headers.Authorization) return reply(401, { message: 'x' });
+    if (exportFails) return reply(500, { message: 'Kaputt' });
+    return { ok: true, status: 200, headers: { get: (k) => (k === 'Content-Disposition' ? 'attachment; filename="musiktafel-konto-2026-10-23.json"' : null) }, blob: async () => 'BLOB' };
+  }
   if (url === '/api/me/logout-all') return opts.headers.Authorization ? reply(204, null) : reply(401, { message: 'x' });
   return reply(404, { message: 'Not found' });
 };
@@ -58,6 +68,7 @@ globalThis.fetch = async (url, opts = {}) => {
 beforeEach(() => {
   calls = [];
   meFails = false;
+  exportFails = false;
   mem = fakeStorage();
   globalThis.localStorage = mem;
   A.initAuth('/api');
@@ -215,4 +226,46 @@ test('logoutAll: Server zuerst, dann lokal abmelden; bei Fehler bleibt die Anmel
   assert.equal(calls.at(-1).url, '/api/me/logout-all');
   assert.equal(A.currentUser(), null);
   assert.equal(mem.getItem('notentafel.auth.v1'), null);
+});
+
+test('deleteAccount: falsches Passwort lässt die Anmeldung stehen, richtiges löscht und meldet ab', async () => {
+  await A.login('a@b.de', 'geheim123');
+  assert.equal(await A.deleteAccount('falsch'), 'Das Passwort stimmt nicht.');
+  assert.notEqual(A.currentUser(), null);
+  assert.equal(await A.deleteAccount(''), 'Das Passwort stimmt nicht.');
+  calls = [];
+  assert.equal(await A.deleteAccount('geheim123'), '');
+  assert.deepEqual(calls.map((c) => c.url), ['/api/me/delete']);
+  assert.equal(calls[0].auth, 'tok1');
+  assert.equal(A.currentUser(), null);
+  assert.equal(mem.getItem('notentafel.auth.v1'), null);
+});
+
+// Browser-Teile des Downloads: ein Link im Dokument, der angeklickt wird
+function fakeDownload() {
+  const saved = [];
+  globalThis.document = {
+    createElement: () => ({ click() { saved.push({ href: this.href, name: this.download }); }, remove() {} }),
+    body: { append() {} }
+  };
+  URL.createObjectURL = (b) => 'blob:' + b;
+  URL.revokeObjectURL = () => {};
+  return saved;
+}
+
+test('downloadExport: holt mit Token, speichert unter dem Namen vom Server', async () => {
+  const saved = fakeDownload();
+  await A.login('a@b.de', 'geheim123');
+  calls = [];
+  assert.equal(await A.downloadExport(), '');
+  assert.deepEqual(calls, [{ url: '/api/me/export', auth: 'tok1' }]);
+  assert.deepEqual(saved, [{ href: 'blob:BLOB', name: 'musiktafel-konto-2026-10-23.json' }]);
+});
+
+test('downloadExport: Serverfehler gibt eine Meldung und speichert nichts', async () => {
+  const saved = fakeDownload();
+  await A.login('a@b.de', 'geheim123');
+  exportFails = true;
+  assert.equal(await A.downloadExport(), 'Das hat nicht geklappt (500).');
+  assert.deepEqual(saved, []);
 });

@@ -26,7 +26,7 @@ const A = await import('../shared/auth.js');
 const login = async (email, pass) => { const err = await A.login(email, pass); await C.ready(); return err; };
 const register = async (email, pass) => { const err = await A.register(email, pass); await C.ready(); return err; };
 const logout = A.logout;
-const deleteAccount = async () => { const err = await A.deleteAccount(); await C.ready(); return err; };
+const deleteAccount = async (pass = 'geheim123') => { const err = await A.deleteAccount(pass); await C.ready(); return err; };
 // Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
 const realTimeout = setTimeout;
 globalThis.setTimeout = (f, ms, ...a) => (ms === C.SYNC_DELAY ? 0 : realTimeout(f, ms, ...a));
@@ -68,9 +68,11 @@ function handle(method, path, auth, body) {
     if (server.meFails) return [500, { message: 'Kaputt' }]; // Anmeldung gelingt, das Konto ist aber nicht erreichbar
     return [200, { tier: 'pro', features: ['lied', 'cloud'], limits: {} }];
   }
-  if (method === 'DELETE' && path.startsWith('/collections/users/records/')) {
-    const id = path.split('/').pop();
-    for (const [k, u] of server.users) if (u.id === id) server.users.delete(k);
+  if (method === 'POST' && path === '/me/delete') {
+    const id = uid;
+    const u = [...server.users.values()].find((x) => x.id === id);
+    if (body.password !== u.password) return [400, { message: 'x', data: { password: { code: 'validation_invalid_password' } } }];
+    for (const [k, v] of server.users) if (v.id === id) server.users.delete(k);
     server.songs = server.songs.filter((s) => s.user !== id);
     for (const [t, u] of server.tokens) if (u === id) server.tokens.delete(t);
     return [204, null];

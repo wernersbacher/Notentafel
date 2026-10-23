@@ -13,12 +13,17 @@ const raw = require('../pb_hooks/known.js');
 /* ---------- Endpunkt GET /api/known (pb_hooks/known.pb.js) ---------- */
 // Die Datei läuft wie in PocketBase: routerAdd, require, __hooks und ForbiddenError gibt es als Globals. Hier ein Ersatz,
 // der den Handler einsammelt; so prüft der Test den echten Code samt Feature-Prüfung statt eines Nachbaus.
-function endpoint() {
+// lite: Lite freigegeben (LITE_AKTIV true), dann zählt wieder die echte Stufe statt Pro für alle
+function endpoint(lite = false) {
   let handler = null;
   class ForbiddenError extends Error {}
   const ctx = vm.createContext({
     routerAdd: (method, route, h) => { assert.equal(method, 'GET'); assert.equal(route, '/api/known'); handler = h; },
-    require, ForbiddenError, __hooks: path.join(ROOT, 'pb_hooks')
+    require: (p) => {
+      const m = require(p);
+      return lite && p.endsWith('tiers.js') ? { ...m, effectiveTier: m.tierOf } : m;
+    },
+    ForbiddenError, __hooks: path.join(ROOT, 'pb_hooks')
   });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'pb_hooks/known.pb.js'), 'utf8'), ctx);
   return { handler, ForbiddenError };
@@ -53,8 +58,13 @@ test('GET /api/known: Pro bekommt die Lieder, privat und ohne Cache', () => {
   assert.match(headers['Cache-Control'], /no-store/);
 });
 
-test('GET /api/known: Gast, Konto ohne Pro und abgelaufenes Pro bekommen 403 und keine Daten', () => {
-  const { handler, ForbiddenError } = endpoint();
+test('GET /api/known: solange Lite nicht freigegeben ist, bekommt jeder die Lieder, auch ohne Anmeldung', () => {
+  const { handler } = endpoint();
+  for (const auth of [null, account(''), account('2001-01-01 00:00:00.000Z')]) assert.equal(call(handler, auth).out.status, 200);
+});
+
+test('GET /api/known: mit freigegebenem Lite bekommen Gast, Konto ohne Pro und abgelaufenes Pro 403 und keine Daten', () => {
+  const { handler, ForbiddenError } = endpoint(true);
   for (const auth of [null, account(''), account('2001-01-01 00:00:00.000Z')]) {
     const sent = [];
     assert.throws(() => handler({ auth, json: (...a) => sent.push(a), response: { header: () => ({ set() {} }) } }), ForbiddenError);

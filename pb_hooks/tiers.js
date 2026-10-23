@@ -34,4 +34,13 @@ function tierOf(auth) {
   return until && new Date(until.replace(' ', 'T')) > new Date() ? 'pro' : 'account';
 }
 
-module.exports = { TIERS, BETA_END, TRIAL_DAYS, newUserProUntil, tierOf };
+// Lite gibt es vorerst nur in der Entwicklung (npm run dev:lite, ?tier=…). In der Produktion gilt für alle Pro, auch ohne Anmeldung,
+// solange LITE_AKTIV false ist. Auf true setzen, wenn Lite freigegeben wird: dann zählt wieder tierOf.
+const LITE_AKTIV = false;
+
+// Stufe, nach der Funktionen und Grenzen vergeben werden (die Anzeige im Konto liest weiter pro_until)
+function effectiveTier(auth) {
+  return LITE_AKTIV ? tierOf(auth) : 'pro';
+}
+
+module.exports = { TIERS, BETA_END, TRIAL_DAYS, LITE_AKTIV, newUserProUntil, tierOf, effectiveTier };

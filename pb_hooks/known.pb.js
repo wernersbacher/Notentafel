@@ -5,8 +5,8 @@
 // ausgeliefert werden. Die App macht daraus Zeilen und Noten (melodyRows, songOf), sortiert nach Gruppen und merkt sich die
 // Antwort, bis sich die Stufe ändert. Mit Cache-Control: private, no-store landet nichts in einem geteilten Cache.
 routerAdd('GET', '/api/known', (e) => {
-  const { TIERS, tierOf } = require(`${__hooks}/tiers.js`);
-  if (!TIERS[tierOf(e.auth)].features.includes('known')) throw new ForbiddenError('Bekannte Lieder gibt es mit Pro.');
+  const { TIERS, effectiveTier } = require(`${__hooks}/tiers.js`);
+  if (!TIERS[effectiveTier(e.auth)].features.includes('known')) throw new ForbiddenError('Bekannte Lieder gibt es mit Pro.');
   const { MELODIES, SONGS } = require(`${__hooks}/known.js`);
   e.response.header().set('Cache-Control', 'private, no-store');
   return e.json(200, { mel: MELODIES, lied: SONGS });

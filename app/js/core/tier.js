@@ -17,7 +17,7 @@ let tier = 'guest';
 let backend = false; // true: Stufe, Funktionen und Grenzen kommen vom Server
 const tierSignal = makeSignal();
 
-const info = () => (backend && currentMe()) || TIERS[tier];
+const info = () => (backend && (currentMe() || guestMe)) || TIERS[tier];
 
 export const plan = {
   get tier() { return tier; },
@@ -39,13 +39,15 @@ function setTier(next) {
   tierSignal.emit(tier);
 }
 
-// Mit Backend: Stufe der Anmeldung holen; ohne Anmeldung oder bei einem Fehler gilt guest
+// Mit Backend: Stufe vom Server holen, auch ohne Anmeldung (solange Lite nicht freigegeben ist, gilt dort Pro für alle,
+// siehe LITE_AKTIV in pb_hooks/tiers.js). Bei einem Fehler gilt guest.
+let guestMe = null; // Antwort von /me ohne Anmeldung
 async function fromServer() {
-  if (!currentUser()) return setTier('guest');
   try {
-    const me = currentMe() || (await api('/me'));
+    guestMe = currentUser() ? null : await api('/me');
+    const me = currentUser() ? currentMe() || (await api('/me')) : guestMe;
     setTier(me.tier);
-  } catch { setTier('guest'); }
+  } catch { guestMe = null; setTier('guest'); }
 }
 
 // Umgebung lesen und Stufe bestimmen; vor dem Anmelden der Bereiche aufrufen.

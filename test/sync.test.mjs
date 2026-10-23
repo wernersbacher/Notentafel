@@ -146,3 +146,10 @@ test('newUserProUntil: vor dem Beta-Ende gilt das Beta-Ende, danach eine Woche z
   assert.equal(newUserProUntil(new Date('2027-06-01T00:00:00Z')), BETA_END);
   assert.equal(newUserProUntil(new Date('2027-06-25T00:00:00Z')), '2027-07-02 00:00:00.000Z');
 });
+
+test('effectiveTier: solange Lite nicht freigegeben ist, gilt für alle Pro, auch ohne Anmeldung', () => {
+  const { LITE_AKTIV, effectiveTier, tierOf } = require('../pb_hooks/tiers.js');
+  assert.equal(LITE_AKTIV, false);
+  assert.equal(effectiveTier(null), 'pro');
+  assert.equal(tierOf(null), 'guest'); // die Anzeige im Konto bleibt davon unberührt
+});

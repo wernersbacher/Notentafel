@@ -18,10 +18,10 @@
 //   nowMs     Uhrzeit des Servers, danach stellt die App ihre Zeitstempel (Geräte mit falsch gehender Uhr)
 // Was angenommen wird, entscheidet planSync (sync.js); hier bleibt nur Body lesen, einspielen und antworten.
 routerAdd('POST', '/api/songs/sync', (e) => {
-  const { TIERS, tierOf } = require(`${__hooks}/tiers.js`);
+  const { TIERS, effectiveTier } = require(`${__hooks}/tiers.js`);
   const { MAX_CHANGES, planSync } = require(`${__hooks}/sync.js`);
   const auth = e.auth;
-  const tier = TIERS[tierOf(auth)];
+  const tier = TIERS[effectiveTier(auth)];
   if (!tier.features.includes('cloud')) throw new ForbiddenError('Abgleich nur mit Pro.');
   const limit = tier.limits.songs;
   const body = e.requestInfo().body || {};

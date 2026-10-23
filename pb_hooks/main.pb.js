@@ -3,10 +3,10 @@
 // GET /api/me: Stufe, Funktionen und Grenzen des Aufrufers, dazu beta_end (Ende der Beta, für die Anzeige im Konto). Ohne gültigen Token: guest.
 routerAdd('GET', '/api/me', (e) => {
   // Jeder Handler läuft in eigenem Kontext, gemeinsamer Code wird darum hier geladen
-  const { TIERS, BETA_END, tierOf } = require(`${__hooks}/tiers.js`);
+  const { TIERS, BETA_END, tierOf, effectiveTier } = require(`${__hooks}/tiers.js`);
   const auth = e.auth;
-  const tier = tierOf(auth);
-  const user = tier === 'guest' ? null
+  const tier = effectiveTier(auth);
+  const user = tierOf(auth) === 'guest' ? null
     : { id: auth.id, email: auth.email(), name: auth.getString('name'), pro_until: auth.getString('pro_until') || null };
   return e.json(200, { tier, features: TIERS[tier].features, limits: TIERS[tier].limits, user, beta_end: BETA_END });
 });

@@ -60,6 +60,17 @@ test('mit Backend gilt ?tier nicht; ohne Anmeldung ist es guest', async () => {
   assert.equal(plan.has('cloud'), false);
 });
 
+test('mit Backend fragt auch der Gast den Server: solange Lite nicht freigegeben ist, antwortet er mit Pro', async () => {
+  globalThis.localStorage = fakeStorage();
+  const pro = TIERS.pro;
+  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ tier: 'pro', features: pro.features, limits: pro.limits, user: null }) });
+  await loadPlan({ env: { backend: '/api', tier: null }, search: '' });
+  assert.equal(plan.tier, 'pro');
+  assert.equal(plan.has('known'), true);
+  assert.equal(plan.limit('measures'), null);
+  delete globalThis.fetch;
+});
+
 test('onTier meldet Wechsel, nicht Gleichstand', async () => {
   const seen = [];
   const off = onTier((t) => seen.push(t));

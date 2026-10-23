@@ -168,14 +168,15 @@ a.btn { text-decoration: none; }
   .boardwrap:has(.gameintro:not([hidden])) .playfab { display: none; } /* die Startseite hat ihren eigenen Knopf */
   .gintro { min-width: 0; }
   .topshow { white-space: nowrap; font-size: .85rem; padding: 6px 18px 8px; }
-  .phone .topshow span { font-size: 0; }
-  .phone .topshow span::after { content: "Menü, Lieder, Bereiche"; font-size: .85rem; }
+  .topshow span { font-size: 0; }
+  .topshow span::after { content: "Menü, Lieder, Bereiche"; font-size: .85rem; }
   .gameintro .gintro { gap: 12px; }
   .gameintro .gintro h2 { font-size: 1.5rem; }
   .gameintro .gintro p { font-size: 1rem; line-height: 1.4; }
   .gameintro .gintro .gbtn.big { margin-top: 0; min-width: 0; width: 100%; height: 60px; font-size: 1.2rem; white-space: nowrap; }
-  /* Nur ansehen und abspielen: nichts zum Schreiben (die Leiste bleibt eingeklappt, Speichern entfällt) */
-  .phone .fab.sidetoggle, .phone .savewrap { display: none; }
+  /* Nur ansehen und abspielen: nichts zum Schreiben (die Leiste bleibt eingeklappt, Speichern entfällt). Rein per CSS,
+     damit schon der erste Render stimmt und nichts erst nach dem Laden per JS (.phone, .collapsed) verschwindet. */
+  .app > .side, .fab.sidetoggle, .savewrap { display: none; }
   /* Leiste oben auf dem Handy: Titel und Knöpfe in einer Zeile (nur Symbole), darunter Reiter und Schreiben/Üben */
   .topbar { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
   .topbar .title { font-size: 1.15rem; letter-spacing: .02em; padding-left: 2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -341,4 +342,21 @@ a.btn { text-decoration: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .qkey.right, .qkeys .qkey.wrong, .gfeed { animation: none; }
+}
+
+/* Ladeschirm: deckt die noch leere Seite ab, bis main.js alles aufgebaut hat (bootDone), damit nichts halb fertig aufblitzt */
+.boot {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-content: center; justify-items: center; gap: 16px;
+  background: var(--bg); color: var(--fg); transition: opacity .2s ease;
+}
+.boot.done { opacity: 0; pointer-events: none; }
+.boot .bootname { font: 700 1.6rem var(--font-ui); letter-spacing: .02em; }
+.boot .bootdots { display: flex; gap: 8px; }
+.boot .bootdots i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); animation: bootpulse 1s ease-in-out infinite; }
+.boot .bootdots i:nth-child(2) { animation-delay: .15s; }
+.boot .bootdots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bootpulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .boot { transition: none; }
+  .boot .bootdots i { animation: none; }
 }

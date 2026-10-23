@@ -132,6 +132,8 @@
 <script type="module" src="js/main.js?v=1.0.0"></script>
 </head>
 <body>
+<div class="boot" id="boot" role="status" aria-label="Wird geladen"><div class="bootname">Musiktafel</div><div class="bootdots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+<script>setTimeout(function () { var b = document.getElementById("boot"); if (b) b.remove(); }, 15000); /* Notausgang, falls das Laden scheitert */</script>
 <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
   <!-- Die Zeichnungen der Knöpfe stehen hier einmal; index.html bindet sie mit <use> ein. -->
   <symbol id="speichern" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>

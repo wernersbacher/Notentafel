@@ -37,5 +37,11 @@ initMenu();
 initAccount();
 initWake();
 startShell();
+// Ladeschirm (index.html) weg, jetzt steht die Seite
+const boot = document.getElementById('boot');
+if (boot) {
+  boot.classList.add('done');
+  setTimeout(() => boot.remove(), 300);
+}
 // Backend nur im Docker-Image (shared/env.js, siehe deploy/env.prod.js); mit npm start ist backend null, dann ohne Konto
 loadBackend().then(initCloud);

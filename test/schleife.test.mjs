@@ -113,3 +113,35 @@ test('ein ganz kurzer Bereich (eine Note) wird ohne Lücke und ohne Flut vorgepl
   assert.ok(marks.length >= 14 && marks.length <= 18, 'etwa 16 Durchläufe, waren ' + marks.length);
   P.togglePlay(() => one, mark);
 });
+
+test('replay: spielt mit dem neuen Plan des Bereichs von vorn weiter, ohne Einzählen', () => {
+  settings.countIn = true;
+  let p = cycle();
+  P.togglePlay(() => ({ ...p, again: p }), mark);
+  advance(2300); // Einzählen (zwei Sekunden) und gleich der erste Ton
+  p = { items: [it(0, 1, 'x'), it(1, 1, 'y')], end: 2, beat: 1, perBar: 4 };
+  marks.length = 0;
+  P.replay();
+  advance(700);
+  // das Alte endet, sofort danach der neue Plan; mit Einzählen käme der erste Ton erst nach zwei Sekunden
+  assert.deepEqual(marks, [null, 'x', 'y']);
+});
+
+test('replay: ohne Abspielen über den großen Knopf passiert nichts', () => {
+  P.replay();
+  assert.deepEqual(marks, []);
+});
+
+test('Schleife: der Hinweis zum Markieren kommt beim ersten Einschalten, danach nie wieder', async () => {
+  const { el } = await import('../app/js/core/dom.js');
+  P.initPlayer();
+  const btn = document.querySelector('[data-play="loop"]');
+  btn.click();
+  assert.equal(settings.loop, true);
+  assert.match(el.toast.textContent, /gedrückt halten markiert einen Bereich/);
+  assert.equal(settings.loopHint, true);
+  el.toast.hidden = true; el.toast.textContent = '';
+  btn.click(); btn.click(); // aus, wieder an
+  assert.equal(settings.loop, true);
+  assert.equal(el.toast.textContent, '');
+});

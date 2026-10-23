@@ -168,7 +168,17 @@ function stepNext(getPlan, mark) {
 export function togglePlay(getPlan, mark) {
   if (settings.step) stepNext(getPlan, mark);
   else if (play) stopPlay();
-  else startPlay(getPlan(), mark);
+  else { startPlay(getPlan(), mark); areaPlay = { getPlan, mark }; }
+}
+// Plan und Markierung des Bereichs, der zuletzt über den großen Knopf gespielt hat (für replay)
+let areaPlay = null;
+// Spielt mit dem neuen Plan des Bereichs von vorn weiter, ohne Einzählen (z. B. nachdem der markierte Bereich geändert wurde).
+// Läuft gerade nichts über den großen Knopf, passiert nichts.
+export function replay() {
+  if (!play || play.steps || !areaPlay || play.mark !== areaPlay.mark) return;
+  const { getPlan, mark } = areaPlay;
+  stopPlay();
+  startPlay(getPlan(), mark, true);
 }
 // Zurückhalten (z. B. beim Aufbau der ersten Aufgabe eines Spiels): Was playNow und previewTone in der Zeit spielen
 // sollen, klingt noch nicht, sondern wird gemerkt. releaseSound() liefert es zum Nachholen (null, wenn nichts war)
@@ -238,6 +248,11 @@ export function initPlayer() {
     // Wechsel zwischen Abspielen und Schritt für Schritt: was gerade läuft, endet
     if (b.dataset.play === 'step' || b.dataset.play === 'stepHide') stopPlay();
     settings[b.dataset.play] = !settings[b.dataset.play];
+    // Beim ersten Einschalten der Schleife der Hinweis, wie man einen Bereich markiert (einmal, dann nie wieder)
+    if (b.dataset.play === 'loop' && settings.loop && !settings.loopHint) {
+      settings.loopHint = true;
+      toast('Tipp: Eine Note oder Zeilennummer gedrückt halten markiert einen Bereich. Er läuft dann in der Schleife.');
+    }
     persistSettings();
     renderPlayOpts();
     showButton(!!play);

@@ -4,7 +4,7 @@ import { isNote, isBeat, isRest, isBarOnly, findCoverRow, widest, beams, subBeam
 import { spanOf, unitCount, colFrs, midOf, geoFrac } from './board-math.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { meterParts } from './rhythms.js';
-import { S, settings, wraps, inRange } from './state.js';
+import { S, settings, wraps, inRange, resolveRange } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
 import { stepHides } from '../core/player.js';
@@ -167,6 +167,7 @@ function blankRow(row, meter) {
 const isBeatOrRest = (x) => isBeat(x) || isRest(x);
 
 export function renderBoard() {
+  resolveRange();
   S.cap = S.variant === 'rhy' ? RHY_PER_ROW : MAX_PER_ROW;
   const grid = el.grid, cols = unitCount();
   grid.classList.add('prop');

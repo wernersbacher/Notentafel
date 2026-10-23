@@ -5,7 +5,7 @@ import { filled, lineSpan } from './model.js';
 import { S } from './state.js';
 import { render } from './redraw.js';
 import { cellEl } from './board.js';
-import { tapCell, swapCells, deleteCell, revealRow, toggleFold, setRange, setRows, clearRange } from './actions.js';
+import { tapCell, swapCells, deleteCell, revealRow, toggleFold, setRange, setRows, clearRange, endRange } from './actions.js';
 import { quizRow, quizCell } from '../core/quiz.js';
 import { pointerDrag } from '../core/pointer.js';
 import { el } from './dom.js';
@@ -104,7 +104,7 @@ function onMove(e, d, dragging) {
   if (over && over !== d.src) { over.classList.add('drop'); d.over = over; } else { d.over = null; }
 }
 function onEnd(e, d, cancel) {
-  if (d.held || d.kind === 'handle') { swallowClick(); return; } // der Bereich ist schon gesetzt
+  if (d.held || d.kind === 'handle') { swallowClick(); endRange(); return; } // der Bereich ist schon gesetzt
   if (d.kind === 'line') return; // ein Tipp auf die Nummer klappt per Klick (siehe click)
   if (d.active) {
     d.ghost.remove();

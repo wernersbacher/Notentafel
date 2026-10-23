@@ -57,7 +57,20 @@ const undo = makeUndo({
     L.last = null;
   }
 });
-// Jede Änderung, auch Rückgängig und Wiederholen, hebt den markierten Bereich auf: seine Indizes stimmen danach nicht mehr
-export const snap = () => { L.range = null; undo.snap(); };
-export const restore = () => { L.range = null; return undo.restore(); };
-export const redo = () => { L.range = null; return undo.redo(); };
+// Der markierte Bereich bleibt bei Änderungen, die die Form des Lieds nicht verändern (Ton, Wert, Vorzeichen, Bogen, Silbe,
+// Tauschen): Dieselbe Ereignisliste in derselben Länge, die Indizes stimmen also noch. Beim Einfügen und Löschen von Zeichen,
+// bei einem neuen Lied und bei Rückgängig und Wiederholen verschwindet er. snap merkt ihn sich, das nächste Neuzeichnen
+// (resolveRange) holt ihn zurück oder verwirft ihn.
+let kept = null;
+export const snap = () => {
+  kept = L.range && { range: L.range, ev: L.song.ev, n: L.song.ev.length };
+  L.range = null;
+  undo.snap();
+};
+export function resolveRange() {
+  const k = kept;
+  kept = null;
+  if (k && !L.range && L.song.ev === k.ev && L.song.ev.length === k.n) L.range = k.range;
+}
+export const restore = () => { kept = null; L.range = null; return undo.restore(); };
+export const redo = () => { kept = null; L.range = null; return undo.redo(); };

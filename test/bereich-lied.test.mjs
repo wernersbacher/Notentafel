@@ -69,10 +69,20 @@ test('setLines: ganze Notenzeilen, in beliebiger Richtung', () => {
   assert.deepEqual(L.range, { a: 2, b: 3 });
 });
 
-test('Eine Änderung, Rückgängig und ein Tipp auf eine Note heben den Bereich auf', () => {
+test('Ein Ton ändert sich im Bereich, der Bereich bleibt; Einfügen, Rückgängig und ein Tipp auf eine Note heben ihn auf', () => {
+  act.setRange(1, 2);
+  act.placePitch('e1'); // ersetzt die Note an der Markierung (Index 1): dieselbe Form des Lieds
+  assert.equal(L.song.ev[1].p, 'e1');
+  assert.deepEqual(L.range, { a: 1, b: 2 }, 'der Bereich bleibt');
+  assert.equal(el.sheet.querySelectorAll('.rband').length, 2);
+  act.setRange(1, 2);
+  act.setValue(2); // eine andere Länge ändert auch nur die Note
+  assert.deepEqual(L.range, { a: 1, b: 2 });
   act.setRange(0, 1);
-  act.deleteEv();
+  L.insertMode = true;
+  act.placePitch('c1'); // eine neue Note verschiebt die Plätze
   assert.equal(L.range, null);
+  L.insertMode = false;
   act.setRange(0, 1);
   act.undo();
   assert.equal(L.range, null);

@@ -68,10 +68,16 @@ test('setRows: ganze Zeilen, leere am Rand fallen weg', () => {
   assert.deepEqual(S.range, { a: { r: 0, c: 0 }, b: { r: 1, c: 1 } });
 });
 
-test('Eine Änderung, Rückgängig, ein Tipp auf einen Platz und das ✕ heben den Bereich auf', () => {
-  act.setRows(0, 0);
-  act.deleteCell();
+test('Ein Ton ändert sich im Bereich, der Bereich bleibt; Einfügen, Rückgängig, ein Tipp auf einen Platz und das ✕ heben ihn auf', () => {
+  act.setRange({ r: 0, c: 1 }, { r: 0, c: 2 });
+  act.placeNote('A'); // ersetzt den Platz an der Markierung: dieselbe Form der Tafel
+  assert.equal(S.rows[0][1].n, 'A');
+  assert.deepEqual(S.range, { a: { r: 0, c: 1 }, b: { r: 0, c: 2 } }, 'der Bereich bleibt');
+  assert.deepEqual(marked(), ['0,1', '0,2']);
+  S.insertMode = true;
+  act.placeNote('A'); // ein neuer Platz verschiebt die übrigen
   assert.equal(S.range, null);
+  S.insertMode = false;
   act.setRows(0, 0);
   act.undo();
   assert.equal(S.range, null);

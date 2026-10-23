@@ -123,7 +123,7 @@ function onMove(e, drag, dragging) {
   }
 }
 function onEnd(e, d, cancel) {
-  if (d.held || d.kind === 'handle') { swallowClick(); return; }
+  if (d.held || d.kind === 'handle') { swallowClick(); act.endRange(); return; }
   if (!d.mode) return; // ein Tipp: das erledigt der Klick
   justDragged = true;
   setTimeout(() => { justDragged = false; }, 0);

@@ -1,6 +1,6 @@
 // Bereich markieren: Platz oder Zeilennummer gedrückt halten, dann ziehen oder an den Griffen ziehen (input.js). Der Bereich
 // gilt nur zum Abspielen und Wiederholen; jede Änderung der Tafel hebt ihn auf (snap in state.js), ein Tipp aufs Brett auch.
-import { stopPlay } from '../core/player.js';
+import { replay } from '../core/player.js';
 import { S } from './state.js';
 import { lineSpan } from './model.js';
 import { render } from './redraw.js';
@@ -8,7 +8,7 @@ import { render } from './redraw.js';
 const before = (p, q) => p.r - q.r || p.c - q.c;
 
 // Der Bereich von a bis b ({ r, c }, in beliebiger Reihenfolge), auf Plätze mit Zeichen begrenzt. Was gerade klingt, endet:
-// Weiter geht es mit dem neuen Bereich. Die Markierung rückt an seinen Anfang.
+// Die Markierung rückt an seinen Anfang. Was gerade klingt, läuft weiter, bis die Geste endet (endRange).
 export function setRange(p, q) {
   const fit = (x) => {
     const last = S.rows[x.r] ? lineSpan(S.rows[x.r]) : -1;
@@ -19,7 +19,6 @@ export function setRange(p, q) {
   if (before(a, b) > 0) [a, b] = [b, a];
   const g = S.range;
   if (g && !before(g.a, a) && !before(g.b, b)) return;
-  stopPlay();
   S.range = { a, b };
   S.sel = { ...a };
   S.countAt = null;
@@ -38,4 +37,7 @@ export function clearRange() {
   if (!S.range) return;
   S.range = null;
   render();
+  replay();
 }
+// Die Geste am Bereich ist zu Ende: Was gerade klingt, spielt mit dem neuen Bereich von vorn weiter
+export const endRange = replay;

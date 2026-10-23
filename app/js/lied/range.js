@@ -1,12 +1,12 @@
 // Bereich markieren: Note oder Zeilennummer gedrückt halten, dann ziehen oder an den Griffen ziehen (input.js). Der Bereich
 // gilt nur zum Abspielen und Wiederholen; jede Änderung am Lied hebt ihn auf (snap in state.js), ein Tipp aufs Notenblatt auch.
-import { stopPlay } from '../core/player.js';
+import { replay } from '../core/player.js';
 import { L } from './state.js';
 import { render, renderSheet, lineSpan } from './render.js';
 import { ev } from './common.js';
 
 // Der Bereich a … b (beide eingeschlossen, auf das Lied begrenzt, a <= b); die Markierung rückt an seinen Anfang.
-// Was gerade klingt, endet: Weiter geht es mit dem neuen Bereich.
+// Was gerade klingt, läuft weiter, bis die Geste endet (endRange).
 export function setRange(a, b) {
   const last = ev().length - 1;
   if (last < 0) return;
@@ -14,7 +14,6 @@ export function setRange(a, b) {
   b = Math.max(a, Math.min(b, last));
   const r = L.range;
   if (r && r.a === a && r.b === b) return;
-  stopPlay();
   L.range = { a, b };
   const moved = L.sel !== a;
   L.sel = a;
@@ -30,4 +29,7 @@ export function clearRange() {
   if (!L.range) return;
   L.range = null;
   renderSheet();
+  replay();
 }
+// Die Geste am Bereich ist zu Ende: Was gerade klingt, spielt mit dem neuen Bereich von vorn weiter
+export const endRange = replay;

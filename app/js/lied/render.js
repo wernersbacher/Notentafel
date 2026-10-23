@@ -6,7 +6,7 @@ import { follow } from '../core/ui.js';
 import { isNote } from './model.js';
 import { layout, widestMeasure } from './layout.js';
 import { sheetSVG, NUM_W, foldedLine } from './sheet.js';
-import { L, opts, persistSong, written } from './state.js';
+import { L, opts, persistSong, written, resolveRange } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 import { setSpPx } from './scale.js';
@@ -35,6 +35,7 @@ export const lineSpan = (k) => lines[k];
 export const lineCount = () => lines.length;
 
 export function renderSheet() {
+  resolveRange();
   // Übt man gerade, liefert written() das wartende Lied statt L selbst
   const practicing = written() !== L;
   // Leere Übungstafel: ganz leer, ohne Notenlinien

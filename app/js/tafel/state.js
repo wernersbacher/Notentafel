@@ -90,7 +90,21 @@ const undo = makeUndo({
     S.countAt = null;
   }
 });
-// Jede Änderung, auch Rückgängig und Wiederholen, hebt den markierten Bereich auf: seine Plätze stimmen danach nicht mehr
-export const snap = () => { S.range = null; undo.snap(); };
-export const restore = () => { S.range = null; return undo.restore(); };
-export const redo = () => { S.range = null; return undo.redo(); };
+// Der markierte Bereich bleibt bei Änderungen, die die Form der Tafel nicht verändern (Ton, Hand, Zählzeit …): Dieselbe Liste
+// von Zeilen mit denselben Längen, die Plätze stimmen also noch. Beim Einfügen und Löschen von Zeichen, bei einer neuen Tafel
+// und bei Rückgängig und Wiederholen verschwindet er. snap merkt ihn sich, das nächste Neuzeichnen (resolveRange) holt ihn
+// zurück oder verwirft ihn.
+let kept = null;
+const shape = () => S.rows.map((row) => row.length).join(',');
+export const snap = () => {
+  kept = S.range && { range: S.range, rows: S.rows, shape: shape() };
+  S.range = null;
+  undo.snap();
+};
+export function resolveRange() {
+  const k = kept;
+  kept = null;
+  if (k && !S.range && S.rows === k.rows && shape() === k.shape) S.range = k.range;
+}
+export const restore = () => { kept = null; S.range = null; return undo.restore(); };
+export const redo = () => { kept = null; S.range = null; return undo.redo(); };

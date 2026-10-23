@@ -67,6 +67,7 @@ function replaceCur(v) {
 // Beendet Abspielen und Schritt für Schritt: weiter geht es ab der neuen Markierung (z. B. eine Stelle mehrmals üben)
 export function select(r, c) {
   stopPlay();
+  S.range = null;
   S.sel = { r, c };
   S.countAt = null;
   render();

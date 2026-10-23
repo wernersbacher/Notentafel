@@ -2,7 +2,7 @@
 import { useSettings } from '../core/settings.js';
 import { makePractice } from '../core/practice.js';
 import { makeUndo } from '../core/undo.js';
-import { emptyRows, appendPos, hasNotes, isNote, attachLines, packLines } from './model.js';
+import { emptyRows, appendPos, hasNotes, isNote, attachLines, packLines, lineSpan } from './model.js';
 import { loadBoard, saveBoard, saveAuto, cleanTafelSettings } from './storage.js';
 
 // Gemeinsame Einstellungen samt denen der Tafel, je ein Set für Melodie und Rhythmus (unter mel und rhy)
@@ -25,6 +25,7 @@ export const S = {
   // Markierung und Rückgängig-Verlauf der gerade nicht sichtbaren Tafel (nur bis zum Schließen der App)
   parked: {},
   insertMode: false,
+  range: null, // markierter Bereich zum Abspielen und Wiederholen: { a, b } (Plätze { r, c }, beide eingeschlossen, a vor b) oder null
   countAt: null, // Platz, unter dem gerade mehrere Zählzeiten getippt werden
   quiz: null, // Tonnamen-Quiz durch die Melodie: { pos (gefragter Platz), done (benannte Plätze als 'r,c') }, siehe quiz.js
   written: null, // beim Üben und Spielen: die geschriebene Tafel { rows, name, sel, hist }, die so lange wartet
@@ -39,6 +40,12 @@ export function useVariant(v) {
   settings = all[v];
 }
 
+// Liegt der Platz im markierten Bereich (S.range)? Leere Plätze hinter dem letzten Zeichen einer Zeile gehören nie dazu.
+export function inRange(r, c) {
+  const g = S.range;
+  if (!g || r < g.a.r || r > g.b.r || (r === g.a.r && c < g.a.c) || (r === g.b.r && c > g.b.c)) return false;
+  return c <= lineSpan(S.rows[r]);
+}
 export const curCell = () => S.rows[S.sel.r][S.sel.c];
 export const curRow = () => S.rows[S.sel.r];
 
@@ -54,7 +61,7 @@ export function stashBoard() {
 export const { startPractice, resetPractice, practiceWritten, endPractice } = makePractice({
   state: S,
   fields: ['rows', 'sel', 'hist', 'redo'],
-  fresh: () => ({ rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [], redo: [] }),
+  fresh: () => ({ rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [], redo: [], range: null }),
   // Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten.
   // false, wenn darin nichts zu benennen ist: Dann bleibt die Übungstafel unangetastet (das Quiz prüft es damit vor dem
   // Umschalten, sonst wäre sie schon getauscht, wenn es die Leer-Meldung zeigt).
@@ -67,12 +74,13 @@ export const { startPractice, resetPractice, practiceWritten, endPractice } = ma
       row.forEach((x) => { if (x) delete x.q; });
     });
     S.sel = { r: 0, c: 0 };
+    S.range = null;
     return true;
   }
 });
 
 // Merkt sich den Stand vor einer Änderung für „Rückgängig“
-export const { snap, restore, redo } = makeUndo({
+const undo = makeUndo({
   state: S,
   snapshot: () => ({ rows: S.rows, lines: packLines(S.rows), sel: S.sel, name: S.name }),
   apply: (d) => {
@@ -82,3 +90,7 @@ export const { snap, restore, redo } = makeUndo({
     S.countAt = null;
   }
 });
+// Jede Änderung, auch Rückgängig und Wiederholen, hebt den markierten Bereich auf: seine Plätze stimmen danach nicht mehr
+export const snap = () => { S.range = null; undo.snap(); };
+export const restore = () => { S.range = null; return undo.restore(); };
+export const redo = () => { S.range = null; return undo.redo(); };

@@ -46,6 +46,8 @@ export const foldedLine = (ev, s) => ev.slice(s.first, s.end).some((e) => e.fd);
 // lay: Ergebnis von layout(). o: { width (in sp), sel, clean, insert, names, nameIf, colors, counts, lyrics, target, playing,
 // fit, nums }. lyrics: false blendet den Liedtext aus (layout() dann auch ohne lyrics rechnen lassen).
 // nameIf(i) (optional): nur unter diesen Noten steht ihr Name (der Platz für die Namen bleibt unter allen).
+// range: { a, b } – markierter Bereich (Ereignisse a … b): ein Band dahinter, vorn und hinten ein Griff zum Ziehen und ein ✕
+// zum Aufheben (data-handle a oder b, data-rclear).
 // fit (für den Druck): Die Notenlinien jeder Zeile enden an ihrem letzten Strich statt am rechten Rand.
 // nums: Vor jedem System steht seine Nummer (NUM_W breit, das System rückt so weit nach rechts); ein Tipp darauf klappt
 // es ein. Eingeklappt behält es seine Höhe, zu sehen ist nur die Nummer als Knopf und eine feine Linie.
@@ -115,6 +117,9 @@ function foldedSVG(s, W, bottom) {
   return g;
 }
 
+// Griff am Rand des Bereichs (which: 'a' Anfang, 'b' Ende): ein Punkt mit größerem, unsichtbarem Feld zum Anfassen
+const handle = (which, x, y) => '<g class="rhandle" data-handle="' + which + '" transform="translate(' + f(x) + ' ' + f(y) + ')"><circle class="rdot" r="0.8"/><circle class="rtouch" r="1.9"/></g>';
+
 // Ein System mit allem, was darin steht (in Linienabständen ab seiner obersten Notenlinie)
 function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
   const ev = song.ev;
@@ -126,6 +131,9 @@ function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
     const col = lay.at[o.playing];
     g += rect('playbar', col.l + 0.1, -s.top + 0.2, col.r - 0.1, 4 + bottom - 0.2, ' rx="0.8"');
   }
+  // Markierter Bereich: Band hinter den Noten (nur der Teil in diesem System)
+  const rg = o.range, ra = rg ? Math.max(rg.a, s.first) : 0, rb = rg ? Math.min(rg.b, s.end - 1) : -1;
+  if (rg && ra <= rb) g += rect('rband', lay.at[ra].l + 0.05, -s.top + 0.2, lay.at[rb].r - 0.05, 4 + bottom - 0.2, ' rx="0.8"');
   // Markierung (nicht nach „fertig“)
   if (!o.clean) {
     const col = o.sel < ev.length ? (o.sel >= s.first && o.sel < s.end ? lay.at[o.sel] : null) : s.ghost;
@@ -180,5 +188,15 @@ function systemSVG(song, lay, s, o, W, bottom, zz, lyrics) {
   // Die markierte Spalte lässt sich ziehen (grab), alle anderen scrollen wie gewohnt
   s.items.forEach((it) => { g += rect(it.i === o.sel && !o.clean ? 'hit grab' : 'hit', it.l, -s.top, it.r, 4 + bottom, ' data-i="' + it.i + '"'); });
   if (s.ghost) g += rect('hit', s.ghost.l, -s.top, s.ghost.r, 4 + bottom, ' data-i="' + ev.length + '"');
+  // Griffe des markierten Bereichs über allem: Anfang oben links, Ende unten rechts, ✕ oben rechts (das Feld zum Antippen
+  // ist größer als der Punkt)
+  if (rg && ra <= rb) {
+    if (ra === rg.a) g += handle('a', lay.at[ra].l + 0.05, -s.top + 0.2);
+    if (rb === rg.b) {
+      g += handle('b', lay.at[rb].r - 0.05, 4 + bottom - 0.2);
+      g += '<g class="rclear" data-rclear="1" transform="translate(' + f(lay.at[rb].r - 0.05) + ' ' + f(-s.top + 0.2) + ')"><circle class="rdot" r="0.8"/>' +
+        '<path d="M-0.32-0.32L0.32 0.32M0.32-0.32L-0.32 0.32"/><circle class="rtouch" r="1.5"/></g>';
+    }
+  }
   return g;
 }

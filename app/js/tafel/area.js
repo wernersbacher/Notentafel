@@ -1,6 +1,6 @@
 // Meldet Melodie und Rhythmus beim Kern an. Beide nutzen dieselbe Tafel, jede mit eigenem Stand.
 import { register } from '../core/shell.js';
-import { beatsOf, startAt, cutAt } from '../core/plan.js';
+import { beatsOf, startAt, cutAt, within } from '../core/plan.js';
 import { confirmTap } from '../core/ui.js';
 import { NOTE_BY } from './config.js';
 import { isNote, isBeat, sounds, dur, emptyRows, appendPos, playOrderRows } from './model.js';
@@ -25,6 +25,7 @@ import { el } from './dom.js';
 function useBoard(v) {
   if (S.variant === v) return;
   S.parked[S.variant] = { sel: S.sel, hist: S.hist, redo: S.redo };
+  S.range = null;
   useVariant(v);
   const d = loadBoard(v), p = S.parked[v];
   S.rows = d ? d.rows : emptyRows(v === 'rhy');
@@ -40,8 +41,10 @@ function enter(v) {
   render();
 }
 
-// Ablaufplan fürs Abspielen: Zeile für Zeile bis zur letzten Note; leere Plätze innerhalb einer Zeile sind Pausen
-function plan() {
+// Ablaufplan fürs Abspielen: Zeile für Zeile bis zur letzten Note; leere Plätze innerhalb einer Zeile sind Pausen.
+// Ist ein Bereich markiert, spielt nur er, sonst geht es ab der Markierung los (dahinter nichts mehr: von vorn).
+// again ist, was die Schleife wiederholt: der Bereich, sonst die ganze Tafel.
+export function plan() {
   const items = [];
   let last = -1, t = 0, end = 0;
   // Wiederholungen werden mitgespielt (playOrderRows), eingeklappte Zeilen nicht
@@ -58,8 +61,13 @@ function plan() {
   // Was unter dem Tuch liegt, klingt noch nicht
   const k = act.coverRow();
   if (k >= 0) plan = cutAt(plan, (s) => s.pos.r >= k);
+  const g = S.range;
+  if (g) {
+    const w = within(plan, ({ pos: p }) => (p.r - g.a.r || p.c - g.a.c) >= 0 && (p.r - g.b.r || p.c - g.b.c) <= 0);
+    return { ...w, again: w };
+  }
   const sel = S.sel;
-  return startAt(plan, plan.items.findIndex((s) => s.pos.r > sel.r || (s.pos.r === sel.r && s.pos.c >= sel.c)));
+  return { ...startAt(plan, plan.items.findIndex((s) => s.pos.r > sel.r || (s.pos.r === sel.r && s.pos.c >= sel.c))), again: plan };
 }
 
 const tools = {

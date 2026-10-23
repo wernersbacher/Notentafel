@@ -4,7 +4,7 @@ import { renderToggle, toggleSetting, closeMenu, sortAbc } from '../core/menu.js
 import { confirmTap, delegate, esc, groupedHTML, lockLibrary, toast, downloadFile, onEnter, setPressed } from '../core/ui.js';
 import { settings, setTempo } from '../core/settings.js';
 import { playPlan, QUARTER } from './model.js';
-import { beatsOf, startAt, cutAt, skip } from '../core/plan.js';
+import { beatsOf, startAt, cutAt, skip, within } from '../core/plan.js';
 import { store } from './storage.js';
 import { songOf } from './songs.js';
 import { songToMusicXML, fileNameOf } from './musicxml.js';
@@ -129,6 +129,19 @@ function printSheet() {
   window.print();
 }
 
+// Ablaufplan fürs Abspielen: Zählschlag und Auftakt für den Player. Eingeklappte Zeilen werden übersprungen, was unter dem Tuch
+// liegt, klingt noch nicht. Ist ein Bereich markiert, spielt nur er, sonst geht es ab der Markierung los (steht sie hinter der
+// letzten Note, von vorn). again ist, was die Schleife wiederholt: der Bereich, sonst das ganze Stück.
+export function liedPlan() {
+  let p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
+  p = skip(p, (s) => isFolded(s.pos));
+  const k = act.coverIndex();
+  if (k >= 0) p = cutAt(p, (s) => s.pos >= k);
+  const r = L.range;
+  if (r) { const w = within(p, (s) => s.pos >= r.a && s.pos <= r.b); return { ...w, again: w }; }
+  return { ...startAt(p, p.items.findIndex((s) => s.pos >= L.sel)), again: p };
+}
+
 export function registerLied() {
   buildPanel();
   initControls();
@@ -173,16 +186,8 @@ export function registerLied() {
       delRow: (btn) => { if (act.lastLineHasNotes()) confirmTap(btn, 'Sicher? Nochmal', act.delLine); else act.delLine(); },
       clear: (btn) => confirmTap(btn, 'Sicher? Nochmal tippen', act.clearAll)
     },
-    // Ab der Markierung (steht sie hinter der letzten Note, von vorn), mit Zählschlag und Auftakt für den Player
     receive: act.receiveSong,
-    plan: () => {
-      let p = { ...playPlan(L.song, opts.autoBar), ...beatsOf(L.song.meter), barStart: L.song.pickup / QUARTER };
-      // Eingeklappte Zeilen werden übersprungen; was unter dem Tuch liegt, klingt noch nicht
-      p = skip(p, (s) => isFolded(s.pos));
-      const k = act.coverIndex();
-      if (k >= 0) p = cutAt(p, (s) => s.pos >= k);
-      return startAt(p, p.items.findIndex((s) => s.pos >= L.sel));
-    },
+    plan: liedPlan,
     mark: markPlaying,
     cover: { from: act.coverFrom, card: act.toggleCard, name: act.toggleNameCard, names: act.toggleAllNames, reset: act.resetCover, clear: act.clearCover },
     songs: {

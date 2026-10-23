@@ -6,3 +6,4 @@ export * from './meter.js';
 export * from './lines.js';
 export * from './song.js';
 export * from './cover.js';
+export * from './range.js';

@@ -79,6 +79,17 @@ export function placeGrabber() {
   d.style.cssText = 'left:' + r.l + 'px;top:' + r.t + 'px;width:' + r.w + 'px;height:' + r.h + 'px';
   el.sheet.appendChild(d);
 }
+// Die Griffe des markierten Bereichs sind im Notenblatt nur Zeichnung; zum Anfassen liegt ein unsichtbares HTML-Feld über jedem
+// (wie beim Greifer: Auf SVG-Elementen beachten nicht alle Browser touch-action: none, der Finger risse sonst das Blatt mit)
+export function placeGrips() {
+  el.sheet.querySelectorAll('.rhandle').forEach((h) => {
+    const r = boxOf(h.querySelector('.rtouch')), d = document.createElement('div');
+    d.className = 'rgrip';
+    d.dataset.handle = h.dataset.handle;
+    d.style.cssText = 'left:' + r.l + 'px;top:' + r.t + 'px;width:' + r.w + 'px;height:' + r.h + 'px';
+    el.sheet.appendChild(d);
+  });
+}
 // Lage eines Elements des Notenblatts im Notenblatt (in CSS-Pixeln, wie left/top der Felder darüber). Gerechnet aus den
 // Koordinaten der Noten, nicht aus der Lage auf dem Bildschirm: Die enthält die Größe der Oberfläche (CSS zoom), und die
 // Felder säßen bei mehr als 100 % umso weiter daneben, je weiter unten sie liegen.

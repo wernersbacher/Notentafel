@@ -38,6 +38,7 @@ export function cleanCoreSettings(s) {
     wake: s.wake !== false, // Bildschirm anlassen
     countIn: !!s.countIn, // vor dem Abspielen einen Takt einzählen
     metro: !!s.metro, // beim Abspielen jeden Schlag mitklicken
+    loop: !!s.loop, // den markierten Bereich (ohne Markierung das ganze Stück) immer wieder abspielen
     songSort: s.songSort === 'abc' ? 'abc' : 'group', // bekannte Lieder nach Thema oder alphabetisch
     step: !!s.step, // Schritt für Schritt: jeder Tipp auf den großen Knopf eine Note weiter
     stepSound: !!s.stepSound, // dabei die erreichte Note auch erklingen lassen

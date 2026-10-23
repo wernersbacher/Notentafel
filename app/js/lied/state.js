@@ -17,6 +17,7 @@ export const L = {
   hist: [], // Rückgängig-Verlauf (als JSON)
   redo: [], // zurückgenommene Stände, die „Wiederholen“ wiederherstellt (als JSON)
   insertMode: false,
+  range: null, // markierter Bereich zum Abspielen und Wiederholen: { a, b } (Indizes in song.ev, beide eingeschlossen, a <= b)
   last: null, // der zuletzt gesetzte Ton; auf ihn wirken Vorzeichen und Bogen, bis man woanders hin tippt
   pen: { v: 4, dot: 0 }, // vorgewählter Notenwert für die nächsten Töne und Pausen
   quiz: null, // Tonnamen-Quiz durch das Lied: { i (gefragte Note), done (benannte Noten) }, siehe quiz.js
@@ -37,16 +38,16 @@ export const written = () => L.written || L;
 export const { startPractice, resetPractice, practiceWritten, endPractice } = makePractice({
   state: L,
   fields: ['song', 'sel', 'hist', 'redo'],
-  fresh: () => ({ song: emptySong(), sel: 0, hist: [], redo: [], last: null }),
+  fresh: () => ({ song: emptySong(), sel: 0, hist: [], redo: [], last: null, range: null }),
   // Legt eine Kopie des geschriebenen Lieds auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz)
   copy: (w) => {
-    Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(w.song))), sel: 0, last: null });
+    Object.assign(L, { song: cleanSong(JSON.parse(JSON.stringify(w.song))), sel: 0, last: null, range: null });
     return true;
   }
 });
 
 // Merkt sich den Stand vor einer Änderung für „Rückgängig“
-export const { snap, restore, redo } = makeUndo({
+const undo = makeUndo({
   state: L,
   snapshot: () => ({ song: L.song, sel: L.sel, name: L.name }),
   apply: (d) => {
@@ -56,3 +57,7 @@ export const { snap, restore, redo } = makeUndo({
     L.last = null;
   }
 });
+// Jede Änderung, auch Rückgängig und Wiederholen, hebt den markierten Bereich auf: seine Indizes stimmen danach nicht mehr
+export const snap = () => { L.range = null; undo.snap(); };
+export const restore = () => { L.range = null; return undo.restore(); };
+export const redo = () => { L.range = null; return undo.redo(); };

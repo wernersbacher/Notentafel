@@ -4,7 +4,7 @@ import { isNote, isBeat, isRest, isBarOnly, findCoverRow, widest, beams, subBeam
 import { spanOf, unitCount, colFrs, midOf, geoFrac } from './board-math.js';
 import { autoMarks, barAt, meterOf } from './theory.js';
 import { meterParts } from './rhythms.js';
-import { S, settings, wraps } from './state.js';
+import { S, settings, wraps, inRange } from './state.js';
 import { sideCollapsed } from '../core/shell.js';
 import { follow } from '../core/ui.js';
 import { stepHides } from '../core/player.js';
@@ -37,6 +37,12 @@ function countsHTML(zz, geo) {
 // am Anfang (kein eigenes Silbenfeld); reach: so weit reicht das Silbenfeld am Anfang einer Gruppe (in Platzbreiten).
 function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, beamCut, beamIn, bw, sub, odd, gin, reach: greach }) {
   const isSel = S.sel.r === r && S.sel.c === c;
+  // Markierter Bereich (zum Abspielen und Wiederholen): ein Band hinter den Plätzen, am Anfang ein Griff, am Ende ein Griff
+  // und ein ✕ zum Aufheben
+  const g = S.range, rng = inRange(r, c);
+  const isA = rng && g.a.r === r && g.a.c === c, isB = rng && g.b.r === r && g.b.c === c;
+  const grips = (isA ? '<span class="rhandle a" data-handle="a"></span>' : '') +
+    (isB ? '<span class="rhandle b" data-handle="b"></span><span class="rclear" data-rclear="1" role="button" aria-label="Markierten Bereich aufheben">✕</span>' : '');
   const where = 'Zeile ' + (r + 1) + ', Platz ' + (c + 1);
   let dot, label, len = '', stackCls = '';
   if (isNote(cell)) {
@@ -83,12 +89,12 @@ function cellHTML(cell, r, c, { beyond, beam, line, meter, marks, geo, endBar, b
   // ?-Karte: verdeckt liegt sie über dem Zeichen; aufgedeckt ist nichts mehr zu sehen (sie bleibt für „neu abdecken“ gemerkt)
   const q = cell && cell.q;
   if (q === 1) label = where + ': verdeckt (antippen deckt auf)';
-  return '<div class="cell' + (isSel ? ' sel' : '') + (q === 1 ? ' quiz' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
+  return '<div class="cell' + (isSel ? ' sel' : '') + (rng ? ' rng' : '') + (q === 1 ? ' quiz' : '') + (beyond ? ' beyond' : '') + (fr > 1 ? ' half' : '') +
     (line ? ' line-' + line : '') + (meter ? ' has-meter' : '') + '"' + span + ' data-r="' + r + '" data-c="' + c + '" role="button" tabindex="0" aria-label="' + label + '">' +
     '<div class="stack' + stackCls + '"' + (bw ? ' style="--bw:' + bw.toFixed(4) + '"' : '') + '>' + (c === 0 ? '<span class="rnum" data-fold="' + r + '" aria-hidden="true">' + (r + 1) + '</span>' : '') + (meter ? '<span class="meter" aria-label="Taktart ' + meter + '">' + meterHTML(meter) + '</span>' : '') +
     (bar ? '<span class="barline' + (BAR_CLS[bar] || '') + '"></span>' : '') + (endBar ? '<span class="barline after' + (BAR_CLS[endBar] || '') + '"' + (BAR_CLS[endBar] ? ' style="left:auto"' : '') + '></span>' : '') + dot +
     '<span class="len' + (beam === 1 && isNote(cell) ? ' beam' : '') + '">' + len + '</span>' + countsHTML(zz, geo) + hand +
-    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (sub && isBeat(cell) ? '<span class="bm2 s' + sub + '"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div></div>';
+    (beamIn && isBeat(cell) ? '<span class="hbeam"></span>' : '') + (sub && isBeat(cell) ? '<span class="bm2 s' + sub + '"></span>' : '') + (q === 1 ? '<span class="qcard" aria-hidden="true">?</span>' : '') + '</div>' + grips + '</div>';
 }
 
 /* ---------- Eine Zeile ---------- */

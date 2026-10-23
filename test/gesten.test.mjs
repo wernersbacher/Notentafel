@@ -31,7 +31,8 @@ test('Tafel: touchmove auf einem belegten Platz verhindert das Scrollen (Rückfa
   assert.match(guard[1], /scroll\(drag\)/);
   // … und die Tafel nur auf belegten Plätzen – sonst ließe sich die breite Tafel nirgends mehr wischen
   const src = read('app/js/tafel/input.js');
-  assert.match(src, /scroll:\s*\(d\)\s*=>\s*filled\(S\.rows\[d\.r\]\[d\.c\]\)/);
+  // (ein Griff des markierten Bereichs und eine gehaltene Geste gehören ebenfalls dem Ziehen)
+  assert.match(src, /scroll:\s*\(d\)\s*=>\s*d\.kind === 'handle' \|\| d\.held \|\| filled\(S\.rows\[d\.r\]\[d\.c\]\)/);
 });
 
 test('Note setzen: ein abgebrochener Zeiger gibt „held“ frei und blockiert die Aufgabe nicht', () => {

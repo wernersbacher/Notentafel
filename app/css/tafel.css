@@ -258,6 +258,22 @@
 /* „Fertig“: Markierung und leere Plätze ausblenden, nur die Töne bleiben */
 .grid.clean .dot.ghost { visibility: hidden; }
 .grid.clean .cell.sel .dot { box-shadow: inset 0 calc(var(--d) * -.05) 0 rgba(0, 0, 0, .16); }
+/* Markierter Bereich (zum Abspielen und Wiederholen): ein Band hinter den Plätzen, über die Lücken hinweg; Griffe am Anfang und
+   Ende, ein ✕ zum Aufheben. Das Tippfeld der Griffe ist größer als der Punkt. */
+.grid { --rng: #2563eb; --rng-bg: rgba(37, 99, 235, .15); }
+@media (prefers-color-scheme: dark) { .grid { --rng: #8fb4ff; --rng-bg: rgba(143, 180, 255, .2); } }
+.cell.rng { background: var(--rng-bg); box-shadow: 0 0 0 calc(var(--g) / 2) var(--rng-bg); }
+.rhandle, .rclear {
+  position: absolute; z-index: 3; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--rng); border: 2px solid var(--board); touch-action: none; cursor: pointer;
+}
+.rhandle::after, .rclear::after { content: ""; position: absolute; inset: -14px; }
+.rhandle.a { left: -8px; top: -8px; }
+.rhandle.b { right: -8px; bottom: -8px; }
+.rclear {
+  right: -8px; top: -8px; display: grid; place-items: center; background: var(--board); color: var(--rng);
+  border-color: var(--rng); font: 800 11px/1 var(--font-ui);
+}
 /* Beim Abspielen: der klingende Platz leuchtet als farbiger Balken über die ganze Zeilenhöhe, das Zeichen wird größer */
 .cell.playing { background: var(--play-bg); box-shadow: 0 0 0 4px var(--play-bg); }
 .cell.playing .dot:not(.ghost) { transform: scale(1.22); }

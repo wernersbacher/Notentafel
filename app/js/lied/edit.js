@@ -35,6 +35,7 @@ function tooLong(was) {
 // Beendet Abspielen und Schritt für Schritt: weiter geht es ab der neuen Markierung (z. B. eine Stelle mehrmals üben)
 export function select(i) {
   stopPlay();
+  L.range = null;
   L.sel = Math.max(0, Math.min(i, ev().length));
   L.last = null;
   const e = cur();

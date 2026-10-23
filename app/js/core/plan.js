@@ -45,3 +45,16 @@ export function cutAt(plan, hidden) {
   const last = items[items.length - 1];
   return { ...plan, items, end: last ? last.t + last.len : 0 };
 }
+
+// Ablaufplan nur mit den Einträgen, für die inside(s) gilt (ein markierter Bereich), in Reihenfolge des Plans. Jede Stelle
+// zählt einmal, auch wenn eine Wiederholung sie ein zweites Mal spielen würde. Die Zeiten laufen lückenlos ab 0; der Takt
+// läuft weiter wie im ganzen Plan. Liegt nichts im Bereich, bleibt der Plan leer (items: []).
+const keyOf = (pos) => (pos !== null && typeof pos === 'object' ? pos.r + ',' + pos.c : pos);
+export function within(plan, inside) {
+  const seen = new Set(), first = plan.items.find(inside);
+  const kept = plan.items.filter((s) => inside(s) && !seen.has(keyOf(s.pos)) && seen.add(keyOf(s.pos)));
+  if (!first) return { ...plan, items: [], end: 0 };
+  let t = 0;
+  const items = kept.map((s) => { const it = { ...s, t }; t += s.len; return it; });
+  return { ...plan, items, end: t, barStart: (plan.barStart || 0) - first.t };
+}

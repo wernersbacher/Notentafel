@@ -4,5 +4,6 @@ export * from './bars.js';
 export * from './rows.js';
 export * from './board-actions.js';
 export * from './cover.js';
+export * from './range.js';
 // Aus edit.js kommen nur die Aktionen; advance darin braucht allein bars.js (Zählzeiten).
 export { select, toggleInsert, placeNote, placeValue, toggleDot, placeRest, setHand, closeGap, deleteCell } from './edit.js';

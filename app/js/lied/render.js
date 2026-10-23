@@ -10,7 +10,7 @@ import { L, opts, persistSong, written } from './state.js';
 import { renderSidebar } from './sidebar.js';
 import { el } from './dom.js';
 import { setSpPx } from './scale.js';
-import { clothFrom, placeCovers, placeGrabber } from './overlays.js';
+import { clothFrom, placeCovers, placeGrabber, placeGrips } from './overlays.js';
 
 export { spPx } from './scale.js';
 export { lineStartAfter } from './overlays.js';
@@ -28,12 +28,17 @@ export const lastLineStart = () => lastFirst;
 // Ereignisse in eingeklappten Zeilen, so wie das Notenblatt gerade umbrochen ist (sie werden nicht abgespielt)
 let folded = new Set();
 export const isFolded = (i) => folded.has(i);
+// Die Notenzeilen, so wie das Notenblatt gerade umbrochen ist: { first, end } (Ereignisse first … end−1), nur mit Zeichen
+let lines = [];
+export const lineAt = (i) => lines.findIndex((s) => i >= s.first && i < s.end);
+export const lineSpan = (k) => lines[k];
+export const lineCount = () => lines.length;
 
 export function renderSheet() {
   // Übt man gerade, liefert written() das wartende Lied statt L selbst
   const practicing = written() !== L;
   // Leere Übungstafel: ganz leer, ohne Notenlinien
-  if (practicing && !L.song.ev.length) { el.sheet.innerHTML = ''; lastFirst = 0; folded = new Set(); return; }
+  if (practicing && !L.song.ev.length) { el.sheet.innerHTML = ''; lastFirst = 0; folded = new Set(); lines = []; return; }
   // Schreibt man gerade am Ende, bleibt die letzte Zeile beim Umbrechen einfach gefüllt (growing in layout.js)
   const avail = el.sheet.clientWidth || 600, o = { autoBar: opts.autoBar, counts: opts.autoZ, check: opts.check, lyrics: opts.lyrics };
   const growing = L.last != null && L.sel >= L.song.ev.length;
@@ -51,6 +56,7 @@ export function renderSheet() {
   setSpPx(sp);
   lastFirst = lay.systems[lay.systems.length - 1].first;
   folded = new Set();
+  lines = lay.systems.filter((s) => s.end > s.first).map((s) => ({ first: s.first, end: s.end }));
   lay.systems.forEach((s) => { if (foldedLine(L.song.ev, s)) for (let i = s.first; i < s.end; i++) folded.add(i); });
   // Eingeklappte Leiste, Tonnamen-Quiz und Übungstafel: Bearbeiten beendet, ohne Markierung und leeren Platz
   const clean = sideCollapsed() || !!L.quiz || practicing;
@@ -60,11 +66,13 @@ export function renderSheet() {
   const q = L.quiz, pos = playingPos() ?? (q ? q.i : null);
   const { svg, height } = sheetSVG(L.song, lay, {
     width: W, sel: L.sel, clean, insert: L.insertMode, names: opts.names || !!q, nameIf: q ? (i) => q.done.has(i) : null,
-    colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, target: last, playing: pos == null ? -1 : pos, nums: true
+    colors: opts.colors, counts: opts.autoZ, lyrics: opts.lyrics, target: last, playing: pos == null ? -1 : pos, nums: true,
+    range: L.range && L.range.b < L.song.ev.length ? L.range : null
   });
   el.sheet.innerHTML = '<svg class="score' + (clean ? ' clean' : '') + '" width="' + Math.floor(W * sp) + '" height="' + Math.ceil(height * sp) +
     '" viewBox="0 0 ' + W + ' ' + height + '" fill="currentColor" role="img" aria-label="Notenblatt">' + svg + '</svg>';
   placeGrabber();
+  placeGrips();
   placeCovers();
   if (pos != null && stepHides()) clothFrom(pos + 1, 'cloth stepcloth');
   showMark();

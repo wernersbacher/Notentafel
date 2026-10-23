@@ -21,7 +21,7 @@ const ICONS = {
   next: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15l11-7.5z" fill="currentColor"/><rect x="16.5" y="4.5" width="3.2" height="15" rx="1" fill="currentColor"/></svg>'
 };
 
-let play = null; // { out, timers, cur, mark } während des Abspielens; Schritt für Schritt dazu steps und i
+let play = null; // { out, timers, cur, mark, plan, k, cycle, loopPlan } während des Abspielens; Schritt für Schritt dazu steps und i
 
 // Die Stelle, die gerade klingt (damit sie nach einem Neuzeichnen hervorgehoben bleibt)
 export const playingPos = () => play && play.cur;
@@ -45,11 +45,16 @@ function showButton(playing) {
   b.setAttribute('aria-label', playing ? 'Stopp' : 'Abspielen');
 }
 
-// again: Weiterspielen nach einer Tempoänderung, dann ohne Einzählen.
+// Schleife (settings.loop): Der Plan eines Bereichs nennt mit again den Plan der Wiederholungen (den markierten Bereich
+// oder das ganze Stück); die Spiele haben keinen und laufen immer nur einmal. Die Durchläufe werden Stück für Stück
+// vorgeplant: so weit im Voraus (in Sekunden), dass auch ein Timer-Aussetzer keine Lücke macht.
+const LEAD = 1.2;
+
+// again: Weiterspielen nach einer Tempoänderung, dann ohne Einzählen; loopPlan: dann der Plan der Wiederholungen.
 // Für die Spiele kann der Plan mehr: bare spielt nur die Töne (ohne Einzählen und Metronom, z. B. das Melodie-Echo),
 // silent läuft ohne Töne nur mit Markierung, countIn zählt immer ein, metro klickt jeden Schlag deutlich
 // (Vom Blatt klatschen: die Kinder klatschen zum Grundschlag)
-function startPlay(plan, mark, again) {
+function startPlay(plan, mark, again, loopPlan = plan && plan.again) {
   if (!plan || !(plan.silent || plan.items.some((s) => s.sound))) { toast('Noch keine Töne auf der Tafel.', true); return; }
   const ctx = audioCtx();
   if (!ctx) { toast('Abspielen wird von diesem Browser nicht unterstützt.', true); return; }
@@ -63,23 +68,42 @@ function startPlay(plan, mark, again) {
   const step = 60 / settings.tempo, t0 = ctx.currentTime + 0.08 + pre * step;
   // Verzögerung bis Schlag t in Millisekunden
   const delay = (beats) => (t0 - ctx.currentTime + beats * step) * 1000;
-  // plan und k (der Eintrag, der gerade klingt) braucht ein Tempowechsel zum Weiterspielen
-  play = { out, timers: [], cur: null, mark, plan, k: -1 };
+  // plan und k (der Eintrag, der gerade klingt) braucht ein Tempowechsel zum Weiterspielen; cycle ist der Plan des
+  // laufenden Durchlaufs (k zählt darin), loopPlan der der Wiederholungen
+  const me = play = { out, timers: new Set(), cur: null, mark, plan, k: -1, cycle: plan, loopPlan: loopPlan && loopPlan.end > 0 ? loopPlan : null };
+  const later = (f, ms) => {
+    const id = setTimeout(() => { me.timers.delete(id); f(); }, ms);
+    me.timers.add(id);
+  };
   for (let k = 0; k < perBar && pre; k++) tick(out, t0 - pre * step + k * beat * step, k === 0);
-  // Metronom: jeder Schlag des Stücks, betont am Taktanfang (gerechnet ab barStart). plan.pulse: leiser Grundschlag
-  // unabhängig vom Metronom-Schalter (Rhythmus-Echo)
-  if (metro || plan.pulse) {
-    const first = ((plan.barStart || 0) % beat + beat) % beat;
-    for (let t = first; t < plan.end - 1e-9; t += beat) {
-      const inBar = ((t - (plan.barStart || 0)) % bar + bar) % bar;
-      tick(out, t0 + t * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6, !metro);
+  // Ein Durchlauf des Plans p ab Schlag base; liefert sein Ende. Metronom: jeder Schlag des Stücks, betont am Taktanfang
+  // (gerechnet ab barStart). p.pulse: leiser Grundschlag unabhängig vom Metronom-Schalter (Rhythmus-Echo)
+  const schedule = (p, base) => {
+    if (metro || p.pulse) {
+      const first = ((p.barStart || 0) % beat + beat) % beat;
+      for (let t = first; t < p.end - 1e-9; t += beat) {
+        const inBar = ((t - (p.barStart || 0)) % bar + bar) % bar;
+        tick(out, t0 + (base + t) * step, Math.abs(inBar) < 1e-6 || Math.abs(inBar - bar) < 1e-6, !metro);
+      }
     }
-  }
-  plan.items.forEach((s, k) => {
-    strike(s.sound, out, s.f, t0 + s.t * step, s.len * step * 0.95);
-    play.timers.push(setTimeout(() => { play.cur = s.pos; play.k = k; mark(s.pos); }, delay(s.t)));
-  });
-  play.timers.push(setTimeout(stopPlay, delay(plan.end)));
+    p.items.forEach((s, k) => {
+      strike(s.sound, out, s.f, t0 + (base + s.t) * step, s.len * step * 0.95);
+      later(() => { play.cur = s.pos; play.k = k; play.cycle = p; mark(s.pos); }, delay(base + s.t));
+    });
+    return base + p.end;
+  };
+  let end = schedule(plan, 0);
+  // Am Ende des geplanten Stücks: bei Schleife den nächsten Durchlauf anhängen, sonst aufhören
+  const pump = () => {
+    if (play !== me) return;
+    const left = () => t0 + end * step - ctx.currentTime;
+    if (settings.loop && me.loopPlan) {
+      while (left() < LEAD) end = schedule(me.loopPlan, end);
+      later(pump, Math.max(100, (left() - LEAD) * 1000));
+    } else if (left() <= 0.01) stopPlay();
+    else later(pump, delay(end));
+  };
+  later(pump, Math.max(0, delay(end) - LEAD * 1000));
   showButton(true);
 }
 
@@ -168,6 +192,7 @@ function renderPlayOpts() {
   document.querySelectorAll('[data-play]').forEach((b) => {
     const on = !!settings[b.dataset.play];
     setPressed(b, on);
+    if (b.dataset.play === 'loop') b.hidden = !!settings.step; // Schritt für Schritt wiederholt nichts
     if (b.dataset.play !== 'stepSound') return;
     b.hidden = !settings.step;
     b.innerHTML = on ? ICONS.sound : ICONS.mute;
@@ -187,10 +212,10 @@ function changeTempo(v) {
   if (v === settings.tempo) return;
   setTempo(v);
   if (!play || !play.plan) return;
-  const { plan, k, mark } = play, next = startAt(plan, k + 1);
-  if (k >= 0 && next === plan) return; // es kommt nichts mehr
+  const { cycle, k, mark, loopPlan } = play, next = startAt(cycle, k + 1);
+  if (k >= 0 && next === cycle && !loopPlan) return; // es kommt nichts mehr
   stopPlay();
-  startPlay(next, mark, true);
+  startPlay(next, mark, true, loopPlan);
 }
 function initTempo() {
   renderTempo();

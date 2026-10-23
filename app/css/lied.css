@@ -18,6 +18,15 @@
 .score .ev.target { color: var(--mark); }
 .score .ev.playing { color: var(--play); }
 .score .playbar { fill: var(--play-bg); }
+/* Markierter Bereich (zum Abspielen und Wiederholen): Band hinter den Noten, Griffe am Anfang und Ende, ✕ zum Aufheben */
+.score .rband { fill: var(--mark); fill-opacity: .13; stroke: var(--mark); stroke-width: .08; stroke-opacity: .55; pointer-events: none; }
+.score .rhandle { pointer-events: none; }
+.score .rclear { cursor: pointer; }
+.score .rdot { fill: var(--mark); stroke: var(--board, #fff); stroke-width: .14; }
+.score .rclear .rdot { fill: var(--board, #fff); stroke: var(--mark); stroke-width: .12; }
+.score .rclear path { stroke: var(--mark); stroke-width: .2; stroke-linecap: round; fill: none; }
+.score .rtouch { fill: transparent; }
+.score .hit, .score .rhandle { -webkit-touch-callout: none; }
 /* Taktart: zwei Ziffern übereinander, jede so hoch wie zwei Linienabstände */
 /* Versalziffern: Georgias Mediävalziffern (3, 4, 5 …) reichen unter die Grundlinie und säßen zu tief */
 .score .mt { font: 700 2.75px "Times New Roman", Times, "Noto Serif", serif; font-variant-numeric: lining-nums; text-anchor: middle; dominant-baseline: central; }
@@ -61,7 +70,7 @@
 /* ---------- Ziehen auf dem Notenblatt ---------- */
 /* Die markierte Note lässt sich ziehen: Ein unsichtbares Feld liegt darüber, dort scrollt der Finger nicht */
 .sheet { position: relative; }
-.grabber { position: absolute; touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.grabber, .rgrip { position: absolute; touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .score .ev.lifting { opacity: .35; }
 .score .ev.drop { color: var(--mark); }
 

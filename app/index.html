@@ -272,8 +272,17 @@
     </div>
     <!-- Üben und Spielen: die Frage des Tonnamen-Quiz groß über der Tafel, darunter die Leiste des Spiels -->
     <div class="quizview" id="quizView" aria-live="polite" hidden></div>
-    <!-- Startseite des gewählten Spiels: kurze Erklärung für die Kinder und „Los geht's!“ (bis das Spiel läuft) -->
-    <div class="gameintro" id="gameIntro" hidden></div>
+    <!-- Beim Üben, bis ein Spiel läuft: erst die Galerie mit allen Spielen des Bereichs, nach dem Antippen die Karte des
+         Spiels (Erklärung, „Los geht's!“ und seine Einstellungen). In .gslot zieht game.js die Spielabschnitte (.play) der
+         Bereiche aus der Leiste -->
+    <div class="gameintro" id="gameIntro" hidden>
+      <div class="gallery" hidden></div>
+      <div class="gcard" hidden>
+        <button type="button" class="btn gback" data-act="back"><svg class="ico chev" aria-hidden="true"><use href="#chev"/></svg><span>Alle Spiele</span></button>
+        <div class="gintro"></div>
+        <div class="gslot"></div>
+      </div>
+    </div>
     <div class="gamebar" id="gameBar" role="group" aria-label="Üben und Spielen" hidden></div>
     <div class="tray" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>

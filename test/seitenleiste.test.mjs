@@ -79,12 +79,13 @@ test('explainLocked: ein Tipp auf die Stelle eines grauen Knopfs blendet seinen 
   assert.equal(el.toast.hidden, true, 'ohne Grund kein Hinweis');
 });
 
-test('Spiele: die Einstellungen stehen zugeklappt hinter „Einstellungen“ unter dem Startknopf und bleiben gemerkt', async () => {
+test('Spiele: die Einstellungen stehen zugeklappt hinter „Einstellungen“ unter dem Startknopf und bleiben gemerkt (auf der Tafel, nicht in der Leiste)', async () => {
   await import('../app/js/tafel/dom.js'); // fügt Hinweis und Startknopf der Spiele ein
   await import('../app/js/lied/dom.js');
   (await import('../app/js/core/game.js')).initGamePicks();
-  const plays = [...document.querySelectorAll('.panel > .play')];
+  const plays = [...document.querySelectorAll('#gameIntro .gslot > .play')];
   assert.equal(plays.length, 3);
+  assert.equal(document.querySelectorAll('.side .play').length, 0, 'in der Leiste bleibt nichts von den Spielen');
   for (const play of plays) {
     assert.ok(!play.classList.contains('opts-open'), 'am Anfang zu');
     for (const sec of play.querySelectorAll(':scope > .game')) {
@@ -103,6 +104,34 @@ test('Spiele: die Einstellungen stehen zugeklappt hinter „Einstellungen“ unt
   btn.click();
   assert.ok(!rhy.classList.contains('opts-open'));
   assert.ok(!settings.open.includes('rhy-play-opts'));
+});
+
+test('Spielwahl: beim Üben zuerst die Galerie auf der Tafel, ein Tipp öffnet die Karte des Spiels, „Alle Spiele“ führt zurück', async () => {
+  const { shellState } = await import('../app/js/core/shell-state.js');
+  shellState.area = { id: 'rhy', play: { clear() {} }, enter() {} };
+  settings.play.rhy = true;
+  side.dataset.area = 'rhy';
+  const intro = document.getElementById('gameIntro');
+  const gallery = intro.querySelector('.gallery'), card = intro.querySelector('.gcard');
+  // der Bereichswechsel (onShow) setzt die Ansicht auf die Galerie; hier über die Wahl im Hintergrund angestoßen
+  document.querySelector('.gamepick[data-area="rhy"] [data-game="which"]').click();
+  assert.equal(intro.hidden, false);
+  assert.equal(card.hidden, false);
+  assert.equal(card.querySelector('.gintro h2').textContent, "Welcher war's?");
+  assert.equal(document.getElementById('rhyPlay').hidden, false, 'der Abschnitt des offenen Bereichs');
+  assert.equal(document.getElementById('melPlay').hidden, true);
+  card.querySelector('[data-act="back"]').click();
+  assert.equal(gallery.hidden, false);
+  assert.equal(card.hidden, true);
+  const tiles = [...gallery.querySelectorAll('.gcardtile')];
+  assert.deepEqual(tiles.map((t) => t.dataset.game), ['echo', 'which', 'read', 'build', 'fix']);
+  assert.ok(tiles.every((t) => t.querySelector('.gdesc').textContent.length > 10), 'jede Kachel erklärt ihr Spiel');
+  tiles[0].click();
+  assert.equal(card.hidden, false);
+  assert.equal(card.querySelector('.gintro h2').textContent, 'Rhythmus-Echo');
+  assert.equal(document.querySelector('.gamepick[data-area="rhy"] [data-game="echo"]').getAttribute('aria-pressed'), 'true');
+  delete settings.play.rhy;
+  shellState.area = null;
 });
 
 test('Umwandeln: das Feld klappt auf und schließt sich nach einem Tipp auf eine Umwandlung', async () => {

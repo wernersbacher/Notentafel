@@ -1,4 +1,4 @@
-// Üben und Spielen: die Spielauswahl in der Leiste, die Leiste unten auf der Tafel und der Ablauf der Ratespiele
+// Üben und Spielen: die Spielauswahl auf der Tafel, die Leiste unten auf der Tafel und der Ablauf der Ratespiele
 // (Tonnamen-Quiz, Welcher war's?, Melodie-Echo, Höher oder tiefer?, Note setzen, Schritt oder Sprung).
 // Es läuft immer nur ein Spiel; ein neues beendet das alte. Beim Wechsel des Bereichs endet es (endGame).
 import { playNow, holdSound, releaseSound } from './player.js';
@@ -16,6 +16,7 @@ let game = null; // { kind, tap, stop }
 export function openGame(kind, html, { tap, stop }) {
   endGame();
   el.gameIntro.hidden = true;
+  view = 'game'; // nach dem Ende wartet die Karte dieses Spiels, nicht die Galerie
   game = { kind, tap, stop };
   el.gameBar.className = 'gamebar ' + kind;
   el.gameBar.innerHTML = html;
@@ -107,7 +108,8 @@ export function fillGameFrames(sectionId, frames) {
 }
 
 /* ---------- Spielauswahl ---------- */
-// In der Leiste jedes Bereichs wählen Kacheln (.gamepick mit data-area, Knöpfe mit data-game) ein Spiel. Zu sehen ist
+// Je Bereich wählt eine Kachelreihe (.gamepick mit data-area, Knöpfe mit data-game) das Spiel; sie bleibt unsichtbar im
+// Hintergrund, gezeigt wird die Galerie auf der Tafel (showIntro). Zu sehen ist
 // dann sein Abschnitt (.game mit data-game) und die Einstellungen, die es betreffen (data-for: Spiele, durch Leerzeichen
 // getrennt). Der Rahmen .play trägt das Spiel in data-game (für das CSS). Die Wahl bleibt gemerkt (settings.game).
 // Ein Tipp auf eine Kachel beendet das laufende Spiel und macht die Übungstafel leer.
@@ -130,20 +132,63 @@ function showPick(box) {
   play.querySelectorAll('.game[data-game]').forEach((x) => { x.hidden = x.dataset.game !== g; });
   play.querySelectorAll('[data-for]').forEach((x) => { x.hidden = !x.dataset.for.split(' ').includes(g); });
 }
-// Startseite auf der Tafel, solange beim Üben kein Spiel läuft: Name des gewählten Spiels, eine kurze Erklärung für die
-// Kinder (data-intro an seinem Abschnitt) und „Los geht's!“, das wie der Startknopf in der Leiste wirkt (.gamego)
-let introGo = null;
-function showIntro() {
-  const box = playing() && !game && document.querySelector('.gamepick[data-area="' + document.getElementById('side').dataset.area + '"]');
-  const tile = box && box.querySelector('[aria-pressed="true"]');
-  const sec = tile && box.closest('.play').querySelector('.game[data-game="' + tile.dataset.game + '"]');
-  introGo = sec && sec.querySelector('.gamego');
-  el.gameIntro.hidden = !introGo;
-  if (!introGo) { el.gameIntro.innerHTML = ''; return; }
-  el.gameIntro.innerHTML = '<div class="gintro"><h2>' + tile.textContent + '</h2><p>' + (sec.dataset.intro || '') + '</p>' +
-    '<button type="button" class="gbtn main big" data-act="go">' + PLAY + '<span>Los geht\'s!</span></button></div>';
+// Auf der Tafel, solange beim Üben kein Spiel läuft: zuerst die Galerie mit allen Spielen des Bereichs (große Kacheln mit
+// Name und Erklärung), nach dem Antippen die Karte des Spiels: Name, Erklärung für die Kinder, „Los geht's!“ (wirkt wie
+// der Startknopf .gamego des Spielabschnitts) und darunter seine Einstellungen. Die Spielabschnitte (.play) der Bereiche
+// ziehen dafür beim Start aus der Leiste in .gslot (initGamePicks). Beim Wechsel des Bereichs beginnt es wieder mit der
+// Galerie (view).
+let introGo = null, view = 'gallery'; // view: 'gallery' oder 'game'
+const gallery = el.gameIntro.querySelector('.gallery'), card = el.gameIntro.querySelector('.gcard');
+const cardHead = card.querySelector('.gintro'), slot = card.querySelector('.gslot');
+const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const pickBox = () => document.querySelector('.gamepick[data-area="' + document.getElementById('side').dataset.area + '"]');
+function showGallery(box, play) {
+  const tiles = [...box.querySelectorAll('[data-game]')].map((b) => {
+    const sec = play.querySelector('.game[data-game="' + b.dataset.game + '"]'), locked = b.classList.contains('locked');
+    return '<button type="button" class="gcardtile' + (locked ? ' locked' : '') + '" data-game="' + b.dataset.game + '"' +
+      (locked ? ' aria-disabled="true"' : '') + '><span class="gname">' + esc(b.textContent) + '</span>' +
+      '<span class="gdesc">' + esc(sec.dataset.intro || '') + '</span></button>';
+  }).join('');
+  gallery.innerHTML = '<h2>Was möchtest du üben?</h2><div class="gtiles">' + tiles + '</div>';
 }
-el.gameIntro.addEventListener('click', (e) => { if (e.target.closest('[data-act="go"]') && introGo) introGo.click(); });
+function showIntro() {
+  const box = playing() && !game && pickBox();
+  introGo = null;
+  el.gameIntro.hidden = !box;
+  if (!box) return;
+  const play = box.closest('.play'), tile = box.querySelector('[aria-pressed="true"]');
+  const sec = tile && play.querySelector('.game[data-game="' + tile.dataset.game + '"]');
+  introGo = sec && sec.querySelector('.gamego');
+  slot.querySelectorAll(':scope > .play').forEach((p) => { p.hidden = p !== play; });
+  const one = view === 'game' && !!introGo;
+  gallery.hidden = one;
+  card.hidden = !one;
+  if (!one) { showGallery(box, play); return; }
+  cardHead.innerHTML = '<h2>' + esc(tile.textContent) + '</h2><p>' + esc(sec.dataset.intro || '') + '</p>' +
+    '<button type="button" class="gbtn main big" data-act="go">' + PLAY + '<span>Los geht\'s!</span></button>';
+  el.gameIntro.scrollTop = 0;
+}
+// Wählt ein Spiel (aus der Galerie oder der Kachelreihe); ein gesperrtes zeigt den Hinweis. Jedes Spiel beginnt auf
+// einer leeren Tafel.
+function choose(box, id) {
+  const b = box && box.querySelector('[data-game="' + id + '"]');
+  if (!b) return;
+  if (b.getAttribute('aria-disabled') === 'true') { toast(limitText('games'), true); return; }
+  settings.game[box.dataset.area] = id;
+  persistSettings();
+  endGame();
+  clearPractice();
+  showPick(box);
+  view = 'game';
+  showIntro();
+}
+el.gameIntro.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-act], .gcardtile');
+  if (!t) return;
+  if (t.dataset.act === 'go') { if (introGo) introGo.click(); }
+  else if (t.dataset.act === 'back') { view = 'gallery'; showIntro(); }
+  else choose(pickBox(), t.dataset.game);
+});
 
 /* ---------- Einstellungen zuklappen ---------- */
 // Unter jeder Kachelreihe: Hinweis und Startknopf des gewählten Spiels, dann ein Knopf „Einstellungen“, der die Auswahl
@@ -181,23 +226,20 @@ function initOptions(play) {
 }
 
 export function initGamePicks() {
-  document.querySelectorAll('.play').forEach((play) => { if (play.querySelector('.gamepick')) initOptions(play); });
+  document.querySelectorAll('.play').forEach((play) => {
+    if (!play.querySelector('.gamepick')) return;
+    slot.append(play); // aus der Leiste auf die Tafel: beim Üben stehen Spiele und Einstellungen dort
+    initOptions(play);
+  });
   document.querySelectorAll('.gamepick').forEach((box) => {
     showPick(box);
     box.addEventListener('click', (e) => {
       const b = e.target.closest('[data-game]');
-      if (!b) return;
-      if (b.getAttribute('aria-disabled') === 'true') { toast(limitText('games'), true); return; }
-      settings.game[box.dataset.area] = b.dataset.game;
-      persistSettings();
-      endGame();
-      clearPractice(); // jedes Spiel beginnt auf einer leeren Tafel
-      showPick(box);
-      showIntro();
+      if (b) choose(box, b.dataset.game);
     });
   });
-  onTier(() => document.querySelectorAll('.gamepick').forEach(showPick)); // Anmelden oder Abmelden ändert die offenen Spiele
-  onShow(showIntro); // beim Wechsel des Bereichs oder zwischen schreiben und üben
+  onTier(() => { document.querySelectorAll('.gamepick').forEach(showPick); showIntro(); }); // Anmelden oder Abmelden ändert die offenen Spiele
+  onShow(() => { view = 'gallery'; showIntro(); }); // beim Wechsel des Bereichs oder zwischen schreiben und üben
   showIntro();
 }
 

@@ -52,6 +52,9 @@ body {
 /* Leiste eingeklappt: die Tafel nimmt die ganze Breite */
 .app.collapsed { grid-template-columns: minmax(0, 1fr); }
 .app.collapsed > .side { display: none; }
+/* Beim Üben gehört die ganze Breite der Tafel: Spiele und ihre Einstellungen stehen auf der Tafel, nicht in der Leiste */
+.app.practice { grid-template-columns: minmax(0, 1fr); }
+.app.practice > .side, .app.practice .fab.sidetoggle { display: none; }
 /* Vorführen: nur die Tafel mit den runden Knöpfen, ohne Leisten und mit schmalem Rand */
 body.present { padding: 4px max(4px, env(safe-area-inset-right, 0px)) 4px max(4px, env(safe-area-inset-left, 0px)); }
 .present .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
@@ -168,7 +171,6 @@ a.btn { text-decoration: none; }
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   /* Startseite des Spiels: Platz unten für die runden Knöpfe, nichts ragt über die Tafel hinaus */
   .gameintro { grid-template-columns: minmax(0, 1fr); padding: 16px; overflow-y: auto; }
-  .boardwrap:has(.gameintro:not([hidden])) .playfab { display: none; } /* die Startseite hat ihren eigenen Knopf */
   .gintro { min-width: 0; }
   .topshow { white-space: nowrap; font-size: .85rem; padding: 6px 18px 8px; }
   .topshow span { font-size: 0; }
@@ -321,12 +323,14 @@ a.btn { text-decoration: none; }
 /* Startseite eines Spiels: Name, Erklärung für die Kinder und „Los geht's!“ mittig auf der Tafel */
 .gameintro {
   position: absolute; top: 10px; left: 10px; right: 10px; bottom: 22px; z-index: 14;
-  display: grid; place-items: center; padding: 24px 80px; border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; padding: 24px 80px; overflow-y: auto; border-radius: 8px;
   background: var(--board); color: var(--fg);
 }
 .gintro { max-width: 680px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
 .gintro h2 { margin: 0; font: 800 2.6rem/1.1 var(--font-ui); }
 .gintro p { margin: 0; font: 700 1.5rem/1.45 var(--font-ui); text-wrap: pretty; }
+/* Solange die Galerie oder die Karte eines Spiels auf der Tafel steht, gibt es nichts abzuspielen: Die Karte hat ihren eigenen Knopf */
+.boardwrap:has(.gameintro:not([hidden])) .playfab { display: none; }
 .gintro .gbtn.big { margin-top: 8px; min-width: 280px; height: 84px; font-size: 1.4rem; }
 /* Vor „Abspielen“ ist die Leiste blass, nur dieser Knopf und „Ende“ nicht */
 .gamebar.gated .qkey, .gamebar.gated .gbtn:not([data-act="end"]):not([data-act="start"]) { opacity: .4; }

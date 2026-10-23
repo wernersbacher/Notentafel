@@ -128,10 +128,7 @@
   cursor: pointer; touch-action: manipulation;
 }
 .part[aria-pressed="true"] { background: var(--fg); color: var(--board); }
-/* Beim Üben zeigt die Leiste nur die Spiele: ohne Werkzeuge oben, ohne Blöcke zum Schreiben und ohne Knöpfe unten */
-.side[data-part="play"] .tools.toprow, .side[data-part="play"] .actions, .side[data-part="play"] .panel > .block, .side[data-part="play"] .panel > .showrow { display: none; }
-.side:not([data-part="play"]) .panel > .play { display: none; }
-.panel .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.gslot .play { gap: 7px; padding: 10px 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--fg) 4%, transparent); }
 .play .game { gap: 7px; margin-bottom: 4px; }
 /* Einstellungen der Spiele: zugeklappt hinter „Einstellungen“ unter dem Startknopf (game.js initOptions) */
 .play .gopts { display: flex; flex-direction: column; gap: 7px; }
@@ -139,19 +136,28 @@
 .btn.gopt { width: 100%; min-height: 44px; padding: 0 .8rem; justify-content: space-between; font-size: .9rem; }
 .btn.gopt .chev { width: 1.1rem; height: 1.1rem; color: var(--muted); transition: transform .18s ease; }
 .play.opts-open .gopt .chev { transform: rotate(180deg); }
-/* Spielauswahl: große Kacheln, das gewählte Spiel ist dunkel. Die Schrift wird in schmaler Leiste kleiner, damit jedes
-   Wort in eine Zeile passt (umbrochen wird nur zwischen Wörtern, nie mit Bindestrich) */
-.gamepick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; container-type: inline-size; }
-.gtile {
-  min-height: 62px; padding: .3rem .2rem; border: 2px solid var(--btn-line); border-radius: 14px;
-  background: var(--btn); color: var(--fg); font: 800 min(.9rem, 4.3cqi)/1.15 var(--font-ui); text-align: center;
-  cursor: pointer; touch-action: manipulation;
+/* Spielauswahl: Die Kachelreihe .gamepick bleibt als Wahl im Hintergrund (game.js), gezeigt wird die Galerie auf der Tafel */
+.gslot .gamepick, .gslot .gamego, .gslot .game > .ghint { display: none; } /* die Karte erklärt das Spiel schon */
+/* Galerie beim Üben: große Kacheln mit Name und Erklärung */
+.gallery { width: 100%; max-width: 940px; margin: auto 0; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.gallery h2 { margin: 0; font: 800 2.2rem/1.1 var(--font-ui); text-align: center; }
+.gtiles { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.gcardtile {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px;
+  min-height: 150px; padding: 18px 20px; border: 3px solid var(--btn-line); border-radius: 22px; text-align: left;
+  background: var(--btn); color: var(--fg); box-shadow: 0 3px 10px var(--shadow); cursor: pointer; touch-action: manipulation;
 }
-.gtile[aria-pressed="true"] { background: var(--fg); color: var(--board); border-color: var(--fg); }
-.gtile:active { transform: scale(.97); }
+.gcardtile:active { transform: scale(.97); }
+.gcardtile .gname { font: 800 1.45rem/1.15 var(--font-ui); }
+.gcardtile .gdesc { font: 700 .95rem/1.35 var(--font-ui); color: var(--muted); }
 /* Lite: gesperrtes Spiel; der Tipp zeigt den Hinweis (Pro) */
-.gtile.locked { opacity: .55; position: relative; }
-.gtile.locked::after { content: 'Pro'; position: absolute; top: 3px; right: 6px; font: 800 .65rem/1 var(--font-ui); letter-spacing: .04em; }
+.gcardtile.locked { opacity: .55; }
+.gcardtile.locked::after { content: 'Pro'; position: absolute; top: 10px; right: 14px; font: 800 .75rem/1 var(--font-ui); letter-spacing: .04em; }
+/* Karte des gewählten Spiels: Zurück zur Galerie, Erklärung, Los, darunter die Einstellungen */
+.gcard { width: 100%; max-width: 620px; margin: auto 0; display: flex; flex-direction: column; align-items: stretch; gap: 16px; }
+.gcard .gback { align-self: flex-start; min-height: 44px; padding: 0 1rem 0 .6rem; font-size: .95rem; }
+.gcard .gback .chev { transform: rotate(90deg); }
+.gcard .gintro { align-self: center; }
 /* Beim Tonnamen-Quiz „Melodie/Lied durchgehen“ braucht es Töne, Tonraum und Vorzeichen nicht */
 .play[data-game="quiz"] .songmode { display: none; }
 /* Leere Übungstafel: noch keine Zeilennummern */
@@ -176,3 +182,12 @@
 .rval { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .rval .small { font: 700 .66rem var(--font-ui); color: var(--muted); }
 .rval output { font: 700 1.35rem/1.2 var(--font-display); }
+
+/* Handy: Galerie und Karte schmaler (nach dem Rahmen .gameintro in base.css, der sonst sein Polster behält) */
+@media (max-width: 600px) {
+  .gameintro { padding: 56px 16px 16px; }
+  .gallery { gap: 14px; }
+  .gallery h2 { font-size: 1.5rem; }
+  .gcardtile { min-height: 0; padding: 14px 16px; }
+  .gcardtile .gname { font-size: 1.2rem; }
+}

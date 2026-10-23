@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { fakeStorage } from './helpers.mjs';
 
 // core/quiz.js liest beim Laden die Elemente aus dom.js; für die Fabriken genügt ein leeres Dokument. game.js hängt sich
-// dabei mit addEventListener an die Spielleiste, also braucht jedes Element die Methode.
+// dabei mit addEventListener an die Spielleiste und mit querySelector in die Galerie, also braucht jedes Element beide Methoden.
 globalThis.localStorage = fakeStorage();
-const noopEl = () => ({ addEventListener() {} });
+const noopEl = () => ({ addEventListener() {}, querySelector: noopEl });
 globalThis.document = { getElementById: noopEl, querySelector: () => null };
 const { answerOf, randomQuiz, songQuiz } = await import('../app/js/core/quiz.js');
 

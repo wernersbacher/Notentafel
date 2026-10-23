@@ -20,3 +20,44 @@ export function fakeStorage({ failKey = null } = {}) {
 export const n = (p, v = 4, x = {}) => ({ p, v, ...x });
 export const r = (v = 4, x = {}) => ({ v, ...x });
 export const song = (ev, meter = '4/4', pickup = 0) => ({ meter, pickup, ev });
+
+// DOM-Ersatz (jsdom) für die Module, die beim Import Elemente aus app/index.html einlesen (core/dom.js, lied/dom.js,
+// tafel/dom.js). installDom() lädt die echte index.html (ohne Scripts) und legt document, window, localStorage usw. als
+// globals an; uninstallDom() entfernt sie wieder. Die Module halten ihre Elemente nach dem Import fest, deshalb:
+// installDom() VOR dem dynamischen import() der App-Module aufrufen, pro Testdatei einmal (before/after), und die
+// Elemente zwischen den Tests selbst leeren (innerHTML, Klassen) statt das Dokument zu ersetzen.
+import fs from 'node:fs';
+import path from 'node:path';
+import { JSDOM } from 'jsdom';
+
+let current = null;
+const saved = new Map();
+
+export function installDom({ storage = fakeStorage() } = {}) {
+  if (current) throw new Error('installDom: schon installiert, erst uninstallDom()');
+  const html = fs.readFileSync(path.resolve(import.meta.dirname, '../app/index.html'), 'utf8');
+  const dom = new JSDOM(html, { url: 'http://localhost/' });
+  const w = dom.window;
+  const set = { window: w, document: w.document, localStorage: storage, Node: w.Node, Element: w.Element, HTMLElement: w.HTMLElement, SVGElement: w.SVGElement, Event: w.Event, MouseEvent: w.MouseEvent, getComputedStyle: w.getComputedStyle.bind(w) };
+  for (const [k, v] of Object.entries(set)) {
+    saved.set(k, Object.getOwnPropertyDescriptor(globalThis, k));
+    Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+  }
+  // Layout gibt es in jsdom nicht (clientWidth ist 0, getBoundingClientRect liefert Nullen); Scrollen fehlt ganz
+  for (const f of ['scrollIntoView', 'scrollBy', 'scrollTo']) w.Element.prototype[f] ??= function () {};
+  // SVG-Geometrie: Einheitsmatrix und die Maße aus den Attributen (reicht für die Rechtecke des Notenblatts)
+  const num = (e, a) => parseFloat(e.getAttribute(a)) || 0;
+  w.SVGElement.prototype.getCTM ??= () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 });
+  w.SVGElement.prototype.getBBox ??= function () { return { x: num(this, 'x'), y: num(this, 'y'), width: num(this, 'width'), height: num(this, 'height') }; };
+  current = { dom, storage, html };
+  return { window: w, document: w.document, storage };
+}
+
+// Entfernt das DOM und die globals wieder (die vorherigen Werte kommen zurück)
+export function uninstallDom() {
+  if (!current) return;
+  current.dom.window.close();
+  for (const [k, d] of saved) { if (d) Object.defineProperty(globalThis, k, d); else delete globalThis[k]; }
+  saved.clear();
+  current = null;
+}

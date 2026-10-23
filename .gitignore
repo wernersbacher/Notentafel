@@ -8,3 +8,4 @@ shared/env.js
 .beads-credential-key
 .beads/proxieddb/
 *.gate.lock*
+node_modules/

@@ -20,6 +20,7 @@ export function transpose(song, semis) {
   let ds = rootStep(k) - rootStep(k0);
   if (semis > 0 && ds < 0) ds += 7;
   if (semis < 0 && ds > 0) ds -= 7;
+  ds += 7 * Math.trunc(semis / 12); // volle Oktaven kommen zur Stufenverschiebung innerhalb einer Oktave dazu
   const ev = [];
   for (const e of song.ev) {
     if (!isNote(e)) { ev.push({ ...e }); continue; }

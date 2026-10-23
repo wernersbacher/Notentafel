@@ -8,5 +8,8 @@
     "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
     "screens": "node tools/screens.js",
     "version:set": "node tools/version.js"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
   }
 }

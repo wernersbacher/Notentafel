@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node tools/serve.js",
     "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
+    "screens": "node tools/screens.js",
     "version:set": "node tools/version.js"
   }
 }

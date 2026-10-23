@@ -167,6 +167,7 @@ export function registerLied() {
       del: act.deleteEv,
       brk: act.lineBreak,
       undo: act.undo,
+      redo: act.redo,
       addRow: act.addLine,
       // − Zeile (wenn in der Zeile Noten stehen) und Alles löschen muss man zweimal antippen
       delRow: (btn) => { if (act.lastLineHasNotes()) confirmTap(btn, 'Sicher? Nochmal', act.delLine); else act.delLine(); },

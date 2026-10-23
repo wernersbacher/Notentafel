@@ -34,7 +34,7 @@ beforeEach(() => {
   Object.assign(settings, { lens: true, autoBar: false, autoZ: false, syl: false });
   S.rows = [row([note('C'), note('D'), note('E')]), row(), row()];
   S.sel = { r: 0, c: 1 };
-  S.hist = []; S.quiz = null; S.written = null; S.insertMode = false; S.cap = 0;
+  S.hist = []; S.redo = []; S.quiz = null; S.written = null; S.insertMode = false; S.cap = 0;
   el.grid.innerHTML = ''; el.grid.className = ''; el.grid.removeAttribute('style');
 });
 
@@ -393,6 +393,7 @@ test('renderSidebar: Werkzeuge Löschen, Lücke, Umbruch, Rückgängig, Zeilen',
   SB.renderSidebar();
   assert.equal(el.btnDel.disabled, true, 'leerer Platz');
   assert.equal(el.btnUndo.disabled, false);
+  assert.equal(el.btnRedo.disabled, true);
   assert.equal(el.btnAddRow.disabled, false);
   assert.equal(el.btnDelRow.disabled, false);
   S.rows = [row([note('C')])];

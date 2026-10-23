@@ -23,7 +23,7 @@ after(uninstallDom);
 beforeEach(() => {
   storage.clear();
   L.song = song([n('c1'), n('d1'), n('e1'), n('f1')], '', 0);
-  L.sel = 4; L.hist = []; L.last = null; L.insertMode = false; L.quiz = null; L.written = null; L.pen = { v: 4, dot: 0 };
+  L.sel = 4; L.hist = []; L.redo = []; L.last = null; L.insertMode = false; L.quiz = null; L.written = null; L.pen = { v: 4, dot: 0 };
   Object.assign(opts, { autoBar: true, autoZ: false, lyrics: true, names: false, colors: false, wrap: true, size: 2, allTones: false });
   el.toast.hidden = true; el.toast.textContent = ''; el.toast.className = '';
   el.sheet.innerHTML = '';
@@ -418,6 +418,7 @@ test('renderSidebar: Anzeige-Schalter folgen den Optionen, Rückgängig dem Verl
   L.hist.push('{}');
   SB.renderSidebar();
   assert.equal(el.btnUndo.disabled, false);
+  assert.equal(el.btnRedo.disabled, true);
   L.sel = 0;
   SB.renderSidebar();
   assert.equal(el.btnBreak.disabled, true);

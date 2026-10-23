@@ -6,7 +6,7 @@
 //   panel, board     seine Elemente in der Leiste und im Rahmen der Tafel
 //   enter()          wird sichtbar: Stand laden und zeichnen
 //   leave()          wird verlassen (optional)
-//   tools            gemeinsame Knöpfe: insert, gap, del, brk, undo, addRow, delRow(btn), clear(btn);
+//   tools            gemeinsame Knöpfe: insert, gap, del, brk, undo, redo, addRow, delRow(btn), clear(btn);
 //                    fehlt einer, ist der Knopf ausgeblendet. Ihren Zustand zeichnet der Bereich selbst.
 //   plan(), mark(pos)  Abspielen (siehe player.js); ohne plan kein Abspielen-Knopf
 //   songs            Speichern und Laden (optional): store (aus makeStore), texts { save, songs },

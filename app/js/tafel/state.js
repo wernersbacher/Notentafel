@@ -21,6 +21,7 @@ export const S = {
   name: saved ? saved.name : '',
   sel: appendPos(saved ? saved.rows : []), // markierter Platz, am Anfang hinter dem letzten Ton
   hist: [], // Rückgängig-Verlauf (als JSON)
+  redo: [], // zurückgenommene Stände, die „Wiederholen“ wiederherstellt (als JSON)
   // Markierung und Rückgängig-Verlauf der gerade nicht sichtbaren Tafel (nur bis zum Schließen der App)
   parked: {},
   insertMode: false,
@@ -52,8 +53,8 @@ export function stashBoard() {
 // Eine neue, leere Übungstafel; die geschriebene Tafel wartet so lange unberührt in S.written
 export const { startPractice, resetPractice, practiceWritten, endPractice } = makePractice({
   state: S,
-  fields: ['rows', 'sel', 'hist'],
-  fresh: () => ({ rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [] }),
+  fields: ['rows', 'sel', 'hist', 'redo'],
+  fresh: () => ({ rows: emptyRows(S.variant === 'rhy'), sel: { r: 0, c: 0 }, hist: [], redo: [] }),
   // Legt eine Kopie der geschriebenen Tafel auf die Übungstafel (zum Durchgehen im Tonnamen-Quiz), ohne Tuch und Karten.
   // false, wenn darin nichts zu benennen ist: Dann bleibt die Übungstafel unangetastet (das Quiz prüft es damit vor dem
   // Umschalten, sonst wäre sie schon getauscht, wenn es die Leer-Meldung zeigt).
@@ -71,7 +72,7 @@ export const { startPractice, resetPractice, practiceWritten, endPractice } = ma
 });
 
 // Merkt sich den Stand vor einer Änderung für „Rückgängig“
-export const { snap, restore } = makeUndo({
+export const { snap, restore, redo } = makeUndo({
   state: S,
   snapshot: () => ({ rows: S.rows, lines: packLines(S.rows), sel: S.sel, name: S.name }),
   apply: (d) => {

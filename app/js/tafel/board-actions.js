@@ -1,7 +1,7 @@
 // Ganze Tafel: Rückgängig, leeren, Plätze tauschen, Lied übernehmen und laden. Jede Aktion merkt sich vorher den
 // Stand für „Rückgängig“ und endet mit commit().
 import { emptyRows, content, setCell, trimRow, cleanRows, appendPos, packLines } from './model.js';
-import { S, snap, restore, stashBoard } from './state.js';
+import { S, snap, restore, redo as redoStep, stashBoard } from './state.js';
 import { commit } from './redraw.js';
 import { toast } from '../core/ui.js';
 import { el } from './dom.js';
@@ -9,6 +9,9 @@ import { el } from './dom.js';
 /* ---------- Ganze Tafel ---------- */
 export function undo() {
   if (restore()) commit();
+}
+export function redo() {
+  if (redoStep()) commit();
 }
 export function clearAll() {
   snap();

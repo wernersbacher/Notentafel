@@ -3,7 +3,7 @@ const ids = [
   'toast', 'tabs', 'parts','btnSongs', 'btnSettings', 'drawerTitle',
   'btnIns', 'btnGap', 'btnDel', 'btnBreak', 'btnSide', 'btnTopHide', 'btnTopShow',
   'gameBar', 'quizView', 'gameIntro',
-  'btnPlay', 'btnPresent', 'btnTempo', 'tempoNum', 'tempoPop', 'tempoPopOut', 'tempoRange', 'tempoMinus', 'tempoPlus', 'btnUndo', 'btnClear', 'btnAddRow', 'btnDelRow',
+  'btnPlay', 'btnPresent', 'btnTempo', 'tempoNum', 'tempoPop', 'tempoPopOut', 'tempoRange', 'tempoMinus', 'tempoPlus', 'btnUndo', 'btnRedo', 'btnClear', 'btnAddRow', 'btnDelRow',
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs', 'cloudHint', 'btnExportAll', 'btnImportAll', 'importFile', 'backupHint',

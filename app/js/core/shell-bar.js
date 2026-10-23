@@ -6,7 +6,7 @@ import { el } from './dom.js';
 import { shellState } from './shell-state.js';
 
 // Zuordnung der Werkzeuge eines Bereichs zu ihren Knöpfen; show() in shell.js blendet danach aus
-export const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', undo: 'btnUndo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
+export const TOOL_BTNS = { insert: 'btnIns', gap: 'btnGap', del: 'btnDel', brk: 'btnBreak', undo: 'btnUndo', redo: 'btnRedo', addRow: 'btnAddRow', delRow: 'btnDelRow', clear: 'btnClear' };
 
 export function initBar(areas, setArea, setPlay) {
   el.tabs.innerHTML = areas.map((a) =>

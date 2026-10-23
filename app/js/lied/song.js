@@ -2,13 +2,16 @@
 import { toast } from '../core/ui.js';
 import { handOver } from '../core/shell.js';
 import { isNote, emptySong, songToMelody, cleanSong, splitAll } from './model.js';
-import { L, opts, persistOpts, snap, restore, stashSong } from './state.js';
+import { L, opts, persistOpts, snap, restore, redo as redoStep, stashSong } from './state.js';
 import { commit, scrollTop } from './render.js';
 import { ev } from './common.js';
 
 /* ---------- Ganzes Lied ---------- */
 export function undo() {
   if (restore()) commit();
+}
+export function redo() {
+  if (redoStep()) commit();
 }
 // Neues, leeres Lied in der Grundeinstellung: 4/4, C-Dur, ohne Auftakt
 export function clearAll() {

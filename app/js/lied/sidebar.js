@@ -107,4 +107,5 @@ export function renderSidebar() {
   el.btnBreak.disabled = L.sel === 0;
   breakJoins(!!(ev[L.sel - 1] && ev[L.sel - 1].brk));
   el.btnUndo.disabled = L.hist.length === 0;
+  el.btnRedo.disabled = L.redo.length === 0;
 }

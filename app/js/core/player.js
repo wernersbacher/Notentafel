@@ -83,11 +83,28 @@ function startPlay(plan, mark, again) {
   showButton(true);
 }
 
+// Längste Dauer eines Einzeltons beim Schritt-für-Schritt, damit er nicht übermäßig lang klingt
+const STEP_MAX = 0.8;
+
+// Blendet die Ausgabe in secs Sekunden aus und trennt sie dann, statt sie scharf abzuschneiden (Stopp, Liedende, nächster Schritt)
+function fadeOut(out, secs) {
+  if (!out) return;
+  const ctx = audioCtx();
+  try {
+    if (!ctx) { out.disconnect(); return; }
+    const t = ctx.currentTime;
+    out.gain.cancelScheduledValues(t);
+    out.gain.setValueAtTime(out.gain.value, t);
+    out.gain.linearRampToValueAtTime(0, t + secs);
+    setTimeout(() => { try { out.disconnect(); } catch (e) { /* schon getrennt */ } }, secs * 1000 + 50);
+  } catch (e) { /* schon getrennt */ }
+}
+
 export function stopPlay() {
   if (!play) return;
   const { timers, out, mark } = play;
   timers.forEach(clearTimeout);
-  if (out) { try { out.disconnect(); } catch (e) { /* schon getrennt */ } }
+  fadeOut(out, 0.25);
   play = null;
   mark(null);
   showButton(false);
@@ -95,11 +112,12 @@ export function stopPlay() {
 
 // Schritt für Schritt mit Ton: die erreichte Note klingt in ihrer Länge, die vorige verstummt
 function stepSound(s) {
-  if (play.out) { try { play.out.disconnect(); } catch (e) { /* schon getrennt */ } play.out = null; }
+  fadeOut(play.out, 0.12);
+  play.out = null;
   if (!settings.stepSound || !s.sound) return;
   const ctx = audioCtx();
   if (!ctx) return;
-  const out = play.out = ctx.createGain(), t0 = ctx.currentTime + 0.01, len = s.len * 60 / settings.tempo * 0.95;
+  const out = play.out = ctx.createGain(), t0 = ctx.currentTime + 0.01, len = Math.min(s.len * 60 / settings.tempo * 0.95, STEP_MAX);
   out.gain.value = 0.6;
   out.connect(ctx.destination);
   strike(s.sound, out, s.f, t0, len);

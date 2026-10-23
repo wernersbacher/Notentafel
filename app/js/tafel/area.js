@@ -24,12 +24,13 @@ import { el } from './dom.js';
 // Rückgängig-Verlauf werden geparkt, die andere Tafel kommt aus dem Speicher.
 function useBoard(v) {
   if (S.variant === v) return;
-  S.parked[S.variant] = { sel: S.sel, hist: S.hist };
+  S.parked[S.variant] = { sel: S.sel, hist: S.hist, redo: S.redo };
   useVariant(v);
   const d = loadBoard(v), p = S.parked[v];
   S.rows = d ? d.rows : emptyRows(v === 'rhy');
   S.name = d ? d.name : '';
   S.hist = p ? p.hist : [];
+  S.redo = p ? p.redo : [];
   S.sel = p && p.sel.r < S.rows.length ? p.sel : appendPos(S.rows);
 }
 // Macht die Tafel des Bereichs v sichtbar
@@ -67,6 +68,7 @@ const tools = {
   del: act.deleteCell,
   brk: act.lineBreak,
   undo: act.undo,
+  redo: act.redo,
   addRow: act.addRow,
   // − Zeile (wenn in der Zeile Noten stehen) und Alles löschen muss man zweimal antippen
   delRow: (btn) => { if (act.lastRowHasNotes()) confirmTap(btn, 'Sicher? Nochmal', act.delRow); else act.delRow(); },

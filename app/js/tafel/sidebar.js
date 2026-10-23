@@ -94,6 +94,7 @@ export function renderSidebar() {
   el.btnBreak.disabled = S.rows.length >= maxRows() && !canStepDown(S.rows, S.sel);
   breakJoins(false);
   el.btnUndo.disabled = S.hist.length === 0;
+  el.btnRedo.disabled = S.redo.length === 0;
   el.btnAddRow.disabled = S.rows.length >= maxRows();
   el.btnDelRow.disabled = S.rows.length <= 1;
 }

@@ -160,8 +160,20 @@ a.btn { text-decoration: none; }
 }
 
 @media (max-width: 600px) { /* nur Handys; ein iPad (ab 768 px) behält die Leiste an der Seite */
-  html, body { height: auto; }
-  .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
+  /* Die Tafel füllt den Bildschirm unter der Leiste oben (dvh: ohne die Adressleiste des Browsers mitzuzählen) */
+  html, body { height: 100dvh; }
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  /* Startseite des Spiels: Platz unten für die runden Knöpfe, nichts ragt über die Tafel hinaus */
+  .gameintro { grid-template-columns: minmax(0, 1fr); padding: 16px; overflow-y: auto; }
+  .boardwrap:has(.gameintro:not([hidden])) .playfab { display: none; } /* die Startseite hat ihren eigenen Knopf */
+  .gintro { min-width: 0; }
+  .topshow { white-space: nowrap; font-size: .85rem; padding: 6px 18px 8px; }
+  .phone .topshow span { font-size: 0; }
+  .phone .topshow span::after { content: "Menü, Lieder, Bereiche"; font-size: .85rem; }
+  .gameintro .gintro { gap: 12px; }
+  .gameintro .gintro h2 { font-size: 1.5rem; }
+  .gameintro .gintro p { font-size: 1rem; line-height: 1.4; }
+  .gameintro .gintro .gbtn.big { margin-top: 0; min-width: 0; width: 100%; height: 60px; font-size: 1.2rem; white-space: nowrap; }
   /* Nur ansehen und abspielen: nichts zum Schreiben (die Leiste bleibt eingeklappt, Speichern entfällt) */
   .phone .fab.sidetoggle, .phone .savewrap { display: none; }
   /* Leiste oben auf dem Handy: Titel und Knöpfe in einer Zeile (nur Symbole), darunter Reiter und Schreiben/Üben */

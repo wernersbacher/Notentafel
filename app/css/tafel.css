@@ -272,7 +272,7 @@
 }
 
 @media (max-width: 600px) { /* nur Handys; ein iPad (ab 768 px) behält die Leiste an der Seite */
-  .boardwrap { height: min(62vh, 520px); min-height: 340px; }
+  .boardwrap { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dot { transition: none; }

@@ -220,3 +220,26 @@ test('Quiz: Lite beendet die Runde nach quizQuestions Fragen mit Hinweis, Pro l�
   assert.equal(G.gameOn('quiz'), true, 'Pro: keine Grenze');
   G.endGame();
 });
+
+test('Quiz: mit gateEach wartet auch die Frage nach „Weiter“ auf „Abspielen“, ohne nicht', async () => {
+  await as('pro');
+  const { previewTone } = await import('../app/js/core/player.js');
+  // Eine Frage mit Ton: Er wird beim Aufbau zurückgehalten, wenn ein Tor davorsteht
+  const quiz = (gateEach) => ({ ...fakeQuiz(), gateEach, next() { previewTone(440, 'bell'); return { ok: new Set(['a']), f: 440 }; } });
+  const start = () => el.gameBar.querySelector('[data-act="start"]');
+  const nextRound = () => { Q.quizAnswer('a'); el.gameBar.querySelector('[data-act="next"]').click(); };
+  Q.startQuiz(quiz(true));
+  start().click(); // die erste Frage wartet immer auf „Abspielen“
+  nextRound();
+  assert.ok(start(), 'nach „Weiter“ steht „Abspielen“ da');
+  assert.equal(G.gameGated(), true);
+  start().click();
+  assert.equal(start(), null);
+  assert.equal(G.gameGated(), false);
+  G.endGame();
+  Q.startQuiz(quiz(false));
+  start().click();
+  nextRound();
+  assert.equal(start(), null, 'ohne gateEach klingt die Frage gleich');
+  G.endGame();
+});

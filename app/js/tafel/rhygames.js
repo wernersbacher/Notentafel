@@ -1,7 +1,8 @@
 // Weitere Rhythmus-Spiele („Üben und Spielen“), mit denselben Einstellungen wie das Rhythmus-Echo:
 //   Welcher war's?      Auf der Übungstafel stehen 2–4 gewürfelte Rhythmen, einer davon erklingt. Die Kinder tippen
 //                       unten seine Nummer. Eine falsche Nummer wird rot (auch auf der Tafel) und erklingt nicht; die
-//                       richtige wird grün. Danach spielt ein Tipp auf eine Zeilennummer diesen Rhythmus ab.
+//                       richtige wird grün. Danach spielt ein Tipp auf eine Zeilennummer diesen Rhythmus ab. In jeder
+//                       Runde stehen die Rhythmen erst da; der eine erklingt erst nach „Abspielen“.
 //   Vom Blatt klatschen Ein Rhythmus steht auf der Tafel. „Mitklatschen“ zählt ein und gibt den Grundschlag, die Zeichen
 //                       leuchten dabei mit, aber es klingt nichts; „Anhören“ spielt ihn zur Kontrolle.
 //   Rhythmus legen      Ein Rhythmus erklingt, die Kinder legen ihn unten aus Bausteinen (ta, ti-ti, Pause …) nach.
@@ -55,6 +56,7 @@ function whichQuiz() {
   const play = (r, mark) => { const p = rowPlan(r); if (p) playNow(p, mark); };
   return {
     layout: 'words', keys,
+    gateEach: true, // in jeder Runde erst die Rhythmen ansehen, dann „Abspielen“
     next() {
       stopPlay();
       solved = false;

@@ -25,6 +25,8 @@ import { openGame, endGame, gameFirst, gameBtn, GAME_ICONS, gameGated } from './
 //   cell(r, c)  (optional, Tafel) die Antwort, die ein Tipp auf den Platz (r, c) gibt, oder null
 //   stop()   räumt auf; sound 'piano' oder 'bell'; done: Hinweis am Ende
 //   rekey    die Antwortknöpfe ändern sich mit jeder Frage (next() setzt q.keys neu, z. B. Lied erraten)
+//   gateEach  auch nach „Weiter“ steht die Frage erst in Ruhe da und ihr Ton klingt erst nach „Abspielen“ (sonst gilt das
+//            nur für die erste Frage)
 // Rückmeldung: Eine richtige Antwort wird grün, eine falsche rot (sie bleibt es bis zur nächsten Frage), über der Leiste
 // steht dazu ein Hinweis. Ist die Frage gelöst (richtig getippt oder „Lösung“), geht es erst mit „Weiter“ weiter.
 let quiz = null; // { q, cur, solved: false, 'right' (richtig getippt) oder 'shown' (Lösung gezeigt) }
@@ -199,7 +201,7 @@ function quizTap(b) {
   const act = b.dataset.act;
   if (act === 'end') { endGame(); return; }
   if (act === 'hear') { hear(); return; }
-  if (act === 'next') { quizNext(); return; }
+  if (act === 'next') { if (quiz.q.gateEach) gameFirst(quizNext); else quizNext(); return; }
   if (act === 'solve') { if (!quiz.solved) solve(false); return; }
   if (b.dataset.key != null) answer(b.dataset.key, b);
 }

@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/menu.css?v=1.0.0">
 <script type="importmap">
 { "imports": {
+  "./js/core/account-text.js": "./js/core/account-text.js?v=1.0.0",
   "./js/core/account.js": "./js/core/account.js?v=1.0.0",
   "./js/core/audio.js": "./js/core/audio.js?v=1.0.0",
   "./js/core/blocks.js": "./js/core/blocks.js?v=1.0.0",
@@ -215,7 +216,7 @@
         <button type="button" class="btn" id="btnSettings" aria-haspopup="dialog" aria-controls="drawer" title="Einstellungen">
           <svg class="ico" aria-hidden="true"><use href="#einstellungen"/></svg><span>Einstellungen</span>
         </button>
-        <!-- Anmelden oder Avatar mit Menü (shared/header.js, nur mit Backend) -->
+        <!-- Personen-Symbol oder Avatar mit Menü (shared/header.js, nur mit Backend) -->
         <div id="accMount"></div>
       </div>
       <button type="button" class="fab topfold" id="btnTopHide" aria-controls="topbar" title="Leiste oben einklappen" aria-label="Leiste oben einklappen"><svg class="ico" aria-hidden="true"><use href="#hoch"/></svg></button>
@@ -805,27 +806,6 @@
   <!-- Gilt für alle Modi gleich -->
   <div class="mgroup global" aria-labelledby="menuGlobalTitle" role="group" data-part="settings">
     <h2 class="mtitle" id="menuGlobalTitle">Für alle Modi</h2>
-
-    <!-- Konto (freiwillig, nur mit Backend): gespeicherte Lieder auf allen Geräten -->
-    <section id="accountSec" hidden>
-      <h3>Konto</h3>
-      <div id="accOut">
-        <p class="hint">Freiwillig: Mit einem Konto liegen deine gespeicherten Lieder auch auf dem Server und sind auf jedem Gerät da, auf dem du dich anmeldest. Ohne Konto bleibt alles nur auf diesem Gerät. <a href="/privacy/" target="_blank" rel="noopener">Datenschutz</a></p>
-        <div class="sizes accrow">
-          <a class="btn" href="/login/?next=/app/">Anmelden</a>
-          <a class="btn" href="/login/?mode=register&amp;next=/app/">Konto anlegen</a>
-        </div>
-      </div>
-      <div id="accIn" hidden>
-        <p class="accwho">Angemeldet als <b id="accWho"></b></p>
-        <p class="hint" id="accState" aria-live="polite"></p>
-        <div class="sizes accrow">
-          <a class="btn" href="/account/">Mein Konto</a>
-          <button type="button" class="btn" id="btnLogout">Abmelden</button>
-        </div>
-        <p class="hint">Beim Abmelden bleiben die Lieder auf diesem Gerät.</p>
-      </div>
-    </section>
 
     <section>
       <h3>Größe der Oberfläche</h3>

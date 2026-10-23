@@ -7,7 +7,7 @@ const ids = [
   'btnSaveSide', 'savePop', 'saveName', 'btnSaveOk', 'saveHintSide',
   'drawer', 'backdrop', 'btnClose', 'menuAreaTitle', 'menuSettings', 'menuSettingsTitle', 'saveSec', 'saveTitle', 'songName', 'btnSave', 'saveHint',
   'autoSec', 'autosave', 'songsSec', 'songsTitle', 'songs', 'cloudHint', 'btnExportAll', 'btnImportAll', 'importFile', 'backupHint',
-  'accMount', 'accountSec', 'accOut', 'accIn', 'accWho', 'accState', 'btnLogout',
+  'accMount',
   'wakeSec', 'btnWakeToggle', 'wakeToggleState', 'tempo', 'tempoOut', 'uiScale', 'uiRange', 'uiNum', 'uiMinus', 'uiPlus'
 ];
 // Zu einer Liste von ids das Objekt id → Element; das Einlesen steht so nur einmal da

@@ -5,12 +5,24 @@
 .kopf-knopf { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border: 2px solid var(--btn-line); border-radius: 22px; background: var(--btn); color: var(--fg); font: 800 1rem var(--font-ui); text-decoration: none; }
 .kopf-avatar { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid var(--frame-edge); border-radius: 50%; background: none; cursor: pointer; }
 .kopf-avatar[aria-expanded="true"] { border-color: var(--ring); }
-.kopf-menue { position: absolute; top: calc(100% + 6px); right: 0; z-index: 10; min-width: 15rem; padding: 6px; border: 2px solid var(--line); border-radius: 14px; background: var(--board); box-shadow: 0 6px 18px var(--shadow); }
+.kopf-avatar { position: relative; }
+.kopf-avatar.warn::after { content: ""; position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border: 2px solid var(--board); border-radius: 50%; background: var(--danger); }
+/* Personen-Symbol für Gäste (nur in der App, dort statt „Anmelden“) */
+.kopf-person { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid var(--btn-line); border-radius: 12px; background: var(--btn); color: var(--fg); cursor: pointer; }
+.kopf-person[aria-expanded="true"] { border-color: var(--ring); }
+.kopf-symbol { width: 1.5rem; height: 1.5rem; }
+.kopf-menue { position: absolute; top: calc(100% + 6px); right: 0; z-index: 10; width: 17rem; max-width: calc(100vw - 24px); padding: 6px; border: 2px solid var(--line); border-radius: 14px; background: var(--board); box-shadow: 0 6px 18px var(--shadow); }
 .kopf-menue[hidden] { display: none; }
 .kopf-wer { margin: 0; padding: 6px 12px 8px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
 .kopf-punkt { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--fg); font: 700 1rem var(--font-ui); text-align: left; text-decoration: none; cursor: pointer; }
+.kopf-wer:has(+ .kopf-status) { padding-bottom: 0; border-bottom: 0; }
+.kopf-text, .kopf-status { margin: 0; padding: 6px 12px 8px; color: var(--muted); font-size: .85rem; line-height: 1.35; }
+.kopf-text { border-bottom: 1px solid var(--line); }
+.kopf-status { border-bottom: 1px solid var(--line); }
+.kopf-status.warn { color: var(--danger); }
+.kopf-klein { font-size: .9rem; color: var(--muted); }
 .kopf-punkt:active { background: var(--panel); }
-:is(.kopf-knopf, .kopf-avatar, .kopf-punkt, .kopf-name):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+:is(.kopf-knopf, .kopf-avatar, .kopf-person, .kopf-punkt, .kopf-name):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 /* Initialen-Avatar (shared/avatar.js): Farbe nach Name, Größe setzt das Skript */
 .avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; color: var(--av-fg); font-family: var(--font-ui); font-weight: 800; letter-spacing: .02em; line-height: 1; user-select: none; }
 .av-1 { background: var(--av-1); } .av-2 { background: var(--av-2); } .av-3 { background: var(--av-3); } .av-4 { background: var(--av-4); }

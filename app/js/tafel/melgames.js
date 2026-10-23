@@ -151,6 +151,7 @@ function guessQuiz() {
   const hear = () => playNow(plan(), solved ? markPlaying : () => {});
   const q = {
     layout: 'words', rekey: true, keys: [],
+    gateEach: true, // in jeder Runde erst die Namen ansehen, dann „Abspielen“
     next() {
       stopPlay();
       let k = rnd(MELODIES.length);

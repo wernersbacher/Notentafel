@@ -110,6 +110,7 @@ function stepQuiz() {
   el.quizView.hidden = false;
   return {
     layout: 'words', sound: 'piano', keys: STEP_KEYS,
+    gateEach: true, // in jeder Runde erst die Noten ansehen, dann „Abspielen“
     next() {
       stopPlay();
       let kind;
@@ -156,6 +157,7 @@ function valuesQuiz() {
   const hear = () => playNow(plan, () => {});
   return {
     layout: 'words', keys,
+    gateEach: true, // in jeder Runde erst die Note ansehen, dann „Abspielen“
     next() {
       stopPlay();
       const pick = vals.filter((x) => x[0] !== cur);

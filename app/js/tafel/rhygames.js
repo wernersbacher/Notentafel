@@ -9,7 +9,8 @@
 //                       Jeder richtige Baustein erscheint auf der Tafel, ein falscher wackelt nur.
 //   Fehler finden       Ein Rhythmus steht auf der Tafel, die Tafel spielt ihn mit einem Fehler in einem Takt. Die Kinder
 //                       tippen den Takt (auf der Tafel oder unten). Auf der Tafel leuchtet dabei nichts mit und kein
-//                       Takt wird hinterlegt; rot und grün werden nur die Knöpfe unten.
+//                       Takt wird hinterlegt; rot und grün werden nur die Knöpfe unten. In jeder Runde steht der
+//                       Rhythmus erst da, die Tafel spielt ihn erst nach „Abspielen“.
 //                       Rhythmus legen und Fehler finden: Nach dem Lösen spielt die Zeilennummer den Rhythmus richtig.
 import { makeRhythm, makeBlocks, usableBlocks, meterParts } from './rhythms.js';
 import { games, persistGames } from './gameOptions.js';
@@ -184,6 +185,7 @@ function fixQuiz() {
   const play = () => playNow(planOf(played, o.meter), quiet);
   return {
     layout: 'words', keys,
+    gateEach: true, // in jeder Runde erst den Rhythmus ansehen, dann „Abspielen“
     next() {
       stopPlay();
       const bars = byBar(makeBlocks(o).flat(), len);

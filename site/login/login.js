@@ -1,85 +1,18 @@
-// Seite /login/: Anmelden, Registrieren, Passwort vergessen, neues Passwort (?reset=) und E-Mail bestätigen
-// (?verify=). Die Ansicht kommt aus der Adresse; ?next= sagt, wohin es nach dem Anmelden geht (nur Pfade auf
-// dieser Seite, siehe safeNext). Gebaut wird mit DOM-Aufrufen, Stile stehen in /form.css.
+// Seite /login/: Anmelden, Registrieren, Passwort vergessen, neues Passwort (?reset=), E-Mail bestätigen (?verify=)
+// und neue E-Mail-Adresse bestätigen (?email=). Die Ansicht kommt aus der Adresse; ?next= sagt, wohin es nach dem
+// Anmelden geht (nur Pfade auf dieser Seite, siehe safeNext). Gebaut wird mit DOM-Aufrufen (/formular.js), Stile
+// stehen in /form.css.
 import { mountHeader } from '/shared/header.js';
+import { node, button, anchor, note, field, form } from '/formular.js';
 import {
   hasBackend, currentUser, onAuthChange, login, register, logout, safeNext,
-  requestPasswordReset, confirmPasswordReset, requestVerification, confirmVerification
+  requestPasswordReset, confirmPasswordReset, requestVerification, confirmVerification, confirmEmailChange
 } from '/shared/auth.js';
 
 const params = new URLSearchParams(location.search);
 const next = safeNext(params.get('next'));
 const root = document.getElementById('inhalt');
 
-function node(tag, cls, text) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text !== undefined) e.textContent = text;
-  return e;
-}
-function button(text, cls, onClick) {
-  const b = node('button', cls, text);
-  b.type = 'button';
-  if (onClick) b.addEventListener('click', onClick);
-  return b;
-}
-function anchor(href, text, cls) {
-  const a = node('a', cls, text);
-  a.href = href;
-  return a;
-}
-// Meldung mit Rolle: Fehler werden vorgelesen (alert), Hinweise höflich (status)
-function note(text, kind) {
-  const p = node('p', 'meldung' + (kind ? ' ' + kind : ''), text);
-  p.setAttribute('role', kind === 'fehler' ? 'alert' : 'status');
-  return p;
-}
-// Eingabefeld mit Beschriftung; Passwort bekommt den Zeigen-Schalter statt eines Wiederholungsfeldes
-function field(label, { type = 'text', autocomplete, name, show = false } = {}) {
-  const wrap = node('label', 'feld');
-  const input = node('input');
-  input.type = type;
-  input.name = name;
-  input.required = true;
-  input.autocomplete = autocomplete;
-  if (type === 'email') { input.inputMode = 'email'; input.autocapitalize = 'none'; input.spellcheck = false; }
-  wrap.append(node('span', '', label));
-  if (!show) { wrap.append(input); return { wrap, input }; }
-  const row = node('div', 'passwort');
-  const toggle = button('Zeigen', 'zeigen');
-  toggle.setAttribute('aria-pressed', 'false');
-  toggle.addEventListener('click', () => {
-    const on = input.type === 'password';
-    input.type = on ? 'text' : 'password';
-    toggle.textContent = on ? 'Verbergen' : 'Zeigen';
-    toggle.setAttribute('aria-pressed', String(on));
-  });
-  row.append(input, toggle);
-  wrap.append(row);
-  return { wrap, input };
-}
-// Formular mit Absenden-Knopf; submit(form) liefert '' (Erfolg, macht die Ansicht weiter) oder eine Fehlermeldung.
-// Der Knopf ist währenddessen gesperrt, damit ein zweiter Tipp nichts doppelt abschickt.
-function form(fields, label, submit) {
-  const f = node('form');
-  f.noValidate = false;
-  const msg = node('div');
-  const go = node('button', 'knopf', label);
-  go.type = 'submit';
-  f.append(msg, ...fields.map((x) => x.wrap));
-  const extra = node('div');
-  f.append(go, extra);
-  f.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    go.disabled = true;
-    msg.replaceChildren();
-    const err = await submit();
-    go.disabled = false;
-    if (err) msg.replaceChildren(note(err, 'fehler'));
-  });
-  f.extra = extra;
-  return f;
-}
 function show(...nodes) {
   root.replaceChildren(...nodes);
   const focus = root.querySelector('input');
@@ -156,6 +89,21 @@ async function viewVerify(token) {
     user ? anchor(next, 'Weiter', 'knopf') : button('Anmelden', 'knopf', () => { dropParams(); viewAuth('login'); }));
 }
 
+// Link aus der Mail zum Ändern der E-Mail-Adresse: zur Bestätigung gehört das Passwort. Danach sind alle Token
+// ungültig, also geht es zurück zum Anmelden (confirmEmailChange meldet hier schon ab).
+function viewEmailChange(tk) {
+  const pw = field('Passwort', { type: 'password', autocomplete: 'current-password', name: 'password', show: true });
+  const f = form([pw], 'E-Mail-Adresse ändern', async () => {
+    const err = await confirmEmailChange(tk, pw.input.value);
+    if (err) return err;
+    token.email = null;
+    dropParams();
+    viewAuth('login', 'Deine E-Mail-Adresse ist geändert. Melde dich jetzt mit der neuen Adresse an.');
+    return '';
+  });
+  show(node('h1', '', 'Neue E-Mail-Adresse'), node('p', '', 'Gib zur Bestätigung dein Passwort ein.'), f);
+}
+
 // Schon angemeldet: wer die Seite öffnet, kann weitergehen oder das Konto wechseln
 function viewSignedIn() {
   const user = currentUser();
@@ -170,17 +118,18 @@ function viewNoBackend() {
 
 /* ---------- Start ---------- */
 await mountHeader(document.getElementById('kopf'));
-const token = { reset: params.get('reset'), verify: params.get('verify') };
+const token = { reset: params.get('reset'), verify: params.get('verify'), email: params.get('email') };
 function start() {
   if (!hasBackend()) return viewNoBackend();
   if (token.reset) return viewReset(token.reset);
   if (token.verify) return viewVerify(token.verify);
+  if (token.email) return viewEmailChange(token.email);
   if (currentUser()) return viewSignedIn();
   viewAuth(params.get('mode') === 'register' ? 'register' : 'login');
 }
 start();
 // Abmelden (hier oder in der Kopfleiste) zeigt wieder das Anmeldeformular; Anmelden im Formular geht über location.assign
 onAuthChange((user) => {
-  if (!hasBackend() || token.reset || token.verify) return;
+  if (!hasBackend() || token.reset || token.verify || token.email) return;
   if (!user) viewAuth('login');
 });

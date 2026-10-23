@@ -1,7 +1,8 @@
 // Gemeinsame Kopfleiste für Landing, Konto und (später) App: links „Musiktafel“, rechts „Anmelden“ oder der
 // Initialen-Avatar mit Menü. Bedient wird per Touch: große Tippflächen, das Menü hängt nicht an Hover und
 // schließt beim Tippen daneben. Stile in header.css, Farben aus tokens.css.
-import { initAuth, loadBackend, hasBackend, currentUser, onAuthChange, logout, refresh, initials } from './auth.js';
+import { initAuth, loadBackend, hasBackend, currentUser, onAuthChange, logout, refresh } from './auth.js';
+import { avatar as avatarBild } from './avatar.js';
 
 function node(tag, cls, text) {
   const e = document.createElement(tag);
@@ -37,7 +38,8 @@ export function mountHeader(container) {
       if (hasBackend() && location.pathname !== '/login/') side.append(link('/login/', 'Anmelden', 'kopf-knopf'));
       return;
     }
-    avatar = node('button', 'kopf-avatar', initials(user));
+    avatar = node('button', 'kopf-avatar');
+    avatar.append(avatarBild(user, 40));
     avatar.type = 'button';
     avatar.setAttribute('aria-haspopup', 'true');
     avatar.setAttribute('aria-expanded', 'false');

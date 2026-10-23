@@ -18,3 +18,12 @@ onRecordCreate((e) => {
   if (!e.record.getString('pro_until')) e.record.set('pro_until', newUserProUntil());
   e.next();
 }, 'users');
+
+// POST /api/me/logout-all: von allen Geräten abmelden. Ein neuer Schlüssel macht jedes bisher ausgestellte Token
+// ungültig, auch das des Aufrufers; die Seite meldet danach lokal ab.
+routerAdd('POST', '/api/me/logout-all', (e) => {
+  const user = e.auth;
+  user.refreshTokenKey();
+  $app.save(user);
+  return e.noContent(204);
+}, $apis.requireAuth('users'));

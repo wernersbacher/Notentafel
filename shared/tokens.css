@@ -15,6 +15,8 @@
   --danger: #b3261e;
   --ok: #1e8449; --bad: #c62828; /* Spiele: richtig, falsch */
   --shadow: rgba(24, 33, 29, .18);
+  /* Avatar-Farben (Initialen-Rund): acht ruhige Töne, weiße Schrift */
+  --av-1: #2f6f8f; --av-2: #3f7d4e; --av-3: #8a5a9e; --av-4: #b0623a; --av-5: #a04f66; --av-6: #4f6aa8; --av-7: #7b7a2f; --av-8: #3c7f7a; --av-fg: #ffffff;
   /* Playwrite DE Grund ist die Deutschland-Grundschrift für die Grundschule; die Schrift hat nur Stärken bis 400, fett wird vom Browser verstärkt */
   --font-display: "Playwrite DE Grund", "Andika", "Trebuchet MS", system-ui, sans-serif;
   --font-ui: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -27,6 +29,7 @@
     --panel: #17201d; --fg: #eaf1ed; --muted: #9aaba3; --line: #41504a;
     --btn: #22302b; --btn-line: #3a4943; --ring: #eaf1ed; --danger: #ff8f86; --ok: #2e9d5b; --bad: #e0483e;
     --shadow: rgba(0, 0, 0, .45);
+    --av-1: #6fb0d0; --av-2: #7bc08a; --av-3: #c49ad6; --av-4: #e0a07a; --av-5: #db96ab; --av-6: #8fa8e0; --av-7: #c4c36c; --av-8: #7cc4bd; --av-fg: #101614;
     color-scheme: dark;
   }
 }

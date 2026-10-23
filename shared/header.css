@@ -3,7 +3,7 @@
 .kopf-name { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: inherit; text-decoration: none; }
 .kopf-seite { position: relative; display: flex; align-items: center; }
 .kopf-knopf { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border: 2px solid var(--btn-line); border-radius: 22px; background: var(--btn); color: var(--fg); font: 800 1rem var(--font-ui); text-decoration: none; }
-.kopf-avatar { width: 44px; height: 44px; padding: 0; border: 2px solid var(--frame-edge); border-radius: 50%; background: var(--board); color: var(--fg); font: 800 1rem var(--font-ui); letter-spacing: .02em; cursor: pointer; }
+.kopf-avatar { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid var(--frame-edge); border-radius: 50%; background: none; cursor: pointer; }
 .kopf-avatar[aria-expanded="true"] { border-color: var(--ring); }
 .kopf-menue { position: absolute; top: calc(100% + 6px); right: 0; z-index: 10; min-width: 13rem; padding: 6px; border: 2px solid var(--line); border-radius: 14px; background: var(--board); box-shadow: 0 6px 18px var(--shadow); }
 .kopf-menue[hidden] { display: none; }
@@ -11,3 +11,7 @@
 .kopf-punkt { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--fg); font: 700 1rem var(--font-ui); text-align: left; text-decoration: none; cursor: pointer; }
 .kopf-punkt:active { background: var(--panel); }
 :is(.kopf-knopf, .kopf-avatar, .kopf-punkt, .kopf-name):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+/* Initialen-Avatar (shared/avatar.js): Farbe nach Name, Größe setzt das Skript */
+.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; color: var(--av-fg); font-family: var(--font-ui); font-weight: 800; letter-spacing: .02em; line-height: 1; user-select: none; }
+.av-1 { background: var(--av-1); } .av-2 { background: var(--av-2); } .av-3 { background: var(--av-3); } .av-4 { background: var(--av-4); }
+.av-5 { background: var(--av-5); } .av-6 { background: var(--av-6); } .av-7 { background: var(--av-7); } .av-8 { background: var(--av-8); }

@@ -1,5 +1,5 @@
 // Anmeldung für alle Seiten der Musiktafel (Landing, Konto, App): Anfragen an die API (PocketBase, ohne SDK),
-// Anmelden, Registrieren, Abmelden, Konto löschen, Passwort zurücksetzen, E-Mail bestätigen. Das Token liegt im localStorage und gilt damit auf jeder Seite
+// Anmelden, Registrieren, Abmelden, Konto löschen, Passwort zurücksetzen, E-Mail bestätigen, Profil und Sicherheit. Das Token liegt im localStorage und gilt damit auf jeder Seite
 // derselben Domain. Der Abgleich der Lieder ist Sache der App (app/js/core/cloud.js), er hört auf onAuthChange.
 // Diese Datei hängt von nichts unter app/ ab.
 const KEY = 'notentafel.auth.v1';
@@ -99,8 +99,14 @@ export function message(err) {
   if (!(err instanceof ApiError)) return 'Keine Verbindung zum Server.';
   const d = err.data.data || {};
   if (d.token) return 'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.';
-  if (d.email && d.email.code === 'validation_not_unique') return 'Für diese E-Mail gibt es schon ein Konto.';
-  if (d.email) return 'Bitte eine gültige E-Mail eingeben.';
+  if (d.oldPassword) return 'Das alte Passwort stimmt nicht.';
+  // bestätigt man eine neue E-Mail, ist das Passwort das des Kontos, nicht ein neues
+  if (d.password && d.password.code === 'validation_invalid_password') return 'Das Passwort stimmt nicht.';
+  const mail = d.email || d.newEmail;
+  if (mail && mail.code === 'validation_not_unique') return 'Für diese E-Mail gibt es schon ein Konto.';
+  if (mail && mail.code === 'validation_not_in_invalid') return 'Diese Adresse kannst du nicht verwenden, zum Beispiel weil es schon deine ist.';
+  if (mail) return 'Bitte eine gültige E-Mail eingeben.';
+  if (d.name) return 'Der Name darf höchstens 60 Zeichen haben.';
   if (d.password) return 'Das Passwort braucht mindestens 8 Zeichen.';
   if (err.status === 400 && /authenticate/i.test(err.message)) return 'E-Mail oder Passwort stimmt nicht.';
   if (err.status === 429) return 'Zu viele Versuche, bitte kurz warten.';
@@ -168,6 +174,44 @@ export async function deleteAccount() {
   logout();
   return '';
 }
+/* ---------- Profil und Sicherheit ---------- */
+// Anzeigename ändern; danach steht er im gespeicherten Konto und die Kopfleiste zieht nach. Liefert '' oder eine Meldung.
+export async function updateProfile({ name }) {
+  try {
+    const r = await api('/collections/users/records/' + auth.user.id, { method: 'PATCH', body: { name: name.trim() } });
+    set({ token: auth.token, user: userOf(r) });
+  } catch (err) { return message(err); }
+  notify();
+  return '';
+}
+// Passwort ändern (das alte ist nötig). Der Server macht dabei alle Token ungültig, auch dieses; darum wird gleich
+// mit dem neuen Passwort neu angemeldet.
+export async function changePassword(oldPassword, password) {
+  const email = auth.user.email;
+  try {
+    await api('/collections/users/records/' + auth.user.id, { method: 'PATCH', body: { oldPassword, password, passwordConfirm: password } });
+  } catch (err) { return message(err); }
+  return login(email, password);
+}
+// Schickt den Link zum Bestätigen der neuen Adresse an diese; die alte gilt, bis er benutzt wurde
+export async function requestEmailChange(newEmail) {
+  try { await api('/collections/users/request-email-change', { method: 'POST', body: { newEmail } }); } catch (err) { return message(err); }
+  return '';
+}
+// Neue Adresse mit dem Token aus der Mail und dem Passwort bestätigen; danach sind alle Token ungültig, also
+// wird hier abgemeldet (auch wenn die Seite nur ein altes Token kannte)
+export async function confirmEmailChange(token, password) {
+  try { await api('/collections/users/confirm-email-change', { method: 'POST', body: { token, password } }); } catch (err) { return message(err); }
+  if (auth) logout();
+  return '';
+}
+// Von allen Geräten abmelden: der Server macht jedes Token ungültig, danach auch hier abmelden
+export async function logoutAll() {
+  try { await api('/me/logout-all', { method: 'POST' }); } catch (err) { return message(err); }
+  logout();
+  return '';
+}
+
 // Token erneuern und das Konto holen (liefert /api/me). Ist das Token abgelaufen oder das Konto weg (401, 404),
 // wird abgemeldet und der Fehler weitergegeben; bei anderen Fehlern (offline) bleibt man angemeldet.
 export async function refresh() {

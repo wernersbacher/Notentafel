@@ -32,6 +32,26 @@ globalThis.fetch = async (url, opts = {}) => {
     if (b.password !== undefined && b.password.length < 8) return reply(400, { message: 'x', data: { password: { code: 'validation_length_out_of_range' } } });
     return reply(204, null);
   }
+  if (url === '/api/collections/users/records/u1' && opts.method === 'PATCH') {
+    const b = JSON.parse(opts.body);
+    if (b.oldPassword !== undefined) {
+      if (b.oldPassword !== 'geheim123') return reply(400, { message: 'x', data: { oldPassword: { code: 'validation_invalid_old_password' } } });
+      // das neue Passwort merkt sich der Fake-Server nicht; die Tests ändern es auf dasselbe
+      return reply(200, record);
+    }
+    return b.name.length > 60 ? reply(400, { message: 'x', data: { name: { code: 'validation_max_text_constraint' } } }) : reply(200, { ...record, name: b.name });
+  }
+  if (url === '/api/collections/users/request-email-change') {
+    const b = JSON.parse(opts.body);
+    if (b.newEmail === 'vergeben@b.de') return reply(400, { message: 'x', data: { newEmail: { code: 'validation_not_unique' } } });
+    return b.newEmail ? reply(204, null) : reply(400, { message: 'x', data: { newEmail: { code: 'validation_required' } } });
+  }
+  if (url === '/api/collections/users/confirm-email-change') {
+    const b = JSON.parse(opts.body);
+    if (b.token !== 'gut') return reply(400, { message: 'x', data: { token: { code: 'validation_invalid_token' } } });
+    return b.password === 'geheim123' ? reply(204, null) : reply(400, { message: 'x', data: { password: { code: 'validation_invalid_password' } } });
+  }
+  if (url === '/api/me/logout-all') return opts.headers.Authorization ? reply(204, null) : reply(401, { message: 'x' });
   return reply(404, { message: 'Not found' });
 };
 
@@ -155,4 +175,44 @@ test('Passwort zurücksetzen und E-Mail bestätigen: Anfragen und deutsche Meldu
   assert.match(await A.confirmPasswordReset('alt', 'neuespasswort'), /ungültig oder abgelaufen/);
   assert.equal(await A.confirmVerification('gut'), '');
   assert.match(await A.confirmVerification('alt'), /ungültig oder abgelaufen/);
+});
+
+test('updateProfile: speichert den Namen, behält das Token und meldet die Änderung', async () => {
+  await A.login('a@b.de', 'geheim123');
+  const seen = [];
+  A.onAuthChange((u) => seen.push(u && u.name));
+  assert.equal(await A.updateProfile({ name: '  Berta  ' }), '');
+  assert.equal(A.currentUser().name, 'Berta');
+  assert.deepEqual(JSON.parse(mem.getItem('notentafel.auth.v1')), { token: 'tok1', user: { id: 'u1', email: 'a@b.de', name: 'Berta' } });
+  assert.equal(seen.at(-1), 'Berta');
+  assert.match(await A.updateProfile({ name: 'x'.repeat(61) }), /höchstens 60/);
+});
+
+test('changePassword: falsches altes Passwort, sonst neu anmelden', async () => {
+  await A.login('a@b.de', 'geheim123');
+  assert.equal(await A.changePassword('falsch', 'neuespasswort'), 'Das alte Passwort stimmt nicht.');
+  calls = [];
+  assert.equal(await A.changePassword('geheim123', 'geheim123'), '');
+  assert.deepEqual(calls.map((c) => c.url), ['/api/collections/users/records/u1', '/api/collections/users/auth-with-password', '/api/me']);
+  assert.equal(A.currentUser().email, 'a@b.de');
+});
+
+test('E-Mail ändern: Anfrage, vergebene Adresse, Bestätigung meldet ab', async () => {
+  await A.login('a@b.de', 'geheim123');
+  assert.equal(await A.requestEmailChange('neu@b.de'), '');
+  assert.equal(await A.requestEmailChange('vergeben@b.de'), 'Für diese E-Mail gibt es schon ein Konto.');
+  assert.equal(await A.requestEmailChange(''), 'Bitte eine gültige E-Mail eingeben.');
+  assert.match(await A.confirmEmailChange('alt', 'geheim123'), /ungültig oder abgelaufen/);
+  assert.equal(await A.confirmEmailChange('gut', 'falsch'), 'Das Passwort stimmt nicht.');
+  assert.notEqual(A.currentUser(), null);
+  assert.equal(await A.confirmEmailChange('gut', 'geheim123'), '');
+  assert.equal(A.currentUser(), null);
+});
+
+test('logoutAll: Server zuerst, dann lokal abmelden; bei Fehler bleibt die Anmeldung', async () => {
+  await A.login('a@b.de', 'geheim123');
+  assert.equal(await A.logoutAll(), '');
+  assert.equal(calls.at(-1).url, '/api/me/logout-all');
+  assert.equal(A.currentUser(), null);
+  assert.equal(mem.getItem('notentafel.auth.v1'), null);
 });

@@ -1,0 +1,24 @@
+/* Kontoseite: schmal ein Umschalter oben, breit die Reiter als Liste links. Formulare und Farben aus form.css. */
+main.konto { width: min(52rem, 100% - 24px); margin: 16px auto 40px; }
+main.konto h1 { margin: 0 4px 14px; }
+.konto-raster { display: grid; gap: 14px; }
+.konto-reiter { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; padding: 5px; background: var(--panel); border-radius: 16px; }
+.konto-reiter button { min-height: 48px; border: 0; border-radius: 12px; background: none; color: var(--muted); font: 800 1rem var(--font-ui); cursor: pointer; }
+.konto-reiter button[aria-selected="true"] { background: var(--btn); color: var(--fg); box-shadow: 0 1px 4px var(--shadow); }
+.konto-reiter button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.konto-blatt { padding: 20px clamp(16px, 4vw, 28px) 24px; background: var(--panel); border-radius: 16px; }
+.konto-blatt h2 { margin: 0 0 10px; font-size: 1.15rem; }
+.konto-blatt section + section { margin-top: 28px; padding-top: 24px; border-top: 2px solid var(--line); }
+.konto-blatt form { max-width: 26rem; }
+.konto-blatt .knopf { width: auto; min-width: 12rem; }
+.konto-kopf { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.konto-kopf p { margin: 0; overflow-wrap: anywhere; }
+.konto-mail { font-weight: 800; }
+.knopf.gefahr { border-color: var(--danger); background: none; color: var(--danger); }
+.reihe { display: flex; flex-wrap: wrap; gap: 10px; }
+.reihe .knopf + .knopf { margin: 0; }
+@media (min-width: 48rem) {
+  .konto-raster { grid-template-columns: 13rem 1fr; align-items: start; }
+  .konto-reiter { grid-auto-flow: row; }
+  .konto-reiter button { text-align: left; padding: 0 16px; }
+}

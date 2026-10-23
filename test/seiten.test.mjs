@@ -6,7 +6,7 @@ import path from 'node:path';
 // Jede lokale Datei, die eine Seite per href oder src einbindet, muss es geben: /shared/... und /legal.css aus dem
 // Container-Layout (site/ ist die Wurzel), alles andere relativ zur Seite.
 const ROOT = path.resolve(import.meta.dirname, '..');
-const pages = ['site/index.html', 'site/imprint/index.html', 'site/privacy/index.html', 'site/login/index.html', 'app/index.html'];
+const pages = ['site/index.html', 'site/imprint/index.html', 'site/privacy/index.html', 'site/login/index.html', 'site/account/index.html', 'app/index.html'];
 
 for (const page of pages) {
   test(`${page}: lokale Dateien sind da`, () => {

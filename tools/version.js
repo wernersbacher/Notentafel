@@ -1,6 +1,6 @@
 // Version setzen und Cache-Busting in app/index.html nachziehen. Ohne Abhängigkeiten.
 // Aufruf: npm run version:set 1.0.1  (ohne Nummer: nur app/index.html auf die Version aus package.json bringen)
-// Umgeschrieben werden nur: die Import Map (alle Module unter app/js/, auch in Unterordnern), ?v= an Stylesheets (css/ und /shared/) und Einstiegs-Script, der Text „Version …“ im Menü.
+// Umgeschrieben werden nur: die Import Map (alle Module unter app/js/, auch in Unterordnern, und shared/*.js), ?v= an Stylesheets (css/ und /shared/) und Einstiegs-Script, der Text „Version …“ im Menü.
 const fs = require('fs');
 const path = require('path');
 
@@ -20,9 +20,12 @@ const walk = (dir, pre = '') => fs.readdirSync(dir, { withFileTypes: true }).fla
 
 // Jedes Modul unter js/ (samt Unterordnern) auf die versionierte Adresse umleiten. Greift auch für relative Imports
 // wie './config.js' oder '../core/ui.js', weil Import Maps die aufgelöste URL vergleichen (die Schlüssel gelten relativ zur Seite).
+// Dazu die Module aus shared/ (außer env.js, das jede Umgebung selbst liefert): die Seite liegt unter /app/, ihr
+// Schlüssel heißt darum ../shared/..., und die App importiert sie relativ (../../../shared/auth.js), das ergibt dieselbe Adresse.
 const mods = walk(path.join(root, 'app', 'js')).sort();
+const shared = walk(path.join(root, 'shared')).filter(f => !f.includes('/') && f !== 'env.js').sort();
 const map = '<script type="importmap">\n{ "imports": {\n'
-  + mods.map(f => `  "./js/${f}": "./js/${f}?v=${v}"`).join(',\n')
+  + [...mods.map(f => `  "./js/${f}": "./js/${f}?v=${v}"`), ...shared.map(f => `  "../shared/${f}": "../shared/${f}?v=${v}"`)].join(',\n')
   + '\n} }\n</script>';
 
 let html = fs.readFileSync(htmlFile, 'utf8');
@@ -36,4 +39,4 @@ html = html
   .replace(/(src="js\/[\w/-]+\.js)(\?v=[^"]*)?"/g, (m, a) => `${a}?v=${v}"`)
   .replace(/(<p class="version">Version )[^<]*/, (m, a) => a + v);
 fs.writeFileSync(htmlFile, html);
-console.log(`Version ${v}: ${mods.length} Module in der Import Map, app/index.html ${html.length - n >= 0 ? '+' : ''}${html.length - n} Zeichen`);
+console.log(`Version ${v}: ${mods.length + shared.length} Module in der Import Map, app/index.html ${html.length - n >= 0 ? '+' : ''}${html.length - n} Zeichen`);

@@ -23,7 +23,7 @@ COPY pb_migrations /pb/pb_migrations
 COPY site /pb/pb_public
 COPY app /pb/pb_public/app
 COPY shared /pb/pb_public/shared
-COPY deploy/env.prod.js /pb/pb_public/app/js/env.js
+COPY deploy/env.prod.js /pb/pb_public/shared/env.js
 EXPOSE 8090
 # --indexFallback=false: sonst liefert jeder unbekannte Pfad die Landing Page (index.html) statt 404
 CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--publicDir=/pb/pb_public", "--hooksDir=/pb/pb_hooks", "--migrationsDir=/pb/pb_migrations", "--indexFallback=false"]

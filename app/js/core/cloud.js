@@ -1,4 +1,6 @@
-// Konto und Abgleich der gespeicherten Lieder mit dem Server (PocketBase, siehe pb_hooks/songs.pb.js).
+// Abgleich der gespeicherten Lieder mit dem Server (PocketBase, siehe pb_hooks/songs.pb.js). Anmelden und Abmelden
+// liegen in shared/auth.js; hier wird nur darauf reagiert (onAuthChange), auch wenn es auf einer anderen Seite oder
+// in einem anderen Tab passiert ist.
 // Ohne Backend (npm start) oder ohne Anmeldung passiert hier nichts, die App speichert wie immer nur im Browser.
 // Mit Konto bleibt der localStorage der Speicher, aus dem die App liest. Jedes Speichern und Löschen merkt sich
 // cloud.js (pending) und schickt es kurz danach an den Server; die Antwort bringt mit, was sich auf anderen Geräten
@@ -8,11 +10,14 @@
 // zu lang oder Inhalt zu groß), bleibt ebenfalls hier, geht aber nicht von selbst wieder raus.
 import { readJSON, writeJSON, syncStores, onSongChange, setClock } from './store.js';
 import { makeSignal } from './signal.js';
+import { initAuth, onAuthChange, currentUser, currentMe, api, message, refresh, logout as authLogout } from '../../../shared/auth.js';
 
 const KEY = 'notentafel.konto.v1';
 // So viel später nach dem Speichern läuft der Abgleich (mehrere Änderungen kurz hintereinander gehen mit)
 export const SYNC_DELAY = 800;
-// acc = { token, user: { id, email }, since, pending: [{ area, id, at }], rejected: [{ area, id, why? }], limit, offset }
+// Das Token und das Konto selbst hält shared/auth.js (notentafel.auth.v1); hier steht nur der Stand des Abgleichs
+// und userId, das Konto, zu dem er gehört. Weicht die angemeldete id davon ab, ist es ein neues Konto: Erst-Abgleich.
+// acc = { userId, since, pending: [{ area, id, at }], rejected: [{ area, id, why? }], limit, offset }
 // rejected: Lieder nur auf diesem Gerät; why 'refused' = nimmt der Server nicht an, sonst (auch alte Einträge ohne why)
 // über dem Limit und rücken beim Löschen nach.
 // ohne Anmeldung steht nur offset darin
@@ -41,7 +46,7 @@ function setOffset(serverMs) {
 export const onCloudChange = (f) => changes(f);
 const emit = (merged) => changes.emit(!!merged);
 
-const loggedIn = () => !!acc.token;
+const loggedIn = () => !!acc.userId;
 const canSync = () => loggedIn() && !!me && me.features.includes('cloud');
 function limit() {
   const l = acc.limit !== undefined ? acc.limit : me && me.limits && me.limits.songs;
@@ -53,7 +58,7 @@ const accountCount = () => localCount() - (acc.rejected || []).length;
 export const cloudInfo = () => {
   const rej = canSync() ? acc.rejected || [] : [];
   return {
-    available: !!base, user: loggedIn() ? acc.user : null, sync: canSync(), tier: me && me.tier, lastSync, error,
+    available: !!base, user: loggedIn() ? currentUser() : null, sync: canSync(), tier: me && me.tier, lastSync, error,
     limit: canSync() ? limit() : null,
     rejected: rej.filter((r) => r.why !== 'refused').length, // über dem Limit: rücken beim Löschen nach
     invalid: rej.filter((r) => r.why === 'refused').length // nimmt der Server nicht an
@@ -64,33 +69,10 @@ export const localOnly = (area, id) => canSync() && (acc.rejected || []).some((r
 // Ist das Konto voll? Dann landet ein neues Lied nur auf diesem Gerät.
 export const accountFull = () => canSync() && limit() !== null && accountCount() >= limit();
 
-/* ---------- Anfragen ---------- */
-class ApiError extends Error {
-  constructor(status, data) { super((data && data.message) || 'Fehler ' + status); this.status = status; this.data = data || {}; }
-}
-async function api(path, { method = 'GET', body } = {}) {
-  const headers = {};
-  if (body) headers['Content-Type'] = 'application/json';
-  if (acc.token) headers.Authorization = acc.token;
-  const res = await fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
-  const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, data);
-  return data;
-}
-// Fehlermeldung für die Oberfläche; ohne Antwort vom Server liegt es meist am Netz
-function message(err) {
-  if (!(err instanceof ApiError)) return 'Keine Verbindung zum Server.';
-  const d = err.data.data || {};
-  if (d.email && d.email.code === 'validation_not_unique') return 'Für diese E-Mail gibt es schon ein Konto.';
-  if (d.email) return 'Bitte eine gültige E-Mail eingeben.';
-  if (d.password) return 'Das Passwort braucht mindestens 8 Zeichen.';
-  if (err.status === 400 && /authenticate/i.test(err.message)) return 'E-Mail oder Passwort stimmt nicht.';
-  if (err.status === 429) return 'Zu viele Versuche, bitte kurz warten.';
-  return 'Das hat nicht geklappt (' + err.status + ').';
-}
-// Token abgelaufen oder Konto weg: abmelden, die Lieder auf dem Gerät bleiben
-function dropLogin() {
+// Abgemeldet (hier oder anderswo, Token abgelaufen, Konto weg): Stand des Abgleichs vergessen, die Lieder auf dem Gerät bleiben
+function forget() {
   session++; // laufende Abgleiche dürfen nichts mehr schreiben
+  clearTimeout(timer);
   acc = { offset: acc.offset };
   me = null;
   error = '';
@@ -98,25 +80,28 @@ function dropLogin() {
   persist();
 }
 
-/* ---------- Anmelden ---------- */
+/* ---------- Anmelden und Abmelden (erkannt über shared/auth.js) ---------- */
 // Nach dem Anmelden: erst holen, was im Konto liegt, dann alle Lieder dieses Geräts hochschicken. Was der Server
 // schon im selben oder einem neueren Stand hat, lässt er liegen; verschiedene Lieder mit gleichem Namen bleiben beide
 // (siehe resolveNames in store.js).
-async function start(auth) {
+async function start(user) {
   const my = ++session; // ein Abgleich für ein anderes Konto ist ab jetzt ungültig
-  acc = { token: auth.token, user: { id: auth.record.id, email: auth.record.email }, since: '', pending: [], rejected: [], offset: acc.offset };
+  acc = { userId: user.id, since: '', pending: [], rejected: [], offset: acc.offset };
   me = null;
-  // Das Token wird erst gespeichert, wenn der Server das Konto bestätigt. Sonst bliebe nach einem Fehler ein
-  // gültiges Token gespeichert, die App zeigte aber kein Konto (und nach dem Neuladen wäre man still angemeldet).
-  try {
-    me = await api('/me');
-  } catch (err) {
+  // Das Konto hat auth.js beim Anmelden schon bestätigt; nur nach einer Anmeldung auf anderer Seite fehlt /me noch
+  me = currentMe();
+  if (!me) {
+    try {
+      me = await api('/me');
+    } catch (err) {
+      if (my !== session) return;
+      if (err.status === 401 || err.status === 404) { authLogout(); return; } // Konto weg: forget und emit folgen
+      error = message(err); // offline: angemeldet bleiben, run() holt /me später
+      emit();
+      return;
+    }
     if (my !== session) return;
-    dropLogin();
-    emit();
-    throw err;
   }
-  if (my !== session) return;
   persist();
   if (!canSync()) { emit(); return; }
   let res;
@@ -139,7 +124,7 @@ async function start(auth) {
   for (const area in syncStores) syncStores[area].songIds().forEach((id) => mark(area, id, t));
   if (failed) {
     // Nicht alles ließ sich speichern: since bleibt leer, der nächste Abgleich holt die Lieder des Servers erneut.
-    // Angemeldet bleibt man, der Aufrufer bekommt '' (die Anmeldung selbst hat geklappt).
+    // Angemeldet bleibt man (die Anmeldung selbst hat geklappt).
     persist();
     error = 'Auf dem Gerät ist kein Platz mehr für die Lieder vom Server.';
     emit();
@@ -150,29 +135,17 @@ async function start(auth) {
   emit(true);
   await sync();
 }
-// Liefert '' oder eine Fehlermeldung
-export async function login(email, password) {
-  try {
-    await start(await api('/collections/users/auth-with-password', { method: 'POST', body: { identity: email, password } }));
-    return '';
-  } catch (err) { return message(err); }
-}
-export async function register(email, password) {
-  try {
-    await api('/collections/users/records', { method: 'POST', body: { email, password, passwordConfirm: password } });
-  } catch (err) { return message(err); }
-  return login(email, password);
-}
-export function logout() {
-  clearTimeout(timer);
-  dropLogin();
-  emit();
-}
-// Löscht das Konto samt den Liedern darin auf dem Server. Die Lieder auf diesem Gerät bleiben.
-export async function deleteAccount() {
-  try { await api('/collections/users/records/' + acc.user.id, { method: 'DELETE' }); } catch (err) { return message(err); }
-  logout();
-  return '';
+// Läuft der Erst-Abgleich nach einer Anmeldung gerade? Wartet darauf, wer sicher sein will, dass er durch ist.
+let starting = Promise.resolve();
+export const ready = () => starting;
+// Die Anmeldung hat sich geändert (auch auf einer anderen Seite oder in einem anderen Tab): abgemeldet, anderes Konto
+// (Erst-Abgleich) oder dasselbe (normaler Abgleich)
+function onAuth() {
+  if (!base) return;
+  const user = currentUser();
+  if (!user) { forget(); emit(); return; }
+  if (acc.userId !== user.id) { starting = start(user); return; }
+  sync();
 }
 
 /* ---------- Abgleich ---------- */
@@ -227,7 +200,7 @@ async function run() {
     if (!me) me = await api('/me');
   } catch (err) {
     if (my !== session) return;
-    if (err.status === 401) dropLogin();
+    if (err.status === 401) authLogout();
     else error = message(err);
     emit();
     return;
@@ -247,7 +220,7 @@ async function run() {
     res = await api('/songs/sync', { method: 'POST', body: { since: acc.since || '', changes } });
   } catch (err) {
     if (my !== session) return;
-    if (err.status === 401) dropLogin();
+    if (err.status === 401) authLogout();
     else error = message(err);
     emit();
     return;
@@ -295,39 +268,44 @@ function mergeAll(songs) {
 }
 
 /* ---------- Start ---------- */
-// backend: Adresse der API (aus app/js/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
+// backend: Adresse der API (aus shared/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
 let wired = false;
-// initCloud läuft bei jedem Neuladen erneut (auch in den Tests je Gerät). onSongChange meldet im Signal jedes Mal
-// einen weiteren Abonnenten an, darum wird queue nur einmal angemeldet und die Anmeldung gemerkt.
-let unwireQueue = null;
+// initCloud läuft bei jedem Neuladen erneut (auch in den Tests je Gerät). onSongChange und onAuthChange melden jedes Mal
+// einen weiteren Abonnenten an, darum werden queue und onAuth nur einmal angemeldet und die Anmeldung gemerkt.
+let unwireQueue = null, unwireAuth = null;
 export async function initCloud(backend) {
   const my = ++session; // ein Neuladen macht laufende Abgleiche ungültig
   base = backend || null;
+  initAuth(base);
   acc = readJSON(KEY) || {};
   me = null;
   setClock(now);
   if (!base) { emit(); return; }
   if (!unwireQueue) unwireQueue = onSongChange(queue);
+  if (!unwireAuth) unwireAuth = onAuthChange(onAuth);
   if (!wired && typeof window !== 'undefined') {
     wired = true;
     // Wieder online oder zurück in der App: holen, was andere Geräte inzwischen gespeichert haben
     window.addEventListener('online', () => sync());
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
   }
-  if (loggedIn()) {
-    try {
-      const auth = await api('/collections/users/auth-refresh', { method: 'POST' });
-      if (my !== session) return;
-      acc.token = auth.token;
-      persist();
-      me = await api('/me');
-      if (my !== session) return;
-    } catch (err) {
-      if (my !== session) return;
-      // Token abgelaufen oder Konto weg: abmelden, die Ansicht sofort aktualisieren
-      if (err.status === 401 || err.status === 404) { dropLogin(); emit(); return; }
-      error = message(err); // offline: angemeldet bleiben, später noch einmal
-    }
+  const user = currentUser();
+  if (!user) {
+    // Auf einer anderen Seite abgemeldet: Stand des Abgleichs vergessen, die Lieder bleiben
+    if (Object.keys(acc).some((k) => k !== 'offset')) forget();
+    emit();
+    return;
+  }
+  // Auf einer anderen Seite (oder mit einem anderen Konto) angemeldet: Erst-Abgleich wie nach dem Anmelden
+  if (acc.userId !== user.id) { starting = start(user); await starting; return; }
+  try {
+    me = await refresh();
+    if (my !== session) return;
+  } catch (err) {
+    if (my !== session) return;
+    // Token abgelaufen oder Konto weg: auth.js hat schon abgemeldet (forget und emit sind gelaufen)
+    if (!currentUser()) return;
+    error = message(err); // offline: angemeldet bleiben, später noch einmal
   }
   if (my !== session) return;
   emit();

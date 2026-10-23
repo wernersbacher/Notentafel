@@ -1,0 +1,13 @@
+/* Kopfleiste für Landing, Konto und App: Farben und Schriften aus tokens.css, Tippflächen mindestens 44 px */
+.kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 70rem; margin: 0 auto; padding: 8px 16px; font-family: var(--font-ui); color: var(--fg); }
+.kopf-name { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: inherit; text-decoration: none; }
+.kopf-seite { position: relative; display: flex; align-items: center; }
+.kopf-knopf { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border: 2px solid var(--btn-line); border-radius: 22px; background: var(--btn); color: var(--fg); font: 800 1rem var(--font-ui); text-decoration: none; }
+.kopf-avatar { width: 44px; height: 44px; padding: 0; border: 2px solid var(--frame-edge); border-radius: 50%; background: var(--board); color: var(--fg); font: 800 1rem var(--font-ui); letter-spacing: .02em; cursor: pointer; }
+.kopf-avatar[aria-expanded="true"] { border-color: var(--ring); }
+.kopf-menue { position: absolute; top: calc(100% + 6px); right: 0; z-index: 10; min-width: 13rem; padding: 6px; border: 2px solid var(--line); border-radius: 14px; background: var(--board); box-shadow: 0 6px 18px var(--shadow); }
+.kopf-menue[hidden] { display: none; }
+.kopf-wer { margin: 0; padding: 6px 12px 8px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.kopf-punkt { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--fg); font: 700 1rem var(--font-ui); text-align: left; text-decoration: none; cursor: pointer; }
+.kopf-punkt:active { background: var(--panel); }
+:is(.kopf-knopf, .kopf-avatar, .kopf-punkt, .kopf-name):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }

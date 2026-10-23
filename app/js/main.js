@@ -3,6 +3,7 @@ import { initPlayer } from './core/player.js';
 import { initMenu } from './core/menu.js';
 import { initAccount } from './core/account.js';
 import { initCloud } from './core/cloud.js';
+import { loadBackend } from '../../shared/auth.js';
 import { initWake } from './core/wake.js';
 import { startShell } from './core/shell.js';
 import { initParts } from './core/parts.js';
@@ -32,5 +33,5 @@ initMenu();
 initAccount();
 initWake();
 startShell();
-// Backend nur im Docker-Image (app/js/env.js, siehe deploy/env.prod.js); mit npm start fehlt die Datei, dann ohne Konto
-import('./env.js').then((m) => m.ENV.backend, () => null).then(initCloud);
+// Backend nur im Docker-Image (shared/env.js, siehe deploy/env.prod.js); mit npm start fehlt die Datei, dann ohne Konto
+loadBackend().then(initCloud);

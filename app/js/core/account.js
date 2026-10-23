@@ -1,6 +1,7 @@
 // Konto in den Einstellungen (anmelden, Konto anlegen, abmelden, löschen) und der Hinweis unter den gespeicherten
 // Liedern, wo sie liegen. Den Abgleich selbst macht cloud.js; ohne Backend bleibt der Abschnitt ausgeblendet.
-import { cloudInfo, onCloudChange, login, register, logout, deleteAccount } from './cloud.js';
+import { cloudInfo, onCloudChange } from './cloud.js';
+import { login, register, logout, deleteAccount } from '../../../shared/auth.js';
 import { confirmTap, onEnter, status, timeOf } from './ui.js';
 import { el } from './dom.js';
 import { refreshSongs } from './menu.js';

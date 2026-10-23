@@ -9,6 +9,10 @@ import path from 'node:path';
 const JS = path.resolve(import.meta.dirname, '../app/js');
 const ROOT = ['main.js', 'songformat.js'];
 const ALLOWED = { core: ['core'], tafel: ['tafel', 'core'], lied: ['lied', 'core'] };
+// shared/ (neben app/ und site/) ist für alle Seiten: aus app/js darf jeder Bereich es importieren, shared/ selbst
+// darf nichts aus app/ (oder site/) kennen
+const SHARED_DIR = path.resolve(import.meta.dirname, '../shared');
+const inShared = (file) => file.startsWith(SHARED_DIR + path.sep);
 // Aus js/ selbst dürfen nur die Bereiche holen, und nur das, was für beide gedacht ist (nie main.js); core bleibt unten
 const SHARED = ['songformat.js'];
 
@@ -32,11 +36,23 @@ for (const f of files.filter((x) => area(x))) {
     for (const m of src.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)'([^']+)'/g)) {
       const target = path.resolve(path.dirname(f), m[1]);
       assert.ok(fs.existsSync(target), m[1] + ' gibt es nicht');
+      if (inShared(target)) continue;
       const from = area(f), to = area(target);
       const ok = to === ''
         ? SHARED.includes(path.basename(target)) && from !== 'core'
         : ALLOWED[from].includes(to);
       assert.ok(ok, m[1] + ' ist aus ' + from + '/ heraus nicht erlaubt');
+    }
+  });
+}
+
+// Alles in shared/ bleibt unabhängig von der App: Importe nur innerhalb von shared/
+for (const f of walk(SHARED_DIR)) {
+  test('shared/' + path.relative(SHARED_DIR, f).replaceAll('\\', '/') + ': kein Import aus app/', () => {
+    const src = fs.readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)'([^']+)'/g)) {
+      if (!m[1].startsWith('.')) continue;
+      assert.ok(inShared(path.resolve(path.dirname(f), m[1])), m[1] + ' liegt außerhalb von shared/');
     }
   });
 }

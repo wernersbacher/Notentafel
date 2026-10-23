@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { layout, beamGroups, spacing, G } from '../js/lied/layout.js';
-import { barsAfter } from '../js/lied/model.js';
+import { layout, beamGroups, spacing, G } from '../app/js/lied/layout.js';
+import { barsAfter } from '../app/js/lied/model.js';
 import { n, r, song } from './helpers.mjs';
 
 test('spacing: längere Werte bekommen mehr Platz', () => {

@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { changePitch } from '../js/lied/model.js';
+import { changePitch } from '../app/js/lied/model.js';
 import { fakeStorage, n } from './helpers.mjs';
 
 // Einfacher localStorage-Ersatz; muss stehen, bevor state.js geladen wird
 globalThis.localStorage = fakeStorage();
-const { L, snap, restore } = await import('../js/lied/state.js');
+const { L, snap, restore } = await import('../app/js/lied/state.js');
 
 // Mit Tonart, anders als in den übrigen Lied-Tests
 const song = (ev) => ({ meter: '4/4', pickup: 0, key: 0, ev });

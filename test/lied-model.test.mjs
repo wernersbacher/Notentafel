@@ -4,7 +4,7 @@ import {
   ticks, staffPos, freq, noteName, pitchLabel, measureTicks, barsAfter, drawnBars, cleanSong, parsePitch,
   pickupsFor, gridOffset, gridStarts, stepPitch, badMeasures, splitAtBar, keyAcc, keySignature, keyName, shownAccidentals, transpose, playOrder, playPlan, splitAll, songToMelody,
   canTie, tieValidAt, toggleTieAt, changePitch, swapEvents
-} from '../js/lied/model.js';
+} from '../app/js/lied/model.js';
 import { n, r } from './helpers.mjs';
 
 test('drawnBars: mit Automatik und Taktart am Ende ein Schlussstrich', () => {

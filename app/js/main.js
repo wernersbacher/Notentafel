@@ -32,5 +32,5 @@ initMenu();
 initAccount();
 initWake();
 startShell();
-// Backend nur im Docker-Image (js/env.js, siehe deploy/env.prod.js); mit npm start fehlt die Datei, dann ohne Konto
+// Backend nur im Docker-Image (app/js/env.js, siehe deploy/env.prod.js); mit npm start fehlt die Datei, dann ohne Konto
 import('./env.js').then((m) => m.ENV.backend, () => null).then(initCloud);

@@ -1,12 +1,12 @@
-// Version setzen und Cache-Busting in index.html nachziehen. Ohne Abhängigkeiten.
-// Aufruf: npm run version:set 1.0.1  (ohne Nummer: nur index.html auf die Version aus package.json bringen)
-// Umgeschrieben werden nur: die Import Map (alle Module unter js/, auch in Unterordnern), ?v= an Stylesheets und Einstiegs-Script, der Text „Version …“ im Menü.
+// Version setzen und Cache-Busting in app/index.html nachziehen. Ohne Abhängigkeiten.
+// Aufruf: npm run version:set 1.0.1  (ohne Nummer: nur app/index.html auf die Version aus package.json bringen)
+// Umgeschrieben werden nur: die Import Map (alle Module unter app/js/, auch in Unterordnern), ?v= an Stylesheets (css/ und /shared/) und Einstiegs-Script, der Text „Version …“ im Menü.
 const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const pkgFile = path.join(root, 'package.json');
-const htmlFile = path.join(root, 'index.html');
+const htmlFile = path.join(root, 'app', 'index.html');
 
 const pkgText = fs.readFileSync(pkgFile, 'utf8');
 const arg = process.argv[2];
@@ -20,7 +20,7 @@ const walk = (dir, pre = '') => fs.readdirSync(dir, { withFileTypes: true }).fla
 
 // Jedes Modul unter js/ (samt Unterordnern) auf die versionierte Adresse umleiten. Greift auch für relative Imports
 // wie './config.js' oder '../core/ui.js', weil Import Maps die aufgelöste URL vergleichen (die Schlüssel gelten relativ zur Seite).
-const mods = walk(path.join(root, 'js')).sort();
+const mods = walk(path.join(root, 'app', 'js')).sort();
 const map = '<script type="importmap">\n{ "imports": {\n'
   + mods.map(f => `  "./js/${f}": "./js/${f}?v=${v}"`).join(',\n')
   + '\n} }\n</script>';
@@ -32,8 +32,8 @@ html = /<script type="importmap">[\s\S]*?<\/script>/.test(html)
   ? html.replace(/<script type="importmap">[\s\S]*?<\/script>/, map)
   : html.replace(/<script type="module"/, map + '\n<script type="module"');
 html = html
-  .replace(/(href="css\/[\w/-]+\.css)(\?v=[^"]*)?"/g, (m, a) => `${a}?v=${v}"`)
+  .replace(/(href="(?:css|\/shared)\/[\w/-]+\.css)(\?v=[^"]*)?"/g, (m, a) => `${a}?v=${v}"`)
   .replace(/(src="js\/[\w/-]+\.js)(\?v=[^"]*)?"/g, (m, a) => `${a}?v=${v}"`)
   .replace(/(<p class="version">Version )[^<]*/, (m, a) => a + v);
 fs.writeFileSync(htmlFile, html);
-console.log(`Version ${v}: ${mods.length} Module in der Import Map, index.html ${html.length - n >= 0 ? '+' : ''}${html.length - n} Zeichen`);
+console.log(`Version ${v}: ${mods.length} Module in der Import Map, app/index.html ${html.length - n >= 0 ? '+' : ''}${html.length - n} Zeichen`);

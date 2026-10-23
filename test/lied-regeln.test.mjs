@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shownAccidentals, badMeasures } from '../js/lied/model.js';
-import { layout } from '../js/lied/layout.js';
-import { sheetSVG } from '../js/lied/sheet.js';
+import { shownAccidentals, badMeasures } from '../app/js/lied/model.js';
+import { layout } from '../app/js/lied/layout.js';
+import { sheetSVG } from '../app/js/lied/sheet.js';
 import { n, r, song } from './helpers.mjs';
 const shown = (ev, autoBar = false, meter = '4/4') => shownAccidentals(song(ev, meter), autoBar);
 

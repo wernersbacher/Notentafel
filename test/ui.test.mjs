@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 // ui.js liest beim Laden die Elemente aus dom.js; ohne Browser genügt ein leeres Dokument
 globalThis.document = { getElementById: () => null, querySelector: () => null };
-const { setPressed, status, tempoText } = await import('../js/core/ui.js');
+const { setPressed, status, tempoText } = await import('../app/js/core/ui.js');
 
 // Kleine Element-Attrappe: merkt sich Klassen und Attribute
 function fakeNode() {

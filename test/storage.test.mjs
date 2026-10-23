@@ -4,8 +4,8 @@ import { fakeStorage } from './helpers.mjs';
 
 // Einfacher localStorage-Ersatz; muss stehen, bevor storage.js geladen wird
 globalThis.localStorage = fakeStorage();
-const S = await import('../js/tafel/storage.js');
-const { setWriteError } = await import('../js/core/store.js');
+const S = await import('../app/js/tafel/storage.js');
+const { setWriteError } = await import('../app/js/core/store.js');
 
 beforeEach(() => globalThis.localStorage.clear());
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { beatsOf, startAt, skip } from '../js/core/plan.js';
+import { beatsOf, startAt, skip } from '../app/js/core/plan.js';
 
 test('beatsOf: Zählschlag nach der Taktart', () => {
   assert.deepEqual(beatsOf('3/4'), { beat: 1, perBar: 3 });
@@ -21,7 +21,7 @@ test('startAt: ab der Markierung, Zeiten beginnen bei 0, der Takt läuft weiter'
 });
 
 test('cutAt: bis vor das Tuch, stille Einträge davor fallen weg', async () => {
-  const { cutAt } = await import('../js/core/plan.js');
+  const { cutAt } = await import('../app/js/core/plan.js');
   const items = [
     { t: 0, len: 1, sound: 'bell', pos: 0 }, { t: 1, len: 2, sound: 'bell', pos: 1 },
     { t: 3, len: 1, sound: '', pos: 2 }, { t: 4, len: 1, sound: 'bell', pos: 3 }

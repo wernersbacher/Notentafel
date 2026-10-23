@@ -5,8 +5,8 @@ import { fakeStorage } from './helpers.mjs';
 // Die beiden Bereiche nutzen dieselben core-Bausteine (practice.js, undo.js) – hier einmal für beide geprüft.
 // localStorage-Ersatz; muss stehen, bevor die Zustände (über settings.js und storage.js) geladen werden
 globalThis.localStorage = fakeStorage();
-const lied = await import('../js/lied/state.js');
-const tafel = await import('../js/tafel/state.js');
+const lied = await import('../app/js/lied/state.js');
+const tafel = await import('../app/js/tafel/state.js');
 
 // Lied mit einer Viertelnote
 const song = (p = 'c1') => ({ meter: '4/4', pickup: 0, key: 0, ev: [{ p, v: 4 }] });

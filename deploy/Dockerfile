@@ -1,4 +1,4 @@
-# Ein Image für alles: PocketBase liefert die App (pb_public), die API und die Admin-Oberfläche aus.
+# Ein Image für alles: PocketBase liefert die Seiten (pb_public: Landing und Rechtliches, dazu /app/ und /shared/), die API und die Admin-Oberfläche aus.
 # HTTPS und die Domain übernimmt der Caddy auf dem Server davor.
 FROM alpine:3.22
 ARG PB_VERSION=0.40.5
@@ -20,10 +20,10 @@ RUN set -eu; \
     rm /tmp/pb.zip /tmp/pb.sha256
 COPY pb_hooks /pb/pb_hooks
 COPY pb_migrations /pb/pb_migrations
-COPY index.html impressum.html datenschutz.html /pb/pb_public/
-COPY css /pb/pb_public/css
-COPY fonts /pb/pb_public/fonts
-COPY js /pb/pb_public/js
-COPY deploy/env.prod.js /pb/pb_public/js/env.js
+COPY site /pb/pb_public
+COPY app /pb/pb_public/app
+COPY shared /pb/pb_public/shared
+COPY deploy/env.prod.js /pb/pb_public/app/js/env.js
 EXPOSE 8090
-CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--publicDir=/pb/pb_public", "--hooksDir=/pb/pb_hooks", "--migrationsDir=/pb/pb_migrations"]
+# --indexFallback=false: sonst liefert jeder unbekannte Pfad die Landing Page (index.html) statt 404
+CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--publicDir=/pb/pb_public", "--hooksDir=/pb/pb_hooks", "--migrationsDir=/pb/pb_migrations", "--indexFallback=false"]

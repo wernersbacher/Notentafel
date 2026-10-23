@@ -14,13 +14,13 @@ Date.now = () => ++clock + skew;
 const serverNow = () => ++clock;
 const YEAR = 365 * 24 * 3600 * 1000;
 
-const T = await import('../js/tafel/storage.js');
-const L = await import('../js/lied/storage.js');
-const C = await import('../js/core/cloud.js');
+const T = await import('../app/js/tafel/storage.js');
+const L = await import('../app/js/lied/storage.js');
+const C = await import('../app/js/core/cloud.js');
 // Den verzögerten Abgleich nach dem Speichern schalten die Tests ab und rufen sync() selbst auf
 const realTimeout = setTimeout;
 globalThis.setTimeout = (f, ms, ...a) => (ms === C.SYNC_DELAY ? 0 : realTimeout(f, ms, ...a));
-const { mergeSongs, newId } = await import('../js/core/store.js');
+const { mergeSongs, newId } = await import('../app/js/core/store.js');
 // Die Server-Regeln selbst liegen in pb_hooks/ (CommonJS) und laufen hier mit: der nachgebaute Server hält nur die Daten
 const require = createRequire(import.meta.url);
 const { planSync } = require('../pb_hooks/sync.js');
@@ -825,7 +825,7 @@ test('Import: Lieder aus einer exportierten Datei kommen dazu, ohne Doppel, und 
 });
 
 test('Sicherungsdatei: alle Bereiche hin und zurück, fremde Dateien werden abgelehnt', async () => {
-  const { exportAll, importAll } = await import('../js/core/store.js');
+  const { exportAll, importAll } = await import('../app/js/core/store.js');
   await use('tablet');
   T.stores.mel.saveSong([tune('C')], 'M');
   T.stores.rhy.saveSong([tune('D')], 'R');

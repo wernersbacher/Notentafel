@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MELODIES, melodyRows } from '../js/tafel/melodies.js';
-import { cleanRows, packLines, dur } from '../js/tafel/model.js';
-import { meterInfo } from '../js/tafel/theory.js';
+import { MELODIES, melodyRows } from '../app/js/tafel/melodies.js';
+import { cleanRows, packLines, dur } from '../app/js/tafel/model.js';
+import { meterInfo } from '../app/js/tafel/theory.js';
 
 for (const m of MELODIES) {
   test(`${m.name}: übersteht cleanRows unverändert`, () => {
@@ -24,13 +24,13 @@ for (const m of MELODIES) {
 }
 
 test('Farbnoten und Notenblatt bieten dieselben Lieder in derselben Reihenfolge', async () => {
-  const { SONGS } = await import('../js/lied/songs.js');
+  const { SONGS } = await import('../app/js/lied/songs.js');
   assert.deepEqual(MELODIES.map((m) => [m.name, m.group]), SONGS.map((s) => [s.name, s.group]));
 });
 
 test('Jedes bekannte Lied bringt ein Tempo mit, das der Regler einstellen kann', async () => {
-  const { SONGS } = await import('../js/lied/songs.js');
-  const { TEMPO } = await import('../js/core/settings.js');
+  const { SONGS } = await import('../app/js/lied/songs.js');
+  const { TEMPO } = await import('../app/js/core/settings.js');
   for (const s of [...MELODIES, ...SONGS]) {
     assert.ok(s.tempo >= TEMPO.min && s.tempo <= TEMPO.max && s.tempo % 5 === 0, `${s.name}: ${s.tempo}`);
   }

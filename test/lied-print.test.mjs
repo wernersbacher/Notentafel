@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { printHTML, PAGE_MM } from '../js/lied/print.js';
-import { layout } from '../js/lied/layout.js';
-import { SONGS, songOf } from '../js/lied/songs.js';
+import { printHTML, PAGE_MM } from '../app/js/lied/print.js';
+import { layout } from '../app/js/lied/layout.js';
+import { SONGS, songOf } from '../app/js/lied/songs.js';
 
 const geb = songOf(SONGS.find((s) => s.pickup)).song;
 const svgs = (html) => [...html.matchAll(/<svg [^>]*style="width:([\d.]+)mm"/g)].map((m) => +m[1]);

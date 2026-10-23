@@ -6,10 +6,10 @@ import { fakeStorage } from './helpers.mjs';
 
 // blocks.js liest beim Laden die Einstellungen (localStorage); ein Dokument braucht es erst beim Binden der Knöpfe.
 globalThis.localStorage = fakeStorage();
-const { blockKey } = await import('../js/core/blocks.js');
-const { cleanCoreSettings, OPEN_START } = await import('../js/core/settings.js');
+const { blockKey } = await import('../app/js/core/blocks.js');
+const { cleanCoreSettings, OPEN_START } = await import('../app/js/core/settings.js');
 
-const src = fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8');
+const src = fs.readFileSync(path.resolve(import.meta.dirname, '../app/index.html'), 'utf8');
 
 // Der Verdecken-Block steht einmal als Vorlage da; parts.js setzt ihn in jeden .cover-slot eines Panels.
 const tplTag = src.slice(src.indexOf('<template id="tplCover">'), src.indexOf('</template>'));

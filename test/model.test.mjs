@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanRows, attachLines, packLines, beams, subBeams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn, units, cellUnits, rowUnits, rowFullAt, fitsInRow, widest } from '../js/tafel/model.js';
-import { MAX_LEN, MAX_ROWS } from '../js/tafel/config.js';
+import { cleanRows, attachLines, packLines, beams, subBeams, put, setCell, appendPos, canStepDown, emptyRows, reflow, canCloseGap, syllable, syllableParts, rowsToSong, playOrderRows, dotTargetIn, units, cellUnits, rowUnits, rowFullAt, fitsInRow, widest } from '../app/js/tafel/model.js';
+import { MAX_LEN, MAX_ROWS } from '../app/js/tafel/config.js';
 
 const C = { n: 'C', h: '' };
 const nulls = (k) => Array(k).fill(null);

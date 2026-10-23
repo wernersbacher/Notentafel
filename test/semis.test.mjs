@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toneColor, TONE_COLORS, SEMI_COLORS } from '../js/core/colors.js';
-import { songToMelody } from '../js/lied/model.js';
-import { rowsToSong } from '../js/tafel/model.js';
+import { toneColor, TONE_COLORS, SEMI_COLORS } from '../app/js/core/colors.js';
+import { songToMelody } from '../app/js/lied/model.js';
+import { rowsToSong } from '../app/js/tafel/model.js';
 
 test('toneColor: Stammtöne und Halbtöne nach dem klingenden Ton', () => {
   assert.equal(toneColor(0), TONE_COLORS.C);

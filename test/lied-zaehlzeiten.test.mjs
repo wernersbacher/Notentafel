@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { countsOf, tiedFrom, playPlan } from '../js/lied/model.js';
-import { layout } from '../js/lied/layout.js';
+import { countsOf, tiedFrom, playPlan } from '../app/js/lied/model.js';
+import { layout } from '../app/js/lied/layout.js';
 import { n, r } from './helpers.mjs';
 // Zählzeiten kurz: gehaltene in Klammern
 const show = (zz) => zz.map((cs) => cs.map((c) => (c.held ? '(' + c.t + ')' : c.t)).join(' '));

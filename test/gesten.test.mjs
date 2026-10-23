@@ -2,18 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pointerDrag } from '../js/core/pointer.js';
+import { pointerDrag } from '../app/js/core/pointer.js';
 
 // Echte Wisch- und Zeigerereignisse lassen sich ohne Browser/DOM nicht nachstellen. Deshalb prüfen diese Tests den
 // Quelltext an den Stellen, an denen das Ziehen gegen die Wischgeste abgesichert ist und die Quiz-Eingabe einen
 // abgebrochenen Zeiger freigibt – wie bei den Quelltext-Prüfungen in spiele.test.mjs.
 const read = (rel) => fs.readFileSync(path.resolve(import.meta.dirname, '..', rel), 'utf8');
-const JS = path.resolve(import.meta.dirname, '../js');
+const JS = path.resolve(import.meta.dirname, '../app/js');
 const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
   d.isDirectory() ? walk(path.join(dir, d.name)) : d.name.endsWith('.js') ? [path.join(dir, d.name)] : []);
 
 test('Breite Tafel: eine Geste auf einem belegten Platz gehört dem Ziehen, in den Lücken bleibt das Wischen', () => {
-  const css = read('css/tafel.css');
+  const css = read('app/css/tafel.css');
   // Die breite Tafel lässt sich weiter seitlich wischen …
   assert.match(css, /\.grid\.wide\s*\{\s*touch-action:\s*pan-x/);
   // … belegte Plätze (ein Kreis, kein leerer Geist) nehmen an der Geste nicht teil
@@ -24,18 +24,18 @@ test('Breite Tafel: eine Geste auf einem belegten Platz gehört dem Ziehen, in d
 
 test('Tafel: touchmove auf einem belegten Platz verhindert das Scrollen (Rückfall ohne touch-action)', () => {
   // Das gemeinsame Gerüst hängt den nicht-passiven Schutz an und fragt den Bereich, ob die Geste ihm gehört …
-  const core = read('js/core/pointer.js');
+  const core = read('app/js/core/pointer.js');
   const guard = core.match(/addEventListener\('touchmove',\s*\(e\)\s*=>\s*\{([^}]*)\}\s*,\s*\{\s*passive:\s*false\s*\}\)/);
   assert.ok(guard, 'nicht-passiver touchmove-Schutz fehlt');
   assert.match(guard[1], /preventDefault\(\)/);
   assert.match(guard[1], /scroll\(drag\)/);
   // … und die Tafel nur auf belegten Plätzen – sonst ließe sich die breite Tafel nirgends mehr wischen
-  const src = read('js/tafel/input.js');
+  const src = read('app/js/tafel/input.js');
   assert.match(src, /scroll:\s*\(d\)\s*=>\s*filled\(S\.rows\[d\.r\]\[d\.c\]\)/);
 });
 
 test('Note setzen: ein abgebrochener Zeiger gibt „held“ frei und blockiert die Aufgabe nicht', () => {
-  const src = read('js/lied/games.js');
+  const src = read('app/js/lied/games.js');
   assert.match(src, /try \{ svg\.setPointerCapture\(e\.pointerId\); \} catch/);
   assert.match(src, /const m = svg\.getScreenCTM\(\);\s*\n\s*if \(!m\) return null;/);
   // pointercancel (und das Freigeben im Fehlerfall) räumt held auf und blendet die blasse Note aus

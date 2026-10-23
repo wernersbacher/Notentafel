@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeSignal } from '../js/core/signal.js';
+import { makeSignal } from '../app/js/core/signal.js';
 
 test('Signal: alle Angemeldeten werden mit den Argumenten aufgerufen, in der Reihenfolge der Anmeldung', () => {
   const s = makeSignal(), seen = [];

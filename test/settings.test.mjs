@@ -7,8 +7,8 @@ import { fakeStorage } from './helpers.mjs';
 const OLD = { theme: 'original', tempo: 120, lens: false, mode: 'rhy', autoBar: true, autoZ: true, prop: true, wake: false };
 globalThis.localStorage = fakeStorage();
 globalThis.localStorage.setItem('notentafel.settings.v1', JSON.stringify(OLD));
-const { settings, useSettings, persistSettings, cleanCoreSettings } = await import('../js/core/settings.js');
-const { cleanTafelSettings } = await import('../js/tafel/storage.js');
+const { settings, useSettings, persistSettings, cleanCoreSettings } = await import('../app/js/core/settings.js');
+const { cleanTafelSettings } = await import('../app/js/tafel/storage.js');
 
 // Die Einstellungen der Tafel aus dem alten Stand; sie galten für Melodie und Rhythmus zusammen
 const TAFEL = { lens: false, autoBar: true, autoZ: true, syl: false };
@@ -46,7 +46,7 @@ test('Einstellungen: welche Bereiche gerade üben (Üben und Spielen)', () => {
 });
 
 test('Größe der Oberfläche: frei wählbar, gerundet und begrenzt', async () => {
-  const { clampUi } = await import('../js/core/settings.js');
+  const { clampUi } = await import('../app/js/core/settings.js');
   assert.equal(clampUi(1.234), 1.23);
   assert.equal(clampUi(0.1), 0.5);
   assert.equal(clampUi(5), 2);

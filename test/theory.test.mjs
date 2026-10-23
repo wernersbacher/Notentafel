@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { autoMarks, meterInfo, countSlots, barAt, openMeasureAt } from '../js/tafel/theory.js';
-import { attachLines } from '../js/tafel/model.js';
+import { autoMarks, meterInfo, countSlots, barAt, openMeasureAt } from '../app/js/tafel/theory.js';
+import { attachLines } from '../app/js/tafel/model.js';
 
 const q = { n: 'C', h: '' };          // Punkt ohne Notenwert: ein Schlag
 const n = (d) => ({ n: 'C', h: '', d });

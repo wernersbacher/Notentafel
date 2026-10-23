@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { songToMusicXML, fileNameOf } from '../js/lied/musicxml.js';
-import { measureTicks } from '../js/lied/model.js';
-import { SONGS, songOf } from '../js/lied/songs.js';
+import { songToMusicXML, fileNameOf } from '../app/js/lied/musicxml.js';
+import { measureTicks } from '../app/js/lied/model.js';
+import { SONGS, songOf } from '../app/js/lied/songs.js';
 import { n, r, song } from './helpers.mjs';
 
 // Prüft, ob jedes geöffnete Element wieder geschlossen wird (ein kleiner Ersatz für einen XML-Parser)

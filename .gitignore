@@ -1,6 +1,6 @@
 *.md
 pb_data/
-js/env.js
+app/js/env.js
 
 # Beads / Dolt files (added by bd init)
 .dolt/

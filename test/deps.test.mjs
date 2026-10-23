@@ -6,7 +6,7 @@ import path from 'node:path';
 // Die Bereiche hängen nicht voneinander ab: core/ kennt keinen Bereich, tafel/ und lied/ nutzen nur sich selbst und core/.
 // Ganz oben unter js/ liegen main.js (führt alles zusammen) und songformat.js (verbindet Tafel und Lied; tafel/ und lied/
 // reichen seine Funktionen nur weiter). Sie dürfen aus beiden Bereichen lesen, die Bereiche dürfen sie importieren.
-const JS = path.resolve(import.meta.dirname, '../js');
+const JS = path.resolve(import.meta.dirname, '../app/js');
 const ROOT = ['main.js', 'songformat.js'];
 const ALLOWED = { core: ['core'], tafel: ['tafel', 'core'], lied: ['lied', 'core'] };
 // Aus js/ selbst dürfen nur die Bereiche holen, und nur das, was für beide gedacht ist (nie main.js); core bleibt unten

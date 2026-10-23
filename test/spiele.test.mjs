@@ -2,17 +2,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeRhythm, meterParts } from '../js/tafel/rhythms.js';
-import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../js/lied/model.js';
-import { makeMelody } from '../js/tafel/theory.js';
-import { MEL_FRAMES, RHY_FRAMES } from '../js/tafel/gameFrames.js';
-import { LIED_FRAMES } from '../js/lied/gameFrames.js';
+import { makeRhythm, meterParts } from '../app/js/tafel/rhythms.js';
+import { midiOf, whiteRange, quizPitches, quizKeys, songRange, makeInterval, comparePitch } from '../app/js/lied/model.js';
+import { makeMelody } from '../app/js/tafel/theory.js';
+import { MEL_FRAMES, RHY_FRAMES } from '../app/js/tafel/gameFrames.js';
+import { LIED_FRAMES } from '../app/js/lied/gameFrames.js';
 import { fakeStorage } from './helpers.mjs';
 
 // localStorage-Ersatz für die Einstellungen (vor dem Laden von gameOptions.js und lied/storage.js)
 globalThis.localStorage = fakeStorage();
-const { cleanGames } = await import('../js/tafel/gameOptions.js');
-const { cleanLiedSettings } = await import('../js/lied/storage.js');
+const { cleanGames } = await import('../app/js/tafel/gameOptions.js');
+const { cleanLiedSettings } = await import('../app/js/lied/storage.js');
 
 // Gleicher Zufall bei jedem Lauf
 function seeded(seed) {
@@ -136,7 +136,7 @@ test('Schritt oder Sprung: die Art passt zum Abstand, beide Töne im Tonraum', (
 
 // Die Spiele öffnen ihre Leiste über core/game.js und zeichnen auf der Tafel; im Test lässt sich nur prüfen, dass die
 // Spielabläufe in rhygames.js/echo.js die richtige Spielart öffnen und nach dem Lösen den richtigen Stand spielen.
-const tafelSrc = (f) => fs.readFileSync(path.resolve(import.meta.dirname, '../js/tafel', f), 'utf8');
+const tafelSrc = (f) => fs.readFileSync(path.resolve(import.meta.dirname, '../app/js/tafel', f), 'utf8');
 
 test('Spielarten: „Vom Blatt klatschen“ ist nicht das Rhythmus-Echo', () => {
   const rhy = tafelSrc('rhygames.js');
@@ -158,12 +158,12 @@ test('Fehler finden: nach dem Lösen spielt die Tafel die richtige Zeile, nicht 
 
 // Die Beschreibungen (gameFrames.js) bauen Hinweis und Startknopf; danach liest dom.js deren ids. Deshalb muss jeder
 // Spielabschnitt des HTML genau eine Beschreibung haben (und umgekehrt) und jede go-id in der idliste seiner dom.js stehen.
-const planSrc = fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8');
+const planSrc = fs.readFileSync(path.resolve(import.meta.dirname, '../app/index.html'), 'utf8');
 const gamesIn = (sectionId) => {
   const m = planSrc.match(new RegExp('<section class="group play" id="' + sectionId + '">([\\s\\S]*?)<\\/section>'));
   return [...m[1].matchAll(/<div class="group game" data-game="([^"]+)"/g)].map((x) => x[1]);
 };
-const AREAS = [['melPlay', MEL_FRAMES, 'js/tafel/dom.js'], ['rhyPlay', RHY_FRAMES, 'js/tafel/dom.js'], ['liedPlay', LIED_FRAMES, 'js/lied/dom.js']];
+const AREAS = [['melPlay', MEL_FRAMES, 'app/js/tafel/dom.js'], ['rhyPlay', RHY_FRAMES, 'app/js/tafel/dom.js'], ['liedPlay', LIED_FRAMES, 'app/js/lied/dom.js']];
 
 test('Spielrahmen: jeder Abschnitt hat genau eine Beschreibung', () => {
   for (const [id, frames] of AREAS) {

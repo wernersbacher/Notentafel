@@ -4,7 +4,7 @@ import { fakeStorage } from './helpers.mjs';
 
 // localStorage-Ersatz; muss stehen, bevor state.js (über settings.js und storage.js) geladen wird
 globalThis.localStorage = fakeStorage();
-const { S, practiceWritten } = await import('../js/tafel/state.js');
+const { S, practiceWritten } = await import('../app/js/tafel/state.js');
 
 // Zeile mit den Eigenschaften line/meter, wie sie die Tafel am Array trägt
 const row = (...cells) => { cells.line = false; cells.meter = ''; return cells; };

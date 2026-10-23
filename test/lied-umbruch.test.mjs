@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { layout, widestMeasure } from '../js/lied/layout.js';
-import { barsAfter } from '../js/lied/model.js';
+import { layout, widestMeasure } from '../app/js/lied/layout.js';
+import { barsAfter } from '../app/js/lied/model.js';
 import { n } from './helpers.mjs';
 
 const quarters = (bars) => Array.from({ length: bars * 4 }, (_, i) => n(['c1', 'd1', 'e1', 'f1'][i % 4]));

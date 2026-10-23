@@ -7,7 +7,7 @@ import { fakeStorage } from './helpers.mjs';
 globalThis.localStorage = fakeStorage();
 const noopEl = () => ({ addEventListener() {} });
 globalThis.document = { getElementById: noopEl, querySelector: () => null };
-const { answerOf, randomQuiz, songQuiz } = await import('../js/core/quiz.js');
+const { answerOf, randomQuiz, songQuiz } = await import('../app/js/core/quiz.js');
 
 // Die richtige Antwort einer Frage, so wie die Engine sie prüft
 const firstOf = (r) => r.ok.values().next().value;

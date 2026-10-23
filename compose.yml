@@ -1,4 +1,4 @@
-# Backend zum lokalen Ausprobieren: docker compose up --build -d, dann http://localhost:8082/
+# Backend zum lokalen Ausprobieren: docker compose up --build -d, dann http://localhost:8082/ (die App unter /app/)
 # Für die Entwicklung ohne Backend bleibt es bei npm start.
 services:
   app:

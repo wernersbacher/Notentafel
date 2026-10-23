@@ -295,7 +295,7 @@ function mergeAll(songs) {
 }
 
 /* ---------- Start ---------- */
-// backend: Adresse der API (aus js/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
+// backend: Adresse der API (aus app/js/env.js) oder null. Ein gemerktes Token wird erneuert; danach wird abgeglichen.
 let wired = false;
 // initCloud läuft bei jedem Neuladen erneut (auch in den Tests je Gerät). onSongChange meldet im Signal jedes Mal
 // einen weiteren Abonnenten an, darum wird queue nur einmal angemeldet und die Anmeldung gemerkt.

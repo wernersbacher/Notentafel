@@ -1,5 +1,5 @@
 // Anmeldung für alle Seiten der Musiktafel (Landing, Konto, App): Anfragen an die API (PocketBase, ohne SDK),
-// Anmelden, Registrieren, Abmelden, Konto löschen. Das Token liegt im localStorage und gilt damit auf jeder Seite
+// Anmelden, Registrieren, Abmelden, Konto löschen, Passwort zurücksetzen, E-Mail bestätigen. Das Token liegt im localStorage und gilt damit auf jeder Seite
 // derselben Domain. Der Abgleich der Lieder ist Sache der App (app/js/core/cloud.js), er hört auf onAuthChange.
 // Diese Datei hängt von nichts unter app/ ab.
 const KEY = 'notentafel.auth.v1';
@@ -98,6 +98,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
 export function message(err) {
   if (!(err instanceof ApiError)) return 'Keine Verbindung zum Server.';
   const d = err.data.data || {};
+  if (d.token) return 'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.';
   if (d.email && d.email.code === 'validation_not_unique') return 'Für diese E-Mail gibt es schon ein Konto.';
   if (d.email) return 'Bitte eine gültige E-Mail eingeben.';
   if (d.password) return 'Das Passwort braucht mindestens 8 Zeichen.';
@@ -125,6 +126,36 @@ export async function register(email, password) {
     await api('/collections/users/records', { method: 'POST', body: { email, password, passwordConfirm: password } });
   } catch (err) { return message(err); }
   return login(email, password);
+}
+// Schickt die Mail zum Zurücksetzen. Die Antwort ist immer 204, auch bei unbekannter E-Mail; nur Netz- und
+// Formatfehler kommen zurück, so verrät die Seite nicht, welche Konten es gibt.
+export async function requestPasswordReset(email) {
+  try { await api('/collections/users/request-password-reset', { method: 'POST', body: { email } }); } catch (err) { return message(err); }
+  return '';
+}
+// Neues Passwort mit dem Token aus der Mail setzen; danach ist man nirgends angemeldet, das Token ist verbraucht
+export async function confirmPasswordReset(token, password) {
+  try {
+    await api('/collections/users/confirm-password-reset', { method: 'POST', body: { token, password, passwordConfirm: password } });
+  } catch (err) { return message(err); }
+  return '';
+}
+// Schickt die Bestätigungsmail erneut (auch hier immer 204)
+export async function requestVerification(email) {
+  try { await api('/collections/users/request-verification', { method: 'POST', body: { email } }); } catch (err) { return message(err); }
+  return '';
+}
+export async function confirmVerification(token) {
+  try { await api('/collections/users/confirm-verification', { method: 'POST', body: { token } }); } catch (err) { return message(err); }
+  return '';
+}
+// Ziel nach dem Anmelden aus ?next=: nur Pfade auf dieser Seite, sonst /app/. Abgelehnt werden //host, /\host
+// (Browser lesen \ wie /), Steuerzeichen (Tab und Zeilenumbruch fallen beim Auflösen weg) und alles mit Schema.
+export function safeNext(next) {
+  const fallback = '/app/';
+  if (typeof next !== 'string' || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return fallback;
+  if (/[\\\u0000-\u001f\u007f]/.test(next)) return fallback;
+  return next;
 }
 export function logout() {
   me = null;

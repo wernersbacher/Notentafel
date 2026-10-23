@@ -1,0 +1,33 @@
+/* Formulare und Karten für Anmelden und Konto: Tippflächen mindestens 48 px, Farben aus tokens.css */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font-ui); }
+main.karte { width: min(28rem, 100% - 24px); margin: 16px auto 40px; padding: 24px clamp(16px, 5vw, 28px) 28px; background: var(--panel); border-radius: 16px; }
+h1 { margin: 0 0 8px; font-size: 1.5rem; letter-spacing: .02em; }
+p { margin: 0 0 14px; }
+.klein { color: var(--muted); font-size: .9rem; }
+a { color: inherit; font-weight: 800; }
+
+.reiter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 20px; padding: 5px; background: var(--bg); border-radius: 16px; }
+.reiter button { min-height: 48px; border: 0; border-radius: 12px; background: none; color: var(--muted); font: 800 1rem var(--font-ui); cursor: pointer; }
+.reiter button[aria-selected="true"] { background: var(--btn); color: var(--fg); box-shadow: 0 1px 4px var(--shadow); }
+
+.feld { display: block; margin: 0 0 16px; }
+.feld > span { display: block; margin-bottom: 6px; font-weight: 800; }
+.feld input { width: 100%; min-height: 48px; padding: 0 14px; border: 2px solid var(--btn-line); border-radius: 12px; background: var(--btn); color: var(--fg); font: 1rem var(--font-ui); }
+.feld input:focus { border-color: var(--ring); outline: none; }
+.passwort { display: flex; gap: 8px; }
+.passwort input { flex: 1; min-width: 0; }
+.zeigen { flex: none; min-width: 48px; min-height: 48px; padding: 0 14px; border: 2px solid var(--btn-line); border-radius: 12px; background: var(--btn); color: var(--fg); font: 800 .9rem var(--font-ui); cursor: pointer; }
+.zeigen[aria-pressed="true"] { border-color: var(--ring); }
+
+.knopf { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; padding: 0 20px; border: 2px solid var(--fg); border-radius: 26px; background: var(--fg); color: var(--bg); font: 800 1.05rem var(--font-ui); text-decoration: none; cursor: pointer; }
+.knopf.zweit { border-color: var(--btn-line); background: var(--btn); color: var(--fg); }
+.knopf:disabled { opacity: .55; cursor: default; }
+.knopf + .knopf { margin-top: 10px; }
+.textknopf { display: inline-flex; align-items: center; min-height: 48px; padding: 0; border: 0; background: none; color: var(--fg); font: 800 1rem var(--font-ui); text-decoration: underline; cursor: pointer; }
+.zeile { margin-top: 6px; }
+.meldung { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--board); border: 2px solid var(--line); }
+.meldung.fehler { border-color: var(--danger); color: var(--danger); }
+.meldung.ok { border-color: var(--ok); }
+:is(.knopf, .textknopf, .zeigen, .reiter button, a):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+[hidden] { display: none !important; }

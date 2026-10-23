@@ -33,7 +33,8 @@ export function mountHeader(container) {
     menu = avatar = null;
     if (!user) {
       // ohne Backend (npm start) gibt es keine Konten
-      if (hasBackend()) side.append(link('/login/', 'Anmelden', 'kopf-knopf'));
+      // auf der Anmeldeseite selbst wäre der Knopf doppelt
+      if (hasBackend() && location.pathname !== '/login/') side.append(link('/login/', 'Anmelden', 'kopf-knopf'));
       return;
     }
     avatar = node('button', 'kopf-avatar', initials(user));

@@ -23,6 +23,15 @@ globalThis.fetch = async (url, opts = {}) => {
   if (url === '/api/collections/users/auth-refresh') {
     return opts.headers.Authorization === 'tok1' ? reply(200, { token: 'tok2', record }) : reply(401, { message: 'x' });
   }
+  if (url === '/api/collections/users/request-password-reset' || url === '/api/collections/users/request-verification') {
+    return JSON.parse(opts.body).email ? reply(204, null) : reply(400, { message: 'x', data: { email: { code: 'validation_required' } } });
+  }
+  if (url === '/api/collections/users/confirm-password-reset' || url === '/api/collections/users/confirm-verification') {
+    const b = JSON.parse(opts.body);
+    if (b.token !== 'gut') return reply(400, { message: 'x', data: { token: { code: 'validation_invalid_token' } } });
+    if (b.password !== undefined && b.password.length < 8) return reply(400, { message: 'x', data: { password: { code: 'validation_length_out_of_range' } } });
+    return reply(204, null);
+  }
   return reply(404, { message: 'Not found' });
 };
 
@@ -124,4 +133,26 @@ test('refresh: erneuert das Token; bei 401 wird abgemeldet', async () => {
   await assert.rejects(A.refresh(), (e) => e.status === 401);
   assert.equal(A.currentUser(), null);
   assert.equal(mem.getItem('notentafel.auth.v1'), null);
+});
+
+test('safeNext: nur Pfade auf dieser Seite, sonst /app/', () => {
+  for (const ok of ['/app/', '/account/', '/app/?lied=3#x']) assert.equal(A.safeNext(ok), ok);
+  const bs = String.fromCharCode(92);
+  for (const bad of ['//evil.de', '/' + bs + 'evil.de', 'https://evil.de', 'http://evil.de/app/', 'javascript:alert(1)', '/\t/evil.de', '/\n/evil.de',
+    '/ok' + bs + '..' + bs + 'evil', 'evil.de', 'app/', '', null, undefined, 42]) {
+    assert.equal(A.safeNext(bad), '/app/', String(bad));
+  }
+});
+
+test('Passwort zurücksetzen und E-Mail bestätigen: Anfragen und deutsche Meldungen', async () => {
+  assert.equal(await A.requestPasswordReset('a@b.de'), '');
+  assert.equal(calls.at(-1).url, '/api/collections/users/request-password-reset');
+  assert.equal(await A.requestPasswordReset(''), 'Bitte eine gültige E-Mail eingeben.');
+  assert.equal(await A.requestVerification('a@b.de'), '');
+  assert.equal(calls.at(-1).url, '/api/collections/users/request-verification');
+  assert.equal(await A.confirmPasswordReset('gut', 'neuespasswort'), '');
+  assert.equal(await A.confirmPasswordReset('gut', 'kurz'), 'Das Passwort braucht mindestens 8 Zeichen.');
+  assert.match(await A.confirmPasswordReset('alt', 'neuespasswort'), /ungültig oder abgelaufen/);
+  assert.equal(await A.confirmVerification('gut'), '');
+  assert.match(await A.confirmVerification('alt'), /ungültig oder abgelaufen/);
 });

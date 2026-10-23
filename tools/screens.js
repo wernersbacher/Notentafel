@@ -3,6 +3,8 @@
 // Startet tools/serve.js auf einem freien Port (ohne shared/env.js, also ohne Backend: kein Konto-Knopf) und ein
 // lokales Chrome headless mit frischem Profil, steuert es über das DevTools-Protokoll (eingebautes WebSocket und
 // fetch von Node 22) und schreibt je Bereich ein Tablet-Bild nach site/assets/screens/: melodie.webp, rhythmus.webp, lied.webp.
+// Danach folgen aus den Vorlagen tools/og.html und tools/icon.html das Vorschaubild für Links (site/assets/og.png, 1200x630)
+// und das Symbol für den Home-Bildschirm (site/assets/apple-touch-icon.png, 180x180); beide nutzen das Bild melodie.webp.
 // Die Bilder sind quer 1180x820 CSS-Pixel bei doppelter Dichte (2360x1640); Dateinamen und Maße bleiben stabil,
 // die Seite bindet sie mit festen width und height ein. Die Daten kommen aus der App selbst: bekannte Lieder werden
 // wie von Nutzern über die Liedersammlung geladen, der Rhythmus über den gespeicherten Stand der Tafel.
@@ -14,6 +16,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const outDir = path.join(root, 'site', 'assets', 'screens');
+const assetsDir = path.join(root, 'site', 'assets');
 const W = 1180, H = 820, SCALE = 2, QUALITY = 80;
 
 // Was auf dem Bild zu sehen ist: Bereich (Reiter), Lied aus der Liedersammlung oder gespeicherte Tafel,
@@ -29,6 +32,12 @@ const SHOTS = [
     ] }
   },
   { file: 'lied', tab: 'Notenblatt', song: 'Kuckuck, Kuckuck' }
+];
+
+// Bilder aus Vorlagen: Datei in tools/, Größe in CSS-Pixeln (Dichte 1), Ziel in site/assets/
+const TEMPLATES = [
+  { template: 'og.html', file: 'og.png', w: 1200, h: 630 },
+  { template: 'icon.html', file: 'apple-touch-icon.png', w: 180, h: 180 }
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -113,6 +122,23 @@ async function shoot(page, shot, base) {
   console.log(path.relative(root, file) + '  ' + (fs.statSync(file).size / 1024).toFixed(0) + ' KB');
 }
 
+// Vorlage in eine Seite des Servers schreiben (damit /shared/ und /assets/ laden) und als PNG aufnehmen
+async function render(page, tpl, base) {
+  const { send, run } = page;
+  await send('Page.navigate', { url: base + '/imprint/' });
+  await until(() => run('document.readyState === "complete"'), 'Seite geladen');
+  await send('Emulation.setDeviceMetricsOverride', { width: tpl.w, height: tpl.h, deviceScaleFactor: 1, mobile: false });
+  const html = fs.readFileSync(path.join(__dirname, tpl.template), 'utf8');
+  await run('document.open(); document.write(' + JSON.stringify(html) + '); document.close(); true');
+  await until(() => run('document.readyState === "complete" && [...document.images].every((i) => i.complete && i.naturalWidth > 0)'), 'Bilder der Vorlage');
+  await run('document.fonts.ready.then(() => true)');
+  await sleep(300);
+  const { data } = await send('Page.captureScreenshot', { format: 'png' });
+  const file = path.join(assetsDir, tpl.file);
+  fs.writeFileSync(file, Buffer.from(data, 'base64'));
+  console.log(path.relative(root, file) + '  ' + (fs.statSync(file).size / 1024).toFixed(0) + ' KB');
+}
+
 async function main() {
   const chrome = findChrome();
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'nt-screens-'));
@@ -136,6 +162,7 @@ async function main() {
     await page.send('Emulation.setTouchEmulationEnabled', { enabled: true });
     fs.mkdirSync(outDir, { recursive: true });
     for (const shot of SHOTS) await shoot(page, shot, base);
+    for (const tpl of TEMPLATES) await render(page, tpl, base);
     page.close();
   } finally {
     // Unter Windows startet Chrome Kindprozesse, die nur taskkill /T mitnimmt

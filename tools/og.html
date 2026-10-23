@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Vorlage für assets/og.png (1200x630), von tools/screens.js gerendert; nicht öffentlich -->
+<link rel="stylesheet" href="/shared/fonts.css">
+<link rel="stylesheet" href="/shared/tokens.css">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+body { position: relative; background: var(--bg); color: var(--fg); font-family: var(--font-ui); }
+.text { position: absolute; left: 64px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; }
+.zeichen { width: 84px; height: 84px; margin-bottom: 28px; }
+h1 { margin: 0 0 22px; font: 400 84px/1.15 var(--font-display); font-weight: 800; }
+p { margin: 0; font-size: 31px; line-height: 1.4; font-weight: 700; color: var(--muted); }
+/* Ausschnitt der Tafel, rechts angeschnitten */
+.bild { position: absolute; left: 600px; top: 70px; width: 880px; height: 611px; border: 3px solid var(--frame-edge); border-radius: 26px; background: var(--board); box-shadow: 0 14px 40px var(--shadow); }
+</style>
+</head>
+<body>
+<div class="text">
+  <img class="zeichen" src="/shared/favicon.svg" alt="">
+  <h1>Musiktafel</h1>
+  <p>Rhythmen, Farbnoten und Notenblätter für den Musikunterricht.</p>
+</div>
+<img class="bild" src="/assets/screens/melodie.webp" alt="">
+</body>
+</html>

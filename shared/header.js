@@ -112,6 +112,7 @@ export function mountAccount(container, { guestMenu = false, status = null } = {
 export function mountHeader(container) {
   container.classList.add('kopf');
   const brand = link('/', 'Musiktafel', 'kopf-name');
+  brand.append(node('span', 'kopf-beta', 'Beta'));
   const side = node('div');
   container.replaceChildren(brand, side);
   const render = mountAccount(side);

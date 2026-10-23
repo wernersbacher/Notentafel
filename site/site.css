@@ -31,6 +31,7 @@ details p { margin: 0; padding: 4px 18px 16px; max-width: 42rem; }
 
 .schluss { padding: 28px 0 16px; text-align: center; }
 .fuss { padding: 16px 16px 32px; text-align: center; color: var(--muted); font-size: .95rem; }
+.fuss p { margin: 0 0 4px; }
 
 @media (min-width: 48rem) {
   .block { grid-template-columns: 1fr 1.25fr; gap: 36px; }

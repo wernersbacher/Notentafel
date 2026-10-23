@@ -25,3 +25,5 @@ main.konto h1 { margin: 0 4px 14px; }
 .konto-blatt ul { margin: 0 0 14px; padding-left: 1.3rem; }
 .konto-blatt li { margin-bottom: 4px; }
 .konto-blatt .textknopf:disabled { opacity: .55; }
+.abo-stufe { margin: 0 0 4px; font-size: 1.6rem; font-weight: 800; }
+.abo-spaeter { color: var(--muted); }

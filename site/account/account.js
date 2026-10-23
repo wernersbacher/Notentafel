@@ -1,10 +1,11 @@
-// Seite /account/: Reiter Profil, Sicherheit und Daten, ansteuerbar per Hash (#profil, #sicherheit, #daten). Ohne Anmeldung
+// Seite /account/: Reiter Profil, Sicherheit, Daten und Abo, ansteuerbar per Hash (#profil, #sicherheit, #daten, #abo). Ohne Anmeldung
 // geht es auf /login/?next=/account/. Breit stehen die Reiter links, schmal als Umschalter oben (account.css).
 import { mountHeader } from '/shared/header.js';
 import { node, button, anchor, note, field, form } from '/formular.js';
 import { avatar } from '/shared/avatar.js';
+import { aboText } from '/account/abo-text.js';
 import {
-  hasBackend, currentUser, onAuthChange, updateProfile, changePassword, requestEmailChange, logoutAll, downloadExport, deleteAccount
+  hasBackend, currentUser, onAuthChange, updateProfile, changePassword, requestEmailChange, logoutAll, downloadExport, deleteAccount, api
 } from '/shared/auth.js';
 
 const root = document.getElementById('inhalt');
@@ -146,12 +147,34 @@ function abschnittLoeschen() {
 }
 const tabDaten = () => [abschnittHerunterladen(), abschnittLoeschen()];
 
-// Später kommt hier noch das Abo dazu (5z1.9): Eintrag mit id, Text und Aufbau genügt
 const TABS = [
   { id: 'profil', text: 'Profil', build: tabProfil },
   { id: 'sicherheit', text: 'Sicherheit', build: tabSicherheit },
-  { id: 'daten', text: 'Daten', build: tabDaten }
+  { id: 'daten', text: 'Daten', build: tabDaten },
+  { id: 'abo', text: 'Abo', build: tabAbo }
 ];
+
+/* ---------- Abo ---------- */
+// Stand aus /api/me, beim Öffnen frisch geholt (Pro kann inzwischen abgelaufen sein). Der Kopf mit dem Stand erscheint,
+// sobald die Antwort da ist.
+function tabAbo() {
+  const stand = node('section');
+  stand.append(node('h2', '', 'Dein Stand'), node('p', 'klein', 'Einen Moment …'));
+  api('/me').then((me) => {
+    const t = aboText(me);
+    const liste = node('ul');
+    for (const u of t.umfang) liste.append(node('li', '', u));
+    stand.replaceChildren(node('h2', '', 'Dein Stand'), node('p', 'abo-stufe', t.stufe));
+    if (t.bis) stand.append(node('p', '', 'Pro bis ' + t.bis));
+    if (t.beta) stand.append(node('p', 'klein', t.beta));
+    if (t.hinweis) stand.append(node('p', 'klein', t.hinweis));
+    stand.append(node('p', 'klein', 'Das ist dabei:'), liste);
+  }, () => stand.replaceChildren(node('h2', '', 'Dein Stand'), note('Der Stand lässt sich gerade nicht laden. Bitte versuche es später noch einmal.', 'fehler')));
+  // Platz für später: Paket buchen, Kundenportal des Zahlungsdienstes, Rechnungen (5z1.12)
+  const spaeter = node('section', 'abo-spaeter');
+  spaeter.append(node('h2', '', 'Pakete und Rechnungen'), node('p', 'klein', 'Kommt später.'));
+  return [stand, spaeter];
+}
 
 // Nach dem Löschen: das Konto ist weg und man ist abgemeldet
 function abschied() {
